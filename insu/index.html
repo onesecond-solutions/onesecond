@@ -3113,6 +3113,125 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
          </div>
        </div>
      </div>
+     <!-- ════ 영업방향·전략 (#v-sales-strategy) — 임태성 대표 user_id 전용 게이트. 소식지(#v-newsletters) 최소변경 클론. 데이터=sales_strategy 테이블 / Storage=기존 newsletters 버킷 sales-strategy/ 프리픽스. 미리보기=preview_pdf_path 우선(폴백 source_path)·다운로드=source_path. 소식지 nlx-/nlp- 원본 무접촉(신규 ssx-/ssp- 접두만). 2026-08-06 ════ -->
+     <style id="ssx-style">
+       #v-sales-strategy{
+         --ssx-sonhae:#B5741A; --ssx-sonhae-bg:#FBF1E1; --ssx-sonhae-line:#EAD3AE;
+         --ssx-saeng:#0E7A6F; --ssx-saeng-bg:#E2F2EF; --ssx-saeng-line:#BFE2DC;
+         max-width:1200px; margin-left:auto; margin-right:auto;
+       }
+       :root[data-theme="dark"] #v-sales-strategy{
+         --ssx-sonhae:#E5A94F; --ssx-sonhae-bg:#2C2415; --ssx-sonhae-line:#463A22;
+         --ssx-saeng:#4FC2B2; --ssx-saeng-bg:#132A27; --ssx-saeng-line:#254A44;
+       }
+       /* ── 카드 그리드(전체조망/월별) ── */
+       #v-sales-strategy .ssx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:22px;}
+       #v-sales-strategy .ssx-card{display:block;text-align:left;font-family:inherit;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden;cursor:pointer;padding:0;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;}
+       #v-sales-strategy .ssx-card{width:100%;}
+       #v-sales-strategy .ssx-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(20,25,40,.12);}
+       #v-sales-strategy .ssx-card.ssx-nosrc{cursor:default;opacity:.72;}
+       #v-sales-strategy .ssx-card.ssx-nosrc:hover{transform:none;box-shadow:none;}
+       #v-sales-strategy .ssx-cover{aspect-ratio:3/4;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:14px 13px;border-bottom:1px solid var(--bd);}
+       /* 실 PDF 1페이지 썸네일 캔버스 — 표지를 꽉 채우되 전체 페이지 잘림 없이(contain). tint 배경은 레터박스로 비쳐 유형색 유지. */
+       #v-sales-strategy .ssx-cover.chub-ssthumb{gap:0;}
+       #v-sales-strategy .ssx-cover canvas,#v-sales-strategy .ssx-cover img{width:100%;height:100%;object-fit:contain;display:block;background:#fff;border-radius:0;margin:0;max-width:100%;max-height:100%;}
+       #v-sales-strategy .ssx-cover.s{background:var(--ssx-sonhae-bg);}
+       #v-sales-strategy .ssx-cover.l{background:var(--ssx-saeng-bg);}
+       #v-sales-strategy .ssx-ct{font-size:11px;font-weight:700;letter-spacing:.02em;}
+       #v-sales-strategy .ssx-cover.s .ssx-ct{color:var(--ssx-sonhae);}
+       #v-sales-strategy .ssx-cover.l .ssx-ct{color:var(--ssx-saeng);}
+       #v-sales-strategy .ssx-cco{font-size:15.5px;font-weight:800;color:var(--tp);margin-top:5px;letter-spacing:-.01em;line-height:1.25;}
+       #v-sales-strategy .ssx-lines{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+       #v-sales-strategy .ssx-cover.s .ssx-lines{color:var(--ssx-sonhae);}
+       #v-sales-strategy .ssx-cover.l .ssx-lines{color:var(--ssx-saeng);}
+       #v-sales-strategy .ssx-lines i{height:3px;border-radius:2px;background:currentColor;opacity:.18;display:block;}
+       #v-sales-strategy .ssx-lines i:nth-child(2){width:76%;}
+       #v-sales-strategy .ssx-cym{margin-top:auto;font-size:22px;font-weight:800;letter-spacing:-.02em;}
+       #v-sales-strategy .ssx-cover.s .ssx-cym{color:var(--ssx-sonhae);}
+       #v-sales-strategy .ssx-cover.l .ssx-cym{color:var(--ssx-saeng);}
+       #v-sales-strategy .ssx-meta{padding:9px 12px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+       #v-sales-strategy .ssx-mco{font-size:13px;font-weight:700;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+       #v-sales-strategy .ssx-chip{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;flex:0 0 auto;}
+       #v-sales-strategy .ssx-chip.s{background:var(--ssx-sonhae-bg);color:var(--ssx-sonhae);}
+       #v-sales-strategy .ssx-chip.l{background:var(--ssx-saeng-bg);color:var(--ssx-saeng);}
+       /* ── 이번 달 히어로 ── */
+       #v-sales-strategy .ssx-hero{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg,16px);padding:20px 20px 20px;margin-bottom:28px;position:relative;overflow:hidden;}
+       #v-sales-strategy .ssx-hero::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--ssx-sonhae),var(--ssx-saeng));}
+       #v-sales-strategy .ssx-hero-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+       #v-sales-strategy .ssx-hero-hd h2{font-size:19px;font-weight:800;color:var(--tp);}
+       #v-sales-strategy .ssx-hero-hd .k{font-size:13px;color:var(--ts);font-weight:600;}
+       /* ── 과거월 섹션 ── */
+       #v-sales-strategy .ssx-month{margin-bottom:28px;}
+       #v-sales-strategy .ssx-mhd{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+       #v-sales-strategy .ssx-mhd h2{font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--tp);}
+       #v-sales-strategy .ssx-badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:100px;background:var(--s2);color:var(--ts);}
+       #v-sales-strategy .ssx-past{margin-top:6px;}
+       #v-sales-strategy .ssx-past-hd{font-size:12.5px;font-weight:700;color:var(--tf);letter-spacing:.02em;margin:0 2px 10px;}
+       #v-sales-strategy .ssx-mrow{display:flex;align-items:center;gap:10px;width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:13px 15px;margin-bottom:8px;cursor:pointer;font-family:inherit;transition:background .12s;}
+       #v-sales-strategy .ssx-mrow:hover,#v-sales-strategy .ssx-mrow.open{background:var(--s2);}
+       #v-sales-strategy .ssx-mrow-t{flex:1;text-align:left;font-size:14.5px;font-weight:700;color:var(--tp);}
+       #v-sales-strategy .ssx-chev{color:var(--tf);font-size:18px;font-weight:400;line-height:1;transition:transform .15s;}
+       #v-sales-strategy .ssx-mrow.open .ssx-chev{transform:rotate(90deg);}
+       #v-sales-strategy .ssx-mbody{display:none;margin:2px 2px 16px;}
+       #v-sales-strategy .ssx-mbody.open{display:block;}
+       #v-sales-strategy .ssx-rule{flex:1;height:1px;background:var(--bd);}
+       /* ── 회사별 타임라인 ── */
+       #v-sales-strategy .ssx-cohd{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px) var(--radius-md,12px) 0 0;border-bottom:0;}
+       #v-sales-strategy .ssx-av{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:0 0 auto;}
+       #v-sales-strategy .ssx-av.s{background:var(--ssx-sonhae-bg);color:var(--ssx-sonhae);}
+       #v-sales-strategy .ssx-av.l{background:var(--ssx-saeng-bg);color:var(--ssx-saeng);}
+       #v-sales-strategy .ssx-coinfo h3{font-size:18px;font-weight:800;color:var(--tp);}
+       #v-sales-strategy .ssx-cosub{font-size:12.5px;color:var(--ts);margin-top:2px;}
+       #v-sales-strategy .ssx-tot{margin-left:auto;font-size:13px;color:var(--ts);font-weight:600;}
+       #v-sales-strategy .ssx-tot b{color:var(--tp);}
+       #v-sales-strategy .ssx-timeline{background:var(--s1);border:1px solid var(--bd);border-radius:0 0 var(--radius-md,12px) var(--radius-md,12px);padding:6px 0;}
+       #v-sales-strategy .ssx-tlrow{display:flex;align-items:center;gap:14px;padding:11px 18px;border-top:1px solid var(--bd);width:100%;background:transparent;font-family:inherit;text-align:left;color:var(--tp);cursor:pointer;min-height:44px;box-sizing:border-box;}
+       #v-sales-strategy button.ssx-tlrow{border-left:0;border-right:0;border-bottom:0;}
+       #v-sales-strategy .ssx-tlrow:first-child{border-top:0;}
+       #v-sales-strategy button.ssx-tlrow:hover{background:var(--s2);}
+       #v-sales-strategy .ssx-tlym{font-size:13px;font-weight:700;color:var(--tp);width:52px;flex:0 0 auto;}
+       #v-sales-strategy .ssx-tlhas{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--tp);}
+       #v-sales-strategy .ssx-tlic{width:26px;height:32px;border-radius:4px;flex:0 0 auto;}
+       #v-sales-strategy .ssx-tlhas.s .ssx-tlic{background:var(--ssx-sonhae-bg);border:1px solid var(--ssx-sonhae-line);}
+       #v-sales-strategy .ssx-tlhas.l .ssx-tlic{background:var(--ssx-saeng-bg);border:1px solid var(--ssx-saeng-line);}
+       #v-sales-strategy .ssx-tltt{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+       #v-sales-strategy .ssx-tlopen{font-size:12px;font-weight:700;color:var(--ac);flex:0 0 auto;}
+       #v-sales-strategy .ssx-tlrow.empty{padding:9px 18px;opacity:.7;min-height:0;}
+       #v-sales-strategy .ssx-tlrow.empty .ssx-tlym{font-weight:600;color:var(--tf);}
+       #v-sales-strategy .ssx-tlempty{flex:1;font-size:13px;color:var(--tf);}
+       /* ── 사이드 회사 리스트 유형색(공용 .pl-co 전역 무변경: 스코프 오버라이드 + 인라인 --cl) ── */
+       #v-sales-strategy .pl-co{min-height:40px;}
+       /* ── 반응형(열수 하드코딩 없음·auto-fill 유지) ── */
+       @media (max-width:520px){
+         #v-sales-strategy .ssx-grid{grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:12px;}
+         #v-sales-strategy .ssx-cco{font-size:14px;}
+         #v-sales-strategy .ssx-cym{font-size:19px;}
+       }
+     </style>
+     <div class="wrap view" id="v-sales-strategy">
+       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
+       <div class="pl-hd">
+         <button class="pl-menu" type="button" id="ssp-menuBtn">회사 목록</button>
+         <div class="pl-title">영업방향·<b>전략</b></div>
+         <div class="pl-comp">대표 전용 · 회사별 영업방향·영업전략 자료</div>
+       </div>
+       <div class="pl-layout">
+         <aside class="pl-side" id="ssp-side">
+           <div class="pl-pool" id="ssp-pool"><button data-p="all" class="on">전체</button><button data-p="nonlife">손해</button><button data-p="life">생명</button></div>
+           <div class="pl-search"><input id="ssp-q" type="text" placeholder="회사 검색" autocomplete="off"></div>
+           <div id="ssp-coList"></div>
+         </aside>
+         <div class="pl-backdrop" id="ssp-backdrop"></div>
+         <div class="pl-right">
+           <div class="pl-ctrl">
+             <div class="pl-scope" id="ssp-scope"><button data-s="all" class="on">전체 조망</button><button data-s="co">회사별</button></div>
+             <span class="pl-hint" id="ssp-hint"></span>
+           </div>
+           <div class="pl-cnt" id="ssp-cnt"></div>
+           <div class="pl-body"><div class="pl-main" id="ssp-main"></div></div>
+         </div>
+       </div>
+     </div>
      <!-- ════ 운영센터(어드민) — SPA D영역 흡수 (#v-admin · 2단 탭/칩) ════ -->
      <!-- 라이브 표시명: 운영센터(어드민 전용). 사이드바 nav='어드민' -->
      <div class="wrap view" id="v-admin">
@@ -5983,6 +6102,10 @@ function _homeDeskShow(){
     {v:'caregiver-history', ic:'i-file',   t:'간병보험 변천사', d:'장기간병~사용일당 · 지급기준이 다름', c:'var(--ac)'},
     {v:'newsletters',    ic:'i-building', t:'소식지',    d:'원수사 GA소식지 월별 모음',     c:'var(--t-event)'}
   ];
+  /* 영업방향·전략 = 임태성 대표 user_id 전용(2026-08-06). 소식지 카드 바로 뒤에 조건부 push — 게이트 밖 계정은 카드 DOM 미생성. 알릴의무(_canSeeRoadmap) 조건부 push 패턴과 동일. */
+  if(typeof _canSeeSalesStrategy==='function' && _canSeeSalesStrategy()){
+    tools.push({v:'sales-strategy', ic:'i-building', t:'영업방향·전략', d:'회사별 영업방향·전략 자료', c:'var(--t-uw)'});
+  }
   /* 알릴의무(goji) = 임태성 실장 user_id 전용(2026-07-06). 진입점(카드) 자체를 게이트 통과 계정에만 생성 —
      비게이트 계정은 DOM 미생성(리다이렉트가 아니라 카드 존재 자체 0). showView·로더 재가드는 별도 정합. */
   if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap()){
@@ -6397,7 +6520,7 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};if(key==='caregiver-history'){if(!document.body.classList.contains('is-guest')){var _cgO={expandDoc:'caregiver-history'};if(options.skipHistory)_cgO.skipHistory=true;showView('axis-caregiver',_cgO);return;}location.href='/insurance/caregiver-history/';return;}/* 간병 문서 진입 분기(대표 확정 2026-07-26 A안 확장): 로그인 SPA=간병 카테고리(axis-caregiver) D영역 인라인 펼침, 비로그인만 정적. */if(key==='silson'){if(!document.body.classList.contains('is-guest')){var _silO={expandDoc:'silson'};if(options.skipHistory)_silO.skipHistory=true;showView('axis-medical',_silO);return;}location.href='/insurance/silson-history/';return;}/* 실손 문서(silson) 진입 분기(대표 확정 2026-07-26 A안): 로그인 SPA = 의료실비 카테고리(axis-medical) D영역으로 진입하며 실손 본문 인라인 펼침(expandDoc) — /pages/ 바운스 폐지. 비로그인(is-guest)만 기존 정적 페이지로(무변경). skipHistory 전파로 popstate/딥링크 시 중복 pushState 방지. */if(key==='cancer-treatment'){if(!document.body.classList.contains('is-guest')){var _ctO={expandDoc:'cancer-treatment'};if(options.skipHistory)_ctO.skipHistory=true;showView('axis-cancer',_ctO);return;}location.href='/insurance/cancer-treatment-history/';return;}/* 암 문서 진입 분기(대표 확정 2026-07-26 A안 확장): 로그인 SPA=암 카테고리(axis-cancer) D영역 인라인 펼침, 비로그인만 정적. *//* 변천사 3종(간병·실비·암) = iframe 폐지 → 독립 URL 페이지로 이동 (2026-07-22 de-iframe 1·2단계). 타일·검색 바로가기·?view= 딥링크 모든 진입점이 여기서 독립 URL로 리라우트 */try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if(key==='trash'&&typeof _canSeeTrash==='function'&&!_canSeeTrash()){key='home';}/* 휴지통 = 상담관리 공용 게이트(_canSeeCare). 직접 URL 진입도 home 강제(2026-07-13) */var _bjSub=null;if(key==='cov-medical'){key='bojang';_bjSub='medical';}/* cov-medical → 보장분석 허브(의료실비 서브)로 라우팅 통일. #v-cov-medical·js/cov-medical.js는 보존(세대판정 원천). 스트레이 딥링크 하위호환 (2026-07-16) */if(key==='bojang'&&typeof _canSeeCoverage==='function'&&!_canSeeCoverage()){key='home';}/* 보장분석 허브 = 임태성 실장 user_id 또는 어드민(대표 검수). 비게이트·anon 직접 URL(?view=bojang) 진입도 home 강제. 고객 노출 0 (2026-07-16) *//* 보장분석 6축 카테고리 = 전체공개(대표 지시 2026-07-25: 비로그인 홈 6카드 → 카테고리 진입). axis-* 게이트 제거 — bojang·cov-medical은 _canSeeCoverage, X-FILE은 _canSeeXfile 게이트를 그대로 유지(무접촉). anon/비로그인 직접 URL 진입도 허용(공개 지식). */if(key==='xfile'&&typeof _canSeeXfile==='function'&&!_canSeeXfile()){key='home';}/* X-FILE = 임태성 실장 user_id 또는 어드민(대표 검수). 비게이트·anon 직접 URL(?view=xfile) 진입도 home 강제 (2026-07-17) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) *//* 실비 세대별 변천사 = 전체 개방(2026-07-21 대표 승인, 암주요치료비 변천사 개방 전례) — 게이트 없음. 비로그인 포함 누구나 진입 *//* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 원수사 상품 라인업·독립 도구 페이지 개방 전례) — 게이트 없음. 비로그인 포함 누구나 진입 */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'고객관리'/* 라이브 표시명: 고객관리(코드 id salesnote) */,trash:'휴지통','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지','cov-medical':'보장분석','bojang':'보장분석','xfile':'X-FILE','axis-medical':'의료실비','axis-cancer':'암','axis-brainheart':'뇌 · 심장','axis-surgery':'수술비','axis-caregiver':'간병','axis-etc':'기타'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof _snCiShow==='function')_snCiShow();if(key==='trash'&&typeof loadTrash==='function')loadTrash();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='cov-medical'&&typeof window._covMedicalShow==='function')window._covMedicalShow();/* 의료실비 보장분석 렌더 — silson_generations 조회→DB/폴백 렌더 (2026-07-15). cov-medical은 이제 위에서 bojang으로 리다이렉트되어 이 호출은 실질 미도달(하위호환 보존) */if(key==='bojang'&&typeof window._bojangShow==='function')window._bojangShow(_bjSub);/* 보장분석 허브 렌더 — 허브/6서브 내부 스왑. _bjSub='medical'(cov-medical 리다이렉트) 아니면 허브 (2026-07-16) */if(key==='xfile'&&typeof window._xfileShow==='function')window._xfileShow();/* X-FILE 자가 검진표 렌더 — 진입 시 항상 시작화면(상태 초기화). 게이트는 위 _canSeeXfile + xfile.js 내부 2차 방어 (2026-07-17) */if(key.indexOf('axis-')===0&&typeof window._kcShow==='function')window._kcShow(key,options);/* 지식 카테고리 렌더(6축 공통) — options(expandDoc 등)를 전달해 실손 문서 자동 인라인 펼침 지원(2026-07-26 A안). — 원장(js/knowledge-registry.js)에서 문서 목록을 읽어 그린다. 게이트는 위 _canSeeCoverage 인라인(여기서 다시 판정하지 않음). 원장 미로드 시 _kcShow가 조용히 no-op (2026-07-24) */if(key.indexOf('axis-')===0){if(typeof window._kcHomeSearchMove==='function')window._kcHomeSearchMove(key);}else if(typeof window._kcHomeSearchRestore==='function'){window._kcHomeSearchRestore();}/* 카테고리 상단 검색기 = 홈 #homeSearch 슬롯 이동 재사용(대표 지시 — 새 검색기 금지, 2026-07-24). 진입 시 카테고리 슬롯으로 이동, 이탈 시(홈 포함 그 외 모든 키) #v-home 원위치로 복귀 — js/knowledge-category.js _kcHomeSearchMove/_kcHomeSearchRestore */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='caregiver-history'){if(!document.body.classList.contains('is-guest')){var _cgO={expandDoc:'caregiver-history'};if(options.skipHistory)_cgO.skipHistory=true;showView('axis-caregiver',_cgO);return;}location.href='/insurance/caregiver-history/';return;}/* 간병 문서 진입 분기(대표 확정 2026-07-26 A안 확장): 로그인 SPA=간병 카테고리(axis-caregiver) D영역 인라인 펼침, 비로그인만 정적. */if(key==='silson'){if(!document.body.classList.contains('is-guest')){var _silO={expandDoc:'silson'};if(options.skipHistory)_silO.skipHistory=true;showView('axis-medical',_silO);return;}location.href='/insurance/silson-history/';return;}/* 실손 문서(silson) 진입 분기(대표 확정 2026-07-26 A안): 로그인 SPA = 의료실비 카테고리(axis-medical) D영역으로 진입하며 실손 본문 인라인 펼침(expandDoc) — /pages/ 바운스 폐지. 비로그인(is-guest)만 기존 정적 페이지로(무변경). skipHistory 전파로 popstate/딥링크 시 중복 pushState 방지. */if(key==='cancer-treatment'){if(!document.body.classList.contains('is-guest')){var _ctO={expandDoc:'cancer-treatment'};if(options.skipHistory)_ctO.skipHistory=true;showView('axis-cancer',_ctO);return;}location.href='/insurance/cancer-treatment-history/';return;}/* 암 문서 진입 분기(대표 확정 2026-07-26 A안 확장): 로그인 SPA=암 카테고리(axis-cancer) D영역 인라인 펼침, 비로그인만 정적. *//* 변천사 3종(간병·실비·암) = iframe 폐지 → 독립 URL 페이지로 이동 (2026-07-22 de-iframe 1·2단계). 타일·검색 바로가기·?view= 딥링크 모든 진입점이 여기서 독립 URL로 리라우트 */try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if(key==='trash'&&typeof _canSeeTrash==='function'&&!_canSeeTrash()){key='home';}/* 휴지통 = 상담관리 공용 게이트(_canSeeCare). 직접 URL 진입도 home 강제(2026-07-13) */var _bjSub=null;if(key==='cov-medical'){key='bojang';_bjSub='medical';}/* cov-medical → 보장분석 허브(의료실비 서브)로 라우팅 통일. #v-cov-medical·js/cov-medical.js는 보존(세대판정 원천). 스트레이 딥링크 하위호환 (2026-07-16) */if(key==='bojang'&&typeof _canSeeCoverage==='function'&&!_canSeeCoverage()){key='home';}/* 보장분석 허브 = 임태성 실장 user_id 또는 어드민(대표 검수). 비게이트·anon 직접 URL(?view=bojang) 진입도 home 강제. 고객 노출 0 (2026-07-16) *//* 보장분석 6축 카테고리 = 전체공개(대표 지시 2026-07-25: 비로그인 홈 6카드 → 카테고리 진입). axis-* 게이트 제거 — bojang·cov-medical은 _canSeeCoverage, X-FILE은 _canSeeXfile 게이트를 그대로 유지(무접촉). anon/비로그인 직접 URL 진입도 허용(공개 지식). */if(key==='xfile'&&typeof _canSeeXfile==='function'&&!_canSeeXfile()){key='home';}/* X-FILE = 임태성 실장 user_id 또는 어드민(대표 검수). 비게이트·anon 직접 URL(?view=xfile) 진입도 home 강제 (2026-07-17) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='sales-strategy'&&typeof _canSeeSalesStrategy==='function'&&!_canSeeSalesStrategy()){key='home';}/* 영업방향·전략 = 임태성 대표 게이트. 직접 URL 진입도 home 강제(2026-08-06) *//* 실비 세대별 변천사 = 전체 개방(2026-07-21 대표 승인, 암주요치료비 변천사 개방 전례) — 게이트 없음. 비로그인 포함 누구나 진입 *//* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 원수사 상품 라인업·독립 도구 페이지 개방 전례) — 게이트 없음. 비로그인 포함 누구나 진입 */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'고객관리'/* 라이브 표시명: 고객관리(코드 id salesnote) */,trash:'휴지통','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지','sales-strategy':'영업방향·전략','cov-medical':'보장분석','bojang':'보장분석','xfile':'X-FILE','axis-medical':'의료실비','axis-cancer':'암','axis-brainheart':'뇌 · 심장','axis-surgery':'수술비','axis-caregiver':'간병','axis-etc':'기타'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof _snCiShow==='function')_snCiShow();if(key==='trash'&&typeof loadTrash==='function')loadTrash();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='sales-strategy'&&typeof loadSalesStrategy==='function')loadSalesStrategy();if(key==='cov-medical'&&typeof window._covMedicalShow==='function')window._covMedicalShow();/* 의료실비 보장분석 렌더 — silson_generations 조회→DB/폴백 렌더 (2026-07-15). cov-medical은 이제 위에서 bojang으로 리다이렉트되어 이 호출은 실질 미도달(하위호환 보존) */if(key==='bojang'&&typeof window._bojangShow==='function')window._bojangShow(_bjSub);/* 보장분석 허브 렌더 — 허브/6서브 내부 스왑. _bjSub='medical'(cov-medical 리다이렉트) 아니면 허브 (2026-07-16) */if(key==='xfile'&&typeof window._xfileShow==='function')window._xfileShow();/* X-FILE 자가 검진표 렌더 — 진입 시 항상 시작화면(상태 초기화). 게이트는 위 _canSeeXfile + xfile.js 내부 2차 방어 (2026-07-17) */if(key.indexOf('axis-')===0&&typeof window._kcShow==='function')window._kcShow(key,options);/* 지식 카테고리 렌더(6축 공통) — options(expandDoc 등)를 전달해 실손 문서 자동 인라인 펼침 지원(2026-07-26 A안). — 원장(js/knowledge-registry.js)에서 문서 목록을 읽어 그린다. 게이트는 위 _canSeeCoverage 인라인(여기서 다시 판정하지 않음). 원장 미로드 시 _kcShow가 조용히 no-op (2026-07-24) */if(key.indexOf('axis-')===0){if(typeof window._kcHomeSearchMove==='function')window._kcHomeSearchMove(key);}else if(typeof window._kcHomeSearchRestore==='function'){window._kcHomeSearchRestore();}/* 카테고리 상단 검색기 = 홈 #homeSearch 슬롯 이동 재사용(대표 지시 — 새 검색기 금지, 2026-07-24). 진입 시 카테고리 슬롯으로 이동, 이탈 시(홈 포함 그 외 모든 키) #v-home 원위치로 복귀 — js/knowledge-category.js _kcHomeSearchMove/_kcHomeSearchRestore */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -11372,6 +11495,12 @@ window.loadProductLineup=loadProductLineup;
 /* ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. 상품 라인업 구조 재활용(좌 회사목록·전체조망↔회사별). 썸네일/미리보기=회사허브 기계 재사용. 2026-07-03 ════ */
 function _canSeeNl(){ return true; }  /* 2026-07-04 소식지 전원 개방(대표 승인) */
 window._canSeeNl=_canSeeNl;
+/* 영업방향·전략 게이트 — 임태성 대표 user_id 전용(_canSeeRoadmap와 동일 식별값). 이름/role 아닌 확정 user_id로 판별. 2026-08-06 */
+function _canSeeSalesStrategy(){
+  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');
+       return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
+}
+window._canSeeSalesStrategy=_canSeeSalesStrategy;
 var _nlRows=[],_nlCos=[],_nlLoaded=false,_nlLoading=false,_nlQuery='',_nlPool='all',_nlScope='all',_nlCo=null,_nlSecMap={};
 function _nlEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function _nlSecFromStr(t){ t=String(t||''); if(/손해|손보|화재|해상/.test(t))return'nonlife'; if(/생명|생보|라이프|life|연금/i.test(t))return'life'; return ''; }
@@ -11568,6 +11697,352 @@ function _nlBind(){
   var bd=document.getElementById('nlp-backdrop'); if(bd)bd.onclick=_nlCloseSide;
 }
 window.loadNewsletters=loadNewsletters;
+/* ════ 영업방향·전략 (#v-sales-strategy) — 임태성 대표 게이트. 소식지 로더/렌더/미리보기/다운로드 체인 최소변경 클론.
+   ▷ 원본(_nl*·_hubNl*·nlp-*) 무접촉 — 신규 _ss*·_hubSs*·ssp-* 접두만 추가.
+   ▷ 데이터=sales_strategy 테이블(SELECT에 preview_pdf_path 추가) / Storage=기존 'newsletters' 버킷(경로만 sales-strategy/ 하위).
+   ▷ 미리보기=preview_pdf_path 우선(없으면 source_path 폴백) / 다운로드=source_path(원본)로 분리 서명.
+   ▷ 썸네일=thumbs/<id>.jpg(같은 버킷). AI검색바(_canSeeAiSearch)는 범위 밖·미복제. 2026-08-06 ════ */
+var _ssRows=[],_ssCos=[],_ssLoaded=false,_ssLoading=false,_ssQuery='',_ssPool='all',_ssScope='all',_ssCo=null,_ssSecMap={};
+function _ssEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function _ssSecFromStr(t){ t=String(t||''); if(/손해|손보|화재|해상/.test(t))return'nonlife'; if(/생명|생보|라이프|life|연금/i.test(t))return'life'; return ''; }
+function _ssSecOf(co){
+  var norm=(typeof _normCo==='function')?_normCo(co):String(co||'').toLowerCase();
+  if(_ssSecMap[norm])return _ssSecMap[norm];
+  if(typeof _resolveCompany==='function'){ var canon=_resolveCompany(co); if(canon){ var cn=(typeof _normCo==='function')?_normCo(canon):canon; if(_ssSecMap[cn])return _ssSecMap[cn]; var s2=_ssSecFromStr(canon); if(s2)return s2; } }
+  return _ssSecFromStr(co)||'nonlife';
+}
+function _ssLabel(n){ if(typeof _nlShortName==='function'){ var s=_nlShortName(n.source_filename, n.company); if(s)return s; } return '영업자료'; }
+function _ssHas(n){ return !!(String(n.source_pdf_url||'').trim()||String(n.source_path||'').trim()); }
+function loadSalesStrategy(){
+  if(!(typeof _canSeeSalesStrategy==='function'&&_canSeeSalesStrategy())) return;
+  try{ if(typeof loadPdfJs==='function') loadPdfJs(); }catch(e){}  /* pdf.js 선(先)로드 fire-and-forget */
+  _ssBind();
+  if(_ssLoaded){ _ssRender(); return; }
+  if(_ssLoading) return;
+  if(!window.db||!window.db.fetch){ var b0=document.getElementById('ssp-main'); if(b0)b0.innerHTML='<div class="pl-empty">데이터 연결 없음</div>'; return; }
+  _ssLoading=true;
+  var b1=document.getElementById('ssp-main'); if(b1)b1.innerHTML='<div class="pl-empty">불러오는 중…</div>';
+  Promise.all([
+    window.db.fetch('/rest/v1/sales_strategy?status=eq.published&select=id,company,publish_year,publish_month,source_pdf_url,source_path,preview_pdf_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function(r){return r.ok?r.json():[];}),  /* status=published만 노출(검수중 reviewing 초안 숨김) */
+    window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=name,type').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
+  ]).then(function(res){
+    _ssRows=Array.isArray(res[0])?res[0]:[];
+    var ins=Array.isArray(res[1])?res[1]:[];
+    _ssSecMap={}; ins.forEach(function(x){ if(!x||!x.name)return; var s=_ssSecFromStr(x.type)||_ssSecFromStr(x.name); if(s){ _ssSecMap[(typeof _normCo==='function')?_normCo(x.name):String(x.name).toLowerCase()]=s; } });
+    var coMap={},order=[];
+    _ssRows.forEach(function(n){ var co=n.company||'(회사 미상)'; if(!coMap[co]){ coMap[co]={n:co,sec:_ssSecOf(co),items:[]}; order.push(co); } coMap[co].items.push(n); });
+    _ssCos=order.map(function(k){return coMap[k];});
+    _ssLoaded=true; _ssLoading=false; _ssRender();
+  }).catch(function(e){ _ssLoading=false; var b2=document.getElementById('ssp-main'); if(b2)b2.innerHTML='<div class="pl-empty">불러오기 실패<br>'+_ssEsc(String(e))+'</div>'; });
+}
+function _ssPoolCos(){ return _ssCos.filter(function(c){ return _ssPool==='all'||c.sec===_ssPool; }); }
+function _ssPoolCosBy(sec){ return _ssCos.filter(function(c){return c.sec===sec;}); }
+function _ssCoHit(c){ if(!_ssQuery)return true; var q=_ssQuery.toLowerCase(); return String(c.n).toLowerCase().indexOf(q)>=0; }
+function _ssYY(y){ y=Number(y); return y?('0'+(y%100)).slice(-2):'--'; }
+function _ssMM(m){ m=Number(m); return m?('0'+m).slice(-2):'--'; }
+function _ssOpenAtt(n,co){ /* _hubOpenSs 가 읽는 데이터셋. data-pp=preview_pdf_path(미리보기)·data-p=source_path(다운로드) 분리 */
+  return ' data-u="'+_ssEsc(String(n.source_pdf_url||'').trim())+'" data-pp="'+_ssEsc(String(n.preview_pdf_path||'').trim())+'" data-p="'+_ssEsc(String(n.source_path||'').trim())+'" data-co="'+_ssEsc(String(n.company||co||''))+'" data-ym="'+_ssEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_ssEsc(String(n.source_filename||''))+'" onclick="_hubOpenSs(this)"';
+}
+function _ssCard(n,co,sec){
+  var scls=sec==='life'?'l':'s', secLb=sec==='life'?'생명보험':'손해보험';
+  var coNm=String(co||n.company||'(회사 미상)');
+  var ym=_ssYY(n.publish_year)+'.'+_ssMM(n.publish_month);
+  var lbl=_ssLabel(n), has=_ssHas(n), tag=has?'button':'div';
+  var att=has?_ssOpenAtt(n,coNm):'';
+  var idAtt=' data-id="'+_ssEsc(String(n.id||''))+'"';
+  return '<'+tag+' class="ssx-card chub-ssbox'+(has?'':' ssx-nosrc')+'" type="button" title="'+_ssEsc(coNm+' '+lbl+' '+ym)+'"'+idAtt+att+'>'+
+    '<span class="ssx-cover '+scls+' chub-ssthumb" data-rendered="0"><span class="ssx-ct">'+secLb+'</span><span class="ssx-cco">'+_ssEsc(coNm)+'</span><span class="ssx-lines"><i></i><i></i></span><span class="ssx-cym num">'+_ssEsc(ym)+'</span></span>'+
+    '<span class="ssx-meta"><span class="ssx-mco">'+_ssEsc(coNm)+'</span><span class="ssx-chip '+scls+'">'+_ssEsc(lbl)+'</span></span>'+
+    '</'+tag+'>';
+}
+function _ssSecCl(sec){ return sec==='life'?'var(--ssx-saeng)':'var(--ssx-sonhae)'; }
+function _ssRenderSide(){
+  var groups=_ssPool==='all'?[['손해보험',_ssPoolCosBy('nonlife')],['생명보험',_ssPoolCosBy('life')]]:_ssPool==='nonlife'?[['손해보험',_ssPoolCosBy('nonlife')]]:[['생명보험',_ssPoolCosBy('life')]];
+  var html='',any=false;
+  groups.forEach(function(pair){
+    var arr=pair[1].filter(_ssCoHit);
+    if(!arr.length)return; any=true;
+    html+='<div class="pl-pool-lb">'+pair[0]+'</div>';
+    html+=arr.map(function(c){return '<button class="pl-co '+(_ssCo&&_ssCo.n===c.n?'on':'')+'" data-co="'+_ssEsc(c.n)+'" style="--cl:'+_ssSecCl(c.sec)+'"><span class="dot"></span><span class="nm">'+_ssEsc(c.n)+'</span><span class="cnt">'+c.items.length+'</span></button>';}).join('');
+  });
+  var el=document.getElementById('ssp-coList'); if(el)el.innerHTML=any?html:'<div class="pl-empty">검색 결과 없음</div>';
+}
+function _ssRenderCount(){
+  var el=document.getElementById('ssp-cnt'); if(!el)return;
+  var cos=_ssPoolCos(); var nc=cos.length, nn=cos.reduce(function(a,c){return a+c.items.length;},0);
+  el.innerHTML='회사 <b>'+nc+'곳</b> · 자료 <b>'+nn+'건</b>';
+}
+function _ssSetHint(){ var el=document.getElementById('ssp-hint'); if(el)el.textContent=_ssScope==='all'?'회사를 클릭하면 발행월별 자료로':'좌측에서 다른 회사를 고를 수 있어요'; }
+var _ssMonthMap=null;
+var _ssThumbSignCache=Object.create(null), _ssTQ=[], _ssTRun=0;
+function _ssThumbPath(box){ var id=(box&&box.getAttribute('data-id'))||''; return id?('thumbs/'+id+'.jpg'):''; }  /* 표지 키=자료 id */
+async function _ssThumbOne(it){
+  var u=_ssThumbSignCache[it.tp];
+  if(!u && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', it.tp); }catch(e){} if(u) _ssThumbSignCache[it.tp]=u; }
+  if(u && typeof _nlThumbImg==='function') _nlThumbImg(it.th,u);  /* 공용 이미지 스왑 헬퍼 재사용(서명 실패 시 텍스트 폴백) */
+}
+function _ssTPump(){
+  while(_ssTRun<6 && _ssTQ.length){
+    var it=_ssTQ.shift(); _ssTRun++;
+    _ssThumbOne(it).then(function(){ _ssTRun--; _ssTPump(); },function(){ _ssTRun--; _ssTPump(); });
+  }
+}
+function _ssEagerThumbs(container){
+  try{
+    if(!container) return;
+    var ths=[].slice.call(container.querySelectorAll('.chub-ssbox .chub-ssthumb[data-rendered="0"]'));
+    ths.forEach(function(th){
+      th.setAttribute('data-rendered','1');
+      var box=th.closest('.chub-ssbox'); if(!box||box.classList.contains('ssx-nosrc')) return;
+      var tp=_ssThumbPath(box); if(!tp) return;
+      _ssTQ.push({th:th, tp:tp, id:(box.getAttribute('data-id')||'')});
+    });
+    _ssTPump();
+  }catch(e){}
+}
+function _ssToggleMonth(row){
+  try{
+    var mk=row.getAttribute('data-mk');
+    var body=row.nextElementSibling;
+    if(!body||!body.classList.contains('ssx-mbody')) return;
+    var open=!body.classList.contains('open');
+    body.classList.toggle('open',open); row.classList.toggle('open',open);
+    if(open && body.getAttribute('data-filled')!=='1' && _ssMonthMap && _ssMonthMap[mk]){
+      var g=_ssMonthMap[mk];
+      body.innerHTML='<div class="ssx-grid">'+g.items.map(function(it){return _ssCard(it.n,it.co,it.sec);}).join('')+'</div>';
+      body.setAttribute('data-filled','1');
+      _ssEagerThumbs(body);
+    }
+  }catch(e){}
+}
+window._ssToggleMonth=_ssToggleMonth;
+function _ssRenderAll(){
+  var secs=_ssPool==='all'?['nonlife','life']:_ssPool==='nonlife'?['nonlife']:['life'];
+  var cos=[]; secs.forEach(function(s){ _ssPoolCosBy(s).filter(_ssCoHit).forEach(function(c){cos.push(c);}); });
+  var monthMap={}, order=[];
+  cos.forEach(function(c){ c.items.forEach(function(n){
+    var y=Number(n.publish_year), m=Number(n.publish_month);
+    var key=(y&&m)?(y+'|'+m):'unknown';
+    if(!monthMap[key]){ monthMap[key]={y:y,m:m,items:[]}; order.push(key); }
+    monthMap[key].items.push({n:n,co:c.n,sec:c.sec});
+  }); });
+  order.sort(function(a,b){ if(a==='unknown')return 1; if(b==='unknown')return -1; return (monthMap[b].y*12+monthMap[b].m)-(monthMap[a].y*12+monthMap[a].m); });
+  _ssMonthMap=monthMap;
+  var el=document.getElementById('ssp-main');
+  if(!order.length){ if(el)el.innerHTML='<div class="pl-empty">자료가 없습니다.</div>'; return; }
+  var now=new Date(), curKey=now.getFullYear()+'|'+(now.getMonth()+1);
+  var first=order[0], g0=monthMap[first];
+  var t0=(first==='unknown')?'발행월 미상':(g0.y+'년 '+g0.m+'월');
+  var hk=(first===curKey)?('이번 달 · 새 자료 '+g0.items.length+'건'):('최신 발행 · '+g0.items.length+'건');
+  var cards0=g0.items.map(function(it){return _ssCard(it.n,it.co,it.sec);}).join('');
+  var html='<div class="ssx-hero"><div class="ssx-hero-hd"><h2>'+_ssEsc(t0)+'</h2><span class="k">'+hk+'</span></div><div class="ssx-grid">'+cards0+'</div></div>';
+  if(order.length>1){
+    html+='<div class="ssx-past"><div class="ssx-past-hd">이전 발행월 · 클릭하면 펼쳐집니다</div>';
+    for(var i=1;i<order.length;i++){
+      var key=order[i], g=monthMap[key];
+      var title=(key==='unknown')?'발행월 미상':(g.y+'년 '+g.m+'월');
+      html+='<button type="button" class="ssx-mrow" data-mk="'+_ssEsc(key)+'" onclick="_ssToggleMonth(this)"><span class="ssx-mrow-t">'+_ssEsc(title)+'</span><span class="ssx-badge num">'+g.items.length+'건</span><span class="ssx-chev">&#8250;</span></button>';
+      html+='<div class="ssx-mbody" data-mk="'+_ssEsc(key)+'"></div>';
+    }
+    html+='</div>';
+  }
+  if(el){ el.innerHTML=html; _ssEagerThumbs(el); }  /* 당월만 즉시 로드, 과거월은 클릭 시 로드 */
+}
+function _ssRenderCo(){
+  if(!_ssCo)_ssCo=_ssPoolCos()[0]; var c=_ssCo; if(!c){var e0=document.getElementById('ssp-main');if(e0)e0.innerHTML='<div class="pl-empty">회사 없음</div>';return;}
+  var scls=c.sec==='life'?'l':'s', secLb=c.sec==='life'?'생명보험':'손해보험';
+  var map={},unknown=[];
+  c.items.forEach(function(n){ var y=(n.publish_year!=null&&n.publish_year!=='')?Number(n.publish_year):null, m=(n.publish_month!=null&&n.publish_month!=='')?Number(n.publish_month):null; if(y&&m){ (map[y+'|'+m]=map[y+'|'+m]||[]).push(n); } else { unknown.push(n); } });
+  var _ssEndD=new Date(), END=_ssEndD.getFullYear()*12+_ssEndD.getMonth();
+  var minIdx=null,maxIdx=null; Object.keys(map).forEach(function(k){ var pp=k.split('|'); var ix=Number(pp[0])*12+(Number(pp[1])-1); if(minIdx===null||ix<minIdx)minIdx=ix; if(maxIdx===null||ix>maxIdx)maxIdx=ix; });
+  if(minIdx===null){minIdx=END;maxIdx=END;}
+  var top=Math.max(END,maxIdx);
+  var latest=(maxIdx!=null)?(_ssYY(Math.floor(maxIdx/12))+'.'+_ssMM((maxIdx%12)+1)):'-';
+  var av=_ssEsc(String(c.n).replace(/\s+/g,'').slice(0,2));
+  var html='<div class="ssx-cohd"><span class="ssx-av '+scls+'">'+av+'</span><div class="ssx-coinfo"><h3>'+_ssEsc(c.n)+'</h3><div class="ssx-cosub">'+secLb+' · 최근 발행 '+_ssEsc(latest)+'</div></div><span class="ssx-tot">총 <b class="num">'+c.items.length+'</b>건</span></div>';
+  var rows='';
+  function _tlRow(n){
+    var has=_ssHas(n), tag=has?'button':'div', lbl=_ssLabel(n);
+    var ym=_ssYY(n.publish_year)+'.'+_ssMM(n.publish_month);
+    var att=has?_ssOpenAtt(n,c.n):'';
+    return '<'+tag+' class="ssx-tlrow" type="button" title="'+_ssEsc(c.n+' '+lbl+' '+ym)+'"'+att+'><span class="ssx-tlym num">'+_ssEsc(ym)+'</span><span class="ssx-tlhas '+scls+'"><span class="ssx-tlic"></span><span class="ssx-tltt">'+_ssEsc(c.n+' '+lbl+' '+ym)+'</span></span>'+(has?'<span class="ssx-tlopen">열기 ›</span>':'')+'</'+tag+'>';
+  }
+  for(var ix2=top; ix2>=minIdx; ix2--){ var yy=Math.floor(ix2/12), mm=(ix2%12)+1; var its=map[yy+'|'+mm]||[];
+    if(its.length){ rows+=its.map(_tlRow).join(''); }
+    else { var ym=_ssYY(yy)+'.'+_ssMM(mm); rows+='<div class="ssx-tlrow empty"><span class="ssx-tlym num">'+_ssEsc(ym)+'</span><span class="ssx-tlempty">— 미등록</span></div>'; }
+  }
+  if(unknown.length){ rows+=unknown.map(_tlRow).join(''); }
+  html+='<div class="ssx-timeline">'+rows+'</div>';
+  var el=document.getElementById('ssp-main'); if(el){ el.innerHTML=html; }  /* 타임라인엔 썸네일 카드 없음(_hubNlThumbs 호출 미복제) */
+}
+function _ssRender(){ _ssRenderSide(); _ssRenderCount(); _ssSetHint(); if(_ssScope==='all')_ssRenderAll(); else _ssRenderCo(); }
+function _ssSetScope(s){ _ssScope=s; var sc=document.getElementById('ssp-scope'); if(sc)[].slice.call(sc.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-s')===s);}); }
+function _ssSetPool(p){ _ssPool=p; var po=document.getElementById('ssp-pool'); if(po)[].slice.call(po.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-p')===p);}); }
+function _ssCloseSide(){ var s=document.getElementById('ssp-side'); if(s)s.classList.remove('open'); var b=document.getElementById('ssp-backdrop'); if(b)b.classList.remove('on'); }
+function _ssBind(){
+  var root=document.getElementById('v-sales-strategy'); if(!root||root._ssB)return; root._ssB=1;
+  var pool=document.getElementById('ssp-pool'); if(pool)pool.onclick=function(e){var b=e.target.closest('button');if(!b)return;_ssSetPool(b.getAttribute('data-p'));if(_ssCo&&_ssPool!=='all'&&_ssCo.sec!==_ssPool){_ssCo=null;}_ssRender();};
+  var scope=document.getElementById('ssp-scope'); if(scope)scope.onclick=function(e){var b=e.target.closest('button');if(!b)return;_ssSetScope(b.getAttribute('data-s'));_ssRender();};
+  var q=document.getElementById('ssp-q'); if(q)q.oninput=function(e){_ssQuery=e.target.value.trim();_ssRender();};
+  var coList=document.getElementById('ssp-coList'); if(coList)coList.onclick=function(e){var b=e.target.closest('[data-co]');if(!b)return;var nm=b.getAttribute('data-co');var c=_ssCos.filter(function(x){return x.n===nm;})[0];if(!c)return;_ssCo=c;if(c.sec!==_ssPool&&_ssPool!=='all')_ssSetPool(c.sec);_ssSetScope('co');_ssCloseSide();_ssRender();};
+  var mb=document.getElementById('ssp-menuBtn'); if(mb)mb.onclick=function(){var s=document.getElementById('ssp-side');if(s)s.classList.toggle('open');var bd=document.getElementById('ssp-backdrop');if(bd)bd.classList.toggle('on');};
+  var bd=document.getElementById('ssp-backdrop'); if(bd)bd.onclick=_ssCloseSide;
+}
+window.loadSalesStrategy=loadSalesStrategy;
+/* 영업방향·전략 미리보기 진입 — data-pp(preview_pdf_path) 우선 서명, 없으면 data-p(source_path) 폴백. 다운로드는 data-p(원본) 별도. 버킷='newsletters'. */
+async function _hubOpenSs(btn){
+  var u=btn.getAttribute('data-u')||'', pp=btn.getAttribute('data-pp')||'', p=btn.getAttribute('data-p')||'';
+  var prevPath=pp||p;  /* 미리보기=preview_pdf_path 우선, 없으면 source_path */
+  if(!u && prevPath && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', prevPath); }catch(e){} }
+  if(!u){ if(typeof toast==='function') toast('원본을 열 수 없습니다.'); return; }
+  var name=String(btn.getAttribute('title')||btn.textContent||'영업자료').trim();
+  var meta={ company:String(btn.getAttribute('data-co')||'').trim(), ym:String(btn.getAttribute('data-ym')||'').trim(), previewPath:prevPath, dlPath:p, filename:String(btn.getAttribute('data-fn')||'').trim(), canvas:true };
+  _hubSsPreview(u, name, meta);
+}
+window._hubOpenSs=_hubOpenSs;
+/* 영업방향·전략 원본 다운로드 — source_path(원본) 매 클릭 재서명(만료 회피). 파일명=원본 우선, 없으면 sales-strategy_YYYY-MM.pdf */
+async function _hubSsDownload(url, path, filename, ym, btnEl){
+  var name=String(filename||'').trim();
+  if(!name){ name='sales-strategy'+(ym?('_'+String(ym).replace(/\./g,'-')):'')+'.pdf'; }
+  var _label=btnEl?btnEl.textContent:'';
+  try{
+    if(btnEl){ btnEl.style.pointerEvents='none'; btnEl.textContent='다운로드 중…'; }
+    var durl=url;
+    if(path && typeof _svSignUrl==='function'){ try{ var s=await _svSignUrl('newsletters', path); if(s) durl=s; }catch(e){} }
+    if(!durl){ alert('다운로드 링크를 만들지 못했습니다. 권한·로그인 상태를 확인해 주세요.'); return false; }
+    var resp=await fetch(durl);
+    if(!resp.ok){ alert('다운로드에 실패했습니다. (HTTP '+resp.status+') 잠시 후 다시 시도해 주세요.'); return false; }
+    var blob=await resp.blob();
+    var obj=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=obj; a.download=name; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(obj); }catch(e){} }, 5000);
+  }catch(err){ console.error('[hubSsDownload]', err); alert('다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.'); }
+  finally{ if(btnEl){ try{ btnEl.style.pointerEvents=''; btnEl.textContent=_label; }catch(e){} } }
+  return false;
+}
+window._hubSsDownload=_hubSsDownload;
+/* 영업방향·전략 PDF 미리보기 모달 — 소식지 _hubNlPreview 클론. id는 hubSs* 로 충돌 회피. previewPath=미리보기 재서명 경로 / dlPath=다운로드 원본 경로. */
+function _hubSsPreview(url, name, meta){
+  meta=meta||{};
+  var company=String(meta.company||'').trim();
+  var ym=String(meta.ym||'').trim();
+  var previewPath=String(meta.previewPath||'').trim();
+  var dlPath=String(meta.dlPath||'').trim();
+  var filename=String(meta.filename||'').trim();
+  var useCanvas=!!meta.canvas;
+  var old=document.getElementById('hubSsOv'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.id='hubSsOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99996;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  var subBits=[]; if(company) subBits.push(_sEsc(company)); if(ym) subBits.push(_sEsc(ym));
+  var subHtml=subBits.length?('<div style="font-size:var(--sz-s,13px);color:var(--ts);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+subBits.join(' · ')+'</div>'):'';
+  var btnCss='font-size:var(--sz-s,13px);color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:6px 12px;cursor:pointer;text-decoration:none;line-height:1.4;white-space:nowrap;display:inline-flex;align-items:center';
+  ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:1100px;height:84vh;display:flex;flex-direction:column;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--bd)">'
+    +'<div style="min-width:0;flex:1">'
+    +'<div style="font-weight:800;color:var(--tp);font-size:var(--sz-m,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_sEsc(name||'영업자료')+'</div>'
+    +subHtml
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'
+    +'<a href="'+_sEsc(url)+'" target="_blank" rel="noopener" style="'+btnCss+'">새 탭에서 열기 &#8599;</a>'
+    +'<button id="hubSsDl" type="button" style="'+btnCss+'">다운로드</button>'
+    +'<button id="hubSsClose" type="button" aria-label="닫기" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&#10005;</button>'
+    +'</div></div>'
+    +'<div style="position:relative;flex:1;min-height:0">'
+    +(useCanvas
+      ? '<div id="hubSsScroll" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--s2)">'
+          +'<div id="hubSsPages" style="max-width:900px;margin:0 auto;padding:14px 14px 40px"></div>'
+        +'</div>'
+        +'<div id="hubSsStatus" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;align-items:center;background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:5px 13px;color:var(--ts);font-size:var(--sz-xs,12px);opacity:.9;box-shadow:0 1px 5px rgba(0,0,0,.14);pointer-events:none">불러오는 중…</div>'
+      : '<iframe id="hubSsFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="영업자료 미리보기"></iframe>')
+    +'<div id="hubSsFallback" style="display:none;position:absolute;inset:0;background:var(--s1);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px">'
+    +'<div style="font-size:var(--sz-m,16px);color:var(--tp);font-weight:700;line-height:1.7;max-width:440px">이 PC에서는 PDF 미리보기가 제한되어 있습니다.<br>새 탭 열기 또는 다운로드로 확인해 주세요.</div>'
+    +'<div style="display:flex;gap:10px">'
+    +'<a href="'+_sEsc(url)+'" target="_blank" rel="noopener" style="'+btnCss+'">새 탭에서 열기 &#8599;</a>'
+    +'<button id="hubSsDl2" type="button" style="'+btnCss+'">다운로드</button>'
+    +'</div></div>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(ov);
+  var closeOv=function(){ var o=document.getElementById('hubSsOv'); if(o)o.remove(); document.removeEventListener('keydown',esc); };
+  var esc=function(e){ if(e.key==='Escape'){ closeOv(); } };
+  document.addEventListener('keydown',esc);
+  var cbtn=document.getElementById('hubSsClose'); if(cbtn) cbtn.onclick=closeOv;
+  var dl=function(ev){ if(ev&&ev.preventDefault) ev.preventDefault(); _hubSsDownload(url, dlPath, filename, ym, ev&&ev.currentTarget); };  /* 다운로드=원본(dlPath) */
+  var d1=document.getElementById('hubSsDl'); if(d1) d1.onclick=dl;
+  var d2=document.getElementById('hubSsDl2'); if(d2) d2.onclick=dl;
+  if(useCanvas){
+    var pagesEl=document.getElementById('hubSsPages'), statusEl=document.getElementById('hubSsStatus'), scrollEl=document.getElementById('hubSsScroll');
+    var _ssDone=false;
+    var _ssTimer=setTimeout(function(){ if(!_ssDone && statusEl){ statusEl.style.display='inline-flex'; } }, 800);
+    var _ssClear=function(){ _ssDone=true; try{ clearTimeout(_ssTimer); }catch(e){} if(statusEl){ statusEl.style.display='none'; } };
+    _hubSsCanvasRender(pagesEl, url, previewPath, null)  /* 미리보기 재서명=previewPath(preview_pdf_path 폴백 source_path) */
+      .then(function(){ _ssClear(); })
+      .catch(function(e){ console.error('[hubSsCanvas]',e); _ssClear(); _hubSsIframeInto(scrollEl, url); });
+  } else {
+    var frame=document.getElementById('hubSsFrame'), fb=document.getElementById('hubSsFallback');
+    var settled=false;
+    var showFb=function(){ if(settled) return; if(fb) fb.style.display='flex'; };
+    var hideFb=function(){ settled=true; if(fb) fb.style.display='none'; };
+    var t=setTimeout(showFb, 1500);
+    if(frame){
+      frame.onload=function(){ clearTimeout(t); hideFb(); };
+      frame.onerror=function(){ clearTimeout(t); showFb(); };
+    }
+  }
+}
+window._hubSsPreview=_hubSsPreview;
+/* 영업방향·전략 캔버스 렌더 — 소식지 _hubNlCanvasRender 클론. path=미리보기 경로(previewPath) 재서명. 버퍼 캐시 분리(_hubSsBufCache). */
+var _hubSsBufCache={};
+async function _hubSsCanvasRender(pagesEl, url, path, onProgress){
+  if(!pagesEl) throw new Error('no container');
+  var pdfjs=await loadPdfJs();
+  var key=path||url||'';
+  var buf=key?_hubSsBufCache[key]:null;
+  if(!buf){
+    var durl=url;
+    if(path && typeof _svSignUrl==='function'){ try{ var s=await _svSignUrl('newsletters', path); if(s) durl=s; }catch(e){} }
+    if(!durl) throw new Error('no url');
+    var resp=await fetch(durl);
+    if(!resp.ok) throw new Error('http '+resp.status);
+    buf=await resp.arrayBuffer();
+    if(key) _hubSsBufCache[key]=buf;
+  }
+  var doc=await pdfjs.getDocument({data:buf.slice(0)}).promise;
+  var n=doc.numPages, dpr=Math.min(2, window.devicePixelRatio||1);
+  var cw=(pagesEl.clientWidth||860);
+  pagesEl.innerHTML='';
+  for(var i=1;i<=n;i++){
+    if(onProgress){ try{ onProgress(i, n); }catch(e){} }
+    var page=await doc.getPage(i);
+    var base=page.getViewport({scale:1});
+    var fit=Math.min(1.7, cw/base.width);
+    var vp=page.getViewport({scale:fit*dpr});
+    var cv=document.createElement('canvas');
+    cv.width=vp.width; cv.height=vp.height;
+    cv.style.width='100%'; cv.style.height='auto'; cv.style.display='block';
+    cv.style.margin='0 auto 12px'; cv.style.background='#fff';
+    cv.style.borderRadius='var(--radius-sm,6px)';
+    cv.style.boxShadow='0 1px 4px rgba(0,0,0,.12)';
+    pagesEl.appendChild(cv);
+    await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
+  }
+  return n;
+}
+window._hubSsCanvasRender=_hubSsCanvasRender;
+/* 캔버스 실패 시 iframe 이중 폴백 — 소식지 _hubNlIframeInto 클론(hubSs* id). */
+function _hubSsIframeInto(scrollEl, url){
+  if(!scrollEl) return;
+  scrollEl.innerHTML='<iframe id="hubSsFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="영업자료 미리보기"></iframe>';
+  var frame=document.getElementById('hubSsFrame'), fb=document.getElementById('hubSsFallback');
+  var settled=false;
+  var showFb=function(){ if(settled) return; if(fb) fb.style.display='flex'; };
+  var hideFb=function(){ settled=true; if(fb) fb.style.display='none'; };
+  var t=setTimeout(showFb, 1500);
+  if(frame){ frame.onload=function(){ clearTimeout(t); hideFb(); }; frame.onerror=function(){ clearTimeout(t); showFb(); }; }
+}
+window._hubSsIframeInto=_hubSsIframeInto;
 /* ════ 감사센터 1차 — 소식지 회사명 표준화 (admin 전용·자기완결·RPC 4개). 2026-07-03 ════
    RPC=window.db.fetch('/rest/v1/rpc/<fn>',POST). 서버 is_admin() 재검증. company만 변경. */
 function _acnEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}

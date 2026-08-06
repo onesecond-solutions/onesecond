@@ -22,6 +22,7 @@ var _HS2_TILES=[
   {v:'product-lineup', ic:'i-box',      t:'상품 라인업',       d:'원수사 상품 한눈에 비교',   show:function(){return true;}},
   {v:'goji',           ic:'i-check',    t:'알릴의무',          d:'회사별 고지유형·간편고지',  show:function(){return typeof window._canSeeRoadmap==='function'&&window._canSeeRoadmap();}},
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
+  {v:'sales-strategy', ic:'i-building', t:'영업방향·전략',      d:'회사별 영업방향·전략 자료', show:function(){return typeof window._canSeeSalesStrategy==='function'&&window._canSeeSalesStrategy();}},  /* 임태성 대표 게이트 전용(2026-08-06). show() false면 _hs2RenderHub가 DOM 미생성 */
   /* 옛 변천사 홈 카드 3종(의료실비/암주요치료비/간병보험 변천사) 삭제(대표 지시 2026-07-27, WO-8 C안).
      6축 카드가 전체 노출(위)로 열려 모든 모드가 그 경로로 각 변천사 문서에 도달하므로 중복 진입로를 제거.
      문서(url·뷰키 silson/cancer-treatment/caregiver-history)는 그대로 살아 있다 — 홈 링크만 제거. */
