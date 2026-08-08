@@ -18,11 +18,11 @@ const seen = new Set();
 const items = [];
 
 for (const entry of queries) {
-  const endpoint = new URL('https://openapi.naver.com/v1/search/news.json');
+  const endpoint = new URL('https://naverapihub.apigw.ntruss.com/search/v1/news');
   endpoint.searchParams.set('query', entry.query);
   endpoint.searchParams.set('display', '20');
   endpoint.searchParams.set('sort', 'date');
-  const response = await fetch(endpoint, { headers: { 'X-Naver-Client-Id': clientId, 'X-Naver-Client-Secret': clientSecret } });
+  const response = await fetch(endpoint, { headers: { 'X-NCP-APIGW-API-KEY-ID': clientId, 'X-NCP-APIGW-API-KEY': clientSecret } });
   if (!response.ok) throw new Error(`네이버 API 오류: ${response.status}`);
   const data = await response.json();
   for (const article of data.items || []) {
