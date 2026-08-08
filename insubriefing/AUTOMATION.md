@@ -14,4 +14,4 @@
 
 실행 명령은 `node insubriefing/scripts/update-content.mjs`입니다. 기사 본문을 복제하거나 AI로 요약하지 않고, 네이버 API가 반환한 제목·원문 링크·발행일만 저장합니다.
 
-정기 실행 워크플로는 저장소 운영 정책상 총괄 검수 후 별도 적용합니다. 권장 시각은 매일 오전 5시 20분(KST)입니다.
+`.github/workflows/insubriefing-update.yml`이 매일 오전 5시 20분(KST)에 실행됩니다. GitHub Actions의 `Run workflow` 버튼으로 즉시 수동 실행할 수도 있습니다.
