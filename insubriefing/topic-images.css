@@ -1,0 +1,31 @@
+.ib-topics a {
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+  color: var(--s);
+  background-color: var(--tx);
+  background-position: center;
+  background-size: cover;
+}
+
+.ib-topics a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(21, 23, 28, .04) 15%, rgba(21, 23, 28, .28) 52%, rgba(21, 23, 28, .9) 100%);
+}
+
+.ib-topics .ib-topic-news { background-image: url("assets/topic-news.webp"); }
+.ib-topics .ib-topic-policy { background-image: url("assets/topic-policy.webp"); }
+.ib-topics .ib-topic-claim { background-image: url("assets/topic-claim.webp"); }
+.ib-topics .ib-topic-product { background-image: url("assets/topic-product.webp"); }
+
+.ib-topics span,
+.ib-topics small {
+  color: var(--s);
+  text-shadow: 0 1px 8px rgba(21, 23, 28, .8);
+}
+
+.ib-topics strong { text-shadow: 0 2px 12px rgba(21, 23, 28, .85); }
+.ib-topics small { opacity: .9; }
