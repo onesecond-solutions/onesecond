@@ -375,6 +375,8 @@
       dayfolderLink = document.createElement("a");
       dayfolderLink.className = "ib-dayfolder-link";
       dayfolderLink.href = "./dayfolder-advisor/";
+      dayfolderLink.target = "_blank";
+      dayfolderLink.rel = "noopener";
       dayfolderLink.textContent = "데이폴더";
       dayfolderLink.setAttribute("aria-label", "데이폴더 설계사 버전 열기");
       nav.insertBefore(dayfolderLink, loginButton);
