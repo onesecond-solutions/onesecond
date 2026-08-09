@@ -23,6 +23,7 @@
       border-top: 1px solid var(--bd);
     }
 
+    #ib-nav .ib-dayfolder-link,
     #ib-nav .ib-login-button {
       display: inline-flex;
       align-items: center;
@@ -35,9 +36,17 @@
       color: var(--brief-navy);
       font-size: 13px;
       font-weight: 800;
+      text-decoration: none;
       box-shadow: 0 8px 24px color-mix(in srgb, var(--tp) 5%, transparent);
     }
 
+    #ib-nav .ib-dayfolder-link {
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    #ib-nav .ib-dayfolder-link:hover,
     #ib-nav .ib-login-button:hover {
       border-color: color-mix(in srgb, var(--ac) 44%, var(--brief-line));
       color: var(--ac);
@@ -342,13 +351,56 @@
   var toggle = document.getElementById("ib-topic-toggle");
   var all = document.getElementById("ib-all-topics");
 
-  if (nav && !nav.querySelector(".ib-login-button")) {
-    var loginButton = document.createElement("button");
-    loginButton.className = "ib-login-button";
-    loginButton.type = "button";
-    loginButton.textContent = "로그인";
-    loginButton.setAttribute("aria-label", "설계사 로그인");
-    nav.appendChild(loginButton);
+  var advisorSessionKey = "insubriefingAdvisorSession";
+
+  function isAdvisorLoggedIn() {
+    return window.localStorage.getItem(advisorSessionKey) === "1";
+  }
+
+  function renderAdvisorNav() {
+    if (!nav) return;
+
+    var dayfolderLink = nav.querySelector(".ib-dayfolder-link");
+    var loginButton = nav.querySelector(".ib-login-button");
+    var loggedIn = isAdvisorLoggedIn();
+
+    if (!loginButton) {
+      loginButton = document.createElement("button");
+      loginButton.className = "ib-login-button";
+      loginButton.type = "button";
+      nav.appendChild(loginButton);
+    }
+
+    if (loggedIn && !dayfolderLink) {
+      dayfolderLink = document.createElement("a");
+      dayfolderLink.className = "ib-dayfolder-link";
+      dayfolderLink.href = "./dayfolder-advisor/";
+      dayfolderLink.textContent = "데이폴더";
+      dayfolderLink.setAttribute("aria-label", "데이폴더 설계사 버전 열기");
+      nav.insertBefore(dayfolderLink, loginButton);
+    }
+
+    if (!loggedIn && dayfolderLink) {
+      dayfolderLink.remove();
+    }
+
+    loginButton.textContent = loggedIn ? "로그아웃" : "로그인";
+    loginButton.setAttribute("aria-label", loggedIn ? "설계사 로그아웃" : "설계사 로그인");
+  }
+
+  if (nav) {
+    renderAdvisorNav();
+    nav.addEventListener("click", function (event) {
+      var loginButton = event.target.closest(".ib-login-button");
+      if (!loginButton) return;
+
+      if (isAdvisorLoggedIn()) {
+        window.localStorage.removeItem(advisorSessionKey);
+      } else {
+        window.localStorage.setItem(advisorSessionKey, "1");
+      }
+      renderAdvisorNav();
+    });
   }
 
   if (menu && nav) {
