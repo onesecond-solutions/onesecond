@@ -374,7 +374,7 @@
     if (loggedIn && !dayfolderLink) {
       dayfolderLink = document.createElement("a");
       dayfolderLink.className = "ib-dayfolder-link";
-      dayfolderLink.href = "./dayfolder-advisor/";
+      dayfolderLink.href = "/insubriefing/dayfolder-advisor/";
       dayfolderLink.target = "_blank";
       dayfolderLink.rel = "noopener";
       dayfolderLink.textContent = "데이폴더";
