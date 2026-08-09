@@ -412,8 +412,7 @@
       box-shadow: 0 14px 40px color-mix(in srgb, var(--tp) 5%, transparent);
     }
 
-    .ib-topic-detail small,
-    .ib-material-stack small {
+    .ib-topic-detail small {
       color: var(--ac);
       font-size: 12px;
       font-weight: 900;
@@ -431,53 +430,117 @@
       line-height: 1.75;
     }
 
-    .ib-material-stack {
-      margin-top: 18px;
-      padding: 22px;
-      border: 1px dashed color-mix(in srgb, var(--ac) 38%, var(--brief-line));
+    .ib-detail-panel {
+      margin-top: 30px;
+      padding: 32px;
+      border: 1px solid var(--brief-line);
       border-radius: var(--radius-lg);
-      background: color-mix(in srgb, var(--ac) 6%, var(--s1));
+      background: var(--s1);
+      box-shadow: 0 18px 48px color-mix(in srgb, var(--tp) 7%, transparent);
     }
 
-    .ib-material-stack h3 {
-      margin: 8px 0;
-      font-size: 18px;
-    }
+    .ib-detail-panel[hidden] { display: none; }
 
-    .ib-material-stack p {
-      color: var(--ts);
-      line-height: 1.7;
-    }
-
-    .ib-material-list {
+    .ib-detail-head {
       display: grid;
-      gap: 10px;
-      margin: 16px 0 0;
-      padding: 0;
-      list-style: none;
+      gap: 12px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--brief-line);
     }
 
-    .ib-material-list li {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 14px 16px;
+    .ib-detail-head small {
+      color: var(--ac);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+
+    .ib-detail-head h3 {
+      font-size: clamp(26px, 3vw, 38px);
+      line-height: 1.25;
+      letter-spacing: -.04em;
+    }
+
+    .ib-detail-head p {
+      max-width: 820px;
+      color: var(--ts);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .ib-detail-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .ib-detail-section {
+      padding: 22px;
       border: 1px solid var(--brief-line);
       border-radius: var(--radius-md);
-      background: color-mix(in srgb, var(--s1) 92%, transparent);
-      color: var(--tp);
-      font-size: 14px;
-      font-weight: 800;
+      background: color-mix(in srgb, var(--s2) 64%, var(--s1));
     }
 
-    .ib-material-list span {
+    .ib-detail-section + .ib-detail-section { margin-top: 14px; }
+
+    .ib-detail-section h4 {
+      margin-bottom: 12px;
+      font-size: 18px;
+      letter-spacing: -.02em;
+    }
+
+    .ib-detail-section ul {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding-left: 18px;
       color: var(--ts);
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
+      line-height: 1.75;
     }
 
-    @media (max-width: 560px) {
+    .ib-detail-side {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .ib-detail-actions,
+    .ib-archive-list {
+      padding: 18px;
+      border: 1px solid var(--brief-line);
+      border-radius: var(--radius-md);
+      background: var(--s1);
+    }
+
+    .ib-detail-actions h4,
+    .ib-archive-list h4 {
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+
+    .ib-detail-actions a,
+    .ib-archive-list a {
+      display: block;
+      padding: 12px 0;
+      border-top: 1px solid var(--brief-line);
+      color: var(--brief-navy);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .ib-detail-actions a:first-of-type,
+    .ib-archive-list a:first-of-type {
+      border-top: 0;
+    }
+
+    .ib-three article,
+    .ib-topic-detail,
+    .ib-health article {
+      cursor: pointer;
+    }
+@media (max-width: 560px) {
       .ib-hero {
         min-height: 640px;
         padding-top: 76px;
@@ -619,7 +682,7 @@
 
   function renderLatestReference(reference) {
     if (!reference || !reference.title) return "";
-    var source = reference.source ? " · " + reference.source : "";
+    var source = reference.source ? " ? " + reference.source : "";
     var label = "최신 참고자료" + source;
     var title = escapeHtml(reference.title);
 
@@ -630,16 +693,122 @@
     return '<div class="ib-latest-reference"><small>' + escapeHtml(label) + "</small><a>" + title + "</a></div>";
   }
 
-  function renderInjectedMaterials(items) {
+  function renderDetailSections(sections) {
+    if (!Array.isArray(sections) || !sections.length) return "";
+    return '<div class="ib-detail-sections">' + sections.map(function (section) {
+      var items = Array.isArray(section.items) ? section.items : [];
+      return '<section class="ib-detail-section">' +
+        '<h4>' + escapeHtml(section.title || "") + '</h4>' +
+        '<ul>' + items.map(function (item) {
+          return '<li>' + escapeHtml(item) + '</li>';
+        }).join("") + '</ul>' +
+      '</section>';
+    }).join("") + '</div>';
+  }
+
+  function renderArchive(items) {
     if (!Array.isArray(items) || !items.length) {
-      return '<ul class="ib-material-list"><li>아직 연결된 주입 자료가 없습니다<span>대기</span></li></ul>';
+      return '<p class="ib-detail-empty">지난 자료가 아직 준비되지 않았습니다.</p>';
     }
 
-    return '<ul class="ib-material-list">' + items.slice(0, 5).map(function (item) {
-      var title = item.title || item.fileName || "제목 없는 자료";
-      var meta = item.category || item.type || item.date || "주입 자료";
-      return '<li>' + escapeHtml(title) + '<span>' + escapeHtml(meta) + '</span></li>';
-    }).join("") + "</ul>";
+    return items.map(function (item) {
+      var source = item.source ? escapeHtml(item.source) : "출처";
+      var date = item.publishedAt ? " ? " + escapeHtml(item.publishedAt) : "";
+      var url = item.url ? escapeHtml(safeUrl(item.url)) : "#";
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+        '<strong>' + escapeHtml(item.title || "제목 없음") + '</strong>' +
+        '<small>' + source + date + '</small>' +
+      '</a>';
+    }).join("");
+  }
+
+  function renderDetailPanel(label, item, archiveTitle) {
+    if (!item) return "";
+    return '<div class="ib-detail-head">' +
+        '<small>' + escapeHtml(label || "상세 정보") + '</small>' +
+        '<h3>' + escapeHtml(item.title || "") + '</h3>' +
+        '<p>' + escapeHtml(item.summary || item.body || "") + '</p>' +
+      '</div>' +
+      '<div class="ib-detail-body">' +
+        '<div>' + renderDetailSections(item.detailSections) + renderPoints(item.points) + '</div>' +
+        '<aside class="ib-detail-side">' +
+          '<div class="ib-detail-actions">' +
+            '<h4>원문 보기</h4>' +
+            (renderSources(item.sources) || '<p class="ib-detail-empty">연결된 원문이 없습니다.</p>') +
+          '</div>' +
+          '<div class="ib-archive-list">' +
+            '<h4>' + escapeHtml(archiveTitle || "지난 자료 보기") + '</h4>' +
+            renderArchive(item.archive) +
+          '</div>' +
+        '</aside>' +
+      '</div>';
+  }
+
+  function showDetail(containerSelector, panelId, label, item, archiveTitle) {
+    var container = document.querySelector(containerSelector);
+    if (!container || !item) return;
+
+    var panel = document.getElementById(panelId);
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = panelId;
+      panel.className = "ib-detail-panel";
+      panel.tabIndex = -1;
+      container.appendChild(panel);
+    }
+
+    panel.innerHTML = renderDetailPanel(label, item, archiveTitle);
+    panel.hidden = false;
+    panel.focus({ preventScroll: true });
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function makeInteractive(node, callback) {
+    if (!node) return;
+    node.setAttribute("role", "button");
+    node.tabIndex = 0;
+    node.addEventListener("click", callback);
+    node.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      callback(event);
+    });
+  }
+
+  function bindDetails(library) {
+    if (!library || typeof library !== "object") return;
+
+    var briefingCards = document.querySelectorAll(".ib-three article");
+    if (Array.isArray(library.today)) {
+      library.today.slice(0, briefingCards.length).forEach(function (item, index) {
+        makeInteractive(briefingCards[index], function () {
+          showDetail("#briefing", "ib-briefing-detail", "오늘의 브리핑 " + (item.slot || String(index + 1).padStart(2, "0")), item, "지난 자료 보기");
+        });
+      });
+    }
+
+    var topicButtons = document.querySelectorAll(".ib-topics button");
+    var topicCards = document.querySelectorAll(".ib-topic-detail");
+    if (Array.isArray(library.insuranceInfo)) {
+      library.insuranceInfo.forEach(function (item, index) {
+        var label = "보험정보 / " + (item.title || "");
+        makeInteractive(topicButtons[index], function () {
+          showDetail("#insurance", "ib-insurance-detail", label, item, "관련 자료 보기");
+        });
+        makeInteractive(topicCards[index], function () {
+          showDetail("#insurance", "ib-insurance-detail", label, item, "관련 자료 보기");
+        });
+      });
+    }
+
+    var healthCards = document.querySelectorAll(".ib-health article");
+    if (Array.isArray(library.healthStats)) {
+      library.healthStats.slice(0, healthCards.length).forEach(function (item, index) {
+        makeInteractive(healthCards[index], function () {
+          showDetail("#health", "ib-health-detail", "의학통계 상세", item, "통계 원문 보기");
+        });
+      });
+    }
   }
 
   function renderToday(library) {
@@ -654,25 +823,12 @@
 
       if (title) title.textContent = item.title || title.textContent;
       if (body) body.textContent = item.summary || body.textContent;
-      if (caption) caption.textContent = "메뉴 기준 콘텐츠 원장";
+      if (caption) caption.textContent = item.caption || caption.textContent;
 
       var old = card.querySelectorAll(".ib-card-points, .ib-source-list, .ib-latest-reference");
       old.forEach(function (node) { node.remove(); });
       card.insertAdjacentHTML("beforeend", renderPoints(item.points) + renderSources(item.sources) + renderLatestReference(item.latestReference));
     });
-
-    var briefing = document.getElementById("briefing");
-    if (briefing && !briefing.querySelector(".ib-material-stack")) {
-      var injectedMaterials = renderInjectedMaterials(library.injectedMaterials);
-      briefing.insertAdjacentHTML("beforeend",
-        '<div class="ib-material-stack">' +
-          '<small>DAYFOLDER MATERIALS</small>' +
-          '<h3>대표님 주입 자료는 여기로 쌓입니다</h3>' +
-          '<p>데이폴더에 넣은 이미지·표·상담자료는 보험브리핑 메뉴 기준으로 분류하고, 오늘의 보험자료 카드와 연결합니다. 원본을 복제하지 않고 제목·요약·출처만 관리합니다.</p>' +
-          injectedMaterials +
-        '</div>'
-      );
-    }
   }
 
   function renderInsuranceInfo(library) {
@@ -732,22 +888,12 @@
   }
 
   function renderClaims(library) {
-    var steps = document.querySelectorAll(".ib-steps li");
-    if (!steps.length || !Array.isArray(library.claims)) return;
+    var list = document.querySelector(".ib-steps");
+    if (!list || !Array.isArray(library.claims)) return;
 
-    library.claims.slice(0, steps.length).forEach(function (item, index) {
-      var step = steps[index];
-      var badge = step.querySelector("span");
-      var title = step.querySelector("h3");
-      var body = step.querySelector("p");
-      if (badge) badge.textContent = item.step || badge.textContent;
-      if (title) title.textContent = item.title || title.textContent;
-      if (body) body.textContent = item.body || body.textContent;
-
-      var old = step.querySelectorAll(".ib-card-points, .ib-source-list");
-      old.forEach(function (node) { node.remove(); });
-      step.querySelector("div").insertAdjacentHTML("beforeend", renderPoints(item.points) + renderSources(item.sources));
-    });
+    list.innerHTML = library.claims.map(function (item) {
+      return '<li><span>' + escapeHtml(item.step || "") + '</span><div><h3>' + escapeHtml(item.title || "") + '</h3><p>' + escapeHtml(item.body || "") + '</p>' + renderPoints(item.points) + renderSources(item.sources) + '</div></li>';
+    }).join("");
   }
 
   function applyLibrary(library) {
@@ -756,6 +902,7 @@
     renderInsuranceInfo(library);
     renderHealthStats(library);
     renderClaims(library);
+    bindDetails(library);
   }
 
   fetch("./data/library.json", { cache: "no-store" })
