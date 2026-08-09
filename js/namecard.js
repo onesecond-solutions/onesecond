@@ -29,7 +29,7 @@
     if(assetsLoading)return;
     assetsLoading=true;
     var s=document.createElement('script');
-    s.src='/js/namecard-assets.js?v=20260807b';
+    s.src='/js/namecard-assets.js?v=20260808';
     s.onload=function(){ var q=assetsCb.slice();assetsCb=[];q.forEach(function(f){try{f();}catch(e){}}); };
     s.onerror=function(){ assetsLoading=false; };
     document.head.appendChild(s);

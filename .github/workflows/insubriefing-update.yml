@@ -1,0 +1,46 @@
+name: InsuBriefing daily update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 20 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: insubriefing-daily-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Collect insurance news
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+        run: node insubriefing/scripts/update-content.mjs
+
+      - name: Save updated briefing
+        run: |
+          if git diff --quiet -- insubriefing/data/content.json; then
+            echo "No content changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add insubriefing/data/content.json
+          git commit -m "chore: update daily insubriefing content"
+          git push origin HEAD:main
