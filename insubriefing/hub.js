@@ -325,6 +325,158 @@
         repeating-linear-gradient(90deg, transparent 0 20%, color-mix(in srgb, var(--bd) 82%, transparent) 20% calc(20% + 1px));
     }
 
+    .ib-card-points {
+      display: grid;
+      gap: 8px;
+      margin: 20px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ib-card-points li {
+      position: relative;
+      padding-left: 16px;
+      color: var(--ts);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .ib-card-points li:before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .7em;
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--ac);
+    }
+
+    .ib-source-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .ib-source-list a,
+    .ib-source-list span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 11px;
+      border: 1px solid var(--brief-line);
+      border-radius: var(--radius-full);
+      background: color-mix(in srgb, var(--s1) 86%, transparent);
+      color: var(--ts);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .ib-latest-reference {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border: 1px solid color-mix(in srgb, var(--ac) 24%, var(--brief-line));
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--ac) 5%, var(--s1));
+    }
+
+    .ib-latest-reference small {
+      display: block;
+      margin: 0 0 6px;
+      color: var(--ac);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .ib-latest-reference a {
+      color: var(--tp);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+
+    .ib-topic-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .ib-topic-detail {
+      padding: 24px;
+      border: 1px solid var(--brief-line);
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--s1) 92%, transparent);
+      box-shadow: 0 14px 40px color-mix(in srgb, var(--tp) 5%, transparent);
+    }
+
+    .ib-topic-detail small,
+    .ib-material-stack small {
+      color: var(--ac);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .ib-topic-detail h3 {
+      margin: 10px 0 10px;
+      font-size: 21px;
+      line-height: 1.35;
+    }
+
+    .ib-topic-detail p {
+      color: var(--ts);
+      line-height: 1.75;
+    }
+
+    .ib-material-stack {
+      margin-top: 18px;
+      padding: 22px;
+      border: 1px dashed color-mix(in srgb, var(--ac) 38%, var(--brief-line));
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--ac) 6%, var(--s1));
+    }
+
+    .ib-material-stack h3 {
+      margin: 8px 0;
+      font-size: 18px;
+    }
+
+    .ib-material-stack p {
+      color: var(--ts);
+      line-height: 1.7;
+    }
+
+    .ib-material-list {
+      display: grid;
+      gap: 10px;
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ib-material-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--brief-line);
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--s1) 92%, transparent);
+      color: var(--tp);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .ib-material-list span {
+      color: var(--ts);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     @media (max-width: 560px) {
       .ib-hero {
         min-height: 640px;
@@ -425,4 +577,194 @@
       toggle.querySelector("span").textContent = open ? "＋" : "−";
     });
   }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, function (ch) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch];
+    });
+  }
+
+  function safeUrl(value) {
+    try {
+      var url = new URL(value, window.location.href);
+      if (url.protocol === "http:" || url.protocol === "https:" || url.pathname.indexOf("/") === 0) {
+        return url.href;
+      }
+    } catch (error) {
+      return "#";
+    }
+    return "#";
+  }
+
+  function renderPoints(points) {
+    if (!Array.isArray(points) || !points.length) return "";
+    return '<ul class="ib-card-points">' + points.map(function (point) {
+      return "<li>" + escapeHtml(point) + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  function renderSources(sources) {
+    if (!Array.isArray(sources) || !sources.length) return "";
+    return '<div class="ib-source-list" aria-label="출처">' + sources.map(function (source) {
+      if (!source || !source.url) return "";
+      return '<a href="' + escapeHtml(safeUrl(source.url)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(source.label || "출처") + "</a>";
+    }).join("") + "</div>";
+  }
+
+  function renderLatestReference(reference) {
+    if (!reference || !reference.title) return "";
+    var source = reference.source ? " · " + reference.source : "";
+    var label = "최신 참고자료" + source;
+    var title = escapeHtml(reference.title);
+
+    if (reference.url) {
+      return '<div class="ib-latest-reference"><small>' + escapeHtml(label) + '</small><a href="' + escapeHtml(safeUrl(reference.url)) + '" target="_blank" rel="noopener noreferrer">' + title + "</a></div>";
+    }
+
+    return '<div class="ib-latest-reference"><small>' + escapeHtml(label) + "</small><a>" + title + "</a></div>";
+  }
+
+  function renderInjectedMaterials(items) {
+    if (!Array.isArray(items) || !items.length) {
+      return '<ul class="ib-material-list"><li>아직 연결된 주입 자료가 없습니다<span>대기</span></li></ul>';
+    }
+
+    return '<ul class="ib-material-list">' + items.slice(0, 5).map(function (item) {
+      var title = item.title || item.fileName || "제목 없는 자료";
+      var meta = item.category || item.type || item.date || "주입 자료";
+      return '<li>' + escapeHtml(title) + '<span>' + escapeHtml(meta) + '</span></li>';
+    }).join("") + "</ul>";
+  }
+
+  function renderToday(library) {
+    var cards = document.querySelectorAll(".ib-three article");
+    if (!cards.length || !Array.isArray(library.today)) return;
+
+    library.today.slice(0, cards.length).forEach(function (item, index) {
+      var card = cards[index];
+      var title = card.querySelector("h3");
+      var body = card.querySelector("p");
+      var caption = card.querySelector("small");
+
+      if (title) title.textContent = item.title || title.textContent;
+      if (body) body.textContent = item.summary || body.textContent;
+      if (caption) caption.textContent = "메뉴 기준 콘텐츠 원장";
+
+      var old = card.querySelectorAll(".ib-card-points, .ib-source-list, .ib-latest-reference");
+      old.forEach(function (node) { node.remove(); });
+      card.insertAdjacentHTML("beforeend", renderPoints(item.points) + renderSources(item.sources) + renderLatestReference(item.latestReference));
+    });
+
+    var briefing = document.getElementById("briefing");
+    if (briefing && !briefing.querySelector(".ib-material-stack")) {
+      var injectedMaterials = renderInjectedMaterials(library.injectedMaterials);
+      briefing.insertAdjacentHTML("beforeend",
+        '<div class="ib-material-stack">' +
+          '<small>DAYFOLDER MATERIALS</small>' +
+          '<h3>대표님 주입 자료는 여기로 쌓입니다</h3>' +
+          '<p>데이폴더에 넣은 이미지·표·상담자료는 보험브리핑 메뉴 기준으로 분류하고, 오늘의 보험자료 카드와 연결합니다. 원본을 복제하지 않고 제목·요약·출처만 관리합니다.</p>' +
+          injectedMaterials +
+        '</div>'
+      );
+    }
+  }
+
+  function renderInsuranceInfo(library) {
+    if (!Array.isArray(library.insuranceInfo)) return;
+
+    var topicButtons = document.querySelectorAll(".ib-topics button");
+    library.insuranceInfo.forEach(function (item, index) {
+      var button = topicButtons[index];
+      if (!button) return;
+      var order = button.querySelector("span");
+      var title = button.querySelector("strong");
+      var subtitle = button.querySelector("small");
+      if (order) order.textContent = item.order || order.textContent;
+      if (title) title.textContent = item.title || title.textContent;
+      if (subtitle) subtitle.textContent = item.subtitle || subtitle.textContent;
+    });
+
+    var insurance = document.getElementById("insurance");
+    if (!insurance) return;
+    var existing = insurance.querySelector(".ib-topic-details");
+    if (existing) existing.remove();
+
+    var html = '<div class="ib-topic-details" aria-label="보험정보 상세">';
+    html += library.insuranceInfo.map(function (item) {
+      return '<article class="ib-topic-detail">' +
+        '<small>' + escapeHtml(item.order || "") + " · " + escapeHtml(item.subtitle || "") + '</small>' +
+        '<h3>' + escapeHtml(item.title || "") + '</h3>' +
+        '<p>' + escapeHtml(item.summary || "") + '</p>' +
+        renderPoints(item.points) +
+        renderSources(item.sources) +
+      '</article>';
+    }).join("");
+    html += "</div>";
+
+    var after = document.getElementById("ib-topic-toggle");
+    if (after) after.insertAdjacentHTML("beforebegin", html);
+    else insurance.insertAdjacentHTML("beforeend", html);
+  }
+
+  function renderHealthStats(library) {
+    var cards = document.querySelectorAll(".ib-health article");
+    if (!cards.length || !Array.isArray(library.healthStats)) return;
+
+    library.healthStats.slice(0, cards.length).forEach(function (item, index) {
+      var card = cards[index];
+      var small = card.querySelector("small");
+      var title = card.querySelector("h3");
+      var body = card.querySelector("p");
+      if (small) small.textContent = item.sourceLabel || small.textContent;
+      if (title) title.textContent = item.title || title.textContent;
+      if (body) body.textContent = item.summary || body.textContent;
+
+      var old = card.querySelectorAll(".ib-card-points, .ib-source-list");
+      old.forEach(function (node) { node.remove(); });
+      card.querySelector("div:last-child").insertAdjacentHTML("beforeend", renderPoints(item.points) + renderSources(item.sources));
+    });
+  }
+
+  function renderClaims(library) {
+    var steps = document.querySelectorAll(".ib-steps li");
+    if (!steps.length || !Array.isArray(library.claims)) return;
+
+    library.claims.slice(0, steps.length).forEach(function (item, index) {
+      var step = steps[index];
+      var badge = step.querySelector("span");
+      var title = step.querySelector("h3");
+      var body = step.querySelector("p");
+      if (badge) badge.textContent = item.step || badge.textContent;
+      if (title) title.textContent = item.title || title.textContent;
+      if (body) body.textContent = item.body || body.textContent;
+
+      var old = step.querySelectorAll(".ib-card-points, .ib-source-list");
+      old.forEach(function (node) { node.remove(); });
+      step.querySelector("div").insertAdjacentHTML("beforeend", renderPoints(item.points) + renderSources(item.sources));
+    });
+  }
+
+  function applyLibrary(library) {
+    if (!library || typeof library !== "object") return;
+    renderToday(library);
+    renderInsuranceInfo(library);
+    renderHealthStats(library);
+    renderClaims(library);
+  }
+
+  fetch("./data/library.json", { cache: "no-store" })
+    .then(function (response) {
+      if (!response.ok) throw new Error("library load failed");
+      return response.json();
+    })
+    .then(applyLibrary)
+    .catch(function () {
+      applyLibrary(null);
+    });
 })();
