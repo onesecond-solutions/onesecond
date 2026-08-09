@@ -23,6 +23,27 @@
       border-top: 1px solid var(--bd);
     }
 
+    #ib-nav .ib-login-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 16px;
+      border: 1px solid var(--brief-line);
+      border-radius: var(--radius-full);
+      background: color-mix(in srgb, var(--s1) 88%, transparent);
+      color: var(--brief-navy);
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--tp) 5%, transparent);
+    }
+
+    #ib-nav .ib-login-button:hover {
+      border-color: color-mix(in srgb, var(--ac) 44%, var(--brief-line));
+      color: var(--ac);
+      background: var(--s1);
+    }
+
     #ib-app footer:after {
       content: "onesecond.solutions";
       margin-left: auto;
@@ -320,6 +341,15 @@
   var nav = document.getElementById("ib-nav");
   var toggle = document.getElementById("ib-topic-toggle");
   var all = document.getElementById("ib-all-topics");
+
+  if (nav && !nav.querySelector(".ib-login-button")) {
+    var loginButton = document.createElement("button");
+    loginButton.className = "ib-login-button";
+    loginButton.type = "button";
+    loginButton.textContent = "로그인";
+    loginButton.setAttribute("aria-label", "설계사 로그인");
+    nav.appendChild(loginButton);
+  }
 
   if (menu && nav) {
     menu.addEventListener("click", function () {
