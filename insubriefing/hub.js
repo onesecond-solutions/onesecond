@@ -29,19 +29,49 @@
       color: var(--tf);
     }
 
-    .ib-hero h1 { font-size: clamp(40px, 4.5vw, 58px); }
-    .ib-hero-copy > p:not(.ib-kicker) { max-width: 700px; }
+    .ib-hero {
+      position: relative;
+      max-width: none;
+      min-height: 760px;
+      grid-template-columns: 1fr;
+      justify-items: center;
+      align-items: start;
+      gap: 0;
+      padding: 120px 24px 360px;
+      overflow: hidden;
+      text-align: center;
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--s1) 94%, transparent) 0%, color-mix(in srgb, var(--s1) 22%, transparent) 58%, color-mix(in srgb, var(--s1) 0%, transparent) 100%),
+        url("./assets/generated/briefing-toss-hero.webp") center bottom / cover no-repeat;
+    }
+
+    .ib-hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+    }
+
+    .ib-hero h1 {
+      font-size: clamp(48px, 5.2vw, 76px);
+      line-height: 1.14;
+    }
+
+    .ib-hero-copy > p:not(.ib-kicker) {
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
     .ib-hero-panel {
       min-height: 390px;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
       border: 1px solid var(--brief-line);
       background:
-        linear-gradient(90deg, var(--s1) 0%, color-mix(in srgb, var(--s1) 92%, transparent) 36%, color-mix(in srgb, var(--s1) 18%, transparent) 72%),
-        url("./assets/generated/briefing-hero-illustration.webp") right center / cover no-repeat;
+        radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ac) 14%, transparent), transparent 30%),
+        linear-gradient(145deg, var(--s1) 0%, color-mix(in srgb, var(--s2) 72%, var(--s1)) 100%);
       color: var(--tp);
       box-shadow: 0 24px 70px color-mix(in srgb, var(--tp) 10%, transparent);
     }
@@ -145,10 +175,12 @@
 
     .ib-three article {
       position: relative;
-      min-height: 360px;
-      padding: 196px 30px 30px;
+      min-height: 320px;
+      padding: 30px;
       overflow: hidden;
-      background: var(--s1);
+      background:
+        radial-gradient(circle at 84% 18%, color-mix(in srgb, var(--ac) 12%, transparent), transparent 32%),
+        var(--s1);
       transition: transform .2s ease, box-shadow .2s ease;
     }
 
@@ -158,33 +190,35 @@
     }
 
     .ib-three article:before {
-      content: "";
-      position: absolute;
-      inset: 16px 16px auto;
-      height: 150px;
-      border-radius: var(--radius-md);
-      border: 1px solid color-mix(in srgb, var(--bd) 76%, transparent);
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
-      box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--s1) 8%, transparent);
+      display: grid;
+      place-items: center;
+      width: 68px;
+      height: 68px;
+      margin-bottom: 34px;
+      border-radius: var(--radius-lg);
+      background: var(--brief-soft);
+      color: var(--ac);
+      font-size: 30px;
+      font-weight: 900;
     }
 
-    .ib-three article:nth-child(1):before { background-image: url("./assets/generated/briefing-policy-illustration.webp"); }
-    .ib-three article:nth-child(2):before { background-image: url("./assets/generated/briefing-claim-illustration.webp"); }
-    .ib-three article:nth-child(3):before { background-image: url("./assets/generated/briefing-material-illustration.webp"); }
+    .ib-three article:nth-child(1):before { content: "01"; }
+    .ib-three article:nth-child(2):before { content: "02"; }
+    .ib-three article:nth-child(3):before { content: "03"; }
 
     .ib-three article:after {
       content: "";
       position: absolute;
-      left: 16px;
-      right: 16px;
-      top: 126px;
-      height: 40px;
-      opacity: .72;
+      right: 24px;
+      top: 34px;
+      width: 126px;
+      height: 78px;
+      opacity: .62;
       background:
-        linear-gradient(180deg, transparent, color-mix(in srgb, var(--s1) 88%, transparent));
-      pointer-events: none;
+        linear-gradient(var(--brief-line), var(--brief-line)) 0 14px / 100% 1px no-repeat,
+        linear-gradient(var(--brief-line), var(--brief-line)) 0 38px / 100% 1px no-repeat,
+        linear-gradient(var(--brief-line), var(--brief-line)) 0 62px / 80% 1px no-repeat,
+        linear-gradient(90deg, var(--brief-blue), var(--ach)) 0 0 / 52px 8px no-repeat;
     }
 
     .ib-three h3 { margin-top: 0; }
@@ -218,13 +252,13 @@
     .ib-health-photo {
       height: 130px;
       background:
-        linear-gradient(180deg, color-mix(in srgb, var(--s1) 8%, transparent), color-mix(in srgb, var(--s1) 76%, transparent)),
-        url("./assets/generated/briefing-policy-illustration.webp") center 44% / cover no-repeat;
+        radial-gradient(circle at 78% 35%, color-mix(in srgb, var(--ac) 24%, transparent), transparent 28%),
+        linear-gradient(135deg, color-mix(in srgb, var(--ac) 12%, var(--s1)), var(--s1));
     }
 
     .ib-health-photo:before {
       content: "";
-      display: none;
+      display: block;
       width: calc(100% - 48px);
       height: 72px;
       margin: 30px auto 0;
@@ -237,8 +271,8 @@
 
     .ib-health article:nth-child(2) .ib-health-photo {
       background:
-        linear-gradient(180deg, color-mix(in srgb, var(--s1) 8%, transparent), color-mix(in srgb, var(--s1) 76%, transparent)),
-        url("./assets/generated/briefing-claim-illustration.webp") center 45% / cover no-repeat;
+        radial-gradient(circle at 80% 32%, color-mix(in srgb, var(--mint) 22%, transparent), transparent 28%),
+        linear-gradient(135deg, color-mix(in srgb, var(--mint) 10%, var(--s1)), var(--s1));
     }
 
     .ib-health article:nth-child(2) .ib-health-photo:before {
@@ -250,8 +284,8 @@
 
     .ib-health article:nth-child(3) .ib-health-photo {
       background:
-        linear-gradient(180deg, color-mix(in srgb, var(--s1) 8%, transparent), color-mix(in srgb, var(--s1) 76%, transparent)),
-        url("./assets/generated/briefing-material-illustration.webp") center 45% / cover no-repeat;
+        radial-gradient(circle at 80% 32%, color-mix(in srgb, var(--warn) 22%, transparent), transparent 28%),
+        linear-gradient(135deg, color-mix(in srgb, var(--warn) 10%, var(--s1)), var(--s1));
     }
 
     .ib-health article:nth-child(3) .ib-health-photo:before {
@@ -262,9 +296,14 @@
     }
 
     @media (max-width: 560px) {
-      .ib-hero h1 { font-size: 32px; }
+      .ib-hero {
+        min-height: 640px;
+        padding-top: 76px;
+        padding-bottom: 300px;
+        background-size: auto 76%;
+      }
+      .ib-hero h1 { font-size: 38px; }
       .ib-mobile-nav a { font-size: 11px; }
-      .ib-hero-panel { min-height: 420px; padding: 28px; }
       .ib-hero-copy > p:not(.ib-kicker) br { display: none; }
       .ib-hero-panel .ib-hero-dashboard { grid-template-columns: 1fr; }
       .ib-three article { min-height: 280px; }
@@ -275,18 +314,6 @@
   var lead = document.querySelector(".ib-hero-copy > p:not(.ib-kicker)");
   if (lead) {
     lead.innerHTML = "보험 소식부터 보장별 정보, 건강 통계와 보험금 청구 방법까지<br>복잡하지 않게 확인하세요.";
-  }
-
-  var heroPanel = document.querySelector(".ib-hero-panel");
-  if (heroPanel) {
-    heroPanel.insertAdjacentHTML(
-      "beforeend",
-      '<div class="ib-hero-dashboard" aria-hidden="true">' +
-        '<div class="ib-hero-tile"><b>3건</b><span>오늘 브리핑</span><i class="ib-hero-bar" style="--w:72%"></i></div>' +
-        '<div class="ib-hero-tile"><b>6개</b><span>보장 주제</span><i class="ib-hero-bar" style="--w:86%"></i></div>' +
-        '<div class="ib-hero-tile"><b>4단계</b><span>청구 안내</span><i class="ib-hero-bar" style="--w:58%"></i></div>' +
-      "</div>"
-    );
   }
 
   var menu = document.querySelector(".ib-menu");
