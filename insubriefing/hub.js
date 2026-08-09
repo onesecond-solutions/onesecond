@@ -40,8 +40,8 @@
       overflow: hidden;
       border: 1px solid var(--brief-line);
       background:
-        radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ac) 14%, transparent), transparent 30%),
-        linear-gradient(145deg, var(--s1) 0%, color-mix(in srgb, var(--s2) 72%, var(--s1)) 100%);
+        linear-gradient(90deg, var(--s1) 0%, color-mix(in srgb, var(--s1) 92%, transparent) 36%, color-mix(in srgb, var(--s1) 18%, transparent) 72%),
+        url("./assets/generated/briefing-hero-illustration.webp") right center / cover no-repeat;
       color: var(--tp);
       box-shadow: 0 24px 70px color-mix(in srgb, var(--tp) 10%, transparent);
     }
@@ -58,6 +58,7 @@
       max-width: 360px;
       margin: 14px 0 20px;
       color: var(--brief-navy);
+      text-shadow: 0 1px 0 color-mix(in srgb, var(--s1) 92%, transparent);
     }
 
     .ib-hero-panel ul {
@@ -78,7 +79,8 @@
       padding: 0 14px;
       border: 1px solid var(--brief-line);
       border-radius: var(--radius-sm);
-      background: var(--s1);
+      background: color-mix(in srgb, var(--s1) 88%, transparent);
+      backdrop-filter: blur(10px);
       color: var(--ts);
       font-weight: 800;
     }
@@ -104,7 +106,8 @@
       padding: 14px;
       border: 1px solid var(--brief-line);
       border-radius: var(--radius-md);
-      background: var(--s1);
+      background: color-mix(in srgb, var(--s1) 86%, transparent);
+      backdrop-filter: blur(10px);
     }
 
     .ib-hero-panel .ib-hero-tile b {
@@ -142,12 +145,10 @@
 
     .ib-three article {
       position: relative;
-      min-height: 320px;
-      padding: 30px;
+      min-height: 360px;
+      padding: 196px 30px 30px;
       overflow: hidden;
-      background:
-        radial-gradient(circle at 84% 18%, color-mix(in srgb, var(--ac) 12%, transparent), transparent 32%),
-        var(--s1);
+      background: var(--s1);
       transition: transform .2s ease, box-shadow .2s ease;
     }
 
@@ -158,35 +159,32 @@
 
     .ib-three article:before {
       content: "";
-      display: grid;
-      place-items: center;
-      width: 68px;
-      height: 68px;
-      margin-bottom: 34px;
-      border-radius: var(--radius-lg);
-      background: var(--brief-soft);
-      color: var(--ac);
-      font-size: 30px;
-      font-weight: 900;
+      position: absolute;
+      inset: 16px 16px auto;
+      height: 150px;
+      border-radius: var(--radius-md);
+      border: 1px solid color-mix(in srgb, var(--bd) 76%, transparent);
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--s1) 8%, transparent);
     }
 
-    .ib-three article:nth-child(1):before { content: "法"; }
-    .ib-three article:nth-child(2):before { content: "判"; }
-    .ib-three article:nth-child(3):before { content: "資"; }
+    .ib-three article:nth-child(1):before { background-image: url("./assets/generated/briefing-policy-illustration.webp"); }
+    .ib-three article:nth-child(2):before { background-image: url("./assets/generated/briefing-claim-illustration.webp"); }
+    .ib-three article:nth-child(3):before { background-image: url("./assets/generated/briefing-material-illustration.webp"); }
 
     .ib-three article:after {
       content: "";
       position: absolute;
-      right: 24px;
-      top: 34px;
-      width: 126px;
-      height: 78px;
-      opacity: .62;
+      left: 16px;
+      right: 16px;
+      top: 126px;
+      height: 40px;
+      opacity: .72;
       background:
-        linear-gradient(var(--brief-line), var(--brief-line)) 0 14px / 100% 1px no-repeat,
-        linear-gradient(var(--brief-line), var(--brief-line)) 0 38px / 100% 1px no-repeat,
-        linear-gradient(var(--brief-line), var(--brief-line)) 0 62px / 80% 1px no-repeat,
-        linear-gradient(90deg, var(--brief-blue), var(--ach)) 0 0 / 52px 8px no-repeat;
+        linear-gradient(180deg, transparent, color-mix(in srgb, var(--s1) 88%, transparent));
+      pointer-events: none;
     }
 
     .ib-three h3 { margin-top: 0; }
@@ -220,13 +218,13 @@
     .ib-health-photo {
       height: 130px;
       background:
-        radial-gradient(circle at 78% 35%, color-mix(in srgb, var(--ac) 24%, transparent), transparent 28%),
-        linear-gradient(135deg, color-mix(in srgb, var(--ac) 12%, var(--s1)), var(--s1));
+        linear-gradient(180deg, color-mix(in srgb, var(--s1) 8%, transparent), color-mix(in srgb, var(--s1) 76%, transparent)),
+        url("./assets/generated/briefing-policy-illustration.webp") center 44% / cover no-repeat;
     }
 
     .ib-health-photo:before {
       content: "";
-      display: block;
+      display: none;
       width: calc(100% - 48px);
       height: 72px;
       margin: 30px auto 0;
@@ -239,8 +237,8 @@
 
     .ib-health article:nth-child(2) .ib-health-photo {
       background:
-        radial-gradient(circle at 80% 32%, color-mix(in srgb, var(--mint) 22%, transparent), transparent 28%),
-        linear-gradient(135deg, color-mix(in srgb, var(--mint) 10%, var(--s1)), var(--s1));
+        linear-gradient(180deg, color-mix(in srgb, var(--s1) 8%, transparent), color-mix(in srgb, var(--s1) 76%, transparent)),
+        url("./assets/generated/briefing-claim-illustration.webp") center 45% / cover no-repeat;
     }
 
     .ib-health article:nth-child(2) .ib-health-photo:before {
@@ -252,8 +250,8 @@
 
     .ib-health article:nth-child(3) .ib-health-photo {
       background:
-        radial-gradient(circle at 80% 32%, color-mix(in srgb, var(--warn) 22%, transparent), transparent 28%),
-        linear-gradient(135deg, color-mix(in srgb, var(--warn) 10%, var(--s1)), var(--s1));
+        linear-gradient(180deg, color-mix(in srgb, var(--s1) 8%, transparent), color-mix(in srgb, var(--s1) 76%, transparent)),
+        url("./assets/generated/briefing-material-illustration.webp") center 45% / cover no-repeat;
     }
 
     .ib-health article:nth-child(3) .ib-health-photo:before {
