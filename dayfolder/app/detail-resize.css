@@ -43,4 +43,19 @@
     width: 5px;
     background: rgba(47, 133, 137, .72);
   }
+
+  .detail-panel {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .detail-panel .file-preview iframe {
+    height: clamp(430px, calc(100vh - 330px), 760px);
+    max-height: none;
+  }
+
+  .detail-panel .file-preview img {
+    max-height: clamp(430px, calc(100vh - 330px), 760px);
+  }
 }
