@@ -1,0 +1,36 @@
+.dayfolder-advisor-auth-gate {
+  position: fixed;
+  z-index: 10010;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(241, 248, 248, .92);
+  backdrop-filter: blur(12px);
+}
+
+.dayfolder-advisor-auth-gate[hidden] { display: none; }
+
+.dayfolder-advisor-auth-card {
+  width: min(400px, calc(100vw - 40px));
+  padding: 30px;
+  border: 1px solid rgba(47, 133, 137, .22);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(31, 66, 84, .18);
+  color: #17384b;
+  font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", sans-serif;
+}
+
+.dayfolder-advisor-auth-card h1 { margin: 0 0 8px; font-size: 24px; }
+.dayfolder-advisor-auth-card p { margin: 0 0 22px; color: #657783; font-size: 14px; line-height: 1.6; }
+.dayfolder-advisor-auth-card label { display: grid; gap: 7px; margin-top: 14px; color: #425865; font-size: 13px; font-weight: 700; }
+.dayfolder-advisor-auth-card input { height: 44px; padding: 0 13px; border: 1px solid #cad8de; border-radius: 10px; font: inherit; outline: none; }
+.dayfolder-advisor-auth-card input:focus { border-color: #2f8589; box-shadow: 0 0 0 3px rgba(47, 133, 137, .12); }
+.dayfolder-advisor-auth-submit { width: 100%; height: 46px; margin-top: 20px; border: 0; border-radius: 11px; background: #24777b; color: #fff; font: 800 15px/1 inherit; cursor: pointer; }
+.dayfolder-advisor-auth-submit:disabled { opacity: .55; cursor: wait; }
+.dayfolder-advisor-auth-error { min-height: 20px; margin-top: 12px; color: #c43d4e; font-size: 13px; text-align: center; }
+
+@media (max-width: 700px) {
+  .dayfolder-advisor-auth-card { padding: 24px; }
+}
