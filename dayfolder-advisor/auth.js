@@ -132,7 +132,7 @@
     if (settingsButton) {
       var label = currentUser ? "임태성" : "로그인";
       if (settingsButton.textContent !== label) settingsButton.textContent = label;
-      settingsButton.title = currentUser ? "임태성 설정" : "로그인";
+      settingsButton.removeAttribute("title");
     }
 
     var logoutButton = document.querySelector(".account-settings button");
