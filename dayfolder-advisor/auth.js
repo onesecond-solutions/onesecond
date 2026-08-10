@@ -57,6 +57,58 @@
     }
   }
 
+  function createPkceVerifier() {
+    var bytes = new Uint8Array(64);
+    crypto.getRandomValues(bytes);
+    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+    return Array.from(bytes, function (value) { return chars[value % chars.length]; }).join("");
+  }
+
+  async function createPkceChallenge(verifier) {
+    var digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+    var binary = "";
+    new Uint8Array(digest).forEach(function (value) { binary += String.fromCharCode(value); });
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  async function startGoogleLogin() {
+    var verifier = createPkceVerifier();
+    localStorage.setItem("dayfolder_advisor_pkce_verifier", verifier);
+    var challenge = await createPkceChallenge(verifier);
+    var redirectTo = window.location.origin + "/dayfolder-advisor/";
+    window.location.href = SUPABASE_URL + "/auth/v1/authorize" +
+      "?provider=google" +
+      "&code_challenge=" + encodeURIComponent(challenge) +
+      "&code_challenge_method=S256" +
+      "&redirect_to=" + encodeURIComponent(redirectTo);
+  }
+
+  async function handleGoogleCallback() {
+    var params = new URLSearchParams(window.location.search);
+    var errorDescription = params.get("error_description");
+    if (params.get("error")) {
+      history.replaceState(null, "", window.location.pathname);
+      throw new Error(errorDescription || "Google 로그인에 실패했습니다.");
+    }
+    var code = params.get("code");
+    if (!code) return null;
+    var verifier = localStorage.getItem("dayfolder_advisor_pkce_verifier");
+    if (!verifier) throw new Error("Google 로그인 확인 정보가 만료되었습니다. 다시 시도해 주세요.");
+    var data = await request("/auth/v1/token?grant_type=pkce", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
+      body: JSON.stringify({ auth_code: code, code_verifier: verifier })
+    });
+    localStorage.removeItem("dayfolder_advisor_pkce_verifier");
+    history.replaceState(null, "", window.location.pathname);
+    if (!data.user || String(data.user.email || "").toLowerCase() !== ALLOWED_EMAIL) {
+      clearSession();
+      throw new Error("임태성 전용 Google 계정만 로그인할 수 있습니다.");
+    }
+    saveSession(data);
+    return data.user;
+  }
+
   function createGate() {
     var gate = document.createElement("div");
     gate.className = "dayfolder-advisor-auth-gate";
@@ -64,6 +116,8 @@
     gate.innerHTML = '<form class="dayfolder-advisor-auth-card">' +
       '<h1>데이폴더 설계사 버전</h1>' +
       '<p>임태성 전용 계정으로 로그인해 주세요.</p>' +
+      '<button class="dayfolder-advisor-google" type="button">Google로 로그인</button>' +
+      '<div class="dayfolder-advisor-auth-divider">또는</div>' +
       '<label>이메일<input name="email" type="email" autocomplete="username" required></label>' +
       '<label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label>' +
       '<button class="dayfolder-advisor-auth-submit" type="submit">로그인</button>' +
@@ -104,6 +158,7 @@
     var form = gate.querySelector("form");
     var error = gate.querySelector(".dayfolder-advisor-auth-error");
     var submit = gate.querySelector("button[type=submit]");
+    var googleButton = gate.querySelector(".dayfolder-advisor-google");
 
     var observer = new MutationObserver(syncExistingUi);
     observer.observe(document.getElementById("root") || document.body, { childList: true, subtree: true });
@@ -127,7 +182,13 @@
       }
     }, true);
 
-    var user = await verifyToken(localStorage.getItem(TOKEN_KEY));
+    var user = null;
+    try {
+      user = await handleGoogleCallback();
+    } catch (oauthError) {
+      error.textContent = oauthError.message;
+    }
+    if (!user) user = await verifyToken(localStorage.getItem(TOKEN_KEY));
     if (!user) user = await refreshSession();
     if (user && String(user.email || "").toLowerCase() === ALLOWED_EMAIL) setUser(user, gate);
     else {
@@ -157,6 +218,17 @@
         error.textContent = loginError.message === "Invalid login credentials" ? "이메일 또는 비밀번호를 확인해 주세요." : loginError.message;
       } finally {
         submit.disabled = false;
+      }
+    });
+
+    googleButton.addEventListener("click", async function () {
+      error.textContent = "";
+      googleButton.disabled = true;
+      try {
+        await startGoogleLogin();
+      } catch (googleError) {
+        googleButton.disabled = false;
+        error.textContent = googleError.message || "Google 로그인을 시작하지 못했습니다.";
       }
     });
   }
