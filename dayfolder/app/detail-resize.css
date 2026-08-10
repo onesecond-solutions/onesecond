@@ -1,0 +1,46 @@
+@media (min-width: 841px) {
+  .workspace.detail-open[style*="--dayfolder-detail-width"] {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--dayfolder-detail-width, 344px) !important;
+  }
+
+  .workspace.sidebar-collapsed.detail-open[style*="--dayfolder-detail-width"] {
+    grid-template-columns: 0 minmax(0, 1fr) var(--dayfolder-detail-width, 344px) !important;
+  }
+
+  .workspace.dayfolder-detail-resizing {
+    transition: none !important;
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  .dayfolder-detail-resize-handle {
+    position: absolute;
+    z-index: 15;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 12px;
+    border: 0;
+    background: transparent;
+    cursor: col-resize;
+    touch-action: none;
+  }
+
+  .dayfolder-detail-resize-handle::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: rgba(47, 133, 137, .18);
+    transition: width .15s ease, background .15s ease;
+  }
+
+  .dayfolder-detail-resize-handle:hover::before,
+  .dayfolder-detail-resize-handle:focus-visible::before,
+  .workspace.dayfolder-detail-resizing .dayfolder-detail-resize-handle::before {
+    width: 5px;
+    background: rgba(47, 133, 137, .72);
+  }
+}
