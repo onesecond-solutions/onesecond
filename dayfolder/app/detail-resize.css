@@ -58,4 +58,48 @@
   .detail-panel .file-preview img {
     max-height: clamp(430px, calc(100vh - 330px), 760px);
   }
+
+  .detail-panel .file-preview[style*="--dayfolder-preview-height"] iframe,
+  .detail-panel .file-preview[style*="--dayfolder-preview-height"] img {
+    height: var(--dayfolder-preview-height) !important;
+    max-height: none !important;
+    object-fit: contain;
+  }
+
+  .dayfolder-preview-height-handle {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 14px;
+    margin: 2px 0 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: row-resize;
+    touch-action: none;
+  }
+
+  .dayfolder-preview-height-handle::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    right: 12%;
+    left: 12%;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(47, 133, 137, .24);
+    transition: height .15s ease, background .15s ease;
+  }
+
+  .dayfolder-preview-height-handle:hover::before,
+  .dayfolder-preview-height-handle:focus-visible::before,
+  body.dayfolder-preview-resizing .dayfolder-preview-height-handle::before {
+    height: 5px;
+    background: rgba(47, 133, 137, .75);
+  }
+
+  body.dayfolder-preview-resizing {
+    cursor: row-resize;
+    user-select: none;
+  }
 }
