@@ -34,10 +34,13 @@
   function localKey(date) { return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()); }
 
   function renderSolarTerms() {
-    var heading = document.querySelector(".calendar-heading h1, .month-switcher h1");
     var cells = Array.from(document.querySelectorAll(".calendar-grid.days .day"));
-    if (!heading || !cells.length) return;
-    var match = heading.textContent.match(/(\d{4})년\s*(\d{1,2})월/);
+    if (!cells.length) return;
+    var monthLabel = Array.from(document.querySelectorAll("h1, h2, h3, strong, b, span")).find(function (element) {
+      return /^\s*\d{4}년\s*\d{1,2}월\s*$/.test(element.textContent || "");
+    });
+    var match = monthLabel && monthLabel.textContent.match(/(\d{4})년\s*(\d{1,2})월/);
+    if (!match) match = (document.body.textContent || "").match(/(\d{4})년\s*(\d{1,2})월/);
     if (!match) return;
 
     var year = Number(match[1]);
