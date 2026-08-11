@@ -142,8 +142,8 @@
       if (logoutButton.textContent !== "로그아웃") logoutButton.textContent = "로그아웃";
     }
     if (logoutHint) {
-      var hint = currentUser ? "임태성 계정으로 로그인되어 있습니다." : "로그인 후 사용할 수 있습니다.";
-      if (logoutHint.textContent !== hint) logoutHint.textContent = hint;
+      logoutHint.hidden = true;
+      logoutHint.textContent = "";
     }
   }
 
