@@ -150,6 +150,8 @@
     // 헤더의 로그인 버튼을 눌렀을 때만 인증 창을 연다.
     gate.hidden = true;
     syncExistingUi();
+    window.dayfolderAdvisorAuthReady = true;
+    window.dispatchEvent(new Event("dayfolder-advisor-auth-ready"));
   }
 
   async function start() {
