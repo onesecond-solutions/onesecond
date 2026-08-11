@@ -3,7 +3,6 @@
 
   var SUPABASE_URL = "https://pdnwgzneooyygfejrvbg.supabase.co";
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs";
-  var ALLOWED_EMAIL = "bylts0428@gmail.com";
   var TOKEN_KEY = "dayfolder_advisor_access_token";
   var REFRESH_KEY = "dayfolder_advisor_refresh_token";
   var USER_KEY = "dayfolder_advisor_user";
@@ -48,7 +47,7 @@
         headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
         body: JSON.stringify({ refresh_token: refreshToken })
       });
-      if (!data.user || String(data.user.email || "").toLowerCase() !== ALLOWED_EMAIL) throw new Error("허용되지 않은 계정입니다.");
+      if (!data.user) throw new Error("로그인 정보를 확인하지 못했습니다.");
       saveSession(data);
       return data.user;
     } catch (_error) {
@@ -101,12 +100,10 @@
     });
     localStorage.removeItem("dayfolder_advisor_pkce_verifier");
     history.replaceState(null, "", window.location.pathname);
-    if (!data.user || String(data.user.email || "").toLowerCase() !== ALLOWED_EMAIL) {
-      clearSession();
-      throw new Error("임태성 전용 Google 계정만 로그인할 수 있습니다.");
-    }
+    if (!data.user) throw new Error("로그인 정보를 확인하지 못했습니다.");
     saveSession(data);
-    return data.user;
+    window.location.reload();
+    return null;
   }
 
   function createGate() {
@@ -192,7 +189,7 @@
     }
     if (!user) user = await verifyToken(localStorage.getItem(TOKEN_KEY));
     if (!user) user = await refreshSession();
-    if (user && String(user.email || "").toLowerCase() === ALLOWED_EMAIL) setUser(user, gate);
+    if (user) setUser(user, gate);
     else {
       clearSession();
       setUser(null, gate);
@@ -206,15 +203,13 @@
         var formData = new FormData(form);
         var email = String(formData.get("email") || "").trim().toLowerCase();
         var password = String(formData.get("password") || "");
-        if (email !== ALLOWED_EMAIL) throw new Error("임태성 전용 계정만 로그인할 수 있습니다.");
         var data = await request("/auth/v1/token?grant_type=password", {
           method: "POST",
           headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
           body: JSON.stringify({ email: email, password: password })
         });
         saveSession(data);
-        setUser(data.user, gate);
-        form.reset();
+        window.location.reload();
       } catch (loginError) {
         clearSession();
         error.textContent = loginError.message === "Invalid login credentials" ? "이메일 또는 비밀번호를 확인해 주세요." : loginError.message;
