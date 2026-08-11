@@ -149,7 +149,9 @@
 
   function setUser(user, gate) {
     currentUser = user || null;
-    gate.hidden = !!currentUser;
+    // 로그아웃 상태에서도 달력 화면을 먼저 보여 주고,
+    // 헤더의 로그인 버튼을 눌렀을 때만 인증 창을 연다.
+    gate.hidden = true;
     syncExistingUi();
   }
 
