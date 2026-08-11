@@ -35,6 +35,25 @@
 .dayfolder-advisor-auth-divider::before, .dayfolder-advisor-auth-divider::after { content: ""; flex: 1; height: 1px; background: #e1e8eb; }
 .dayfolder-advisor-auth-error { min-height: 20px; margin-top: 12px; color: #c43d4e; font-size: 13px; text-align: center; }
 
+/* 범용 앱에서는 아직 비활성 자리표시자인 로그아웃 버튼에 금지 커서를 쓴다.
+   설계사 버전에서 실제 계정 버튼으로 활성화된 경우에는 정상 동작 상태를 복원한다. */
+.account-settings button:not(:disabled) {
+  cursor: pointer;
+  background: #fff;
+  color: #425865;
+}
+
+.account-settings button:not(:disabled):hover {
+  border-color: #2f8589;
+  background: #f7fbfb;
+  color: #24777b;
+}
+
+.account-settings button:not(:disabled):focus-visible {
+  outline: 3px solid rgba(47, 133, 137, .18);
+  outline-offset: 2px;
+}
+
 @media (max-width: 700px) {
   .dayfolder-advisor-auth-card { padding: 24px; }
 }
