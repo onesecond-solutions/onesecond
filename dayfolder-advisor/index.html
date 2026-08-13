@@ -38,6 +38,38 @@
         return dayfolderSearchParamGet.call(this, name);
       };
     </script>
+    <script>
+      (() => {
+        const refreshKey = "dayfolder-latest-bundle";
+        let checking = false;
+        async function checkForUpdate() {
+          if (checking || document.visibilityState === "hidden") return;
+          checking = true;
+          try {
+            const current = document.querySelector('script[type="module"][src]')?.src;
+            const checkUrl = new URL(location.pathname, location.origin);
+            checkUrl.searchParams.set("__dayfolder_version", String(Date.now()));
+            const response = await fetch(checkUrl, { cache: "no-store" });
+            if (!response.ok || !current) return;
+            const html = await response.text();
+            const latestPath = new DOMParser().parseFromString(html, "text/html").querySelector('script[type="module"][src]')?.getAttribute("src");
+            if (!latestPath) return;
+            const latest = new URL(latestPath, location.origin).href;
+            if (latest === current) { sessionStorage.removeItem(refreshKey); return; }
+            if (sessionStorage.getItem(refreshKey) === latest) return;
+            sessionStorage.setItem(refreshKey, latest);
+            const nextUrl = new URL(location.href);
+            nextUrl.searchParams.set("__dayfolder_refresh", latestPath.split("/").pop() || String(Date.now()));
+            location.replace(nextUrl);
+          } catch {} finally { checking = false; }
+        }
+        window.addEventListener("focus", checkForUpdate);
+        window.addEventListener("pageshow", checkForUpdate);
+        document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdate(); });
+        window.setInterval(checkForUpdate, 60_000);
+        window.setTimeout(checkForUpdate, 1_500);
+      })();
+    </script>
     <script type="module" crossorigin src="/dayfolder/app/assets/index-CjJhamP7.js"></script>
     <link rel="stylesheet" crossorigin href="/dayfolder/app/assets/index-BJ2LqSuF.css" />
     <link rel="stylesheet" href="/dayfolder/app/solar-terms.css?v=2" />
