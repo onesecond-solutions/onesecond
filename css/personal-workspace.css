@@ -36,3 +36,63 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-vault{padding:28px}#v-personal-workspace .pw-vault-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-right:44px}#v-personal-workspace .pw-vault-head h2{margin:0}#v-personal-workspace .pw-vault-head p{margin:6px 0 0;color:var(--ts)}#v-personal-workspace .pw-vault-content{margin-top:20px;border-top:1px solid var(--bd);padding-top:18px}#v-personal-workspace .pw-vault-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}#v-personal-workspace .pw-file-card{display:grid;min-width:0;gap:6px;padding:16px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1)}#v-personal-workspace .pw-file-card>span{font-size:2rem}#v-personal-workspace .pw-file-card b,#v-personal-workspace .pw-file-card small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#v-personal-workspace .pw-file-card small{color:var(--ts)}
 #v-personal-workspace .pw-archive-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#v-personal-workspace .pw-archive-card{padding:18px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);color:var(--tp);text-align:left;cursor:pointer}#v-personal-workspace .pw-archive-card:hover{border-color:var(--ac)}#v-personal-workspace .pw-archive-card strong,#v-personal-workspace .pw-archive-card span{display:block}#v-personal-workspace .pw-archive-card span{margin-top:7px;color:var(--ts);font-size:var(--ts-meta)}
 @media(max-width:860px){#v-personal-workspace .pw-head{align-items:stretch;flex-direction:column}#v-personal-workspace .pw-search{width:100%}#v-personal-workspace .pw-body{grid-template-columns:1fr;grid-template-rows:1fr auto}#v-personal-workspace .pw-main{grid-row:1;padding-bottom:82px}#v-personal-workspace .pw-nav{position:fixed;z-index:80;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));border-top:1px solid var(--bd);border-right:0;box-shadow:0 -5px 20px rgba(0,0,0,.08)}#v-personal-workspace .pw-nav button{justify-content:center;padding:9px 4px;font-size:11px;text-align:center}#v-personal-workspace .pw-nav .archive{display:none}#v-personal-workspace .pw-day{min-height:82px;padding:5px}#v-personal-workspace .pw-event{font-size:0;height:6px;padding:0}#v-personal-workspace .pw-toolbar{align-items:flex-start;flex-direction:column}#v-personal-workspace .pw-calendar-toolbar{grid-template-columns:1fr}#v-personal-workspace .pw-calendar-toolbar>h2{grid-row:1;text-align:left}#v-personal-workspace .pw-calendar-toolbar>.pw-actions:last-child{justify-content:flex-start}#v-personal-workspace .pw-system-note{grid-template-columns:1fr}#v-personal-workspace .pw-system-note strong{grid-row:auto}}
+
+/* Google Workspace 계열 시각 밀도: 가벼운 글자, 낮은 대비, 평평한 표면 */
+#v-personal-workspace,#v-personal-workspace button,#v-personal-workspace input,#v-personal-workspace select,#v-personal-workspace textarea{font-family:"Google Sans","Roboto","Noto Sans KR","Pretendard",Arial,sans-serif;letter-spacing:-.01em}
+#v-personal-workspace{background:#f8fafd;color:#1f1f1f;font-size:14px;font-weight:400}
+#v-personal-workspace .pw-head{padding:18px 28px;border-bottom:0;background:#f8fafd}
+#v-personal-workspace .pw-title h1{font-size:22px;font-weight:500;line-height:1.35;letter-spacing:-.025em}
+#v-personal-workspace .pw-title p{margin-top:3px;color:#5f6368;font-size:13px;font-weight:400}
+#v-personal-workspace .pw-search{height:48px;padding:0 18px;border:0;border-radius:24px;background:#e9eef6;transition:background .15s,box-shadow .15s}
+#v-personal-workspace .pw-search:focus-within{background:#fff;box-shadow:0 1px 2px rgba(60,64,67,.18),0 1px 3px 1px rgba(60,64,67,.10)}
+#v-personal-workspace .pw-search input{font-size:15px;font-weight:400}
+#v-personal-workspace .pw-body{grid-template-columns:200px minmax(0,1fr);gap:8px;padding:0 8px 8px}
+#v-personal-workspace .pw-nav{gap:2px;padding:10px 4px;border-right:0;background:#f8fafd}
+#v-personal-workspace .pw-nav button{min-height:40px;padding:0 16px;border-radius:20px;color:#3c4043;font-size:14px;font-weight:500}
+#v-personal-workspace .pw-nav button span{font-size:16px;font-weight:400}
+#v-personal-workspace .pw-nav button:hover{background:#e9eef6}
+#v-personal-workspace .pw-nav button.on{background:#c2e7ff;color:#001d35}
+#v-personal-workspace .pw-nav .archive{margin:18px 8px 0;padding:16px 8px 0;border-top:1px solid #dde1e5;border-radius:0}
+#v-personal-workspace .pw-main{padding:24px 24px 32px;border-radius:16px;background:#fff}
+#v-personal-workspace .pw-toolbar{margin-bottom:16px}
+#v-personal-workspace .pw-toolbar h2,#v-personal-workspace .pw-calendar-toolbar>h2{font-size:18px;font-weight:500;letter-spacing:-.02em}
+#v-personal-workspace .pw-subtitle{color:#5f6368;font-size:12px;font-weight:400}
+#v-personal-workspace .pw-btn{min-height:36px;padding:0 14px;border-color:#dadce0;border-radius:18px;background:#fff;color:#3c4043;font-size:13px;font-weight:500}
+#v-personal-workspace .pw-btn:hover{border-color:#c4c7c5;background:#f8fafd;box-shadow:0 1px 2px rgba(60,64,67,.15)}
+#v-personal-workspace .pw-btn.primary{border-color:#0b57d0;background:#0b57d0;color:#fff;box-shadow:none}
+#v-personal-workspace .pw-stats{gap:10px;margin-bottom:16px}
+#v-personal-workspace .pw-stat{padding:15px 18px;border:0;border-radius:12px;background:#f0f4f9}
+#v-personal-workspace .pw-stat span{color:#5f6368;font-size:12px;font-weight:400}
+#v-personal-workspace .pw-stat strong{margin-top:5px;color:#1f1f1f;font-size:24px;font-weight:500;line-height:1.2}
+#v-personal-workspace .pw-grid{gap:12px}
+#v-personal-workspace .pw-panel,#v-personal-workspace .pw-explorer,#v-personal-workspace .pw-search-results,#v-personal-workspace .pw-agenda,#v-personal-workspace .pw-cal,#v-personal-workspace .pw-time{border-color:#e0e3e7;border-radius:12px;box-shadow:none}
+#v-personal-workspace .pw-panel-head{padding:12px 16px;border-bottom-color:#e8eaed}
+#v-personal-workspace .pw-panel-head strong,#v-personal-workspace .pw-row b,#v-personal-workspace .pw-table b,#v-personal-workspace .pw-search-results b{font-size:14px;font-weight:500}
+#v-personal-workspace .pw-panel-head button{color:#0b57d0;font-size:12px;font-weight:500}
+#v-personal-workspace .pw-row{padding:11px 16px;border-bottom-color:#e8eaed}
+#v-personal-workspace .pw-row small{margin-top:2px;color:#5f6368;font-size:11px;font-weight:400}
+#v-personal-workspace .pw-row:hover,#v-personal-workspace .pw-table tbody tr:hover,#v-personal-workspace .pw-search-results>button:hover{background:#f6f8fc}
+#v-personal-workspace .pw-tabs{gap:8px}
+#v-personal-workspace .pw-tabs button{padding:7px 14px;border-color:#dadce0;border-radius:8px;background:#fff;color:#3c4043;font-size:12px;font-weight:500}
+#v-personal-workspace .pw-tabs button.on{border-color:#a8c7fa;background:#d3e3fd;color:#041e49}
+#v-personal-workspace .pw-table th{padding:9px 14px;background:#fff;color:#5f6368;font-size:11px;font-weight:500}
+#v-personal-workspace .pw-table td{padding:11px 14px;border-bottom-color:#e8eaed;font-size:13px;font-weight:400}
+#v-personal-workspace .pw-badge{padding:3px 7px;background:#f0f4f9;color:#5f6368;font-size:10px;font-weight:500}
+#v-personal-workspace .pw-badge.public{background:#e6f4ea;color:#137333}
+#v-personal-workspace .pw-system-note{padding:11px 14px;border:0;border-radius:8px;background:#d3e3fd;color:#041e49}
+#v-personal-workspace .pw-system-note strong,#v-personal-workspace .pw-system-note span{font-size:12px;font-weight:500}
+#v-personal-workspace .pw-system-note small{color:#174ea6;font-size:11px;font-weight:400}
+#v-personal-workspace .pw-dialog{border-color:#dadce0;border-radius:16px;box-shadow:0 8px 24px rgba(60,64,67,.24)}
+#v-personal-workspace .pw-form h2,#v-personal-workspace .pw-detail h2,#v-personal-workspace .pw-vault-head h2{font-size:20px;font-weight:500}
+#v-personal-workspace .pw-field>span{font-size:12px;font-weight:500}
+#v-personal-workspace .pw-field input,#v-personal-workspace .pw-field select,#v-personal-workspace .pw-field textarea{border-color:#c4c7c5;border-radius:8px;background:#fff;font-size:14px;font-weight:400}
+#v-personal-workspace .pw-file-card{padding:14px;border:0;border-radius:10px;background:#f0f4f9}
+#v-personal-workspace .pw-file-card b{font-size:12px;font-weight:500}
+#v-personal-workspace .pw-file-card small{font-size:10px;font-weight:400}
+#v-personal-workspace .pw-cal-head{background:#fff}
+#v-personal-workspace .pw-cal-head span{color:#5f6368;font-size:11px;font-weight:500}
+#v-personal-workspace .pw-day{border-color:#e8eaed;color:#3c4043;font-size:12px;font-weight:400}
+#v-personal-workspace .pw-day>strong{font-weight:500}
+#v-personal-workspace .pw-day.today>strong{background:#0b57d0;font-weight:500}
+#v-personal-workspace .pw-event{background:#d3e3fd;color:#174ea6;font-size:10px;font-weight:500}
+@media(max-width:860px){#v-personal-workspace .pw-body{padding:0;gap:0}#v-personal-workspace .pw-main{border-radius:0}#v-personal-workspace .pw-head{padding:14px 16px}#v-personal-workspace .pw-nav{background:#fff}#v-personal-workspace .pw-nav button{min-height:44px;border-radius:12px}}
