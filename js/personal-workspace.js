@@ -1,50 +1,272 @@
-(function(){
+(function () {
   'use strict';
-  var PILOT='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var state={section:'home',assetFilter:'all',q:'',month:new Date(),data:{library:[],scripts:[],events:[],customers:[],consultations:[]},loaded:false};
-  function user(){try{return JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}')}catch(e){return{}}}
-  function allowed(){var localTest=location.hostname==='127.0.0.1'||location.hostname==='localhost';return localTest||String(user().id||'')===PILOT}
-  function esc(v){return String(v==null?'':v).replace(/[&<>'"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]})}
-  function text(v){var d=document.createElement('div');d.innerHTML=String(v||'');return(d.textContent||'').trim()}
-  function date(v){if(!v)return'';var d=new Date(v);return isNaN(d)?String(v).slice(0,10):d.toLocaleDateString('ko-KR')}
-  function api(path,opt){return window.db.fetch('/rest/v1/'+path,opt||{}).then(function(r){if(!r.ok)throw new Error(String(r.status));return r.status===204?[]:r.json()})}
-  function ensure(){
-    if(!allowed())return false;
+
+  var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
+  var state = {
+    section: 'home', assetFilter: 'all', query: '', composing: false, searchTimer: 0,
+    calendarMode: 'month', selectedDate: ymd(new Date()), cursor: new Date(),
+    status: 'idle', error: '', loadedFor: '', requestId: 0,
+    data: { library: [], scripts: [], events: [], customers: [], consultations: [] }
+  };
+
+  function storedUser() {
+    try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); }
+    catch (_) { return {}; }
+  }
+  function currentUserId() {
+    return String((window.AppState && window.AppState.userId) || storedUser().id || '');
+  }
+  function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
+  function allowed() { return isLocal() || currentUserId() === PILOT_ID; }
+  function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
+  function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
+  function stripHtml(value) { var node = document.createElement('div'); node.innerHTML = String(value || ''); return (node.textContent || '').trim(); }
+  function formatDate(value) { if (!value) return ''; var d = new Date(value); return isNaN(d.getTime()) ? String(value).slice(0, 10) : d.toLocaleDateString('ko-KR'); }
+  function ymd(date) { return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0'); }
+  function parseDate(value) { var p = String(value).slice(0, 10).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function addDays(value, count) { var d = typeof value === 'string' ? parseDate(value) : new Date(value); d.setDate(d.getDate() + count); return ymd(d); }
+  function weekday(value) { return ['일', '월', '화', '수', '목', '금', '토'][parseDate(value).getDay()]; }
+  function api(path) {
+    return window.db.fetch('/rest/v1/' + path).then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    });
+  }
+
+  function ensureShell() {
+    if (!allowed()) return false;
     document.body.classList.add('is-personal-workspace');
-    var side=document.querySelector('.side');
-    if(side&&!document.getElementById('nav-personal-workspace')){var n=document.createElement('div');n.className='nav';n.id='nav-personal-workspace';n.innerHTML='<span class="ic">▣</span><span class="lbl">내 업무</span>';n.onclick=function(){open('home')};var home=document.getElementById('nav-home');side.insertBefore(n,home?home.nextSibling:side.firstChild)}
-    var body=document.querySelector('.body');
-    if(body&&!document.getElementById('v-personal-workspace')){var v=document.createElement('div');v.className='wrap view';v.id='v-personal-workspace';body.appendChild(v)}
-    return true
+    var side = document.querySelector('.side');
+    if (side && !document.getElementById('nav-personal-workspace')) {
+      var nav = document.createElement('div');
+      nav.className = 'nav'; nav.id = 'nav-personal-workspace';
+      nav.innerHTML = '<span class="ic">▣</span><span class="lbl">내 업무</span>';
+      nav.onclick = function () { openWorkspace('home'); };
+      var home = document.getElementById('nav-home');
+      side.insertBefore(nav, home ? home.nextSibling : side.firstChild);
+    }
+    var body = document.querySelector('.body');
+    if (body && !document.getElementById('v-personal-workspace')) {
+      var view = document.createElement('div');
+      view.className = 'wrap view'; view.id = 'v-personal-workspace';
+      body.appendChild(view);
+    }
+    return true;
   }
-  function load(force){
-    if(state.loaded&&!force)return Promise.resolve();
-    var u=user(),id=encodeURIComponent(u.id||'');
-    return Promise.all([
-      api('library?owner_id=eq.'+id+'&order=created_at.desc&limit=1000&select=*').catch(function(){return[]}),
-      api('scripts?owner_id=eq.'+id+'&is_active=eq.true&order=created_at.desc&limit=1000&select=*').catch(function(){return[]}),
-      api('calendar_events?author_id=eq.'+id+'&order=event_date.desc&limit=1000&select=*').catch(function(){return[]}),
-      api('sales_customers?deleted_at=is.null&order=created_at.desc&limit=5000&select=*').catch(function(){return[]}),
-      api('sales_consultations?order=consulted_at.desc&limit=2000&select=*').catch(function(){return[]})
-    ]).then(function(a){state.data={library:a[0],scripts:a[1],events:a[2],customers:a[3],consultations:a[4]};state.loaded=true})
+
+  function loadData(force) {
+    var userId = currentUserId();
+    if (!authenticated()) {
+      state.status = 'waiting-auth'; state.loadedFor = ''; renderContent();
+      return Promise.resolve(false);
+    }
+    if (!force && state.status === 'ready' && state.loadedFor === userId) return Promise.resolve(true);
+    state.status = 'loading'; state.error = ''; renderContent();
+    var requestId = ++state.requestId;
+    var id = encodeURIComponent(userId);
+    var requests = [
+      api('library?owner_id=eq.' + id + '&order=created_at.desc&limit=5000&select=*'),
+      api('scripts?owner_id=eq.' + id + '&is_active=eq.true&order=created_at.desc&limit=5000&select=*'),
+      api('calendar_events?author_id=eq.' + id + '&order=event_date.desc&limit=5000&select=*'),
+      api('sales_customers?deleted_at=is.null&order=created_at.desc&limit=5000&select=*'),
+      api('sales_consultations?order=consulted_at.desc&limit=5000&select=*')
+    ];
+    return Promise.allSettled(requests).then(function (results) {
+      if (requestId !== state.requestId) return false;
+      var names = ['library', 'scripts', 'events', 'customers', 'consultations'];
+      var failed = [];
+      results.forEach(function (result, index) {
+        if (result.status === 'fulfilled' && Array.isArray(result.value)) state.data[names[index]] = result.value;
+        else failed.push(names[index]);
+      });
+      state.loadedFor = userId;
+      state.status = failed.length ? 'partial' : 'ready';
+      state.error = failed.length ? failed.join(', ') + ' 자료를 불러오지 못했습니다.' : '';
+      renderContent();
+      return failed.length === 0;
+    });
   }
-  function nav(){var items=[['home','⌂','홈'],['assets','▤','자료'],['customers','♙','고객'],['consultations','✎','상담'],['calendar','▦','캘린더']];return '<nav class="pw-nav">'+items.map(function(x){return'<button type="button" class="'+(state.section===x[0]?'on':'')+'" onclick="OSPersonalWorkspace.go(\''+x[0]+'\')"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('')+'<button type="button" class="archive '+(state.section==='archive'?'on':'')+'" onclick="OSPersonalWorkspace.go(\'archive\')">기존 아카이브</button></nav>'}
-  function row(title,sub,right,onclick){return'<button type="button" class="pw-row"'+(onclick?' onclick="'+onclick+'"':'')+'><span><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></span><span>'+right+'</span></button>'}
-  function filtered(a,fn){var q=state.q.trim().toLowerCase();return a.filter(function(x){return!q||fn(x).toLowerCase().indexOf(q)>=0})}
-  function home(){var d=state.data,today=new Date().toISOString().slice(0,10),todayEvents=d.events.filter(function(x){return String(x.event_date||'').slice(0,10)===today});var recent=[].concat(d.scripts.map(function(x){return{t:x.title,s:'업무노트 · '+date(x.created_at)}}),d.library.map(function(x){return{t:x.title,s:(x.memo_text?'메모':'자료실')+' · '+date(x.created_at)}})).slice(0,6);return'<div class="pw-toolbar"><h2>오늘의 업무</h2><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.legacy(\'myspace\')">자료 추가</button><button class="pw-btn" onclick="OSPersonalWorkspace.legacy(\'salesnote\')">고객 등록</button><button class="pw-btn primary" onclick="OSPersonalWorkspace.legacy(\'myspace\')">기록하기</button></div></div><div class="pw-stats"><div class="pw-stat"><span>오늘 일정</span><strong>'+todayEvents.length+'</strong></div><div class="pw-stat"><span>고객</span><strong>'+d.customers.length+'</strong></div><div class="pw-stat"><span>업무노트</span><strong>'+d.scripts.length+'</strong></div><div class="pw-stat"><span>보관 자료</span><strong>'+d.library.length+'</strong></div></div><div class="pw-grid"><section class="pw-panel"><div class="pw-panel-head"><strong>오늘 일정</strong><button onclick="OSPersonalWorkspace.go(\'calendar\')">전체 보기</button></div><div class="pw-list">'+(todayEvents.length?todayEvents.slice(0,6).map(function(x){return row(x.title,x.description||'일정',esc(String(x.event_time||'').slice(0,5)),'')}).join(''):'<div class="pw-empty">오늘 일정이 없습니다.</div>')+'</div></section><section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSPersonalWorkspace.go(\'assets\')">전체 보기</button></div><div class="pw-list">'+(recent.length?recent.map(function(x){return row(x.t,x.s,'›','OSPersonalWorkspace.go(\'assets\')')}).join(''):'<div class="pw-empty">저장된 자료가 없습니다.</div>')+'</div></section></div>'}
-  function visibility(x){var pub=String(x.scope||'personal')==='global';return'<span class="pw-badge '+(pub?'public':'')+'">'+(pub?'공개':'기존 개인 분류')+'</span>'}
-  function assets(){var all=[];state.data.scripts.forEach(function(x){all.push({type:'note',kind:'업무노트',title:x.title,body:text(x.script_text),created:x.created_at,raw:x})});state.data.library.forEach(function(x){var memo=!!x.memo_text;all.push({type:memo?'memo':'file',kind:memo?'메모':'자료실',title:x.title,body:x.memo_text||x.description||x.link_url||x.file_url||'',created:x.created_at,raw:x})});all=filtered(all,function(x){return x.title+' '+x.body+' '+x.kind}).filter(function(x){return state.assetFilter==='all'||x.type===state.assetFilter});var tabs=[['all','전체'],['note','업무노트'],['file','자료실'],['memo','메모']];return'<div class="pw-toolbar"><h2>자료</h2><div class="pw-actions"><button class="pw-btn primary" onclick="OSPersonalWorkspace.legacy(\'myspace\')">+ 자료 추가</button></div></div><div class="pw-tabs">'+tabs.map(function(x){return'<button class="'+(state.assetFilter===x[0]?'on':'')+'" onclick="OSPersonalWorkspace.assetFilter(\''+x[0]+'\')">'+x[1]+'</button>'}).join('')+'</div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>'+all.map(function(x){return'<tr onclick="OSPersonalWorkspace.openAsset(\''+x.type+'\',\''+esc(x.raw.id)+'\')"><td><b>'+esc(x.title||'(제목 없음)')+'</b></td><td>'+x.kind+'</td><td>'+visibility(x.raw)+'</td><td>'+date(x.created)+'</td></tr>'}).join('')+'</tbody></table>'+(all.length?'':'<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>')+'</div>'}
-  function customers(){var rows=filtered(state.data.customers,function(x){return(x.name||'')+' '+(x.phone||x.phone_raw||'')+' '+(x.status||'')});return'<div class="pw-toolbar"><h2>고객</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.legacy(\'salesnote\')">+ 고객 등록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객명</th><th>연락처</th><th>상태</th><th>등록일</th></tr></thead><tbody>'+rows.map(function(x){return'<tr onclick="OSPersonalWorkspace.openCustomer(\''+esc(x.id)+'\')"><td><b>'+esc(x.name||'(이름 없음)')+'</b></td><td>'+esc(x.phone||x.phone_raw||'')+'</td><td><span class="pw-badge">'+esc(x.status||'미분류')+'</span></td><td>'+date(x.created_at)+'</td></tr>'}).join('')+'</tbody></table>'+(rows.length?'':'<div class="pw-empty">등록된 고객이 없습니다.</div>')+'</div>'}
-  function consultations(){var map={};state.data.customers.forEach(function(x){map[x.id]=x.name});var rows=filtered(state.data.consultations,function(x){return(map[x.customer_id]||'')+' '+(x.memo||'')+' '+(x.channel||'')});return'<div class="pw-toolbar"><h2>상담</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.legacy(\'salesnote\')">+ 상담 기록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객</th><th>상담 내용</th><th>방식</th><th>상담일</th></tr></thead><tbody>'+rows.map(function(x){return'<tr onclick="OSPersonalWorkspace.openCustomer(\''+esc(x.customer_id)+'\')"><td><b>'+esc(map[x.customer_id]||'고객')+'</b></td><td>'+esc(x.memo||'')+'</td><td>'+esc(x.channel||'')+'</td><td>'+date(x.consulted_at||x.created_at)+'</td></tr>'}).join('')+'</tbody></table>'+(rows.length?'':'<div class="pw-empty">상담 기록이 없습니다.</div>')+'</div>'}
-  function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-  function calendar(){var c=new Date(state.month.getFullYear(),state.month.getMonth(),1),start=new Date(c);start.setDate(1-c.getDay());var days=[];for(var i=0;i<42;i++){var d=new Date(start);d.setDate(start.getDate()+i);days.push(d)}var ev={};state.data.events.forEach(function(x){var k=String(x.event_date||'').slice(0,10);(ev[k]=ev[k]||[]).push(x)});var now=ymd(new Date());return'<div class="pw-toolbar"><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.moveMonth(-1)">‹</button><button class="pw-btn" onclick="OSPersonalWorkspace.todayMonth()">오늘</button><button class="pw-btn" onclick="OSPersonalWorkspace.moveMonth(1)">›</button></div><h2>'+c.getFullYear()+'년 '+(c.getMonth()+1)+'월</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.legacy(\'myspace\')">+ 일정</button></div><div class="pw-cal"><div class="pw-cal-head">'+['일','월','화','수','목','금','토'].map(function(x){return'<span>'+x+'</span>'}).join('')+'</div><div class="pw-cal-grid">'+days.map(function(d){var k=ymd(d),items=ev[k]||[];return'<button class="pw-day '+(d.getMonth()!==c.getMonth()?'out ':'')+(k===now?'today':'')+'"><strong>'+d.getDate()+'</strong>'+items.slice(0,3).map(function(x){return'<span class="pw-event">'+esc(x.title)+'</span>'}).join('')+'</button>'}).join('')+'</div></div>'}
-  function archive(){var cards=[['home','기존 원세컨드 홈','보험 검색과 기존 홈 도구'],['product-lineup','상품 라인업','원수사 상품 자료'],['newsletters','소식지','원수사 GA 소식지'],['bojang','보장분석','기존 보장분석 도구'],['axis-medical','보험 지식','실손·암·뇌·심장 등'],['namecard','기타 도구','명함과 기존 제작 도구']];return'<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">'+cards.map(function(x){return'<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\''+x[0]+'\')"><strong>'+x[1]+'</strong><span>'+x[2]+'</span></button>'}).join('')+'</div>'}
-  function content(){if(state.section==='assets')return assets();if(state.section==='customers')return customers();if(state.section==='consultations')return consultations();if(state.section==='calendar')return calendar();if(state.section==='archive')return archive();return home()}
-  function render(){var v=document.getElementById('v-personal-workspace');if(!v)return;v.innerHTML='<div class="pw-shell"><header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input type="search" value="'+esc(state.q)+'" placeholder="내 자료와 고객 검색" oninput="OSPersonalWorkspace.search(this.value)"></label></header><div class="pw-body">'+nav()+'<main class="pw-main">'+content()+'</main></div></div>'}
-  function open(section){if(!ensure()){if(window.showView)window.showView('home');return}state.section=section||'home';var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');document.getElementById('v-personal-workspace').classList.add('on');render();load(false).then(render);try{history.pushState({view:'personal-workspace'},'','?view=personal-workspace')}catch(e){}}
-  function go(s){state.section=s;render()}
-  function legacy(k){if(window.showView)window.showView(k)}
-  function boot(){if(!ensure())return;open('home')}
-  window.OSPersonalWorkspace={open:open,go:go,legacy:legacy,search:function(q){state.q=q;render()},assetFilter:function(x){state.assetFilter=x;render()},moveMonth:function(n){state.month=new Date(state.month.getFullYear(),state.month.getMonth()+n,1);render()},todayMonth:function(){state.month=new Date();render()},openAsset:function(type){legacy(type==='note'?'scripts':'myspace')},openCustomer:function(){legacy('salesnote')},boot:boot};
-  window.addEventListener('load',function(){setTimeout(boot,500)});
+
+  function navHtml() {
+    var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객'], ['consultations', '✎', '상담'], ['calendar', '▦', '캘린더']];
+    return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
+      return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
+    }).join('') + '<button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">기존 아카이브</button></nav>';
+  }
+  function statusHtml() {
+    if (state.status === 'waiting-auth') return '<div class="pw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
+    if (state.status === 'loading' || state.status === 'idle') return '<div class="pw-state"><strong>내 자료를 불러오는 중입니다.</strong><span>잠시만 기다려 주세요.</span></div>';
+    return state.error ? '<div class="pw-error" role="alert"><span>' + esc(state.error) + '</span><button class="pw-btn" onclick="OSPersonalWorkspace.reload()">다시 불러오기</button></div>' : '';
+  }
+  function matches(value) { var q = state.query.trim().toLocaleLowerCase('ko-KR'); return !q || String(value || '').toLocaleLowerCase('ko-KR').indexOf(q) >= 0; }
+  function row(title, subtitle, right, action) {
+    return '<button type="button" class="pw-row" onclick="' + action + '"><span><b>' + esc(title || '(제목 없음)') + '</b><small>' + esc(subtitle || '') + '</small></span><span>' + right + '</span></button>';
+  }
+  function scopeBadge(item) { var global = String(item.scope || 'personal') === 'global'; return '<span class="pw-badge ' + (global ? 'public' : '') + '">' + (global ? '공개' : '기존 개인 분류') + '</span>'; }
+
+  function careEvents() {
+    var result = [];
+    state.data.customers.forEach(function (customer) {
+      var profile = customer.profile && typeof customer.profile === 'object' ? customer.profile : {};
+      var base = String(profile.appl_date || '').slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(base)) return;
+      [[31, '청약 +31일'], [91, '청약 +91일'], [181, '청약 +181일'], [365, '청약 +365일']].forEach(function (step) {
+        result.push({ id: 'care-' + customer.id + '-' + step[0], event_date: addDays(base, step[0]), title: (customer.name || '고객') + ' · ' + step[1], event_type: 'customer', customer_id: customer.id });
+      });
+    });
+    return result;
+  }
+  function allEvents() { return state.data.events.concat(careEvents()); }
+
+  function homeHtml() {
+    var today = ymd(new Date());
+    var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
+    var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
+      .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
+      .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 6);
+    return statusHtml() + '<div class="pw-toolbar"><h2>오늘의 업무</h2><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.addAsset()">자료 추가</button><button class="pw-btn" onclick="OSPersonalWorkspace.addCustomer()">고객 등록</button><button class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultation()">상담 기록</button></div></div>'
+      + '<div class="pw-stats"><div class="pw-stat"><span>오늘 일정</span><strong>' + todayEvents.length + '</strong></div><div class="pw-stat"><span>고객</span><strong>' + state.data.customers.length + '</strong></div><div class="pw-stat"><span>업무노트</span><strong>' + state.data.scripts.length + '</strong></div><div class="pw-stat"><span>보관 자료</span><strong>' + state.data.library.length + '</strong></div></div>'
+      + '<div class="pw-grid"><section class="pw-panel"><div class="pw-panel-head"><strong>오늘 일정</strong><button onclick="OSPersonalWorkspace.go(\'calendar\')">전체 보기</button></div><div class="pw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(event.title, event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="pw-empty">오늘 일정이 없습니다.</div>') + '</div></section>'
+      + '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSPersonalWorkspace.go(\'assets\')">전체 보기</button></div><div class="pw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSPersonalWorkspace.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="pw-empty">저장된 자료가 없습니다.</div>') + '</div></section></div>';
+  }
+
+  function assetsHtml() {
+    var items = [];
+    state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
+    state.data.library.forEach(function (item) { var memo = !!item.memo_text; items.push({ source: 'library', type: memo ? 'memo' : 'file', kind: memo ? '메모' : '자료실', title: item.title, body: item.memo_text || item.description || item.link_url || item.file_url || '', created: item.created_at, raw: item }); });
+    items = items.filter(function (item) { return (state.assetFilter === 'all' || item.type === state.assetFilter) && matches(item.title + ' ' + item.body + ' ' + item.kind); });
+    var tabs = [['all', '전체'], ['note', '업무노트'], ['file', '자료실'], ['memo', '메모']];
+    return statusHtml() + '<div class="pw-toolbar"><div><h2>자료</h2><p class="pw-subtitle">노트와 메모는 여기서 찾고, PC 파일과 폴더는 Windows형 파일함에서 관리합니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.openVault()">📁 파일함 열기</button><button class="pw-btn primary" onclick="OSPersonalWorkspace.addAsset()">+ 자료 추가</button></div></div><div class="pw-system-note"><strong>사이트 파일함 기능</strong><span>새 폴더, 파일·폴더 끌어놓기, 이름 변경, 이동, 삭제, 큰 아이콘·자세히 보기를 지원합니다.</span><small>Windows 기본 기능과 구분: 이 기능은 사이트에 보관된 자료만 조작하며 PC의 원본 파일은 변경하지 않습니다.</small></div><div class="pw-tabs">' + tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('') + '</div>'
+      + '<div class="pw-explorer"><table class="pw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" onclick="OSPersonalWorkspace.showAsset(\'' + item.source + '\',\'' + esc(item.raw.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
+  }
+  function customersHtml() {
+    var rows = state.data.customers.filter(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || '')); });
+    return statusHtml() + '<div class="pw-toolbar"><h2>고객</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addCustomer()">+ 고객 등록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객명</th><th>연락처</th><th>상태</th><th>등록일</th></tr></thead><tbody>' + rows.map(function (item) { return '<tr onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.id) + '\')"><td><b>' + esc(item.name || '(이름 없음)') + '</b></td><td>' + esc(item.phone || item.phone_raw || '') + '</td><td><span class="pw-badge">' + esc(item.status || '미분류') + '</span></td><td>' + formatDate(item.created_at) + '</td></tr>'; }).join('') + '</tbody></table>' + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div>';
+  }
+  function consultationsHtml() {
+    var names = {}; state.data.customers.forEach(function (item) { names[item.id] = item.name; });
+    var rows = state.data.consultations.filter(function (item) { return matches((names[item.customer_id] || '') + ' ' + (item.memo || '') + ' ' + (item.channel || '')); });
+    return statusHtml() + '<div class="pw-toolbar"><h2>상담</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultation()">+ 상담 기록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객</th><th>상담 내용</th><th>방식</th><th>상담일</th></tr></thead><tbody>' + rows.map(function (item) { return '<tr onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.customer_id) + '\')"><td><b>' + esc(names[item.customer_id] || '고객') + '</b></td><td>' + esc(item.memo || '') + '</td><td>' + esc(item.channel || '') + '</td><td>' + formatDate(item.consulted_at || item.created_at) + '</td></tr>'; }).join('') + '</tbody></table>' + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div>';
+  }
+
+  function calendarTitle() {
+    var selected = parseDate(state.selectedDate);
+    if (state.calendarMode === 'day') return selected.getFullYear() + '년 ' + (selected.getMonth() + 1) + '월 ' + selected.getDate() + '일';
+    if (state.calendarMode === 'week') { var start = new Date(selected); start.setDate(start.getDate() - start.getDay()); return (start.getMonth() + 1) + '월 ' + start.getDate() + '일 – ' + formatDate(addDays(start, 6)); }
+    if (state.calendarMode === 'agenda') return '일정';
+    return state.cursor.getFullYear() + '년 ' + (state.cursor.getMonth() + 1) + '월';
+  }
+  function eventsFor(date) { return allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === date; }).sort(function (a, b) { return String(a.event_time || '').localeCompare(String(b.event_time || '')); }); }
+  function monthView() {
+    var first = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), start = new Date(first); start.setDate(1 - first.getDay());
+    var today = ymd(new Date()), cells = [];
+    for (var i = 0; i < 42; i++) { var day = new Date(start); day.setDate(start.getDate() + i); var key = ymd(day), events = eventsFor(key); cells.push('<button type="button" class="pw-day ' + (day.getMonth() !== first.getMonth() ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.selectDate(\'' + key + '\')"><strong>' + day.getDate() + '</strong>' + events.slice(0, 3).map(function (event) { return '<span class="pw-event ' + (event.event_type === 'customer' ? 'customer' : '') + '">' + esc(event.title) + '</span>'; }).join('') + (events.length > 3 ? '<span class="pw-more">+' + (events.length - 3) + '</span>' : '') + '</button>'); }
+    return '<div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + cells.join('') + '</div></div>';
+  }
+  function timeView(days) {
+    var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
+    return '<div class="pw-time" style="--pw-days:' + days.length + '"><div class="pw-time-head"><span>GMT+09</span>' + days.map(function (date) { return '<button class="' + (date === ymd(new Date()) ? 'today' : '') + '" onclick="OSPersonalWorkspace.selectDate(\'' + date + '\')"><small>' + weekday(date) + '</small><strong>' + Number(date.slice(8)) + '</strong></button>'; }).join('') + '</div><div class="pw-time-body"><div class="pw-hours">' + hours.map(function (hour) { return '<span>' + (hour < 12 ? '오전 ' + hour : hour === 12 ? '오후 12' : '오후 ' + (hour - 12)) + '시</span>'; }).join('') + '</div>' + days.map(function (date) { var events = eventsFor(date); return '<div class="pw-time-day">' + hours.map(function () { return '<i></i>'; }).join('') + '<div class="pw-time-events">' + events.map(function (event) { return '<button onclick="OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(event.title) + '</b></button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>';
+  }
+  function agendaView() {
+    var start = state.selectedDate, end = addDays(start, 365);
+    var rows = allEvents().filter(function (event) { var date = String(event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return String(a.event_date).localeCompare(String(b.event_date)) || String(a.event_time || '').localeCompare(String(b.event_time || '')); });
+    return '<div class="pw-agenda">' + (rows.length ? rows.map(function (event) { var date = String(event.event_date).slice(0, 10); return '<button onclick="OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')"><time><strong>' + Number(date.slice(8)) + '</strong><span>' + Number(date.slice(5, 7)) + '월 · ' + weekday(date) + '</span></time><span><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(event.title) + '</b></span></button>'; }).join('') : '<div class="pw-empty">예정된 일정이 없습니다.</div>') + '</div>';
+  }
+  function calendarHtml() {
+    var modes = [['day', '일'], ['week', '주'], ['month', '월'], ['agenda', '일정']];
+    var view = '';
+    if (state.calendarMode === 'month') view = monthView();
+    else if (state.calendarMode === 'agenda') view = agendaView();
+    else if (state.calendarMode === 'day') view = timeView([state.selectedDate]);
+    else { var selected = parseDate(state.selectedDate); selected.setDate(selected.getDate() - selected.getDay()); var week = []; for (var i = 0; i < 7; i++) week.push(addDays(selected, i)); view = timeView(week); }
+    return statusHtml() + '<div class="pw-calendar-toolbar"><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.calendarToday()">오늘</button><button class="pw-btn icon" aria-label="이전 보기" onclick="OSPersonalWorkspace.moveCalendar(-1)">‹</button><button class="pw-btn icon" aria-label="다음 보기" onclick="OSPersonalWorkspace.moveCalendar(1)">›</button></div><h2>' + calendarTitle() + '</h2><div class="pw-actions pw-mode">' + modes.map(function (mode) { return '<button class="pw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="pw-btn primary" onclick="OSPersonalWorkspace.addEvent()">+ 일정</button></div></div>' + view;
+  }
+  function archiveHtml() {
+    var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
+    return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
+  }
+  function sectionHtml() {
+    if (state.status === 'idle' || state.status === 'waiting-auth' || state.status === 'loading') return statusHtml();
+    if (state.section === 'assets') return assetsHtml();
+    if (state.section === 'customers') return customersHtml();
+    if (state.section === 'consultations') return consultationsHtml();
+    if (state.section === 'calendar') return calendarHtml();
+    if (state.section === 'archive') return archiveHtml();
+    return homeHtml();
+  }
+
+  function renderShell() {
+    var view = document.getElementById('v-personal-workspace'); if (!view) return;
+    view.innerHTML = '<div class="pw-shell"><header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header><div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>';
+    bindSearch(); renderContent();
+  }
+  function renderContent() { var main = document.getElementById('pw-main'); if (main) main.innerHTML = sectionHtml(); }
+  function bindSearch() {
+    var input = document.getElementById('pw-search-input'); if (!input) return;
+    input.addEventListener('compositionstart', function () { state.composing = true; });
+    input.addEventListener('compositionend', function () { state.composing = false; scheduleSearch(input.value); });
+    input.addEventListener('input', function () { if (!state.composing) scheduleSearch(input.value); });
+  }
+  function scheduleSearch(value) { window.clearTimeout(state.searchTimer); state.searchTimer = window.setTimeout(function () { state.query = value; renderContent(); }, 180); }
+  function setUrl(push) { var url = '?view=personal-workspace&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; try { history[push ? 'pushState' : 'replaceState']({ view: 'personal-workspace', section: state.section }, '', url); } catch (_) {} }
+
+  function openWorkspace(section, push) {
+    if (!ensureShell()) { if (window.showView) window.showView('home'); return; }
+    state.section = SECTIONS.indexOf(section) >= 0 ? section : 'home';
+    document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
+    document.getElementById('v-personal-workspace').classList.add('on');
+    renderShell(); setUrl(push !== false); loadData(false);
+  }
+  function go(section) { state.section = section; renderShell(); setUrl(true); }
+  function dialog(html) { var box = document.getElementById('pw-dialog'), body = document.getElementById('pw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (box.showModal) box.showModal(); else box.setAttribute('open', ''); }
+  function closeDialog() { var box = document.getElementById('pw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
+  function showAsset(source, id) {
+    var list = source === 'scripts' ? state.data.scripts : state.data.library;
+    var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
+    var body = source === 'scripts' ? item.script_text : item.memo_text || item.description || '';
+    var link = item.file_url || item.image_url || item.link_url;
+    dialog('<div class="pw-detail"><span class="pw-badge">' + (source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실') + '</span><h2>' + esc(item.title || '(제목 없음)') + '</h2><small>' + formatDate(item.created_at) + '</small><div class="pw-detail-body">' + (source === 'scripts' ? String(body || '') : esc(body).replace(/\n/g, '<br>')) + '</div>' + (link ? '<a class="pw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : '') + '</div>');
+  }
+  function showCustomer(id) {
+    var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!customer) return;
+    var history = state.data.consultations.filter(function (entry) { return String(entry.customer_id) === String(id); });
+    dialog('<div class="pw-detail"><span class="pw-badge">고객</span><h2>' + esc(customer.name || '(이름 없음)') + '</h2><p>' + esc(customer.phone || customer.phone_raw || '') + '</p><h3>상담 기록</h3><div class="pw-list">' + (history.length ? history.map(function (entry) { return row(formatDate(entry.consulted_at || entry.created_at), entry.memo || '', esc(entry.channel || ''), ''); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></div>');
+  }
+  function showEvent(id) { var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; dialog('<div class="pw-detail"><span class="pw-badge">' + (event.event_type === 'customer' ? '고객관리' : '일정') + '</span><h2>' + esc(event.title) + '</h2><p>' + esc(String(event.event_date || '').slice(0, 10)) + ' ' + esc(String(event.event_time || '').slice(0, 5)) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div></div>'); }
+
+  function legacy(key) { if (window.showView) window.showView(key); }
+  function addAsset() { legacy('myspace'); setTimeout(function () { if (typeof window.mysEmptyPick === 'function') window.mysEmptyPick(); }, 120); }
+  function openVault() {
+    legacy('myspace');
+    window.setTimeout(function () {
+      var chip = Array.prototype.filter.call(document.querySelectorAll('#v-myspace .chip'), function (item) { return item.textContent.trim() === '자료함'; })[0];
+      if (chip && typeof window.mysVaultOpen === 'function') window.mysVaultOpen(chip);
+    }, 160);
+  }
+  function addCustomer() { legacy('salesnote'); setTimeout(function () { if (typeof window._snOpenForm === 'function') window._snOpenForm(-1); }, 180); }
+  function addConsultation() { legacy('salesnote'); }
+  function addEvent() { if (typeof window.openCalAdd === 'function') window.openCalAdd('mys'); else legacy('myspace'); }
+  function moveCalendar(direction) {
+    if (state.calendarMode === 'month') state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + direction, 1);
+    else { var step = state.calendarMode === 'day' ? 1 : state.calendarMode === 'week' ? 7 : 365; state.selectedDate = addDays(state.selectedDate, direction * step); state.cursor = parseDate(state.selectedDate); }
+    renderContent(); setUrl(false);
+  }
+  function selectDate(date) { state.selectedDate = date; if (state.calendarMode === 'month') { var events = eventsFor(date); if (events.length) showEvent(events[0].id); } renderContent(); setUrl(false); }
+  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
+  function boot() { if (!ensureShell()) return; restoreFromUrl(); openWorkspace(state.section, false); }
+
+  restoreFromUrl();
+  document.addEventListener('appstate:ready', function () { if (!allowed()) return; if (!document.getElementById('v-personal-workspace')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
+  window.addEventListener('popstate', function () { if (!allowed() || !restoreFromUrl()) return; openWorkspace(state.section, false); });
+  window.addEventListener('load', function () { window.setTimeout(boot, 350); });
+  window.OSPersonalWorkspace = {
+    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
+    filterAssets: function (filter) { state.assetFilter = filter; renderContent(); },
+    showAsset: showAsset, showCustomer: showCustomer, showEvent: showEvent,
+    closeDialog: closeDialog, addAsset: addAsset, openVault: openVault, addCustomer: addCustomer, addConsultation: addConsultation, addEvent: addEvent,
+    setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
+    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
+    __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
+  };
 })();
