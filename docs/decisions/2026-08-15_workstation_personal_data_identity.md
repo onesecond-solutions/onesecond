@@ -9,8 +9,8 @@
 - 임태성 파일럿 워크스테이션의 `owner_id`는 `bylts@naver.com` 계정 UUID `98c5f4f9-10c1-4ee1-a656-5c2ca63239fd`다.
 - 관리자 계정 `bylts0428@gmail.com`으로 서버에 등록한 자료는 임태성 파일럿 워크스테이션에 표시하지 않는다.
 - 임태성이 관리자였다는 이유로 같은 관리자 `owner_id`가 지정된 서버 공용 자료는 개인 자료로 가져오지 않는다.
-- 파일럿 자료 화면에는 해당 `owner_id`가 직접 작성한 기존 `library`, `scripts`와 새 워크스테이션 자료만 표시한다.
-- `myspace_folders`, `myspace_files`는 관리자 계정으로 서버에 일괄 등록된 파일이 개인 자료에 섞여 있으므로 보험브리핑 자료 화면에서 제외한다.
+- 파일럿 자료 화면에는 해당 `owner_id`가 직접 작성한 기존 `library`, `scripts`, 개인 범위(`scope=personal`)의 `myspace_folders`, `myspace_files`와 새 워크스테이션 자료를 표시한다.
+- `myspace_folders`, `myspace_files` 중 팀·지점·공용 범위(`team`, `branch`, `global`) 자료는 관리자 서버 일괄 자료가 섞일 수 있으므로 보험브리핑 개인 자료 화면에서 제외한다.
 - 새 워크스테이션에서 작성·업로드한 자료는 `legacy_source IS NULL`이면서 현재 로그인 `owner_id`인 자료만 포함한다.
 - 다른 사용자에게 확대할 때도 고정된 임태성 ID나 이메일을 사용하지 않고, 현재 인증 세션의 사용자 ID를 계정 경계로 사용한다.
 

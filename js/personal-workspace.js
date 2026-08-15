@@ -20,10 +20,10 @@
   }
   function personalItemScope() {
     // workspace_items.owner_id is the canonical account boundary. The legacy
-    // payloads do not consistently contain owner_email, so email filtering can
-    // hide valid personal rows. For the pilot, only authored legacy content is
-    // shown; bulk server vault imports remain excluded from Insurance Briefing.
-    return '&or=(legacy_source.is.null,legacy_source.in.(library,scripts))';
+    // payloads do not consistently contain owner_email. Authored notes are kept,
+    // and only personal-scope vault rows are imported; team/branch/global bulk
+    // server material stays outside the Insurance Briefing workspace.
+    return '&or=(legacy_source.is.null,legacy_source.in.(library,scripts),and(legacy_source.in.(myspace_folders,myspace_files),legacy_payload->>scope.eq.personal))';
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || currentUserId() === PILOT_ID; }
