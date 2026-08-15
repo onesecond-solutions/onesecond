@@ -172,20 +172,39 @@
       + '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSPersonalWorkspace.go(\'assets\')">전체 보기</button></div><div class="pw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSPersonalWorkspace.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="pw-empty">저장된 자료가 없습니다.</div>') + '</div></section></div>';
   }
 
+  function assetCategory(item) {
+    var payload = item && item.legacy_payload;
+    if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (_) { payload = {}; } }
+    if (payload && ['note', 'file', 'memo'].indexOf(payload.workspace_category) >= 0) return payload.workspace_category;
+    if (item && item.item_type === 'note') return 'note';
+    if (item && item.item_type === 'memo') return 'memo';
+    return 'file';
+  }
+  function currentAssetCategory() {
+    if (state.assetFolder) {
+      var folder = state.data.library.find(function (item) { return String(item.id) === String(state.assetFolder) && item.item_type === 'folder'; });
+      if (folder) return assetCategory(folder);
+    }
+    return ['note', 'file', 'memo'].indexOf(state.assetFilter) >= 0 ? state.assetFilter : '';
+  }
+  function assetCategoryLabel(category) { return category === 'note' ? '업무노트' : category === 'memo' ? '메모' : '자료실'; }
+
   function assetsHtml() {
     var items = [];
     state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
-    state.data.library.forEach(function (item) { var memo = item.item_type === 'memo', folder = item.item_type === 'folder', file = item.item_type === 'file'; items.push({ source: 'library', type: memo ? 'memo' : 'file', folder: folder, kind: folder ? '폴더' : file ? '파일' : memo ? '메모' : item.item_type === 'link' ? '링크' : '자료', title: item.title, body: item.body || item.url || item.storage_path || '', created: item.created_at, raw: item }); });
+    state.data.library.forEach(function (item) { var memo = item.item_type === 'memo', folder = item.item_type === 'folder', file = item.item_type === 'file', category = assetCategory(item); items.push({ source: 'library', type: category, folder: folder, kind: folder ? '폴더' : file ? '파일' : memo ? '메모' : item.item_type === 'link' ? '링크' : '자료', title: item.title, body: item.body || item.url || item.storage_path || '', created: item.created_at, raw: item }); });
     items = items.filter(function (item) {
       if (state.assetFilter !== 'all' && item.type !== state.assetFilter) return false;
-      if (item.type === 'file' && String(item.raw.parent_id || '') !== String(state.assetFolder || '')) return false;
+      if (String(item.raw.parent_id || '') !== String(state.assetFolder || '')) return false;
       return matches(item.title + ' ' + item.body + ' ' + item.kind);
     }).sort(function (a, b) { return Number(!!b.folder) - Number(!!a.folder); });
     var tabs = [['all', '전체'], ['note', '업무노트'], ['file', '자료실'], ['memo', '메모']];
     var tabsHtml = tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('');
     var viewModes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
     var viewHtml = viewModes.map(function (mode) { return '<button type="button" class="' + (state.assetView === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setAssetView(\'' + mode[0] + '\')" aria-label="' + mode[1] + ' 보기" title="' + mode[1] + '"><span aria-hidden="true">' + mode[2] + '</span>' + mode[1] + '</button>'; }).join('');
-    var addMenu = '<details class="pw-add-menu"><summary>+ 자료 추가</summary><div class="pw-add-popover"><button type="button" onclick="OSPersonalWorkspace.newAssetFolder()">새 폴더</button><label>파일 업로드<input type="file" multiple hidden onchange="OSPersonalWorkspace.uploadAssetFiles(this.files);this.value=\'\'"></label><button type="button" onclick="OSPersonalWorkspace.addAsset()">업무노트·메모 작성</button></div></details>';
+    var destination = currentAssetCategory();
+    var destinationText = destination ? assetCategoryLabel(destination) + (state.assetFolder ? ' · 현재 폴더' : '') : '저장 위치를 선택합니다';
+    var addMenu = '<details class="pw-add-menu"><summary>+ 자료 추가</summary><div class="pw-add-popover"><small class="pw-add-destination">' + esc(destinationText) + '</small><button type="button" onclick="OSPersonalWorkspace.newAssetFolder()">새 폴더</button><label>파일 업로드<input type="file" multiple hidden onchange="OSPersonalWorkspace.uploadAssetFiles(this.files);this.value=\'\'"></label><button type="button" onclick="OSPersonalWorkspace.addAsset()">업무노트·메모 작성</button></div></details>';
     var controls = STANDALONE
       ? '<div class="pw-assets-controls"><div class="pw-tabs">' + tabsHtml + addMenu + '</div><div class="pw-assets-actions"><div class="pw-view-switch" aria-label="보기 방식">' + viewHtml + '</div></div></div>'
       : '<div class="pw-toolbar"><div><h2>자료</h2><p class="pw-subtitle">노트, 메모, 링크와 사이트 파일을 한 화면에서 관리합니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.openVault()">📁 파일함 열기</button><button class="pw-btn primary" onclick="OSPersonalWorkspace.addAsset()">+ 자료 추가</button></div></div><div class="pw-system-note"><strong>사이트 파일함</strong><span>새 폴더 만들기와 여러 파일 업로드를 지원합니다.</span><small>PC 원본과 별개인 사이트 보관 공간이며, 사이트에서 작업해도 PC 원본은 변경되지 않습니다.</small></div><div class="pw-tabs">' + tabsHtml + '</div>';
@@ -197,10 +216,11 @@
   }
   function assetOpenAction(item) { return item.folder ? "OSPersonalWorkspace.openAssetFolder('" + esc(item.raw.id) + "')" : "OSPersonalWorkspace.showAsset('" + item.source + "','" + esc(item.raw.id) + "')"; }
   function assetBreadcrumbHtml() {
-    if (state.assetFilter !== 'file') return '';
+    if (!state.assetFolder) return '';
     var parts = [], id = state.assetFolder;
     while (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); if (!folder) break; parts.unshift(folder); id = folder.parent_id; }
-    return '<nav class="pw-folder-path" aria-label="폴더 경로"><button type="button" onclick="OSPersonalWorkspace.openAssetFolder(\'\')">내 자료</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSPersonalWorkspace.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</nav>';
+    var category = currentAssetCategory();
+    return '<nav class="pw-folder-path" aria-label="폴더 경로"><button type="button" onclick="OSPersonalWorkspace.openAssetRoot(\'' + esc(category) + '\')">' + esc(assetCategoryLabel(category)) + '</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSPersonalWorkspace.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</nav>';
   }
   function assetCardHtml(item) {
     var raw = item.raw || {}, direct = raw.image_url || (/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(raw.url || '') ? raw.url : '');
@@ -319,7 +339,7 @@
   function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; loadData(true); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { alert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error)); }
   function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
-  function addAsset() { dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note">업무노트</option><option value="memo">메모</option><option value="link">링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off">') + formField('내용', '<textarea id="pwf-body" rows="8" required></textarea>') + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); }
+  function addAsset() { var category = currentAssetCategory(), selected = category === 'memo' ? 'memo' : category === 'file' ? 'link' : 'note'; dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note"' + (selected === 'note' ? ' selected' : '') + '>업무노트</option><option value="memo"' + (selected === 'memo' ? ' selected' : '') + '>메모</option><option value="link"' + (selected === 'link' ? ' selected' : '') + '>링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off">') + formField('내용', '<textarea id="pwf-body" rows="8" required></textarea>') + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); }
   function openVault() {
     dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
     api('workspace_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null' + personalItemScope() + '&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
@@ -329,27 +349,53 @@
   function uploadFiles(files) { var list = Array.prototype.slice.call(files || []); if (!list.length) return; var token = window.db.getToken(), owner = currentUserId(); Promise.all(list.map(function (file) { var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : ''); return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('workspace_items', { id: id, owner_id: owner, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private' }); }); })).then(function () { openVault(); loadData(true); }).catch(saveError); }
   function closeAssetMenu() { var menu = document.querySelector('#v-personal-workspace .pw-add-menu'); if (menu) menu.open = false; }
   function newAssetFolder() {
-    closeAssetMenu(); var name = prompt('새 폴더 이름'); if (name == null || !String(name).trim()) return;
-    write('workspace_items', { owner_id: currentUserId(), parent_id: state.assetFolder || null, item_type: 'folder', title: String(name).trim(), visibility: 'private' })
-      .then(function () { state.assetFilter = 'file'; return loadData(true); }).then(function () { if (typeof window.toast === 'function') window.toast('폴더를 만들었습니다.'); }).catch(saveError);
+    closeAssetMenu();
+    var category = currentAssetCategory();
+    var categoryField = category
+      ? '<input id="pwf-folder-category" type="hidden" value="' + esc(category) + '"><p class="pw-folder-destination">저장 위치 · ' + esc(assetCategoryLabel(category)) + (state.assetFolder ? ' / 현재 폴더' : '') + '</p>'
+      : formField('저장 위치', '<select id="pwf-folder-category" required><option value="note">업무노트</option><option value="file">자료실</option><option value="memo">메모</option></select>');
+    dialog(formShell('새 폴더', categoryField + formField('폴더 이름', '<input id="pwf-folder-name" required autocomplete="off">'), 'OSPersonalWorkspace.saveAssetFolder()'));
+    window.setTimeout(function () { var input = document.getElementById('pwf-folder-name'); if (input) input.focus(); }, 0);
+  }
+  function saveAssetFolder() {
+    var name = value('pwf-folder-name'), category = value('pwf-folder-category');
+    if (!name || ['note', 'file', 'memo'].indexOf(category) < 0) return;
+    var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null;
+    write('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: 'folder', title: name, visibility: 'private', legacy_payload: { workspace_category: category } })
+      .then(function () { closeDialog(); state.assetFilter = category; state.assetFolder = parent; return loadData(true); })
+      .then(function () { if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 폴더를 만들었습니다.'); }).catch(saveError);
   }
   function uploadAssetFiles(files) {
     closeAssetMenu(); var list = Array.prototype.slice.call(files || []); if (!list.length) return;
-    var token = window.db.getToken(), owner = currentUserId(), parent = state.assetFolder || null, folderPath = parent || 'root';
+    var category = currentAssetCategory();
+    if (!category) {
+      state.pendingAssetFiles = list;
+      dialog(formShell('파일 업로드', formField('저장 위치', '<select id="pwf-upload-category" required><option value="note">업무노트</option><option value="file">자료실</option><option value="memo">메모</option></select>') + '<p class="pw-folder-destination">선택한 파일 ' + list.length + '개</p>', 'OSPersonalWorkspace.confirmAssetFileUpload()'));
+      return;
+    }
+    performAssetFileUpload(list, category);
+  }
+  function confirmAssetFileUpload() {
+    var category = value('pwf-upload-category'), list = state.pendingAssetFiles || [];
+    if (!list.length || ['note', 'file', 'memo'].indexOf(category) < 0) return;
+    state.pendingAssetFiles = null; closeDialog(); performAssetFileUpload(list, category);
+  }
+  function performAssetFileUpload(list, category) {
+    var token = window.db.getToken(), owner = currentUserId(), parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null, folderPath = parent || category;
     Promise.all(list.map(function (file) {
       var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/' + folderPath + '/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : '');
       return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
         if (!response.ok) throw new Error(file.name + ' 업로드 실패');
-        return write('workspace_items', { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private' });
+        return write('workspace_items', { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category } });
       });
-    })).then(function () { state.assetFilter = 'file'; return loadData(true); }).then(function () { if (typeof window.toast === 'function') window.toast(list.length + '개 파일을 추가했습니다.'); }).catch(saveError);
+    })).then(function () { state.assetFilter = category; state.assetFolder = parent; return loadData(true); }).then(function () { if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + list.length + '개를 추가했습니다.'); }).catch(saveError);
   }
   function addCustomer() { dialog(formShell('고객 등록', formField('고객명', '<input id="pwf-customer-name" required autocomplete="name">') + formField('연락처', '<input id="pwf-customer-phone" inputmode="tel" autocomplete="tel">') + formField('상태', '<select id="pwf-customer-status"><option>신규DB</option><option>상담중</option><option>청약완료</option><option>보류</option></select>') + formField('메모', '<textarea id="pwf-customer-note" rows="5"></textarea>'), 'OSPersonalWorkspace.saveCustomer()')); }
   function customerOptions() { return state.data.customers.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name || '이름 없음') + '</option>'; }).join(''); }
   function addConsultation(customerId) { if (!state.data.customers.length) { addCustomer(); return; } dialog(formShell('상담 기록', formField('고객', '<select id="pwf-consult-customer" required>' + customerOptions() + '</select>') + formField('상담 방식', '<select id="pwf-consult-channel"><option value="전화">전화</option><option value="대면">대면</option><option value="카카오톡">카카오톡</option><option value="문자">문자</option></select>') + formField('상담 내용', '<textarea id="pwf-consult-memo" rows="8" required></textarea>'), 'OSPersonalWorkspace.saveConsultation()')); var select = document.getElementById('pwf-consult-customer'); if (select && customerId) select.value = customerId; }
   function addEvent(date) { dialog(formShell('일정 추가', formField('날짜', '<input id="pwf-event-date" type="date" required value="' + esc(date || state.selectedDate) + '">') + formField('시간', '<input id="pwf-event-time" type="time">') + formField('제목', '<input id="pwf-event-title" required autocomplete="off">') + formField('설명', '<textarea id="pwf-event-desc" rows="5"></textarea>'), 'OSPersonalWorkspace.saveEvent()')); }
   function value(id) { var element = document.getElementById(id); return element ? String(element.value || '').trim() : ''; }
-  function saveAsset() { var type = value('pwf-asset-type'), title = value('pwf-title'), body = value('pwf-body'), link = value('pwf-link'); if (!title || !body) return; write('workspace_items', { owner_id: currentUserId(), item_type: type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'link', title: title, body: body, url: link || null, visibility: value('pwf-visibility') === 'public' ? 'public' : 'private' }).then(function () { finishSave('자료를 저장했습니다.'); }).catch(saveError); }
+  function saveAsset() { var type = value('pwf-asset-type'), title = value('pwf-title'), body = value('pwf-body'), link = value('pwf-link'), category = type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'file'; if (!title || !body) return; var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null; write('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: category === 'note' ? 'note' : category === 'memo' ? 'memo' : 'link', title: title, body: body, url: link || null, visibility: value('pwf-visibility') === 'public' ? 'public' : 'private', legacy_payload: { workspace_category: category } }).then(function () { state.assetFilter = category; state.assetFolder = parent; finishSave('자료를 저장했습니다.'); }).catch(saveError); }
   function saveCustomer() { var name = value('pwf-customer-name'), phone = value('pwf-customer-phone'), note = value('pwf-customer-note'); if (!name) return; write('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '신규DB', profile: note ? { note: note } : {} }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
   function saveConsultation() { var customerId = value('pwf-consult-customer'), memo = value('pwf-consult-memo'); if (!customerId || !memo) return; write('workspace_consultations', { customer_id: customerId, owner_id: currentUserId(), consulted_at: new Date().toISOString(), channel: value('pwf-consult-channel') || null, content: memo }).then(function () { finishSave('상담 기록을 저장했습니다.'); }).catch(saveError); }
   function saveEvent() { var date = value('pwf-event-date'), title = value('pwf-event-title'); if (!date || !title) return; write('workspace_tasks', { task_date: date, task_time: value('pwf-event-time') || null, title: title, description: value('pwf-event-desc') || null, owner_id: currentUserId() }).then(function () { state.selectedDate = date; state.cursor = parseDate(date); finishSave('일정을 추가했습니다.'); }).catch(saveError); }
@@ -368,11 +414,12 @@
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
-    filterAssets: function (filter) { state.assetFilter = filter; if (filter !== 'file' && filter !== 'all') state.assetFolder = null; renderContent(); },
+    filterAssets: function (filter) { state.assetFilter = filter; state.assetFolder = null; renderContent(); },
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
-    openAssetFolder: function (id) { state.assetFolder = id || null; state.assetFilter = 'file'; renderContent(); },
+    openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; renderContent(); },
+    openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; renderContent(); },
     showAsset: showAsset, showCustomer: showCustomer, showEvent: showEvent,
-    closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, uploadAssetFiles: uploadAssetFiles,
+    closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, saveConsultation: saveConsultation, addEvent: addEvent, saveEvent: saveEvent,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
