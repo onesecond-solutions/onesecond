@@ -40,11 +40,11 @@ body:not(.is-personal-workspace) .ws-global-search{visibility:hidden}
 #v-personal-workspace{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--s1) 58%,transparent);border-radius:var(--radius-lg);background:color-mix(in srgb,var(--s1) 42%,transparent);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--s1) 88%,transparent),0 24px 70px color-mix(in srgb,var(--tp) 16%,transparent)}
 #v-personal-workspace .pw-head{border-bottom:1px solid color-mix(in srgb,var(--s1) 52%,transparent);background:color-mix(in srgb,var(--s1) 20%,transparent)}
 #v-personal-workspace .pw-shell-compact{grid-template-rows:1fr}
-#v-personal-workspace .pw-assets-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
-#v-personal-workspace .pw-assets-controls .pw-tabs{min-width:0;margin-bottom:0}
+#v-personal-workspace .pw-assets-controls{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+#v-personal-workspace .pw-assets-controls .pw-tabs{min-width:0;overflow:visible;margin-bottom:0}
 #v-personal-workspace .pw-assets-controls>.pw-btn{flex:none}
 #v-personal-workspace .pw-assets-actions{display:flex;align-items:center;gap:10px;flex:none}
-#v-personal-workspace .pw-add-menu{position:relative;flex:none}
+#v-personal-workspace .pw-add-menu{position:relative;z-index:31;flex:none}
 #v-personal-workspace .pw-add-menu>summary{display:flex;min-height:36px;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);background:var(--ac);color:#fff;font-size:var(--fs-caption);font-weight:var(--fw-medium);cursor:pointer;list-style:none}
 #v-personal-workspace .pw-add-menu>summary::-webkit-details-marker{display:none}
 #v-personal-workspace .pw-add-popover{position:absolute;z-index:40;top:calc(100% + 6px);left:0;display:grid;width:176px;overflow:hidden;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 12px 30px color-mix(in srgb,var(--tp) 18%,transparent)}
