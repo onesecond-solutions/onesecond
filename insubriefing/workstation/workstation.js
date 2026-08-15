@@ -23,7 +23,8 @@
       box.innerHTML = '<a href="/pages/landing.html?auth=login&amp;redirect=%2Finsubriefing%2Fworkstation%2F">로그인</a>'; return;
     }
     var name = (window.AppState && window.AppState.name) || user.name || '사용자';
-    box.innerHTML = '<button type="button" class="ws-account-trigger" id="ws-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button><div class="ws-account-popover" id="ws-account-popover" role="menu" hidden><button type="button" id="ws-profile-open" role="menuitem">개인정보 수정</button><button type="button" id="ws-logout" role="menuitem">로그아웃</button></div>';
+    var email = (window.AppState && window.AppState.email) || user.email || '';
+    box.innerHTML = '<button type="button" class="ws-account-trigger" id="ws-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button><div class="ws-account-popover" id="ws-account-popover" role="menu" hidden><div class="ws-account-email" aria-label="로그인된 이메일 주소">' + esc(email || '이메일 정보 없음') + '</div><button type="button" id="ws-profile-open" role="menuitem">개인정보 수정</button><button type="button" id="ws-logout" role="menuitem">로그아웃</button></div>';
     document.getElementById('ws-account-trigger').addEventListener('click', function () { var menu = document.getElementById('ws-account-popover'), open = menu.hidden; closeAccountMenu(); menu.hidden = !open; this.setAttribute('aria-expanded', String(open)); });
     document.getElementById('ws-profile-open').addEventListener('click', openProfile);
     document.getElementById('ws-logout').addEventListener('click', logout);
