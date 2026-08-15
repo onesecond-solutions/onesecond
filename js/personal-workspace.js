@@ -86,7 +86,7 @@
       return Promise.resolve(false);
     }
     if (state.loadPromise) return state.loadPromise;
-    if (state.fullLoaded && state.loadedFor === userId) return Promise.resolve(true);
+    if (!force && state.fullLoaded && state.loadedFor === userId) return Promise.resolve(true);
     if (!force && state.status === 'ready' && state.loadedFor === userId) return Promise.resolve(true);
     state.status = 'loading'; state.error = ''; renderContent();
     var requestId = ++state.requestId;
