@@ -4,12 +4,12 @@
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var TEST_EMAIL = 'bylts0428+codex-workstation-20260815@gmail.com';
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'trash', 'archive'];
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, query: '', composing: false, searchTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), selectedConsultation: null, cursor: new Date(),
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, fullLoaded: false, pendingRichFiles: [], pendingRichImages: [],
-    data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [] }
+    data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
 
   function storedUser() {
@@ -104,14 +104,15 @@
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=*'),
       api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=*'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=*'),
-      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=*')
+      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=*'),
+      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=*')
     ] : [
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=6&select=*'),
       api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&task_date=eq.' + today + '&order=task_time.asc&limit=20&select=*')
     ];
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
       if (requestId !== state.requestId) return false;
-      var names = full ? ['items', 'events', 'customers', 'consultations'] : ['items', 'events'];
+      var names = full ? ['items', 'events', 'customers', 'consultations', 'trashCustomers'] : ['items', 'events'];
       var failed = [];
       results.forEach(function (result, index) {
         if (result.status === 'fulfilled' && Array.isArray(result.value)) state.data[names[index]] = result.value;
@@ -135,7 +136,7 @@
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
-    }).join('') + '<button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">기존 아카이브</button></nav>';
+    }).join('') + '<button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">기존 아카이브</button></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="pw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
@@ -267,7 +268,7 @@
   }
   function consultationsHtml() {
     var customers = {}; state.data.customers.forEach(function (item) { customers[item.id] = item; });
-    var rows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id] || {}, profile = customerProfile(customer); return matches((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + (item.memo || '') + ' ' + consultationStatus(item, customer)); });
+    var rows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id]; if (!customer) return false; var profile = customerProfile(customer); return matches((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + (item.memo || '') + ' ' + consultationStatus(item, customer)); });
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedConsultation); });
     if (!selected && state.selectedConsultation) state.selectedConsultation = null;
     var columns = '<div class="pw-consult-columns" aria-hidden="true"><span>등록일자</span><span>이름</span><span>생년월일</span><span>성별(보험나이)</span><span>전화번호</span><span>상담내용</span><span>상담상태</span></div>';
@@ -281,7 +282,7 @@
   function consultationDetailHtml(item, customer) {
     var profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
-    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button><div class="pw-consult-detail-head"><div><input id="pwd-consult-date" type="date" value="' + esc(date) + '" onchange="OSPersonalWorkspace.refreshDetailInsuranceAge()"><div class="pw-detail-name"><input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름"><div class="pw-gender"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div></div></div></div><dl><div><dt>생년월일</dt><dd><input id="pwd-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" onchange="OSPersonalWorkspace.refreshDetailInsuranceAge()"></dd></div><div><dt>보험나이</dt><dd id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</dd></div><div><dt>전화번호</dt><dd><input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)"></dd></div><div><dt>상담상태</dt><dd><select id="pwd-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></dd></div></dl><section><h3>상담내용</h3><div class="pw-consult-content">' + esc(item.memo || '').replace(/\n/g, '<br>') + '</div><textarea id="pwd-consult-new" rows="5" placeholder="새 상담내용을 입력하세요"></textarea></section><div class="pw-consult-save"><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button><div class="pw-consult-detail-head"><div><input id="pwd-consult-date" type="date" value="' + esc(date) + '" onchange="OSPersonalWorkspace.refreshDetailInsuranceAge()"><div class="pw-detail-name"><input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름"><div class="pw-gender"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div></div></div></div><dl><div><dt>생년월일</dt><dd><input id="pwd-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" onchange="OSPersonalWorkspace.refreshDetailInsuranceAge()"></dd></div><div><dt>보험나이</dt><dd id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</dd></div><div><dt>전화번호</dt><dd><input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)"></dd></div><div><dt>상담상태</dt><dd><select id="pwd-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></dd></div></dl><section><h3>상담내용</h3><div class="pw-consult-content">' + esc(item.memo || '').replace(/\n/g, '<br>') + '</div><textarea id="pwd-consult-new" rows="5" placeholder="새 상담내용을 입력하세요"></textarea></section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(customer.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectConsultation()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -320,6 +321,10 @@
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
     return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
   }
+  function trashHtml() {
+    var rows = (state.data.trashCustomers || []).filter(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '')); });
+    return statusHtml() + '<div class="pw-toolbar"><h2>휴지통</h2></div><div class="pw-trash-list">' + (rows.length ? rows.map(function (item) { return '<div class="pw-trash-row"><span><strong>' + esc(item.name || '(이름 없음)') + '</strong><small>' + esc(phoneText(item.phone || item.phone_raw || '')) + (item.deleted_at ? ' · ' + formatDate(item.deleted_at) + ' 삭제' : '') + '</small></span><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.restoreCustomer(\'' + esc(item.id) + '\')">복원</button></div>'; }).join('') : '<div class="pw-empty">휴지통이 비어 있습니다.</div>') + '</div>';
+  }
   function sectionHtml() {
     if (state.status === 'idle' || state.status === 'waiting-auth' || state.status === 'loading') return statusHtml();
     if (state.query.trim()) return searchHtml();
@@ -327,6 +332,7 @@
     if (state.section === 'customers') return customersHtml();
     if (state.section === 'consultations') return consultationsHtml();
     if (state.section === 'calendar') return calendarHtml();
+    if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     return homeHtml();
   }
@@ -357,7 +363,7 @@
     document.getElementById('v-personal-workspace').classList.add('on');
     renderShell(); setUrl(push !== false); loadData(state.section !== 'home');
   }
-  function go(section) { state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
+  function go(section) { if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
   function dialog(html) { var box = document.getElementById('pw-dialog'), body = document.getElementById('pw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function closeDialog() { var box = document.getElementById('pw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function sanitizeRich(html) {
@@ -703,6 +709,19 @@
     }).then(function (saved) { state.selectedConsultation = saved.id; finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
   }
   function selectConsultation(id) { state.selectedConsultation = id && String(state.selectedConsultation) !== String(id) ? id : null; renderContent(); }
+  function trashCustomer(id) {
+    if (!id || !window.confirm('이 고객을 휴지통으로 이동할까요? 상담기록은 보존되며 복원하면 다시 표시됩니다.')) return;
+    softDelete('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
+      state.selectedConsultation = null;
+      return loadData(true);
+    }).then(function () { if (typeof window.toast === 'function') window.toast('고객을 휴지통으로 이동했습니다.'); }).catch(saveError);
+  }
+  function restoreCustomer(id) {
+    if (!id) return;
+    updateOne('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { deleted_at: null }).then(function () {
+      return loadData(true);
+    }).then(function () { if (typeof window.toast === 'function') window.toast('고객을 복원했습니다.'); }).catch(saveError);
+  }
   function refreshDetailInsuranceAge() { var target = document.getElementById('pwd-insurance-age'); if (!target) return; var age = insuranceAge(value('pwd-consult-birth'), value('pwd-consult-date')); target.textContent = age === '' ? '-' : age + '세'; }
   function saveConsultationDetail(id) {
     var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
@@ -741,7 +760,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewDdak: previewDdak, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, saveConsultationDetail: saveConsultationDetail, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, saveEvent: saveEvent,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, saveEvent: saveEvent,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
