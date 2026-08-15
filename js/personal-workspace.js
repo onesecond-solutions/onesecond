@@ -220,7 +220,8 @@
     var parts = [], id = state.assetFolder;
     while (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); if (!folder) break; parts.unshift(folder); id = folder.parent_id; }
     var category = currentAssetCategory();
-    return '<nav class="pw-folder-path" aria-label="폴더 경로"><button type="button" onclick="OSPersonalWorkspace.openAssetRoot(\'' + esc(category) + '\')">' + esc(assetCategoryLabel(category)) + '</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSPersonalWorkspace.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</nav>';
+    var current = parts.length ? parts[parts.length - 1] : null;
+    return '<nav class="pw-folder-path" aria-label="폴더 경로"><span class="pw-folder-trail"><button type="button" onclick="OSPersonalWorkspace.openAssetRoot(\'' + esc(category) + '\')">' + esc(assetCategoryLabel(category)) + '</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSPersonalWorkspace.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</span>' + (current ? '<button type="button" class="pw-folder-delete" onclick="OSPersonalWorkspace.deleteAssetFolder(\'' + esc(current.id) + '\')">현재 폴더 삭제</button>' : '') + '</nav>';
   }
   function assetCardHtml(item) {
     var raw = item.raw || {}, direct = raw.image_url || (/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(raw.url || '') ? raw.url : '');
@@ -336,6 +337,7 @@
   function formField(label, input) { return '<label class="pw-field"><span>' + label + '</span>' + input + '</label>'; }
   function formShell(title, body, saveAction) { return '<form class="pw-form" onsubmit="event.preventDefault();' + saveAction + '"><h2>' + title + '</h2>' + body + '<div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.closeDialog()">취소</button><button type="submit" class="pw-btn primary">저장</button></div></form>'; }
   function write(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
+  function update(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
   function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; loadData(true); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { alert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error)); }
   function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
@@ -364,6 +366,17 @@
     write('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: 'folder', title: name, visibility: 'private', legacy_payload: { workspace_category: category } })
       .then(function () { closeDialog(); state.assetFilter = category; state.assetFolder = parent; return loadData(true); })
       .then(function () { if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 폴더를 만들었습니다.'); }).catch(saveError);
+  }
+  function deleteAssetFolder(id) {
+    var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; });
+    if (!folder) return;
+    var hasChildren = state.data.items.some(function (item) { return !item.deleted_at && String(item.parent_id || '') === String(id); });
+    if (hasChildren) { alert('폴더 안의 자료와 하위 폴더를 먼저 비워주세요.'); return; }
+    if (!window.confirm('“' + String(folder.title || '폴더') + '” 폴더를 삭제할까요?')) return;
+    var category = assetCategory(folder);
+    update('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { deleted_at: new Date().toISOString() })
+      .then(function () { state.assetFolder = null; state.assetFilter = category; return loadData(true); })
+      .then(function () { if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
   }
   function uploadAssetFiles(files) {
     closeAssetMenu(); var list = Array.prototype.slice.call(files || []); if (!list.length) return;
@@ -419,7 +432,7 @@
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; renderContent(); },
     showAsset: showAsset, showCustomer: showCustomer, showEvent: showEvent,
-    closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
+    closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, saveConsultation: saveConsultation, addEvent: addEvent, saveEvent: saveEvent,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
