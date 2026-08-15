@@ -441,11 +441,6 @@
   function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'customer' ? 3 : 4; }
   function eventsFor(date) { return allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === date; }).sort(function (a, b) { return eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); }); }
   function calendarEventKind(event) { return event && event.event_type === 'customer' ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : 'schedule'; }
-  function calendarEventMeta(event) { return event && event.builtin ? (event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : '기념일') : esc(String((event && event.event_time) || '종일').slice(0, 5)); }
-  function calendarEventButton(event, compact) {
-    var date = String(event.event_date || '').slice(0, 10), sub = calendarEventMeta(event) + (compact ? '' : ' · ' + weekday(date));
-    return '<button type="button" class="pw-calendar-card ' + calendarEventKind(event) + '" onclick="OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')"><span>' + sub + '</span><strong>' + esc(event.title || '일정') + '</strong>' + (compact ? '' : '<small>' + esc(event.description || '상세 내용 없음') + '</small>') + '</button>';
-  }
   function monthView() {
     var first = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), start = new Date(first); start.setDate(1 - first.getDay());
     var today = ymd(new Date()), cells = [];
@@ -454,11 +449,7 @@
       var key = ymd(day), events = eventsFor(key), builtIns = events.filter(function (event) { return event.builtin; }), personal = events.filter(function (event) { return !event.builtin; }), outside = day.getMonth() !== first.getMonth();
       cells.push('<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.selectDate(\'' + key + '\')" aria-label="' + esc((day.getMonth() + 1) + '월 ' + day.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + day.getDate() + '</strong><span class="pw-built-ins">' + builtIns.slice(0, 2).map(function (event) { return '<i class="' + calendarEventKind(event) + '">' + esc(event.title) + '</i>'; }).join('') + '</span></span><span class="pw-day-items">' + personal.slice(0, 3).map(function (event) { return '<span class="pw-event ' + calendarEventKind(event) + '">' + esc(event.title || '일정') + '</span>'; }).join('') + (events.length > builtIns.slice(0, 2).length + personal.slice(0, 3).length ? '<small class="pw-more">+' + (events.length - builtIns.slice(0, 2).length - personal.slice(0, 3).length) + '개 더보기</small>' : '') + '</span></button>');
     }
-    return '<section class="pw-calendar-month"><div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + cells.join('') + '</div></div>' + selectedDatePanel() + '</section>';
-  }
-  function selectedDatePanel() {
-    var date = state.selectedDate, rows = eventsFor(date);
-    return '<aside class="pw-calendar-side"><div class="pw-date-heading"><span>선택한 날짜</span><h3>' + Number(date.slice(5, 7)) + '월 ' + Number(date.slice(8)) + '일</h3><small>' + weekday(date) + '요일 · ' + rows.length + '개의 표시 항목</small></div><div class="pw-calendar-quick"><button type="button" onclick="OSPersonalWorkspace.addEvent(\'' + esc(date) + '\')"><b>＋</b> 일정</button><button type="button" onclick="OSPersonalWorkspace.calendarToday()">오늘</button></div><div class="pw-calendar-list ' + (rows.length ? '' : 'empty') + '">' + (rows.length ? rows.map(function (event) { return calendarEventButton(event); }).join('') : '<div class="pw-calendar-empty"><span>⌄</span><strong>이 날짜는 비어 있습니다</strong><p>일정을 추가하면 캘린더에 바로 표시됩니다.</p></div>') + '</div></aside>';
+    return '<section class="pw-calendar-month"><div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + cells.join('') + '</div></div></section>';
   }
   function timeView(days) {
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
