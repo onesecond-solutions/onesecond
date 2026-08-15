@@ -2,7 +2,6 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var PILOT_SOURCE_EMAIL = 'bylts@naver.com';
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
   var state = {
@@ -19,15 +18,12 @@
   function currentUserId() {
     return String((window.AppState && window.AppState.userId) || storedUser().id || '');
   }
-  function currentUserEmail() {
-    var user = storedUser();
-    return String((window.AppState && window.AppState.email) || user.email || '').trim().toLowerCase();
-  }
   function personalItemScope() {
-    var email = currentUserId() === PILOT_ID ? PILOT_SOURCE_EMAIL : currentUserEmail();
-    var clauses = ['legacy_source.is.null'];
-    if (email) clauses.push('legacy_payload->>owner_email.eq.' + encodeURIComponent(email));
-    return '&or=(' + clauses.join(',') + ')';
+    // workspace_items.owner_id is the canonical account boundary. The legacy
+    // payloads do not consistently contain owner_email, so email filtering can
+    // hide valid personal rows. For the pilot, only authored legacy content is
+    // shown; bulk server vault imports remain excluded from Insurance Briefing.
+    return '&or=(legacy_source.is.null,legacy_source.in.(library,scripts))';
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || currentUserId() === PILOT_ID; }
