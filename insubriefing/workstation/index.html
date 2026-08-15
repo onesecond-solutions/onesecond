@@ -8,16 +8,19 @@
   <title>워크스테이션 | 보험브리핑</title>
   <link rel="stylesheet" href="/css/app-core.css?v=20260708">
   <link rel="stylesheet" href="/css/personal-workspace.css?v=20260815a">
-  <link rel="stylesheet" href="./workstation.css?v=20260815g">
+  <link rel="stylesheet" href="./workstation.css?v=20260815h">
   <script src="/js/db.js"></script>
   <script src="/js/auth.js"></script>
   <script defer src="/js/personal-workspace.js?v=20260815a"></script>
-  <script defer src="./workstation.js?v=20260815a"></script>
+  <script defer src="./workstation.js?v=20260815b"></script>
 </head>
 <body class="ws-page">
   <header class="ws-header">
-    <a class="ws-brand" href="/insubriefing/"><span>B</span><strong>보험브리핑</strong></a>
-    <nav aria-label="워크스테이션 바로가기"><a href="/insubriefing/">보험브리핑</a><strong>워크스테이션</strong></nav>
+    <div class="ws-identity">
+      <a class="ws-brand" href="/insubriefing/" aria-label="보험브리핑 홈"><span>B</span><strong>보험브리핑</strong></a>
+      <span class="ws-divider" aria-hidden="true"></span>
+      <strong class="ws-product">워크스테이션</strong>
+    </div>
     <div class="ws-account" id="ws-account"></div>
   </header>
   <main class="ws-main body">
@@ -25,5 +28,17 @@
       <div class="pw-access"><strong>워크스테이션을 준비하고 있습니다.</strong><p>로그인 상태를 확인하는 중입니다.</p></div>
     </section>
   </main>
+  <dialog class="ws-profile-dialog" id="ws-profile-dialog" aria-labelledby="ws-profile-title">
+    <form method="dialog" id="ws-profile-form">
+      <div class="ws-profile-head">
+        <div><strong id="ws-profile-title">개인정보 수정</strong><p>워크스테이션에서 사용할 기본 정보를 관리합니다.</p></div>
+        <button type="button" class="ws-profile-close" aria-label="닫기">×</button>
+      </div>
+      <label>이름<input type="text" id="ws-profile-name" autocomplete="name" maxlength="30" required></label>
+      <label>연락처<input type="tel" id="ws-profile-phone" autocomplete="tel" maxlength="20"></label>
+      <p class="ws-profile-message" id="ws-profile-message" role="status"></p>
+      <div class="ws-profile-actions"><button type="button" class="ws-profile-cancel">취소</button><button type="submit" class="ws-profile-save">저장</button></div>
+    </form>
+  </dialog>
 </body>
 </html>
