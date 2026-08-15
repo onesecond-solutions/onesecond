@@ -2,6 +2,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  var TEST_EMAIL = 'bylts0428+codex-workstation-20260815@gmail.com';
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
   var state = {
@@ -18,6 +19,9 @@
   function currentUserId() {
     return String((window.AppState && window.AppState.userId) || storedUser().id || '');
   }
+  function currentUserEmail() {
+    return String((window.AppState && window.AppState.user && window.AppState.user.email) || storedUser().email || '').toLowerCase();
+  }
   function personalItemScope() {
     // workspace_items.owner_id is the canonical account boundary. The legacy
     // payloads do not consistently contain owner_email. Authored notes are kept,
@@ -26,7 +30,7 @@
     return '&or=(legacy_source.is.null,legacy_source.in.(library,scripts),and(legacy_source.in.(myspace_folders,myspace_files),legacy_payload->>scope.eq.personal))';
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
-  function allowed() { return isLocal() || currentUserId() === PILOT_ID; }
+  function allowed() { return isLocal() || currentUserId() === PILOT_ID || currentUserEmail() === TEST_EMAIL; }
   function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function stripHtml(value) { var node = document.createElement('div'); node.innerHTML = String(value || ''); return (node.textContent || '').trim(); }
