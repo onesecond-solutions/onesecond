@@ -238,6 +238,16 @@
     var preview = item.folder ? '<span class="pw-folder-icon">📁</span>' : image || '<div class="pw-asset-document"><span>' + (item.type === 'note' ? '업무노트' : item.type === 'memo' ? '메모' : item.kind) + '</span><p>' + esc(String(item.body || '').slice(0, 110)) + '</p></div>';
     return '<button type="button" class="pw-asset-card ' + (item.folder ? 'pw-folder-drop-target' : 'pw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><span class="pw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small></button>';
   }
+  function fileExtension(item) {
+    var name = String((item && (item.extension || item.title || item.storage_path)) || '').split('?')[0];
+    return String((item && item.extension) || (name.indexOf('.') >= 0 ? name.split('.').pop() : '')).toLowerCase();
+  }
+  function previewType(item) {
+    var mime = String((item && item.mime_type) || '').toLowerCase(), ext = fileExtension(item);
+    if (/^image\//.test(mime) || /^(png|jpe?g|gif|webp|bmp|svg|avif)$/.test(ext)) return 'image';
+    if (mime === 'application/pdf' || ext === 'pdf') return 'pdf';
+    return '';
+  }
   function hydrateAssetThumbs() {
     if (!window.db || !window.db.url || !window.db.getToken) return;
     document.querySelectorAll('#v-personal-workspace img[data-storage-path]').forEach(function (img) {
@@ -305,7 +315,8 @@
   function renderShell() {
     var view = document.getElementById('v-personal-workspace'); if (!view) return;
     var head = STANDALONE ? '' : '<header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
-    view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>';
+    view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
+      + '<div class="pw-preview" id="pw-preview" aria-hidden="true"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-stage" id="pw-preview-stage"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><button type="button" class="pw-preview-ddak" onclick="OSPersonalWorkspace.previewDdak()">⚡ 딸깍</button><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download>⬇ 다운로드</a></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
     bindSearch(); renderContent();
   }
@@ -367,19 +378,88 @@
   function addRichImages(files) { var editor = document.querySelector('#pw-dialog .pw-rich-body'); if (!editor) return; Array.prototype.slice.call(files || []).filter(function (file) { return /^image\//.test(file.type || ''); }).forEach(function (file) { var id = crypto.randomUUID(), preview = URL.createObjectURL(file); state.pendingRichImages.push({ id: id, file: file, preview: preview }); editor.insertAdjacentHTML('beforeend', '<p><img src="' + esc(preview) + '" data-pending-image="' + id + '" alt="' + esc(file.name) + '"></p>'); }); }
   function formatBytes(bytes) { var value = Number(bytes || 0); if (value < 1024) return value + ' B'; if (value < 1048576) return (value / 1024).toFixed(1) + ' KB'; return (value / 1048576).toFixed(1) + ' MB'; }
   function signStoragePath(path) { return fetch(window.db.url('/storage/v1/object/sign/myspace/' + String(path).split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) }).then(function (response) { if (!response.ok) throw new Error('첨부파일을 열지 못했습니다.'); return response.json(); }).then(function (data) { return window.db.url('/storage/v1' + data.signedURL); }); }
-  function hydrateRichStorage() { var nodes = document.querySelectorAll('#pw-dialog [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { signStoragePath(node.getAttribute('data-storage-path')).then(function (url) { if (node.tagName === 'IMG') node.src = url; else node.href = url; }).catch(function () {}); }); }
+  function hydrateRichStorage() { var nodes = document.querySelectorAll('#pw-dialog [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || ''; signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') { node.src = url; node.classList.add('pw-previewable'); node.title = '클릭하면 크게 보기'; node.onclick = function () { openPreviewUrl(url, title, mime || 'image/*'); }; } else { node.href = url; node.onclick = function (event) { if (previewType({ title: title, mime_type: mime, storage_path: path })) { event.preventDefault(); openPreviewUrl(url, title, mime); } }; } }).catch(function () {}); }); }
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (state.pdfJsPromise) return state.pdfJsPromise;
+    state.pdfJsPromise = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload = function () { if (!window.pdfjsLib) { reject(new Error('PDF 미리보기 모듈을 불러오지 못했습니다.')); return; } window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; resolve(window.pdfjsLib); };
+      script.onerror = function () { reject(new Error('PDF 미리보기 모듈을 불러오지 못했습니다.')); };
+      document.head.appendChild(script);
+    });
+    return state.pdfJsPromise;
+  }
+  function previewUi(type, name, url) {
+    var overlay = document.getElementById('pw-preview'), page = document.getElementById('pw-preview-page'), download = document.getElementById('pw-preview-download');
+    if (!overlay) return false;
+    closeDialog();
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf');
+    if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
+    if (download) { download.href = url; download.download = name || ''; }
+    document.body.classList.add('pw-preview-open');
+    return true;
+  }
+  function openPreviewUrl(url, name, mime) {
+    var type = previewType({ title: name, mime_type: mime, storage_path: url });
+    if (!type) { window.open(url, '_blank', 'noopener'); return; }
+    if (!previewUi(type, name, url)) return;
+    var stage = document.getElementById('pw-preview-stage');
+    state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null };
+    if (type === 'image') { stage.innerHTML = '<img id="pw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '">'; renderPreviewTransform(); return; }
+    stage.innerHTML = '<div class="pw-preview-loading">PDF를 불러오는 중입니다.</div>';
+    Promise.all([loadPdfJs(), fetch(url).then(function (response) { if (!response.ok) throw new Error('PDF를 불러오지 못했습니다.'); return response.arrayBuffer(); })])
+      .then(function (values) { return values[0].getDocument({ data: values[1] }).promise; })
+      .then(function (doc) { if (!state.preview || state.preview.url !== url) return; state.preview.doc = doc; state.preview.pages = doc.numPages; renderPdfPreview(); })
+      .catch(function (error) { if (stage) stage.innerHTML = '<div class="pw-preview-loading">' + esc(error.message || 'PDF 미리보기를 불러오지 못했습니다.') + '</div>'; });
+  }
+  function openFilePreview(id) {
+    var item = workspaceItem(id); if (!item || !item.storage_path) return;
+    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, item.title || '파일', item.mime_type || ''); }).catch(saveError);
+  }
+  function openAssetPreview(source, id) {
+    var list = source === 'scripts' ? state.data.scripts : state.data.library;
+    var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
+    if (item.storage_path) { openFilePreview(id); return; }
+    var url = item.image_url || item.file_url || item.link_url;
+    if (url) openPreviewUrl(url, item.title || '파일', item.mime_type || (item.image_url ? 'image/*' : ''));
+  }
+  function renderPreviewTransform() { var p = state.preview, image = document.getElementById('pw-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
+  function renderPdfPreview() {
+    var p = state.preview, stage = document.getElementById('pw-preview-stage'), pageText = document.getElementById('pw-preview-page'); if (!p || !p.doc || !stage) return;
+    p.doc.getPage(p.page).then(function (page) {
+      if (!state.preview || state.preview !== p) return;
+      var viewport = page.getViewport({ scale: 1.35 * p.zoom, rotation: p.rotate }), canvas = document.createElement('canvas');
+      canvas.id = 'pw-preview-canvas'; canvas.width = viewport.width; canvas.height = viewport.height; stage.innerHTML = ''; stage.appendChild(canvas);
+      return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
+    }).then(function () { if (pageText && state.preview === p) pageText.textContent = p.page + ' / ' + p.pages; });
+  }
+  function closePreview() { var overlay = document.getElementById('pw-preview'); if (overlay) { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); } state.preview = null; document.body.classList.remove('pw-preview-open'); }
+  function previewZoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
+  function previewRotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
+  function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) { p.page = next; renderPdfPreview(); } }
+  function canvasBlob(canvas) { return new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); }); }
+  function previewDdak() {
+    var p = state.preview; if (!p) return;
+    var makeBlob = p.type === 'pdf' ? canvasBlob(document.getElementById('pw-preview-canvas')) : fetch(p.url).then(function (response) { return response.blob(); }).then(function (blob) { return createImageBitmap(blob); }).then(function (bitmap) { var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap, 0, 0); return canvasBlob(canvas); });
+    makeBlob.then(function (blob) { if (!blob) throw new Error('이미지를 만들지 못했습니다.'); if (!navigator.clipboard || !window.ClipboardItem) throw new Error('clipboard'); return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); })
+      .then(function () { if (typeof window.toast === 'function') window.toast('복사했습니다. 카카오톡에 붙여넣으세요.'); })
+      .catch(function () { var link = document.getElementById('pw-preview-download'); if (link) link.click(); if (typeof window.toast === 'function') window.toast('브라우저 복사가 제한되어 파일로 저장했습니다.'); });
+  }
   function workspaceItem(id) { return state.data.items.find(function (entry) { return String(entry.id) === String(id); }); }
   function itemAttachments(id) { return state.data.items.filter(function (entry) { var payload = entry.legacy_payload || {}; return entry.item_type === 'file' && String(entry.parent_id || '') === String(id) && payload.attachment_role !== 'inline-image'; }); }
   function showAsset(source, id) {
     var list = source === 'scripts' ? state.data.scripts : state.data.library;
     var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
     var body = source === 'scripts' ? item.script_text : item.memo_text || item.description || '';
-    var link = item.file_url || item.image_url || item.link_url;
-    var actions = (link ? '<a class="pw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : '')
+    var link = item.image_url || item.link_url;
+    var ownFile = item.item_type === 'file' && item.storage_path;
+    var actions = (ownFile || item.image_url ? '<button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.openAssetPreview(\'' + esc(source) + '\',\'' + esc(id) + '\')">미리보기</button>' : (link ? '<a class="pw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : ''))
       + '<button type="button" class="pw-btn" onclick="OSPersonalWorkspace.editAsset(\'' + esc(id) + '\')">수정</button>'
       + '<button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.deleteAsset(\'' + esc(id) + '\')">삭제</button>';
     var attachments = itemAttachments(id);
-    var attachmentHtml = attachments.length ? '<div class="pw-detail-files"><strong>첨부파일 ' + attachments.length + '개</strong>' + attachments.map(function (file) { return '<a href="#" data-storage-path="' + esc(file.storage_path) + '" target="_blank" rel="noopener"><span>▣</span><b>' + esc(file.title) + '</b><small>' + formatBytes(file.file_size) + '</small></a>'; }).join('') + '</div>' : '';
+    var attachmentHtml = attachments.length ? '<div class="pw-detail-files"><strong>첨부파일 ' + attachments.length + '개</strong>' + attachments.map(function (file) { return '<a href="#" data-storage-path="' + esc(file.storage_path) + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" target="_blank" rel="noopener"><span>' + (previewType(file) === 'image' ? '▧' : previewType(file) === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (previewType(file) ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>'; }).join('') + '</div>' : '';
     dialog('<div class="pw-detail"><span class="pw-badge">' + (source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실') + '</span><h2>' + esc(item.title || '(제목 없음)') + '</h2><small>' + formatDate(item.created_at) + '</small><div class="pw-detail-body pw-rich-content">' + sanitizeRich(body) + '</div>' + attachmentHtml + '<div class="pw-detail-actions">' + actions + '</div></div>');
     hydrateRichStorage();
   }
@@ -579,6 +659,7 @@
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!allowed()) { if (STANDALONE) renderStandaloneGate('denied'); return; } if (!document.getElementById('v-personal-workspace')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
   window.addEventListener('popstate', function () { if (!allowed() || !restoreFromUrl()) return; openWorkspace(state.section, false); });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
@@ -586,7 +667,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; renderContent(); },
-    showAsset: showAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewDdak: previewDdak, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, saveConsultation: saveConsultation, addEvent: addEvent, saveEvent: saveEvent,
