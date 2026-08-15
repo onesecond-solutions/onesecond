@@ -255,7 +255,55 @@
     });
     return result;
   }
-  function allEvents() { return state.data.events.concat(careEvents()); }
+  var LUNAR_HOLIDAYS = [[2020, '2020-01-25', '2020-04-30', '2020-10-01'], [2021, '2021-02-12', '2021-05-19', '2021-09-21'], [2022, '2022-02-01', '2022-05-08', '2022-09-10'], [2023, '2023-01-22', '2023-05-26', '2023-09-29'], [2024, '2024-02-10', '2024-05-15', '2024-09-17'], [2025, '2025-01-29', '2025-05-05', '2025-10-06'], [2026, '2026-02-17', '2026-05-24', '2026-09-25'], [2027, '2027-02-06', '2027-05-13', '2027-09-15'], [2028, '2028-01-26', '2028-05-02', '2028-10-03'], [2029, '2029-02-13', '2029-05-20', '2029-09-22'], [2030, '2030-02-03', '2030-05-09', '2030-09-12'], [2031, '2031-01-23', '2031-05-28', '2031-10-01'], [2032, '2032-02-11', '2032-05-16', '2032-09-19'], [2033, '2033-01-31', '2033-05-06', '2033-09-08'], [2034, '2034-02-19', '2034-05-25', '2034-09-27'], [2035, '2035-02-08', '2035-05-15', '2035-09-16']];
+  var SOLAR_TERM_NAMES = ['소한', '대한', '입춘', '우수', '경칩', '춘분', '청명', '곡우', '입하', '소만', '망종', '하지', '소서', '대서', '입추', '처서', '백로', '추분', '한로', '상강', '입동', '소설', '대설', '동지'];
+  var SOLAR_TERM_MINUTES = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551, 218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532, 504758];
+  var builtinCache = {};
+  function builtinEvent(date, title, kind, description) { return { id: 'builtin-' + date + '-' + title, event_date: date, title: title, event_type: kind, description: description || '', builtin: true }; }
+  function utcKey(date) { return date.getUTCFullYear() + '-' + String(date.getUTCMonth() + 1).padStart(2, '0') + '-' + String(date.getUTCDate()).padStart(2, '0'); }
+  function solarTermsForYear(year) {
+    return SOLAR_TERM_NAMES.map(function (name, index) {
+      var instant = new Date(Date.UTC(1900, 0, 6, 2, 5) + 31556925974.7 * (year - 1900) + SOLAR_TERM_MINUTES[index] * 60000);
+      return builtinEvent(utcKey(instant), name, 'term', '대한민국 24절기');
+    });
+  }
+  function weekdayNumber(date) { return parseDate(date).getDay(); }
+  function nextSubstituteDate(date, occupied) {
+    var next = date;
+    do { next = addDays(next, 1); } while (weekdayNumber(next) === 0 || weekdayNumber(next) === 6 || occupied[next]);
+    return next;
+  }
+  function builtinCalendarEvents(year) {
+    if (builtinCache[year]) return builtinCache[year].slice();
+    var list = [], substitutes = [], occupied = {};
+    [[1, 1, '신정', true, false], [3, 1, '삼일절', true, true], [5, 5, '어린이날', true, true], [6, 6, '현충일', true, false], [7, 17, '제헌절', false, false], [8, 15, '광복절', true, true], [10, 3, '개천절', true, true], [10, 9, '한글날', true, true], [12, 25, '크리스마스', true, true]].forEach(function (entry) {
+      var date = year + '-' + String(entry[0]).padStart(2, '0') + '-' + String(entry[1]).padStart(2, '0');
+      list.push(builtinEvent(date, entry[2], entry[3] ? 'holiday' : 'memorial', entry[3] ? '대한민국 법정 공휴일' : '대한민국 국가기념일'));
+      if (entry[3]) occupied[date] = true;
+      if (entry[3] && entry[4]) substitutes.push({ title: entry[2], dates: [date], trigger: 'weekend' });
+    });
+    (LUNAR_HOLIDAYS.find(function (row) { return row[0] === year; }) || []).slice(1).forEach(function (date, index) {
+      var title = index === 0 ? '설날' : index === 1 ? '부처님오신날' : '추석', offsets = index === 1 ? [0] : [-1, 0, 1], dates = offsets.map(function (offset) { return addDays(date, offset); });
+      dates.forEach(function (target, offsetIndex) { var suffix = offsets[offsetIndex] === 0 ? '' : ' 연휴'; list.push(builtinEvent(target, title + suffix, 'holiday', title + ' 음력 공휴일')); occupied[target] = true; });
+      substitutes.push({ title: title, dates: dates, trigger: index === 1 ? 'weekend' : 'sunday' });
+    });
+    substitutes.forEach(function (target) {
+      var needs = target.dates.some(function (date) { var day = weekdayNumber(date); return target.trigger === 'weekend' ? day === 0 || day === 6 : day === 0; });
+      if (!needs) return;
+      var substitute = nextSubstituteDate(target.dates[target.dates.length - 1], occupied);
+      occupied[substitute] = true;
+      list.push(builtinEvent(substitute, target.title + ' 대체공휴일', 'holiday', target.title + ' 대체공휴일'));
+    });
+    list = list.concat(solarTermsForYear(year)).sort(function (a, b) { return String(a.event_date).localeCompare(String(b.event_date)) || (a.event_type === 'holiday' ? -1 : 1) || String(a.title).localeCompare(String(b.title), 'ko'); });
+    builtinCache[year] = list;
+    return list.slice();
+  }
+  function builtInEventsAroundCalendar() {
+    var years = {}, selected = parseDate(state.selectedDate), cursor = state.cursor || selected;
+    [selected.getFullYear() - 1, selected.getFullYear(), selected.getFullYear() + 1, cursor.getFullYear() - 1, cursor.getFullYear(), cursor.getFullYear() + 1].forEach(function (year) { years[year] = true; });
+    return Object.keys(years).reduce(function (rows, year) { return rows.concat(builtinCalendarEvents(Number(year))); }, []);
+  }
+  function allEvents() { return state.data.events.concat(careEvents()).concat(builtInEventsAroundCalendar()); }
 
   function homeHtml() {
     var today = ymd(new Date());
@@ -390,12 +438,27 @@
     if (state.calendarMode === 'agenda') return '일정';
     return state.cursor.getFullYear() + '년 ' + (state.cursor.getMonth() + 1) + '월';
   }
-  function eventsFor(date) { return allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === date; }).sort(function (a, b) { return String(a.event_time || '').localeCompare(String(b.event_time || '')); }); }
+  function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'customer' ? 3 : 4; }
+  function eventsFor(date) { return allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === date; }).sort(function (a, b) { return eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); }); }
+  function calendarEventKind(event) { return event && event.event_type === 'customer' ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : 'schedule'; }
+  function calendarEventMeta(event) { return event && event.builtin ? (event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : '기념일') : esc(String((event && event.event_time) || '종일').slice(0, 5)); }
+  function calendarEventButton(event, compact) {
+    var date = String(event.event_date || '').slice(0, 10), sub = calendarEventMeta(event) + (compact ? '' : ' · ' + weekday(date));
+    return '<button type="button" class="pw-calendar-card ' + calendarEventKind(event) + '" onclick="OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')"><span>' + sub + '</span><strong>' + esc(event.title || '일정') + '</strong>' + (compact ? '' : '<small>' + esc(event.description || '상세 내용 없음') + '</small>') + '</button>';
+  }
   function monthView() {
     var first = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), start = new Date(first); start.setDate(1 - first.getDay());
     var today = ymd(new Date()), cells = [];
-    for (var i = 0; i < 42; i++) { var day = new Date(start); day.setDate(start.getDate() + i); var key = ymd(day), events = eventsFor(key); cells.push('<button type="button" class="pw-day ' + (day.getMonth() !== first.getMonth() ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.selectDate(\'' + key + '\')"><strong>' + day.getDate() + '</strong>' + events.slice(0, 3).map(function (event) { return '<span class="pw-event ' + (event.event_type === 'customer' ? 'customer' : '') + '">' + esc(event.title) + '</span>'; }).join('') + (events.length > 3 ? '<span class="pw-more">+' + (events.length - 3) + '</span>' : '') + '</button>'); }
-    return '<div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + cells.join('') + '</div></div>';
+    for (var i = 0; i < 42; i++) {
+      var day = new Date(start); day.setDate(start.getDate() + i);
+      var key = ymd(day), events = eventsFor(key), builtIns = events.filter(function (event) { return event.builtin; }), personal = events.filter(function (event) { return !event.builtin; }), outside = day.getMonth() !== first.getMonth();
+      cells.push('<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.selectDate(\'' + key + '\')" aria-label="' + esc((day.getMonth() + 1) + '월 ' + day.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + day.getDate() + '</strong><span class="pw-built-ins">' + builtIns.slice(0, 2).map(function (event) { return '<i class="' + calendarEventKind(event) + '">' + esc(event.title) + '</i>'; }).join('') + '</span></span><span class="pw-day-items">' + personal.slice(0, 3).map(function (event) { return '<span class="pw-event ' + calendarEventKind(event) + '">' + esc(event.title || '일정') + '</span>'; }).join('') + (events.length > builtIns.slice(0, 2).length + personal.slice(0, 3).length ? '<small class="pw-more">+' + (events.length - builtIns.slice(0, 2).length - personal.slice(0, 3).length) + '개 더보기</small>' : '') + '</span></button>');
+    }
+    return '<section class="pw-calendar-month"><div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + cells.join('') + '</div></div>' + selectedDatePanel() + '</section>';
+  }
+  function selectedDatePanel() {
+    var date = state.selectedDate, rows = eventsFor(date);
+    return '<aside class="pw-calendar-side"><div class="pw-date-heading"><span>선택한 날짜</span><h3>' + Number(date.slice(5, 7)) + '월 ' + Number(date.slice(8)) + '일</h3><small>' + weekday(date) + '요일 · ' + rows.length + '개의 표시 항목</small></div><div class="pw-calendar-quick"><button type="button" onclick="OSPersonalWorkspace.addEvent(\'' + esc(date) + '\')"><b>＋</b> 일정</button><button type="button" onclick="OSPersonalWorkspace.calendarToday()">오늘</button></div><div class="pw-calendar-list ' + (rows.length ? '' : 'empty') + '">' + (rows.length ? rows.map(function (event) { return calendarEventButton(event); }).join('') : '<div class="pw-calendar-empty"><span>⌄</span><strong>이 날짜는 비어 있습니다</strong><p>일정을 추가하면 캘린더에 바로 표시됩니다.</p></div>') + '</div></aside>';
   }
   function timeView(days) {
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
@@ -413,7 +476,7 @@
     else if (state.calendarMode === 'agenda') view = agendaView();
     else if (state.calendarMode === 'day') view = timeView([state.selectedDate]);
     else { var selected = parseDate(state.selectedDate); selected.setDate(selected.getDate() - selected.getDay()); var week = []; for (var i = 0; i < 7; i++) week.push(addDays(selected, i)); view = timeView(week); }
-    return statusHtml() + '<div class="pw-calendar-toolbar"><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.calendarToday()">오늘</button><button class="pw-btn icon" aria-label="이전 보기" onclick="OSPersonalWorkspace.moveCalendar(-1)">‹</button><button class="pw-btn icon" aria-label="다음 보기" onclick="OSPersonalWorkspace.moveCalendar(1)">›</button></div><h2>' + calendarTitle() + '</h2><div class="pw-actions pw-mode">' + modes.map(function (mode) { return '<button class="pw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="pw-btn primary" onclick="OSPersonalWorkspace.addEvent()">+ 일정</button></div></div>' + view;
+    return statusHtml() + '<div class="pw-calendar-shell"><div class="pw-calendar-toolbar"><div class="pw-calendar-left"><button class="pw-btn pw-today" onclick="OSPersonalWorkspace.calendarToday()">오늘</button><span class="pw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSPersonalWorkspace.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSPersonalWorkspace.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + '</h2></div><div class="pw-actions pw-mode">' + modes.map(function (mode) { return '<button class="pw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="pw-btn primary" onclick="OSPersonalWorkspace.addEvent()">+ 일정</button></div></div>' + view + '</div>';
   }
   function archiveHtml() {
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
@@ -609,7 +672,7 @@
     var history = state.data.consultations.filter(function (entry) { return String(entry.customer_id) === String(id); });
     dialog('<div class="pw-detail"><span class="pw-badge">고객</span><h2 class="pw-detail-title">' + favoriteButton('customer', id, customer.name || '(이름 없음)', phoneText(customer.phone || customer.phone_raw || '')) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></h2><p>' + esc(customer.phone || customer.phone_raw || '') + '</p><h3>상담 기록</h3><div class="pw-list">' + (history.length ? history.map(function (entry) { return row(formatDate(entry.consulted_at || entry.created_at), entry.memo || '', esc(entry.channel || ''), ''); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></div>');
   }
-  function showEvent(id) { var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; var sub = String(event.event_date || '').slice(0, 10) + ' ' + String(event.event_time || '').slice(0, 5); dialog('<div class="pw-detail"><span class="pw-badge">' + (event.event_type === 'customer' ? '고객관리' : '일정') + '</span><h2 class="pw-detail-title">' + favoriteButton('event', id, event.title || '일정', sub) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div></div>'); }
+  function showEvent(id) { var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; var kind = event.event_type === 'customer' ? '고객관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정', sub = String(event.event_date || '').slice(0, 10) + (event.builtin ? '' : ' ' + String(event.event_time || '').slice(0, 5)); dialog('<div class="pw-detail"><span class="pw-badge">' + kind + '</span><h2 class="pw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div></div>'); }
 
   function formField(label, input) { return '<label class="pw-field"><span>' + label + '</span>' + input + '</label>'; }
   function formShell(title, body, saveAction) { return '<form class="pw-form" onsubmit="event.preventDefault();' + saveAction + '"><h2>' + title + '</h2>' + body + '<div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.closeDialog()">취소</button><button type="submit" class="pw-btn primary">저장</button></div></form>'; }
@@ -880,7 +943,7 @@
     else { var step = state.calendarMode === 'day' ? 1 : state.calendarMode === 'week' ? 7 : 365; state.selectedDate = addDays(state.selectedDate, direction * step); state.cursor = parseDate(state.selectedDate); }
     renderContent(); setUrl(false);
   }
-  function selectDate(date) { state.selectedDate = date; if (state.calendarMode === 'month') { var events = eventsFor(date); if (events.length) showEvent(events[0].id); } renderContent(); setUrl(false); }
+  function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
   function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
   function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } openWorkspace(state.section, false); }
 
