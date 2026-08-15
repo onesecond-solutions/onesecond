@@ -675,7 +675,8 @@
     var statuses = ['신규DB', '상담중', '청약완료', '유지', '변경', '보험금청구', '보류', '종결'];
     var form = '<div class="pw-consult-registration pw-customer-registration"><div class="pw-consult-form-grid">'
       + formField('청약일자', '<input id="pwf-customer-date" type="date" required value="' + ymd(new Date()) + '" onchange="OSPersonalWorkspace.refreshCustomerInsuranceAge()">')
-      + formField('이름', '<div class="pw-name-gender"><input id="pwf-customer-name" required autocomplete="name"><div class="pw-gender"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div></div>')
+      + formField('이름', '<input id="pwf-customer-name" required autocomplete="name">')
+      + formField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>')
       + formField('생년월일', '<div class="pw-birth-age"><input id="pwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')"><span id="pwf-customer-insurance-age">보험나이 -</span></div>')
       + formField('전화번호', '<input id="pwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
       + formField('고객상태', '<select id="pwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>') + '</div>'
@@ -687,7 +688,8 @@
     item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<div class="pw-consult-registration"><div class="pw-consult-form-grid">' + formField('등록일자', '<input id="pwf-consult-date" type="date" required value="' + esc(date) + '" onchange="OSPersonalWorkspace.refreshInsuranceAge()">')
-      + formField('이름', '<div class="pw-name-gender"><input id="pwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '"><div class="pw-gender"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div></div>')
+      + formField('이름', '<input id="pwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
+      + formField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
       + formField('생년월일', '<div class="pw-birth-age"><input id="pwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'form\')"><span id="pwf-insurance-age">보험나이 -</span></div>')
       + formField('전화번호', '<input id="pwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
       + formField('상담상태', '<select id="pwf-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>') + '</div>'
