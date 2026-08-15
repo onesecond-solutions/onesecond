@@ -2,6 +2,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
   var state = {
     section: 'home', assetFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -35,8 +36,9 @@
   }
 
   function ensureShell() {
-    if (!allowed()) return false;
+    if (!allowed()) { if (STANDALONE) renderStandaloneGate(authenticated() ? 'denied' : 'login'); return false; }
     document.body.classList.add('is-personal-workspace');
+    if (STANDALONE) return !!document.getElementById('v-personal-workspace');
     var side = document.querySelector('.side');
     if (side && !document.getElementById('nav-personal-workspace')) {
       var nav = document.createElement('div');
@@ -53,6 +55,17 @@
       body.appendChild(view);
     }
     return true;
+  }
+
+  function renderStandaloneGate(mode) {
+    var view = document.getElementById('v-personal-workspace');
+    if (!view) return;
+    document.body.classList.remove('is-personal-workspace');
+    if (mode === 'denied') {
+      view.innerHTML = '<div class="pw-access"><strong>워크스테이션 준비 중</strong><p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+      return;
+    }
+    view.innerHTML = '<div class="pw-access"><strong>워크스테이션 로그인</strong><p>기존 원세컨드 계정으로 로그인하면 자료, 고객, 상담과 일정을 불러옵니다.</p><a class="pw-btn primary" href="/pages/landing.html?auth=login&amp;redirect=%2Finsubriefing%2Fworkstation%2F">원세컨드 로그인</a><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
   }
 
   function loadData(force) {
@@ -226,7 +239,7 @@
   function setUrl(push) { var url = '?view=personal-workspace&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; try { history[push ? 'pushState' : 'replaceState']({ view: 'personal-workspace', section: state.section }, '', url); } catch (_) {} }
 
   function openWorkspace(section, push) {
-    if (!ensureShell()) { if (window.showView) window.showView('home'); return; }
+    if (!ensureShell()) { if (!STANDALONE && window.showView) window.showView('home'); return; }
     state.section = SECTIONS.indexOf(section) >= 0 ? section : 'home';
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-personal-workspace').classList.add('on');
@@ -254,7 +267,7 @@
   function write(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
   function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; loadData(true); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { alert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error)); }
-  function legacy(key) { if (window.showView) window.showView(key); }
+  function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
   function addAsset() { dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note">업무노트</option><option value="memo">메모</option><option value="link">링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off">') + formField('내용', '<textarea id="pwf-body" rows="8" required></textarea>') + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); }
   function openVault() {
     dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
@@ -279,10 +292,10 @@
   }
   function selectDate(date) { state.selectedDate = date; if (state.calendarMode === 'month') { var events = eventsFor(date); if (events.length) showEvent(events[0].id); } renderContent(); setUrl(false); }
   function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
-  function boot() { if (!ensureShell()) return; restoreFromUrl(); if (isLocal() && new URLSearchParams(location.search).get('pwtest') === '1') { state.data = { library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: {} }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); return; } openWorkspace(state.section, false); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: {} }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); return; } openWorkspace(state.section, false); }
 
   restoreFromUrl();
-  document.addEventListener('appstate:ready', function () { if (!allowed()) return; if (!document.getElementById('v-personal-workspace')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
+  document.addEventListener('appstate:ready', function () { if (!allowed()) { if (STANDALONE) renderStandaloneGate('denied'); return; } if (!document.getElementById('v-personal-workspace')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
   window.addEventListener('popstate', function () { if (!allowed() || !restoreFromUrl()) return; openWorkspace(state.section, false); });
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   window.OSPersonalWorkspace = {

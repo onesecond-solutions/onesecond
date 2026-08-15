@@ -541,6 +541,7 @@
       cursor: pointer;
     }
 @media (max-width: 560px) {
+      .ib-mobile-nav { grid-template-columns: repeat(4, 1fr); }
       .ib-hero {
         min-height: 640px;
         padding-top: 76px;
@@ -566,18 +567,29 @@
   var toggle = document.getElementById("ib-topic-toggle");
   var all = document.getElementById("ib-all-topics");
 
-  var advisorSessionKey = "insubriefingAdvisorSession";
+  function currentAccount() {
+    try { return JSON.parse(window.localStorage.getItem("os_user") || window.sessionStorage.getItem("os_user") || "{}"); }
+    catch (_e) { return {}; }
+  }
 
-  function isAdvisorLoggedIn() {
-    return window.localStorage.getItem(advisorSessionKey) === "1";
+  function hasAccountSession() {
+    return !!((window.localStorage.getItem("os_token") || window.sessionStorage.getItem("os_token")) && currentAccount().id);
   }
 
   function renderAdvisorNav() {
     if (!nav) return;
-
-    var dayfolderLink = nav.querySelector(".ib-dayfolder-link");
+    var workstationLink = nav.querySelector(".ib-workstation-link");
     var loginButton = nav.querySelector(".ib-login-button");
-    var loggedIn = isAdvisorLoggedIn();
+    var loggedIn = hasAccountSession();
+
+    if (!workstationLink) {
+      workstationLink = document.createElement("a");
+      workstationLink.className = "ib-workstation-link";
+      workstationLink.href = "/insubriefing/workstation/";
+      workstationLink.textContent = "워크스테이션";
+      workstationLink.setAttribute("aria-label", "워크스테이션 열기");
+      nav.appendChild(workstationLink);
+    }
 
     if (!loginButton) {
       loginButton = document.createElement("button");
@@ -585,23 +597,7 @@
       loginButton.type = "button";
       nav.appendChild(loginButton);
     }
-
-    if (loggedIn && !dayfolderLink) {
-      dayfolderLink = document.createElement("a");
-      dayfolderLink.className = "ib-dayfolder-link";
-      dayfolderLink.href = "/insubriefing/dayfolder-advisor/";
-      dayfolderLink.target = "_blank";
-      dayfolderLink.rel = "noopener";
-      dayfolderLink.textContent = "데이폴더";
-      dayfolderLink.setAttribute("aria-label", "데이폴더 설계사 버전 열기");
-      nav.insertBefore(dayfolderLink, loginButton);
-    }
-
-    if (!loggedIn && dayfolderLink) {
-      dayfolderLink.remove();
-    }
-
-    loginButton.textContent = loggedIn ? "로그아웃" : "로그인";
+    loginButton.textContent = loggedIn ? "로그아웃" : "원세컨드 로그인";
     loginButton.setAttribute("aria-label", loggedIn ? "설계사 로그아웃" : "설계사 로그인");
   }
 
@@ -611,13 +607,25 @@
       var loginButton = event.target.closest(".ib-login-button");
       if (!loginButton) return;
 
-      if (isAdvisorLoggedIn()) {
-        window.localStorage.removeItem(advisorSessionKey);
+      if (hasAccountSession()) {
+        ["os_token", "os_refresh_token", "os_user", "selected_menu"].forEach(function (key) {
+          window.localStorage.removeItem(key);
+          window.sessionStorage.removeItem(key);
+        });
+        renderAdvisorNav();
       } else {
-        window.localStorage.setItem(advisorSessionKey, "1");
+        window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Fworkstation%2F";
       }
-      renderAdvisorNav();
     });
+  }
+
+  var mobileNav = document.querySelector(".ib-mobile-nav");
+  if (mobileNav && !mobileNav.querySelector(".ib-workstation-mobile")) {
+    var mobileWorkstation = document.createElement("a");
+    mobileWorkstation.className = "ib-workstation-mobile";
+    mobileWorkstation.href = "/insubriefing/workstation/";
+    mobileWorkstation.textContent = "워크스테이션";
+    mobileNav.appendChild(mobileWorkstation);
   }
 
   if (menu && nav) {
