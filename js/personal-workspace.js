@@ -2,6 +2,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  var PILOT_SOURCE_EMAIL = 'bylts@naver.com';
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
   var state = {
@@ -23,8 +24,8 @@
     return String((window.AppState && window.AppState.email) || user.email || '').trim().toLowerCase();
   }
   function personalItemScope() {
-    var email = currentUserEmail();
-    var clauses = ['legacy_source.is.null', 'legacy_source.in.(myspace_folders,myspace_files)'];
+    var email = currentUserId() === PILOT_ID ? PILOT_SOURCE_EMAIL : currentUserEmail();
+    var clauses = ['legacy_source.is.null'];
     if (email) clauses.push('legacy_payload->>owner_email.eq.' + encodeURIComponent(email));
     return '&or=(' + clauses.join(',') + ')';
   }
