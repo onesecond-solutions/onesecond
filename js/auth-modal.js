@@ -12,6 +12,16 @@ var LOGO_SRC     = '../assets/images/logo/logo03.jpg';
 var SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
 
+/* 로그인 시작 페이지와 OAuth 콜백 경로가 달라도 같은 사이트의 안전한 복귀 주소를 보존한다. */
+(function rememberAuthReturn() {
+  try {
+    var target = new URLSearchParams(window.location.search || '').get('redirect') || '';
+    if (target.charAt(0) === '/' && target.charAt(1) !== '/' && target.indexOf('\\') === -1) {
+      window.sessionStorage.setItem('os_auth_return', target);
+    }
+  } catch (_e) { /* 저장소 차단 시 기본 /insu/ 흐름 유지 */ }
+})();
+
 // 로고 src 주입 (5/15 후 이전 시 위 LOGO_SRC만 갱신)
 (function () {
   var logoEl = document.getElementById('logoImg');
