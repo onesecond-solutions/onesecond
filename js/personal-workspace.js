@@ -8,7 +8,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, query: '', composing: false, searchTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), cursor: new Date(),
-    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, fullLoaded: false,
+    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, fullLoaded: false, pendingRichFiles: [], pendingRichImages: [],
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [] }
   };
 
@@ -331,26 +331,44 @@
   function closeDialog() { var box = document.getElementById('pw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function sanitizeRich(html) {
     var doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
-    var allowed = ['B', 'STRONG', 'I', 'EM', 'U', 'S', 'H2', 'H3', 'P', 'DIV', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'BR', 'A'];
+    var allowed = ['B', 'STRONG', 'I', 'EM', 'U', 'S', 'H2', 'H3', 'P', 'DIV', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'BR', 'A', 'IMG'];
     Array.prototype.slice.call(doc.body.querySelectorAll('*')).forEach(function (node) {
       if (allowed.indexOf(node.tagName) < 0) { node.replaceWith(doc.createTextNode(node.textContent || '')); return; }
       var href = node.tagName === 'A' ? String(node.getAttribute('href') || '') : '';
       var align = String(node.style && node.style.textAlign || '');
+      var storagePath = node.tagName === 'IMG' ? String(node.getAttribute('data-storage-path') || '') : '';
+      var pendingImage = node.tagName === 'IMG' ? String(node.getAttribute('data-pending-image') || '') : '';
+      var alt = node.tagName === 'IMG' ? String(node.getAttribute('alt') || '') : '';
       Array.prototype.slice.call(node.attributes).forEach(function (attr) { node.removeAttribute(attr.name); });
       if (node.tagName === 'A' && /^(https?:|mailto:|tel:)/i.test(href)) { node.setAttribute('href', href); node.setAttribute('target', '_blank'); node.setAttribute('rel', 'noopener'); }
       if (/^(left|center|right)$/.test(align)) node.style.textAlign = align;
+      if (node.tagName === 'IMG') {
+        if (storagePath) node.setAttribute('data-storage-path', storagePath);
+        if (/^[0-9a-f-]{36}$/i.test(pendingImage)) node.setAttribute('data-pending-image', pendingImage);
+        node.setAttribute('alt', alt);
+        if (!storagePath && !pendingImage) node.remove();
+      }
     });
     var cleaned = doc.body.innerHTML;
     return doc.body.children.length ? cleaned : cleaned.replace(/\r?\n/g, '<br>');
   }
   function richEditorField(id, html) {
     var buttons = [['bold', '<b>B</b>', '굵게'], ['italic', '<i>I</i>', '기울임'], ['underline', '<u>U</u>', '밑줄'], ['strikeThrough', '<s>S</s>', '취소선'], ['formatBlock', '제목', '제목', 'h2'], ['insertUnorderedList', '• 목록', '글머리 목록'], ['insertOrderedList', '1. 목록', '번호 목록'], ['formatBlock', '인용', '인용문', 'blockquote'], ['justifyLeft', '왼쪽', '왼쪽 정렬'], ['justifyCenter', '가운데', '가운데 정렬'], ['justifyRight', '오른쪽', '오른쪽 정렬'], ['removeFormat', '서식 지우기', '서식 지우기']];
-    return '<div class="pw-rich"><div class="pw-rich-toolbar" role="toolbar" aria-label="본문 서식">' + buttons.map(function (button) { return '<button type="button" title="' + button[2] + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richCommand(\'' + button[0] + '\',\'' + (button[3] || '') + '\')">' + button[1] + '</button>'; }).join('') + '</div><div id="' + id + '" class="pw-rich-body" contenteditable="true" data-placeholder="내용을 입력하세요">' + sanitizeRich(html) + '</div></div>';
+    return '<div class="pw-rich"><div class="pw-rich-toolbar" role="toolbar" aria-label="본문 서식">' + buttons.map(function (button) { return '<button type="button" title="' + button[2] + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richCommand(\'' + button[0] + '\',\'' + (button[3] || '') + '\')">' + button[1] + '</button>'; }).join('') + '<label class="pw-rich-upload">+ 이미지 삽입<input type="file" accept="image/*" multiple hidden onchange="OSPersonalWorkspace.addRichImages(this.files);this.value=\'\'"></label><label class="pw-rich-upload">+ 파일 첨부<input type="file" multiple hidden onchange="OSPersonalWorkspace.addRichFiles(this.files);this.value=\'\'"></label></div><div id="' + id + '" class="pw-rich-body" contenteditable="true" data-placeholder="내용을 입력하세요">' + sanitizeRich(html) + '</div><div class="pw-rich-files" id="pw-rich-files"></div></div>';
   }
   function richCommand(command, commandValue) { var editor = document.querySelector('#pw-dialog .pw-rich-body'); if (!editor) return; editor.focus(); document.execCommand(command, false, commandValue || null); }
   function richValue(id) { var editor = document.getElementById(id); return editor ? sanitizeRich(editor.innerHTML) : ''; }
-  function richHasText(html) { var doc = new DOMParser().parseFromString(String(html || ''), 'text/html'); return !!String(doc.body.textContent || '').trim(); }
+  function richHasText(html) { var doc = new DOMParser().parseFromString(String(html || ''), 'text/html'); return !!String(doc.body.textContent || '').trim() || !!doc.body.querySelector('img'); }
+  function resetRichPending() { (state.pendingRichImages || []).forEach(function (entry) { if (entry.preview) URL.revokeObjectURL(entry.preview); }); state.pendingRichFiles = []; state.pendingRichImages = []; }
+  function renderRichFiles() { var box = document.getElementById('pw-rich-files'); if (!box) return; var files = state.pendingRichFiles || []; box.innerHTML = files.length ? '<strong>첨부파일 ' + files.length + '개</strong>' + files.map(function (entry) { return '<span><b>' + esc(entry.file.name) + '</b><small>' + formatBytes(entry.file.size) + '</small><button type="button" onclick="OSPersonalWorkspace.removeRichFile(\'' + entry.id + '\')" aria-label="' + esc(entry.file.name) + ' 제거">×</button></span>'; }).join('') : ''; }
+  function addRichFiles(files) { Array.prototype.slice.call(files || []).forEach(function (file) { state.pendingRichFiles.push({ id: crypto.randomUUID(), file: file }); }); renderRichFiles(); }
+  function removeRichFile(id) { state.pendingRichFiles = state.pendingRichFiles.filter(function (entry) { return entry.id !== id; }); renderRichFiles(); }
+  function addRichImages(files) { var editor = document.querySelector('#pw-dialog .pw-rich-body'); if (!editor) return; Array.prototype.slice.call(files || []).filter(function (file) { return /^image\//.test(file.type || ''); }).forEach(function (file) { var id = crypto.randomUUID(), preview = URL.createObjectURL(file); state.pendingRichImages.push({ id: id, file: file, preview: preview }); editor.insertAdjacentHTML('beforeend', '<p><img src="' + esc(preview) + '" data-pending-image="' + id + '" alt="' + esc(file.name) + '"></p>'); }); }
+  function formatBytes(bytes) { var value = Number(bytes || 0); if (value < 1024) return value + ' B'; if (value < 1048576) return (value / 1024).toFixed(1) + ' KB'; return (value / 1048576).toFixed(1) + ' MB'; }
+  function signStoragePath(path) { return fetch(window.db.url('/storage/v1/object/sign/myspace/' + String(path).split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) }).then(function (response) { if (!response.ok) throw new Error('첨부파일을 열지 못했습니다.'); return response.json(); }).then(function (data) { return window.db.url('/storage/v1' + data.signedURL); }); }
+  function hydrateRichStorage() { var nodes = document.querySelectorAll('#pw-dialog [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { signStoragePath(node.getAttribute('data-storage-path')).then(function (url) { if (node.tagName === 'IMG') node.src = url; else node.href = url; }).catch(function () {}); }); }
   function workspaceItem(id) { return state.data.items.find(function (entry) { return String(entry.id) === String(id); }); }
+  function itemAttachments(id) { return state.data.items.filter(function (entry) { var payload = entry.legacy_payload || {}; return entry.item_type === 'file' && String(entry.parent_id || '') === String(id) && payload.attachment_role !== 'inline-image'; }); }
   function showAsset(source, id) {
     var list = source === 'scripts' ? state.data.scripts : state.data.library;
     var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
@@ -359,7 +377,10 @@
     var actions = (link ? '<a class="pw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : '')
       + '<button type="button" class="pw-btn" onclick="OSPersonalWorkspace.editAsset(\'' + esc(id) + '\')">수정</button>'
       + '<button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.deleteAsset(\'' + esc(id) + '\')">삭제</button>';
-    dialog('<div class="pw-detail"><span class="pw-badge">' + (source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실') + '</span><h2>' + esc(item.title || '(제목 없음)') + '</h2><small>' + formatDate(item.created_at) + '</small><div class="pw-detail-body pw-rich-content">' + sanitizeRich(body) + '</div><div class="pw-detail-actions">' + actions + '</div></div>');
+    var attachments = itemAttachments(id);
+    var attachmentHtml = attachments.length ? '<div class="pw-detail-files"><strong>첨부파일 ' + attachments.length + '개</strong>' + attachments.map(function (file) { return '<a href="#" data-storage-path="' + esc(file.storage_path) + '" target="_blank" rel="noopener"><span>▣</span><b>' + esc(file.title) + '</b><small>' + formatBytes(file.file_size) + '</small></a>'; }).join('') + '</div>' : '';
+    dialog('<div class="pw-detail"><span class="pw-badge">' + (source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실') + '</span><h2>' + esc(item.title || '(제목 없음)') + '</h2><small>' + formatDate(item.created_at) + '</small><div class="pw-detail-body pw-rich-content">' + sanitizeRich(body) + '</div>' + attachmentHtml + '<div class="pw-detail-actions">' + actions + '</div></div>');
+    hydrateRichStorage();
   }
   function showCustomer(id) {
     var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!customer) return;
@@ -377,9 +398,10 @@
   function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; loadData(true); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { alert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error)); }
   function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
-  function addAsset() { var category = currentAssetCategory(), selected = category === 'memo' ? 'memo' : category === 'file' ? 'link' : 'note'; dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note"' + (selected === 'note' ? ' selected' : '') + '>업무노트</option><option value="memo"' + (selected === 'memo' ? ' selected' : '') + '>메모</option><option value="link"' + (selected === 'link' ? ' selected' : '') + '>링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off">') + formField('내용', richEditorField('pwf-body', '')) + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); }
+  function addAsset() { resetRichPending(); var category = currentAssetCategory(), selected = category === 'memo' ? 'memo' : category === 'file' ? 'link' : 'note'; dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note"' + (selected === 'note' ? ' selected' : '') + '>업무노트</option><option value="memo"' + (selected === 'memo' ? ' selected' : '') + '>메모</option><option value="link"' + (selected === 'link' ? ' selected' : '') + '>링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off">') + formField('내용', richEditorField('pwf-body', '')) + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); }
   function editAsset(id) {
     var item = workspaceItem(id); if (!item || item.item_type === 'folder') return;
+    resetRichPending();
     var fileOnly = item.item_type === 'file';
     var fields = formField('제목', '<input id="pwf-edit-title" required autocomplete="off" value="' + esc(item.title || '') + '">');
     if (fileOnly) fields += '<p class="pw-form-note">업로드 파일은 표시 이름을 수정할 수 있습니다.</p>';
@@ -387,13 +409,20 @@
       + formField('링크 (선택)', '<input id="pwf-edit-link" type="url" placeholder="https://" value="' + esc(item.url || '') + '">')
       + formField('공개 범위', '<select id="pwf-edit-visibility"><option value="private"' + (item.visibility !== 'public' ? ' selected' : '') + '>나만 보기</option><option value="public"' + (item.visibility === 'public' ? ' selected' : '') + '>로그인 사용자 전체 공개</option></select>');
     dialog(formShell('자료 수정', fields, 'OSPersonalWorkspace.saveAssetEdit(\'' + esc(id) + '\')'));
+    hydrateRichStorage();
   }
   function saveAssetEdit(id) {
     var item = workspaceItem(id), title = value('pwf-edit-title'); if (!item || !title) return;
     var changes = { title: title };
     if (item.item_type !== 'file') {
       var body = richValue('pwf-edit-body'); if (!richHasText(body)) return;
-      changes.body = body; changes.url = value('pwf-edit-link') || null; changes.visibility = value('pwf-edit-visibility') === 'public' ? 'public' : 'private';
+      var category = assetCategory(item);
+      prepareRichUploads(id, body, category).then(function (prepared) {
+        changes.body = prepared.body; changes.url = value('pwf-edit-link') || null; changes.visibility = value('pwf-edit-visibility') === 'public' ? 'public' : 'private';
+        return updateOne('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
+          .then(function () { return saveRichChildren(prepared.rows); });
+      }).then(function () { resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
+      return;
     }
     updateOne('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
       .then(function () { finishSave('자료를 수정했습니다.'); }).catch(saveError);
@@ -511,7 +540,27 @@
   function addConsultation(customerId) { if (!state.data.customers.length) { addCustomer(); return; } dialog(formShell('상담 기록', formField('고객', '<select id="pwf-consult-customer" required>' + customerOptions() + '</select>') + formField('상담 방식', '<select id="pwf-consult-channel"><option value="전화">전화</option><option value="대면">대면</option><option value="카카오톡">카카오톡</option><option value="문자">문자</option></select>') + formField('상담 내용', '<textarea id="pwf-consult-memo" rows="8" required></textarea>'), 'OSPersonalWorkspace.saveConsultation()')); var select = document.getElementById('pwf-consult-customer'); if (select && customerId) select.value = customerId; }
   function addEvent(date) { dialog(formShell('일정 추가', formField('날짜', '<input id="pwf-event-date" type="date" required value="' + esc(date || state.selectedDate) + '">') + formField('시간', '<input id="pwf-event-time" type="time">') + formField('제목', '<input id="pwf-event-title" required autocomplete="off">') + formField('설명', '<textarea id="pwf-event-desc" rows="5"></textarea>'), 'OSPersonalWorkspace.saveEvent()')); }
   function value(id) { var element = document.getElementById(id); return element ? String(element.value || '').trim() : ''; }
-  function saveAsset() { var type = value('pwf-asset-type'), title = value('pwf-title'), body = richValue('pwf-body'), link = value('pwf-link'), category = type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'file'; if (!title || !richHasText(body)) return; var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null; write('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: category === 'note' ? 'note' : category === 'memo' ? 'memo' : 'link', title: title, body: body, url: link || null, visibility: value('pwf-visibility') === 'public' ? 'public' : 'private', legacy_payload: { workspace_category: category } }).then(function () { state.assetFilter = category; state.assetFolder = parent; finishSave('자료를 저장했습니다.'); }).catch(saveError); }
+  function prepareRichUploads(itemId, body, category) {
+    var owner = currentUserId(), token = window.db.getToken(), images = state.pendingRichImages || [], files = state.pendingRichFiles || [], all = images.map(function (entry) { return { entry: entry, role: 'inline-image' }; }).concat(files.map(function (entry) { return { entry: entry, role: 'attachment' }; }));
+    if (!all.length) return Promise.resolve({ body: body, rows: [] });
+    return Promise.all(all.map(function (wrapped) {
+      var entry = wrapped.entry, file = entry.file, dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : '', path = owner + '/attachments/' + itemId + '/' + entry.id + (ext ? '.' + ext : '');
+      return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
+        if (!response.ok) throw new Error(file.name + ' 업로드 실패');
+        return { pendingId: entry.id, path: path, row: { id: entry.id, owner_id: owner, parent_id: itemId, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category, attachment_role: wrapped.role } } };
+      });
+    })).then(function (uploaded) {
+      var doc = new DOMParser().parseFromString(String(body || ''), 'text/html');
+      uploaded.forEach(function (file) { var image = doc.body.querySelector('img[data-pending-image="' + file.pendingId + '"]'); if (image) { image.removeAttribute('data-pending-image'); image.removeAttribute('src'); image.setAttribute('data-storage-path', file.path); } });
+      return { body: sanitizeRich(doc.body.innerHTML), rows: uploaded.map(function (entry) { return entry.row; }) };
+    });
+  }
+  function saveRichChildren(rows) { return Promise.all((rows || []).map(function (rowBody) { return write('workspace_items', rowBody); })); }
+  function saveAsset() {
+    var type = value('pwf-asset-type'), title = value('pwf-title'), body = richValue('pwf-body'), link = value('pwf-link'), category = type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'file'; if (!title || !richHasText(body)) return;
+    var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null, itemId = crypto.randomUUID();
+    prepareRichUploads(itemId, body, category).then(function (prepared) { return write('workspace_items', { id: itemId, owner_id: currentUserId(), parent_id: parent, item_type: category === 'note' ? 'note' : category === 'memo' ? 'memo' : 'link', title: title, body: prepared.body, url: link || null, visibility: value('pwf-visibility') === 'public' ? 'public' : 'private', legacy_payload: { workspace_category: category } }).then(function () { return saveRichChildren(prepared.rows); }); }).then(function () { state.assetFilter = category; state.assetFolder = parent; resetRichPending(); finishSave('자료를 저장했습니다.'); }).catch(saveError);
+  }
   function saveCustomer() { var name = value('pwf-customer-name'), phone = value('pwf-customer-phone'), note = value('pwf-customer-note'); if (!name) return; write('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '신규DB', profile: note ? { note: note } : {} }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
   function saveConsultation() { var customerId = value('pwf-consult-customer'), memo = value('pwf-consult-memo'); if (!customerId || !memo) return; write('workspace_consultations', { customer_id: customerId, owner_id: currentUserId(), consulted_at: new Date().toISOString(), channel: value('pwf-consult-channel') || null, content: memo }).then(function () { finishSave('상담 기록을 저장했습니다.'); }).catch(saveError); }
   function saveEvent() { var date = value('pwf-event-date'), title = value('pwf-event-title'); if (!date || !title) return; write('workspace_tasks', { task_date: date, task_time: value('pwf-event-time') || null, title: title, description: value('pwf-event-desc') || null, owner_id: currentUserId() }).then(function () { state.selectedDate = date; state.cursor = parseDate(date); finishSave('일정을 추가했습니다.'); }).catch(saveError); }
@@ -534,7 +583,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; renderContent(); },
-    showAsset: showAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, showCustomer: showCustomer, showEvent: showEvent,
+    showAsset: showAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, saveConsultation: saveConsultation, addEvent: addEvent, saveEvent: saveEvent,
