@@ -18,6 +18,16 @@
   function currentUserId() {
     return String((window.AppState && window.AppState.userId) || storedUser().id || '');
   }
+  function currentUserEmail() {
+    var user = storedUser();
+    return String((window.AppState && window.AppState.email) || user.email || '').trim().toLowerCase();
+  }
+  function personalItemScope() {
+    var email = currentUserEmail();
+    var clauses = ['legacy_source.is.null', 'legacy_source.in.(myspace_folders,myspace_files)'];
+    if (email) clauses.push('legacy_payload->>owner_email.eq.' + encodeURIComponent(email));
+    return '&or=(' + clauses.join(',') + ')';
+  }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || currentUserId() === PILOT_ID; }
   function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
@@ -80,15 +90,16 @@
     state.status = 'loading'; state.error = ''; renderContent();
     var requestId = ++state.requestId;
     var id = encodeURIComponent(userId);
+    var itemScope = personalItemScope();
     var full = !!force;
     var today = ymd(new Date());
     var requests = full ? [
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&or=(legacy_source.is.null,legacy_source.in.(library,myspace_folders,myspace_files))&order=created_at.desc&limit=2000&select=*'),
+      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=*'),
       api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=*'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=*'),
       api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=*')
     ] : [
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&or=(legacy_source.is.null,legacy_source.in.(library,myspace_folders,myspace_files))&order=created_at.desc&limit=6&select=*'),
+      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=6&select=*'),
       api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&task_date=eq.' + today + '&order=task_time.asc&limit=20&select=*')
     ];
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
@@ -301,7 +312,7 @@
   function addAsset() { dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note">업무노트</option><option value="memo">메모</option><option value="link">링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off">') + formField('내용', '<textarea id="pwf-body" rows="8" required></textarea>') + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); }
   function openVault() {
     dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
-    api('workspace_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null&or=(legacy_source.is.null,legacy_source.in.(library,myspace_folders,myspace_files))&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
+    api('workspace_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null' + personalItemScope() + '&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
   }
   function renderVault() { var content = document.getElementById('pw-vault-content'); if (!content) return; var folders = state.vaultFolders || [], files = state.vaultFiles || []; content.innerHTML = '<div class="pw-vault-grid">' + folders.map(function (folder) { return '<div class="pw-file-card folder"><span>📁</span><b>' + esc(folder.title) + '</b><small>폴더</small></div>'; }).concat(files.map(function (file) { return '<div class="pw-file-card"><span>📄</span><b>' + esc(file.title) + '</b><small>' + esc((file.extension || '파일').toUpperCase()) + ' · ' + formatDate(file.created_at) + '</small></div>'; })).join('') + '</div>' + ((!folders.length && !files.length) ? '<div class="pw-empty">저장된 파일이 없습니다.</div>' : ''); }
   function newFolder() { var name = prompt('새 폴더 이름'); if (name == null || !String(name).trim()) return; write('workspace_items', { owner_id: currentUserId(), parent_id: null, item_type: 'folder', title: String(name).trim(), visibility: 'private' }).then(function () { openVault(); loadData(true); }).catch(saveError); }
