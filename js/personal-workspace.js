@@ -5,7 +5,7 @@
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'archive'];
   var state = {
-    section: 'home', assetFilter: 'all', query: '', composing: false, searchTimer: 0,
+    section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', query: '', composing: false, searchTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), cursor: new Date(),
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, fullLoaded: false,
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [] }
@@ -171,11 +171,28 @@
     items = items.filter(function (item) { return (state.assetFilter === 'all' || item.type === state.assetFilter) && matches(item.title + ' ' + item.body + ' ' + item.kind); });
     var tabs = [['all', '전체'], ['note', '업무노트'], ['file', '자료실'], ['memo', '메모']];
     var tabsHtml = tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('');
+    var viewModes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
+    var viewHtml = viewModes.map(function (mode) { return '<button type="button" class="' + (state.assetView === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setAssetView(\'' + mode[0] + '\')" aria-label="' + mode[1] + ' 보기" title="' + mode[1] + '"><span aria-hidden="true">' + mode[2] + '</span>' + mode[1] + '</button>'; }).join('');
     var controls = STANDALONE
-      ? '<div class="pw-assets-controls"><div class="pw-tabs">' + tabsHtml + '</div><button class="pw-btn primary" onclick="OSPersonalWorkspace.addAsset()">+ 자료 추가</button></div>'
+      ? '<div class="pw-assets-controls"><div class="pw-tabs">' + tabsHtml + '</div><div class="pw-assets-actions"><div class="pw-view-switch" aria-label="보기 방식">' + viewHtml + '</div><button class="pw-btn primary" onclick="OSPersonalWorkspace.addAsset()">+ 자료 추가</button></div></div>'
       : '<div class="pw-toolbar"><div><h2>자료</h2><p class="pw-subtitle">노트, 메모, 링크와 사이트 파일을 한 화면에서 관리합니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.openVault()">📁 파일함 열기</button><button class="pw-btn primary" onclick="OSPersonalWorkspace.addAsset()">+ 자료 추가</button></div></div><div class="pw-system-note"><strong>사이트 파일함</strong><span>새 폴더 만들기와 여러 파일 업로드를 지원합니다.</span><small>PC 원본과 별개인 사이트 보관 공간이며, 사이트에서 작업해도 PC 원본은 변경되지 않습니다.</small></div><div class="pw-tabs">' + tabsHtml + '</div>';
-    return statusHtml() + controls
-      + '<div class="pw-explorer"><table class="pw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" onclick="OSPersonalWorkspace.showAsset(\'' + item.source + '\',\'' + esc(item.raw.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
+    var content = state.assetView === 'list'
+      ? '<div class="pw-explorer"><table class="pw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" onclick="OSPersonalWorkspace.showAsset(\'' + item.source + '\',\'' + esc(item.raw.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
+      : '<div class="pw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
+    return statusHtml() + controls + content;
+  }
+  function assetCardHtml(item) {
+    var raw = item.raw || {}, direct = raw.image_url || (/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(raw.url || '') ? raw.url : '');
+    var image = direct ? '<img src="' + esc(direct) + '" alt="">' : ((raw.storage_path && /^image\//.test(raw.mime_type || '')) ? '<img data-storage-path="' + esc(raw.storage_path) + '" alt="">' : '');
+    var preview = image || '<div class="pw-asset-document"><span>' + (item.type === 'note' ? '업무노트' : item.type === 'memo' ? '메모' : item.kind) + '</span><p>' + esc(String(item.body || '').slice(0, 110)) + '</p></div>';
+    return '<button type="button" class="pw-asset-card" onclick="OSPersonalWorkspace.showAsset(\'' + item.source + '\',\'' + esc(raw.id) + '\')"><span class="pw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small></button>';
+  }
+  function hydrateAssetThumbs() {
+    if (!window.db || !window.db.url || !window.db.getToken) return;
+    document.querySelectorAll('#v-personal-workspace img[data-storage-path]').forEach(function (img) {
+      var path = img.getAttribute('data-storage-path'); if (!path) return;
+      fetch(window.db.url('/storage/v1/object/sign/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) }).then(function (response) { return response.ok ? response.json() : null; }).then(function (data) { if (data && data.signedURL) img.src = window.db.url('/storage/v1' + data.signedURL); }).catch(function () {});
+    });
   }
   function customersHtml() {
     var rows = state.data.customers.filter(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || '')); });
@@ -241,7 +258,7 @@
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
     bindSearch(); renderContent();
   }
-  function renderContent() { var main = document.getElementById('pw-main'); if (main) main.innerHTML = sectionHtml(); }
+  function renderContent() { var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -314,6 +331,7 @@
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
     filterAssets: function (filter) { state.assetFilter = filter; renderContent(); },
+    setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     showAsset: showAsset, showCustomer: showCustomer, showEvent: showEvent,
     closeDialog: closeDialog, addAsset: addAsset, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles,
     addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, saveConsultation: saveConsultation, addEvent: addEvent, saveEvent: saveEvent,
