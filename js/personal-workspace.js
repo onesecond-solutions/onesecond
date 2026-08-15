@@ -42,6 +42,7 @@
   function customerProfile(customer) { return customer && customer.profile && typeof customer.profile === 'object' ? customer.profile : {}; }
   function digits(value) { return String(value || '').replace(/\D/g, '').slice(0, 11); }
   function phoneText(value) { var number = digits(value); if (number.length <= 3) return number; if (number.length <= 7) return number.slice(0, 3) + '-' + number.slice(3); if (number.length === 10) return number.slice(0, 3) + '-' + number.slice(3, 6) + '-' + number.slice(6); return number.slice(0, 3) + '-' + number.slice(3, 7) + '-' + number.slice(7); }
+  function writtenAt() { var now = new Date(); return ymd(now) + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
   function insuranceAge(birth, basis) { var born = parseDate(birth), at = parseDate(basis || ymd(new Date())); if (isNaN(born.getTime()) || isNaN(at.getTime()) || born > at) return ''; var age = at.getFullYear() - born.getFullYear(); var birthday = new Date(at.getFullYear(), born.getMonth(), born.getDate()); if (at < birthday) { age -= 1; birthday.setFullYear(at.getFullYear() - 1); } var next = new Date(birthday); next.setFullYear(birthday.getFullYear() + 1); if ((at - birthday) >= (next - birthday) / 2) age += 1; return Math.max(0, age); }
   function weekday(value) { return ['일', '월', '화', '수', '목', '금', '토'][parseDate(value).getDay()]; }
   function api(path) {
@@ -278,7 +279,8 @@
   }
   function consultationDetailHtml(item, customer) {
     var profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
-    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button><div class="pw-consult-detail-head"><div><small>' + esc(date) + '</small><h2>' + esc(customer.name || '(이름 없음)') + '<em>' + esc(profile.gender || '') + '</em></h2></div><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.editConsultation(\'' + esc(item.id) + '\')">수정</button></div><dl><div><dt>생년월일</dt><dd>' + esc(profile.birth_date || '-') + '</dd></div><div><dt>보험나이</dt><dd>' + (age === '' ? '-' : age + '세') + '</dd></div><div><dt>전화번호</dt><dd>' + esc(phoneText(customer.phone || customer.phone_raw || '') || '-') + '</dd></div><div><dt>상담상태</dt><dd><span class="pw-consult-status" data-status="' + esc(status) + '">' + esc(status) + '</span></dd></div></dl><section><h3>상담내용</h3><div class="pw-consult-content">' + esc(item.memo || '').replace(/\n/g, '<br>') + '</div></section></article>';
+    var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
+    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button><div class="pw-consult-detail-head"><div><input id="pwd-consult-date" type="date" value="' + esc(date) + '" onchange="OSPersonalWorkspace.refreshDetailInsuranceAge()"><div class="pw-detail-name"><input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름"><div class="pw-gender"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div></div></div></div><dl><div><dt>생년월일</dt><dd><input id="pwd-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" onchange="OSPersonalWorkspace.refreshDetailInsuranceAge()"></dd></div><div><dt>보험나이</dt><dd id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</dd></div><div><dt>전화번호</dt><dd><input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)"></dd></div><div><dt>상담상태</dt><dd><select id="pwd-consult-status">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></dd></div></dl><section><h3>상담내용</h3><div class="pw-consult-content">' + esc(item.memo || '').replace(/\n/g, '<br>') + '</div><textarea id="pwd-consult-new" rows="5" placeholder="새 상담내용을 입력하세요"></textarea></section><div class="pw-consult-save"><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -684,11 +686,26 @@
     var customerBody = { owner_id: currentUserId(), name: name, phone: phone || null, status: status || '예약', profile: profile };
     var customerPromise = customerId ? updateOne('workspace_customers?id=eq.' + encodeURIComponent(customerId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), customerBody) : writeOne('workspace_customers', customerBody);
     customerPromise.then(function (customer) {
-      var consultationBody = { customer_id: customer.id, owner_id: currentUserId(), consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: memo };
+      var content = consultationId ? memo : '[' + writtenAt() + '] ' + memo;
+      var consultationBody = { customer_id: customer.id, owner_id: currentUserId(), consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content };
       return consultationId ? updateOne('workspace_consultations?id=eq.' + encodeURIComponent(consultationId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), consultationBody) : writeOne('workspace_consultations', consultationBody);
     }).then(function (saved) { state.selectedConsultation = saved.id; finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
   }
-  function selectConsultation(id) { state.selectedConsultation = id || null; renderContent(); }
+  function selectConsultation(id) { state.selectedConsultation = id && String(state.selectedConsultation) !== String(id) ? id : null; renderContent(); }
+  function refreshDetailInsuranceAge() { var target = document.getElementById('pwd-insurance-age'); if (!target) return; var age = insuranceAge(value('pwd-consult-birth'), value('pwd-consult-date')); target.textContent = age === '' ? '-' : age + '세'; }
+  function saveConsultationDetail(id) {
+    var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
+    var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }); if (!customer) return;
+    var name = value('pwd-consult-name'), birth = value('pwd-consult-birth'), date = value('pwd-consult-date'), phone = phoneText(value('pwd-consult-phone')), status = value('pwd-consult-status'), addition = value('pwd-consult-new');
+    var genderInput = document.querySelector('input[name="pwd-consult-gender"]:checked'), gender = genderInput ? genderInput.value : '';
+    if (!name || !date) return;
+    var profile = Object.assign({}, customerProfile(customer), { birth_date: birth || null, gender: gender || null });
+    var content = String(item.memo || ''); if (addition) content += (content ? '\n' : '') + '[' + writtenAt() + '] ' + addition;
+    Promise.all([
+      updateOne('workspace_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '예약', profile: profile }),
+      updateOne('workspace_consultations?id=eq.' + encodeURIComponent(item.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content })
+    ]).then(function () { finishSave('상담을 저장했습니다.'); }).catch(saveError);
+  }
   function saveEvent() { var date = value('pwf-event-date'), title = value('pwf-event-title'); if (!date || !title) return; write('workspace_tasks', { task_date: date, task_time: value('pwf-event-time') || null, title: title, description: value('pwf-event-desc') || null, owner_id: currentUserId() }).then(function () { state.selectedDate = date; state.cursor = parseDate(date); finishSave('일정을 추가했습니다.'); }).catch(saveError); }
   function moveCalendar(direction) {
     if (state.calendarMode === 'month') state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + direction, 1);
@@ -713,7 +730,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewDdak: previewDdak, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, refreshInsuranceAge: refreshInsuranceAge, formatConsultPhone: formatConsultPhone, addEvent: addEvent, saveEvent: saveEvent,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, saveConsultationDetail: saveConsultationDetail, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatConsultPhone: formatConsultPhone, addEvent: addEvent, saveEvent: saveEvent,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
