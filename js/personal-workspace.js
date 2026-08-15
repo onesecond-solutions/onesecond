@@ -126,7 +126,7 @@
   }
 
   function navHtml() {
-    var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객'], ['consultations', '✎', '상담'], ['calendar', '▦', '캘린더']];
+    var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">기존 아카이브</button></nav>';
@@ -257,12 +257,12 @@
   }
   function customersHtml() {
     var rows = state.data.customers.filter(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || '')); });
-    return statusHtml() + '<div class="pw-toolbar"><h2>고객</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addCustomer()">+ 고객 등록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객명</th><th>연락처</th><th>상태</th><th>등록일</th></tr></thead><tbody>' + rows.map(function (item) { return '<tr onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.id) + '\')"><td><b>' + esc(item.name || '(이름 없음)') + '</b></td><td>' + esc(item.phone || item.phone_raw || '') + '</td><td><span class="pw-badge">' + esc(item.status || '미분류') + '</span></td><td>' + formatDate(item.created_at) + '</td></tr>'; }).join('') + '</tbody></table>' + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div>';
+    return statusHtml() + '<div class="pw-toolbar"><h2>고객관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addCustomer()">+ 고객 등록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객명</th><th>연락처</th><th>상태</th><th>등록일</th></tr></thead><tbody>' + rows.map(function (item) { return '<tr onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.id) + '\')"><td><b>' + esc(item.name || '(이름 없음)') + '</b></td><td>' + esc(item.phone || item.phone_raw || '') + '</td><td><span class="pw-badge">' + esc(item.status || '미분류') + '</span></td><td>' + formatDate(item.created_at) + '</td></tr>'; }).join('') + '</tbody></table>' + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div>';
   }
   function consultationsHtml() {
     var names = {}; state.data.customers.forEach(function (item) { names[item.id] = item.name; });
     var rows = state.data.consultations.filter(function (item) { return matches((names[item.customer_id] || '') + ' ' + (item.memo || '') + ' ' + (item.channel || '')); });
-    return statusHtml() + '<div class="pw-toolbar"><h2>상담</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultation()">+ 상담 기록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객</th><th>상담 내용</th><th>방식</th><th>상담일</th></tr></thead><tbody>' + rows.map(function (item) { return '<tr onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.customer_id) + '\')"><td><b>' + esc(names[item.customer_id] || '고객') + '</b></td><td>' + esc(item.memo || '') + '</td><td>' + esc(item.channel || '') + '</td><td>' + formatDate(item.consulted_at || item.created_at) + '</td></tr>'; }).join('') + '</tbody></table>' + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div>';
+    return statusHtml() + '<div class="pw-toolbar"><h2>상담관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultation()">+ 상담 기록</button></div><div class="pw-explorer"><table class="pw-table"><thead><tr><th>고객</th><th>상담 내용</th><th>방식</th><th>상담일</th></tr></thead><tbody>' + rows.map(function (item) { return '<tr onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.customer_id) + '\')"><td><b>' + esc(names[item.customer_id] || '고객') + '</b></td><td>' + esc(item.memo || '') + '</td><td>' + esc(item.channel || '') + '</td><td>' + formatDate(item.consulted_at || item.created_at) + '</td></tr>'; }).join('') + '</tbody></table>' + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div>';
   }
 
   function calendarTitle() {
