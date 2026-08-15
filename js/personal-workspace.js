@@ -7,7 +7,7 @@
   var state = {
     section: 'home', assetFilter: 'all', query: '', composing: false, searchTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), cursor: new Date(),
-    status: 'idle', error: '', loadedFor: '', requestId: 0,
+    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, fullLoaded: false,
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [] }
   };
 
@@ -74,19 +74,26 @@
       state.status = 'waiting-auth'; state.loadedFor = ''; renderContent();
       return Promise.resolve(false);
     }
+    if (state.loadPromise) return state.loadPromise;
+    if (state.fullLoaded && state.loadedFor === userId) return Promise.resolve(true);
     if (!force && state.status === 'ready' && state.loadedFor === userId) return Promise.resolve(true);
     state.status = 'loading'; state.error = ''; renderContent();
     var requestId = ++state.requestId;
     var id = encodeURIComponent(userId);
-    var requests = [
-      api('workspace_items?deleted_at=is.null&order=created_at.desc&limit=10000&select=*'),
-      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=5000&select=*'),
-      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=5000&select=*'),
-      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5000&select=*')
+    var full = !!force;
+    var today = ymd(new Date());
+    var requests = full ? [
+      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=*'),
+      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=*'),
+      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=*'),
+      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=*')
+    ] : [
+      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=6&select=*'),
+      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&task_date=eq.' + today + '&order=task_time.asc&limit=20&select=*')
     ];
-    return Promise.allSettled(requests).then(function (results) {
+    state.loadPromise = Promise.allSettled(requests).then(function (results) {
       if (requestId !== state.requestId) return false;
-      var names = ['items', 'events', 'customers', 'consultations'];
+      var names = full ? ['items', 'events', 'customers', 'consultations'] : ['items', 'events'];
       var failed = [];
       results.forEach(function (result, index) {
         if (result.status === 'fulfilled' && Array.isArray(result.value)) state.data[names[index]] = result.value;
@@ -97,11 +104,13 @@
       state.data.events = state.data.events.map(function (item) { return Object.assign({}, item, { event_date: item.task_date, event_time: item.task_time }); });
       state.data.consultations = state.data.consultations.map(function (item) { return Object.assign({}, item, { memo: item.content }); });
       state.loadedFor = userId;
+      state.fullLoaded = full;
       state.status = failed.length ? 'partial' : 'ready';
       state.error = failed.length ? failed.join(', ') + ' 자료를 불러오지 못했습니다.' : '';
       renderContent();
       return failed.length === 0;
-    });
+    }).finally(function () { if (requestId === state.requestId) state.loadPromise = null; });
+    return state.loadPromise;
   }
 
   function navHtml() {
@@ -235,7 +244,7 @@
     input.addEventListener('compositionend', function () { state.composing = false; scheduleSearch(input.value); });
     input.addEventListener('input', function () { if (!state.composing) scheduleSearch(input.value); });
   }
-  function scheduleSearch(value) { window.clearTimeout(state.searchTimer); state.searchTimer = window.setTimeout(function () { state.query = value; renderContent(); }, 180); }
+  function scheduleSearch(value) { window.clearTimeout(state.searchTimer); state.searchTimer = window.setTimeout(function () { state.query = value; if (state.query.trim() && !state.fullLoaded) loadData(true); else renderContent(); }, 180); }
   function setUrl(push) { var url = '?view=personal-workspace&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; try { history[push ? 'pushState' : 'replaceState']({ view: 'personal-workspace', section: state.section }, '', url); } catch (_) {} }
 
   function openWorkspace(section, push) {
@@ -243,9 +252,9 @@
     state.section = SECTIONS.indexOf(section) >= 0 ? section : 'home';
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-personal-workspace').classList.add('on');
-    renderShell(); setUrl(push !== false); loadData(false);
+    renderShell(); setUrl(push !== false); loadData(state.section !== 'home');
   }
-  function go(section) { state.section = section; renderShell(); setUrl(true); }
+  function go(section) { state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
   function dialog(html) { var box = document.getElementById('pw-dialog'), body = document.getElementById('pw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function closeDialog() { var box = document.getElementById('pw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function showAsset(source, id) {
@@ -292,7 +301,7 @@
   }
   function selectDate(date) { state.selectedDate = date; if (state.calendarMode === 'month') { var events = eventsFor(date); if (events.length) showEvent(events[0].id); } renderContent(); setUrl(false); }
   function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: {} }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); return; } openWorkspace(state.section, false); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: {} }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } openWorkspace(state.section, false); }
 
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!allowed()) { if (STANDALONE) renderStandaloneGate('denied'); return; } if (!document.getElementById('v-personal-workspace')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
