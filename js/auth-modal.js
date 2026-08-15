@@ -1636,9 +1636,9 @@ window.onInsurerEmailInput = function () {
     resetInsurerOtp();
   }
 };
-window.sendInsurerOtp    = function () { return sendInsurerOtp();    };
-window.verifyInsurerOtp  = function () { return verifyInsurerOtp();  };
-window.resetInsurerOtp   = function () { return resetInsurerOtp();   };
+window.sendInsurerOtp    = sendInsurerOtp;
+window.verifyInsurerOtp  = verifyInsurerOtp;
+window.resetInsurerOtp   = resetInsurerOtp;
 
 async function sendInsurerOtp() {
   var emailEl = document.getElementById('f-email');
