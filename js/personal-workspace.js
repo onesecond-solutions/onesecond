@@ -6,9 +6,11 @@
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'trash', 'archive'];
+  var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), selectedConsultation: null, cursor: new Date(),
+    assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [],
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
@@ -101,6 +103,36 @@
     if (!item || !item.id) return;
     state.data.items = [item].concat(state.data.items.filter(function (entry) { return String(entry.id) !== String(item.id); }));
     rebuildWorkspaceDerived();
+  }
+  function removeWorkspaceItemsLocal(ids) {
+    var idSet = {}; (ids || []).forEach(function (id) { idSet[String(id)] = true; });
+    if (!Object.keys(idSet).length) return;
+    state.data.items = state.data.items.filter(function (entry) { return !idSet[String(entry.id)]; });
+    rebuildWorkspaceDerived();
+  }
+  function upsertCustomer(customer) {
+    if (!customer || !customer.id) return;
+    state.data.customers = [customer].concat(state.data.customers.filter(function (entry) { return String(entry.id) !== String(customer.id); }));
+  }
+  function moveCustomerToTrashLocal(id) {
+    var index = state.data.customers.findIndex(function (entry) { return String(entry.id) === String(id); });
+    if (index < 0) return;
+    var removed = state.data.customers.splice(index, 1)[0];
+    removed = Object.assign({}, removed, { deleted_at: new Date().toISOString() });
+    state.data.trashCustomers = [removed].concat(state.data.trashCustomers || []);
+  }
+  function restoreCustomerFromTrashLocal(customer) {
+    if (!customer || !customer.id) return;
+    state.data.trashCustomers = (state.data.trashCustomers || []).filter(function (entry) { return String(entry.id) !== String(customer.id); });
+    upsertCustomer(customer);
+  }
+  function upsertConsultation(consultation) {
+    if (!consultation || !consultation.id) return;
+    state.data.consultations = [consultation].concat(state.data.consultations.filter(function (entry) { return String(entry.id) !== String(consultation.id); }));
+  }
+  function upsertTask(task) {
+    if (!task || !task.id) return;
+    state.data.events = [task].concat(state.data.events.filter(function (entry) { return String(entry.id) !== String(task.id); }));
   }
 
   function ensureShell() {
@@ -349,6 +381,10 @@
     return ['note', 'file', 'memo'].indexOf(state.assetFilter) >= 0 ? state.assetFilter : '';
   }
   function assetCategoryLabel(category) { return category === 'note' ? '업무노트' : category === 'memo' ? '메모' : '자료실'; }
+  function loadMoreHtml(totalCount, visibleCount, action) {
+    if (totalCount <= visibleCount) return '';
+    return '<div class="pw-load-more"><button type="button" class="pw-btn" onclick="' + action + '">더 보기 (' + visibleCount + ' / ' + totalCount + ')</button></div>';
+  }
 
   function assetsHtml() {
     var items = [];
@@ -359,6 +395,8 @@
       if (String(item.raw.parent_id || '') !== String(state.assetFolder || '')) return false;
       return matches(item.title + ' ' + item.body + ' ' + item.kind);
     }).sort(function (a, b) { return Number(!!b.folder) - Number(!!a.folder); });
+    var totalItemCount = items.length;
+    items = items.slice(0, state.assetsRenderLimit);
     var tabs = [['all', '전체'], ['note', '업무노트'], ['file', '자료실'], ['memo', '메모']];
     var tabsHtml = tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('');
     var viewModes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
@@ -373,7 +411,7 @@
     var content = state.assetView === 'list'
       ? '<div class="pw-explorer"><table class="pw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'pw-folder-drop-target' : 'pw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="pw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
       : '<div class="pw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
-    return statusHtml() + controls + breadcrumb + content;
+    return statusHtml() + controls + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSPersonalWorkspace.loadMoreAssets()');
   }
   function assetOpenAction(item) { return item.folder ? "OSPersonalWorkspace.openAssetFolder('" + esc(item.raw.id) + "')" : "OSPersonalWorkspace.showAsset('" + item.source + "','" + esc(item.raw.id) + "')"; }
   function assetDragAttributes(item) {
@@ -417,9 +455,11 @@
     var statuses = ['신규DB', '상담중', '청약완료', '유지', '변경', '보험금청구', '보류', '종결'], gridStyle = '--pw-consult-template:' + consultGridTemplate(columns);
     var latest = {}; state.data.consultations.forEach(function (entry) { var old = latest[entry.customer_id]; if (!old || String(entry.consulted_at || entry.created_at || '') > String(old.consulted_at || old.created_at || '')) latest[entry.customer_id] = entry; });
     var rows = state.data.customers.filter(function (item) { var profile = customerProfile(item); if (profile.customer_managed !== true && String(item.name || '').trim() !== '정나겸') return false; var note = profile.note || '', status = item.status || '신규'; return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
+    var totalRowCount = rows.length;
+    rows = rows.slice(0, state.customersRenderLimit);
     var header = '<div class="pw-consult-columns" style="' + gridStyle + '">' + columns.map(function (column) { if (column.key !== 'status') return '<span>' + column.label + '</span>'; return '<label class="pw-consult-status-filter"><span class="sr-only">고객상태별 보기</span><select aria-label="고객상태별 보기" onchange="OSPersonalWorkspace.filterCustomerStatus(this.value)"><option value="all">고객상태 전체</option>' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (state.customerStatusFilter === entry ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></label>'; }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span></div>';
     var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date || ymd(new Date())), note = profile.note || (latest[item.id] && latest[item.id].memo) || '', status = item.status || '신규'; var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="pw-consult-row" style="' + gridStyle + '" onclick="OSPersonalWorkspace.showCustomer(\'' + esc(item.id) + '\')">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="pw-consult-cell pw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span><span class="pw-consult-hover">' + esc(stripHtml(note || '고객내용이 없습니다.')) + '</span></button>'; }).join('');
-    return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>고객관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addCustomer()">+ 고객 등록</button></div><div class="pw-consult-layout"><section class="pw-consult-master"><div class="pw-consult-list" role="list">' + header + '<div class="pw-consult-rows">' + body + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div></div></section></div></div>';
+    return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>고객관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addCustomer()">+ 고객 등록</button></div><div class="pw-consult-layout"><section class="pw-consult-master"><div class="pw-consult-list" role="list">' + header + '<div class="pw-consult-rows">' + body + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSPersonalWorkspace.loadMoreCustomers()') + '</div></section></div></div>';
   }
   function consultationsHtml() {
     var customers = {}; state.data.customers.forEach(function (item) { customers[item.id] = item; });
@@ -428,11 +468,14 @@
     var rows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id]; if (!customer) return false; var profile = customerProfile(customer), status = consultationStatus(item, customer); return (state.consultationStatusFilter === 'all' || status === state.consultationStatusFilter) && matches((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + (item.memo || '') + ' ' + status); });
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedConsultation); });
     if (!selected && state.selectedConsultation) state.selectedConsultation = null;
+    var totalRowCount = rows.length;
+    if (selected && rows.indexOf(selected) >= state.consultationsRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.consultationsRenderLimit - 1));
+    else rows = rows.slice(0, state.consultationsRenderLimit);
     var columns = '<div class="pw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { if (column.key !== 'status') return '<span>' + esc(column.label) + '</span>'; return '<label class="pw-consult-status-filter"><span class="sr-only">상담상태별 보기</span><select aria-label="상담상태별 보기" onchange="OSPersonalWorkspace.filterConsultationStatus(this.value)"><option value="all">상담상태 전체</option>' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (state.consultationStatusFilter === entry ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></label>'; }).join('') + '<button type="button" class="pw-consult-column-button" onclick="OSPersonalWorkspace.manageConsultColumns()">+ 컬럼</button></div>';
     var list = '<div class="pw-consult-list" role="list">' + columns + '<div class="pw-consult-rows">' + rows.map(function (item) {
       var customer = customers[item.customer_id] || {}, profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
       return '<button type="button" role="listitem" class="pw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSPersonalWorkspace.selectConsultation(\'' + esc(item.id) + '\')">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span><span class="pw-consult-hover">' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '</span></button>';
-    }).join('') + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></div>';
+    }).join('') + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSPersonalWorkspace.loadMoreConsultations()') + '</div>';
     var detail = selected ? consultationDetailHtml(selected, customers[selected.customer_id] || {}) : '';
     return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>상담관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultation()">+ 상담 등록</button></div><div class="pw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="pw-consult-master">' + list + '</section>' + detail + '</div></div>';
   }
@@ -724,7 +767,7 @@
   function updateOne(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); }).then(function (rows) { if (!Array.isArray(rows) || rows.length !== 1) throw new Error('수정 권한을 확인하지 못했습니다. 다시 로그인한 뒤 시도해 주세요.'); return rows[0]; }); }
   function softDelete(path) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); }).then(function (rows) { if (!Array.isArray(rows) || rows.length !== 1) throw new Error('삭제 권한을 확인하지 못했습니다. 다시 로그인한 뒤 시도해 주세요.'); return true; }); }
   function softDeleteChildren(parentId) { return window.db.fetch('/rest/v1/workspace_items?parent_id=eq.' + encodeURIComponent(parentId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
-  function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; loadData(true); if (typeof window.toast === 'function') window.toast(message); }
+  function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; rebuildWorkspaceDerived(); renderContent(); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { alert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error)); }
   function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
   function addAsset() { resetRichPending(); var category = currentAssetCategory(), selected = category === 'memo' ? 'memo' : category === 'file' ? 'link' : 'note'; dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note"' + (selected === 'note' ? ' selected' : '') + '>업무노트</option><option value="memo"' + (selected === 'memo' ? ' selected' : '') + '>메모</option><option value="link"' + (selected === 'link' ? ' selected' : '') + '>링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSPersonalWorkspace.focusRich(\'pwf-body\')}">') + formField('내용', richEditorField('pwf-body', '')) + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); var title = document.getElementById('pwf-title'); if (title) title.focus(); }
@@ -750,27 +793,27 @@
       prepareRichUploads(id, body, category).then(function (prepared) {
         changes.body = prepared.body; changes.url = value('pwf-edit-link') || null; changes.visibility = value('pwf-edit-visibility') === 'public' ? 'public' : 'private';
         return updateOne('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
-          .then(function () { return saveRichChildren(prepared.rows); });
-      }).then(function () { resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
+          .then(function (updated) { return saveRichChildren(prepared.rows).then(function () { return updated; }); });
+      }).then(function (updated) { upsertWorkspaceItem(updated); resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
       return;
     }
     updateOne('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
-      .then(function () { finishSave('자료를 수정했습니다.'); }).catch(saveError);
+      .then(function (updated) { upsertWorkspaceItem(updated); finishSave('자료를 수정했습니다.'); }).catch(saveError);
   }
   function deleteAsset(id) {
     var item = workspaceItem(id); if (!item || item.item_type === 'folder') return;
     if (!window.confirm('“' + String(item.title || '제목 없음') + '” 자료를 삭제할까요?')) return;
+    var childIds = state.data.items.filter(function (entry) { return String(entry.parent_id || '') === String(id); }).map(function (entry) { return entry.id; });
     softDeleteChildren(id).then(function () { return softDelete('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null'); })
-      .then(function () { closeDialog(); return loadData(true); })
-      .then(function () { if (typeof window.toast === 'function') window.toast('자료를 삭제했습니다.'); }).catch(saveError);
+      .then(function () { closeDialog(); removeWorkspaceItemsLocal(childIds.concat([id])); renderContent(); if (typeof window.toast === 'function') window.toast('자료를 삭제했습니다.'); }).catch(saveError);
   }
   function openVault() {
     dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
     api('workspace_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null' + personalItemScope() + '&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
   }
   function renderVault() { var content = document.getElementById('pw-vault-content'); if (!content) return; var folders = state.vaultFolders || [], files = state.vaultFiles || []; content.innerHTML = '<div class="pw-vault-grid">' + folders.map(function (folder) { return '<div class="pw-file-card folder"><span>📁</span><b>' + esc(folder.title) + '</b><small>폴더</small></div>'; }).concat(files.map(function (file) { return '<div class="pw-file-card"><span>📄</span><b>' + esc(file.title) + '</b><small>' + esc((file.extension || '파일').toUpperCase()) + ' · ' + formatDate(file.created_at) + '</small></div>'; })).join('') + '</div>' + ((!folders.length && !files.length) ? '<div class="pw-empty">저장된 파일이 없습니다.</div>' : ''); }
-  function newFolder() { var name = prompt('새 폴더 이름'); if (name == null || !String(name).trim()) return; write('workspace_items', { owner_id: currentUserId(), parent_id: null, item_type: 'folder', title: String(name).trim(), visibility: 'private' }).then(function () { openVault(); loadData(true); }).catch(saveError); }
-  function uploadFiles(files) { var list = Array.prototype.slice.call(files || []); if (!list.length) return; var token = window.db.getToken(), owner = currentUserId(); Promise.all(list.map(function (file) { var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : ''); return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('workspace_items', { id: id, owner_id: owner, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private' }); }); })).then(function () { openVault(); loadData(true); }).catch(saveError); }
+  function newFolder() { var name = prompt('새 폴더 이름'); if (name == null || !String(name).trim()) return; writeOne('workspace_items', { owner_id: currentUserId(), parent_id: null, item_type: 'folder', title: String(name).trim(), visibility: 'private' }).then(function (created) { upsertWorkspaceItem(created); openVault(); }).catch(saveError); }
+  function uploadFiles(files) { var list = Array.prototype.slice.call(files || []); if (!list.length) return; var token = window.db.getToken(), owner = currentUserId(); Promise.all(list.map(function (file) { var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : ''); var row = { id: id, owner_id: owner, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', created_at: new Date().toISOString() }; return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('workspace_items', row).then(function () { return row; }); }); })).then(function (rows) { rows.forEach(upsertWorkspaceItem); openVault(); }).catch(saveError); }
   function closeAssetMenu() { var menu = document.querySelector('#v-personal-workspace .pw-add-menu'); if (menu) menu.open = false; }
   function newAssetFolder() {
     closeAssetMenu();
@@ -785,9 +828,8 @@
     var name = value('pwf-folder-name'), category = value('pwf-folder-category');
     if (!name || ['note', 'file', 'memo'].indexOf(category) < 0) return;
     var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null;
-    write('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: 'folder', title: name, visibility: 'private', legacy_payload: { workspace_category: category } })
-      .then(function () { closeDialog(); state.assetFilter = category; state.assetFolder = parent; return loadData(true); })
-      .then(function () { if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 폴더를 만들었습니다.'); }).catch(saveError);
+    writeOne('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: 'folder', title: name, visibility: 'private', legacy_payload: { workspace_category: category } })
+      .then(function (created) { upsertWorkspaceItem(created); closeDialog(); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 폴더를 만들었습니다.'); }).catch(saveError);
   }
   function deleteAssetFolder(id) {
     var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; });
@@ -797,8 +839,7 @@
     if (!window.confirm('“' + String(folder.title || '폴더') + '” 폴더를 삭제할까요?')) return;
     var category = assetCategory(folder);
     softDelete('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()))
-      .then(function () { state.assetFolder = null; state.assetFilter = category; return loadData(true); })
-      .then(function () { if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
+      .then(function () { removeWorkspaceItemsLocal([id]); state.assetFolder = null; state.assetFilter = category; renderContent(); if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
   }
   function assetDragStart(event, id, category) {
     state.draggingAsset = { id: String(id), category: String(category) };
@@ -835,10 +876,10 @@
       .then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows) || rows.length !== 1) throw new Error('이동할 자료를 확인하지 못했습니다.');
-        state.data.items.concat(state.data.scripts, state.data.library).forEach(function (item) { if (String(item.id) === dragging.id) item.parent_id = String(folderId); });
-        renderContent(); return loadData(true);
-      })
-      .then(function () { if (typeof window.toast === 'function') window.toast('폴더로 이동했습니다.'); }).catch(saveError);
+        state.data.items.forEach(function (item) { if (String(item.id) === dragging.id) item.parent_id = String(folderId); });
+        rebuildWorkspaceDerived(); renderContent();
+        if (typeof window.toast === 'function') window.toast('폴더로 이동했습니다.');
+      }).catch(saveError);
   }
   function uploadAssetFiles(files) {
     closeAssetMenu(); var list = Array.prototype.slice.call(files || []); if (!list.length) return;
@@ -859,11 +900,12 @@
     var token = window.db.getToken(), owner = currentUserId(), parent = parentOverride !== undefined ? parentOverride : (state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null), folderPath = parent || category;
     Promise.all(list.map(function (file) {
       var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/' + folderPath + '/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : '');
+      var row = { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category }, created_at: new Date().toISOString() };
       return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
         if (!response.ok) throw new Error(file.name + ' 업로드 실패');
-        return write('workspace_items', { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category } });
+        return write('workspace_items', row).then(function () { return row; });
       });
-    })).then(function () { state.assetFilter = category; state.assetFolder = parent; return loadData(true); }).then(function () { if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + list.length + '개를 추가했습니다.'); }).catch(saveError);
+    })).then(function (rows) { rows.forEach(upsertWorkspaceItem); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + list.length + '개를 추가했습니다.'); }).catch(saveError);
   }
   function addCustomer() {
     var statuses = ['신규DB', '상담중', '청약완료', '유지', '변경', '보험금청구', '보류', '종결'];
@@ -909,7 +951,7 @@
     if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', '');
   }
   function closeReservationPopup() { var box = document.getElementById('pw-reservation-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
-  function saveReservationEvent() { var date = value('pwr-event-date'), title = value('pwr-event-title'); if (!date || !title) return; write('workspace_tasks', { task_date: date, task_time: value('pwr-event-time') || null, title: title, description: value('pwr-event-desc') || null, owner_id: currentUserId() }).then(function () { state.selectedDate = date; state.cursor = parseDate(date); closeReservationPopup(); loadData(true); if (typeof window.toast === 'function') window.toast('캘린더에 상담 예약을 추가했습니다.'); }).catch(saveError); }
+  function saveReservationEvent() { var date = value('pwr-event-date'), title = value('pwr-event-title'); if (!date || !title) return; writeOne('workspace_tasks', { task_date: date, task_time: value('pwr-event-time') || null, title: title, description: value('pwr-event-desc') || null, owner_id: currentUserId() }).then(function (created) { upsertTask(created); state.selectedDate = date; state.cursor = parseDate(date); closeReservationPopup(); rebuildWorkspaceDerived(); renderContent(); if (typeof window.toast === 'function') window.toast('캘린더에 상담 예약을 추가했습니다.'); }).catch(saveError); }
   function value(id) { var element = document.getElementById(id); return element ? String(element.value || '').trim() : ''; }
   function prepareRichUploads(itemId, body, category) {
     var owner = currentUserId(), token = window.db.getToken(), images = state.pendingRichImages || [], files = state.pendingRichFiles || [], all = images.map(function (entry) { return { entry: entry, role: 'inline-image' }; }).concat(files.map(function (entry) { return { entry: entry, role: 'attachment' }; }));
@@ -926,7 +968,7 @@
       return { body: sanitizeRich(doc.body.innerHTML), rows: uploaded.map(function (entry) { return entry.row; }) };
     });
   }
-  function saveRichChildren(rows) { return Promise.all((rows || []).map(function (rowBody) { return write('workspace_items', rowBody); })); }
+  function saveRichChildren(rows) { return Promise.all((rows || []).map(function (rowBody) { var stamped = Object.assign({ created_at: new Date().toISOString() }, rowBody); return write('workspace_items', stamped).then(function () { upsertWorkspaceItem(stamped); return stamped; }); })); }
   function saveAsset() {
     var type = value('pwf-asset-type'), title = value('pwf-title'), body = richValue('pwf-body'), link = value('pwf-link'), category = type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'file';
     if (!title) { alert('제목을 입력해 주세요.'); return; }
@@ -937,7 +979,7 @@
       return write('workspace_items', row).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return row; });
     }).then(function (row) { state.assetFilter = category; state.assetFolder = parent; upsertWorkspaceItem(row); resetRichPending(); finishSave('자료를 저장했습니다.'); }).catch(saveError);
   }
-  function saveCustomer() { var name = value('pwf-customer-name'), phone = phoneText(value('pwf-customer-phone')), note = richValue('pwf-customer-note'), contractDate = value('pwf-customer-date'), birth = value('pwf-customer-birth'), genderInput = document.querySelector('input[name="pwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDate) return; var profile = { customer_managed: true, contract_date: contractDate, birth_date: birth || null, gender: gender || null, zip: value('pwf-customer-zip') || null, address: value('pwf-customer-address') || null, address_detail: value('pwf-customer-address-detail') || null, job: value('pwf-customer-job') || null, medication: value('pwf-customer-medication') || null, medical_history: value('pwf-customer-history') || null, diagnosis_date: value('pwf-customer-diagnosis') || null, current_condition: value('pwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function () { resetRichPending(); finishSave('고객을 등록했습니다.'); }).catch(saveError); }
+  function saveCustomer() { var name = value('pwf-customer-name'), phone = phoneText(value('pwf-customer-phone')), note = richValue('pwf-customer-note'), contractDate = value('pwf-customer-date'), birth = value('pwf-customer-birth'), genderInput = document.querySelector('input[name="pwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDate) return; var profile = { customer_managed: true, contract_date: contractDate, birth_date: birth || null, gender: gender || null, zip: value('pwf-customer-zip') || null, address: value('pwf-customer-address') || null, address_detail: value('pwf-customer-address-detail') || null, job: value('pwf-customer-job') || null, medication: value('pwf-customer-medication') || null, medical_history: value('pwf-customer-history') || null, diagnosis_date: value('pwf-customer-diagnosis') || null, current_condition: value('pwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); finishSave('고객을 등록했습니다.'); }).catch(saveError); }
   function saveCustomerRich(customer, profile, body) { var hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!hasPending) return Promise.resolve(customer); var rootId = crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '고객 첨부 · ' + customer.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customer.id, attachment_root: true } }; return writeOne('workspace_items', rootBody).then(function () { return prepareRichUploads(rootId, body, 'customer'); }).then(function (prepared) { return saveRichChildren(prepared.rows).then(function () { var updatedProfile = Object.assign({}, profile, { note: prepared.body }); return updateOne('workspace_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { profile: updatedProfile }); }); }); }
   function saveConsultation() {
     var customerId = value('pwf-consult-customer-id'), consultationId = value('pwf-consult-id'), name = value('pwf-consult-name'), birth = value('pwf-consult-birth'), date = value('pwf-consult-date'), phone = phoneText(value('pwf-consult-phone')), status = value('pwf-consult-status'), memo = richValue('pwf-consult-memo');
@@ -947,25 +989,30 @@
     var customerBody = { owner_id: currentUserId(), name: name, phone: phone || null, status: status || '예약', profile: profile };
     var customerPromise = customerId ? updateOne('workspace_customers?id=eq.' + encodeURIComponent(customerId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), customerBody) : writeOne('workspace_customers', customerBody);
     customerPromise.then(function (customer) {
+      upsertCustomer(customer);
       var content = consultationId ? memo : '<p><strong>[' + esc(writtenAt()) + ']</strong></p>' + memo;
       var consultationBody = { customer_id: customer.id, owner_id: currentUserId(), consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content };
       return consultationId ? updateOne('workspace_consultations?id=eq.' + encodeURIComponent(consultationId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), consultationBody) : writeOne('workspace_consultations', consultationBody);
-    }).then(function (saved) { return saveConsultationRich(saved, saved.content || memo).then(function (content) { if (content === saved.content) return saved; return updateOne('workspace_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: content }); }); }).then(function (saved) { state.selectedConsultation = saved.id; resetRichPending(); finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
+    }).then(function (saved) { return saveConsultationRich(saved, saved.content || memo).then(function (content) { if (content === saved.content) return saved; return updateOne('workspace_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: content }); }); }).then(function (saved) { upsertConsultation(saved); state.selectedConsultation = saved.id; resetRichPending(); finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
   }
   function saveConsultationRich(consultation, body) { var root = consultationAttachmentRoot(consultation.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(body); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '상담 첨부 · ' + consultation.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'consultation', consultation_id: consultation.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('workspace_items', rootBody); return ready.then(function () { return prepareRichUploads(rootId, body, 'consultation'); }).then(function (prepared) { return updateOne('workspace_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return prepared.body; }); }); }
   function selectConsultation(id) { state.selectedConsultation = id && String(state.selectedConsultation) !== String(id) ? id : null; renderContent(); }
   function trashCustomer(id) {
     if (!id || !window.confirm('이 고객을 휴지통으로 이동할까요? 상담기록은 보존되며 복원하면 다시 표시됩니다.')) return;
     softDelete('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
+      moveCustomerToTrashLocal(id);
       state.selectedConsultation = null;
-      return loadData(true);
-    }).then(function () { if (typeof window.toast === 'function') window.toast('고객을 휴지통으로 이동했습니다.'); }).catch(saveError);
+      closeDialog(); renderContent();
+      if (typeof window.toast === 'function') window.toast('고객을 휴지통으로 이동했습니다.');
+    }).catch(saveError);
   }
   function restoreCustomer(id) {
     if (!id) return;
-    updateOne('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { deleted_at: null }).then(function () {
-      return loadData(true);
-    }).then(function () { if (typeof window.toast === 'function') window.toast('고객을 복원했습니다.'); }).catch(saveError);
+    updateOne('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { deleted_at: null }).then(function (restored) {
+      restoreCustomerFromTrashLocal(restored);
+      renderContent();
+      if (typeof window.toast === 'function') window.toast('고객을 복원했습니다.');
+    }).catch(saveError);
   }
   function refreshDetailInsuranceAge() { var target = document.getElementById('pwd-insurance-age'); if (!target) return; var age = insuranceAge(value('pwd-consult-birth'), value('pwd-consult-date')); target.textContent = age === '' ? '-' : age + '세'; }
   function saveConsultationDetail(id) {
@@ -980,9 +1027,9 @@
     Promise.all([
       updateOne('workspace_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '예약', profile: profile }),
       updateOne('workspace_consultations?id=eq.' + encodeURIComponent(item.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content })
-    ]).then(function () { finishSave('상담을 저장했습니다.'); }).catch(saveError);
+    ]).then(function (results) { upsertCustomer(results[0]); upsertConsultation(results[1]); finishSave('상담을 저장했습니다.'); }).catch(saveError);
   }
-  function saveEvent() { var date = value('pwf-event-date'), title = value('pwf-event-title'); if (!date || !title) return; write('workspace_tasks', { task_date: date, task_time: value('pwf-event-time') || null, title: title, description: value('pwf-event-desc') || null, owner_id: currentUserId() }).then(function () { state.selectedDate = date; state.cursor = parseDate(date); finishSave('일정을 추가했습니다.'); }).catch(saveError); }
+  function saveEvent() { var date = value('pwf-event-date'), title = value('pwf-event-title'); if (!date || !title) return; writeOne('workspace_tasks', { task_date: date, task_time: value('pwf-event-time') || null, title: title, description: value('pwf-event-desc') || null, owner_id: currentUserId() }).then(function (created) { upsertTask(created); state.selectedDate = date; state.cursor = parseDate(date); finishSave('일정을 추가했습니다.'); }).catch(saveError); }
   function moveCalendar(direction) {
     if (state.calendarMode === 'month') state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + direction, 1);
     else { var step = state.calendarMode === 'day' ? 1 : state.calendarMode === 'week' ? 7 : 365; state.selectedDate = addDays(state.selectedDate, direction * step); state.cursor = parseDate(state.selectedDate); }
@@ -999,14 +1046,17 @@
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
-    filterAssets: function (filter) { state.assetFilter = filter; state.assetFolder = null; renderContent(); },
+    loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
+    loadMoreCustomers: function () { state.customersRenderLimit += LIST_PAGE_SIZE; renderContent(); },
+    loadMoreConsultations: function () { state.consultationsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
+    filterAssets: function (filter) { state.assetFilter = filter; state.assetFolder = null; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
-    openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; renderContent(); },
-    openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; renderContent(); },
+    openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
+    openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewDdak: previewDdak, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; renderContent(); }, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, saveEvent: saveEvent, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, saveEvent: saveEvent, richPaste: richPaste,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
