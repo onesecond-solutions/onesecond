@@ -266,8 +266,42 @@
   function favoriteRows() {
     var rows = state.favorites.slice(0, 8);
     return rows.length ? rows.map(function (entry) {
-      return row(entry.title || '(제목 없음)', favoriteSubtitle(entry), '›', 'OSPersonalWorkspace.openFavorite(\'' + esc(entry.target_type) + '\',\'' + esc(entry.target_id) + '\')');
+      var key = favoriteKey(entry.target_type, entry.target_id);
+      return '<button type="button" class="pw-row pw-asset-draggable pw-folder-drop-target" draggable="true" ondragstart="OSPersonalWorkspace.favoriteDragStart(event,\'' + esc(key) + '\')" ondragover="OSPersonalWorkspace.favoriteDragOver(event,\'' + esc(key) + '\')" ondragleave="OSPersonalWorkspace.favoriteDragLeave(event)" ondrop="OSPersonalWorkspace.favoriteDrop(event,\'' + esc(key) + '\')" ondragend="OSPersonalWorkspace.favoriteDragEnd(event)" onclick="OSPersonalWorkspace.openFavorite(\'' + esc(entry.target_type) + '\',\'' + esc(entry.target_id) + '\')"><span><b>' + esc(entry.title || '(제목 없음)') + '</b><small>' + esc(favoriteSubtitle(entry)) + '</small></span><span>›</span></button>';
     }).join('') : '<div class="pw-empty"><strong>즐겨찾기가 없습니다.</strong><span>자료, 고객, 상담 옆 별표를 눌러 고정하세요.</span></div>';
+  }
+  function favoriteDragStart(event, key) {
+    state.draggingFavorite = key;
+    if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key); }
+    if (event.currentTarget) event.currentTarget.classList.add('is-dragging');
+  }
+  function favoriteDragEnd(event) {
+    state.draggingFavorite = null;
+    if (event && event.currentTarget) event.currentTarget.classList.remove('is-dragging');
+    document.querySelectorAll('#v-personal-workspace .pw-favorites-panel .is-drag-over').forEach(function (el) { el.classList.remove('is-drag-over'); });
+  }
+  function favoriteDragOver(event, key) {
+    if (!state.draggingFavorite || state.draggingFavorite === key) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    if (event.currentTarget) event.currentTarget.classList.add('is-drag-over');
+  }
+  function favoriteDragLeave(event) {
+    if (!event.currentTarget || (event.relatedTarget && event.currentTarget.contains(event.relatedTarget))) return;
+    event.currentTarget.classList.remove('is-drag-over');
+  }
+  function favoriteDrop(event, targetKey) {
+    event.preventDefault(); event.stopPropagation();
+    if (event.currentTarget) event.currentTarget.classList.remove('is-drag-over');
+    var draggingKey = state.draggingFavorite; state.draggingFavorite = null;
+    if (!draggingKey || draggingKey === targetKey) return;
+    var fromIndex = state.favorites.findIndex(function (entry) { return favoriteKey(entry.target_type, entry.target_id) === draggingKey; });
+    var toIndex = state.favorites.findIndex(function (entry) { return favoriteKey(entry.target_type, entry.target_id) === targetKey; });
+    if (fromIndex < 0 || toIndex < 0) return;
+    var moved = state.favorites.splice(fromIndex, 1)[0];
+    state.favorites.splice(toIndex, 0, moved);
+    state.favorites = state.favorites.map(function (entry, order) { return Object.assign({}, entry, { sort_order: order }); });
+    saveFavorites(); renderContent();
   }
   function resolveFavorite(type, id) {
     if (type === 'asset') {
@@ -1116,7 +1150,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, saveEvent: saveEvent, richPaste: richPaste,
