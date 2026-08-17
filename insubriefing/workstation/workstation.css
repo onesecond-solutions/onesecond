@@ -20,6 +20,12 @@ body:not(.is-personal-workspace) .ws-global-search{visibility:hidden}
 .ws-account-popover{position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:240px;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 16px 40px color-mix(in srgb,var(--tp) 16%,transparent)}
 .ws-account-popover[hidden]{display:none}
 .ws-account-email{margin:0 6px 6px;padding:10px 8px 12px;border-bottom:1px solid var(--bd);color:var(--ts);font-size:var(--fs-meta);line-height:1.4;overflow-wrap:anywhere}
+.ws-account-bgmode{margin:0 6px 6px;padding:2px 2px 12px;border-bottom:1px solid var(--bd)}
+.ws-account-bgmode>span{display:block;margin-bottom:7px;color:var(--ts);font-size:var(--fs-meta);font-weight:var(--fw-medium)}
+.ws-bgmode-options{display:flex;gap:6px}
+.ws-account .ws-account-popover .ws-bgmode-btn{width:auto;flex:1;min-height:34px;justify-content:center;padding:0 4px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font-size:11px;font-weight:var(--fw-medium)}
+.ws-account .ws-account-popover .ws-bgmode-btn:hover{background:var(--s2)}
+.ws-account .ws-account-popover .ws-bgmode-btn.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));color:var(--ac)}
 .ws-account .ws-account-popover button{width:100%;min-height:40px;justify-content:flex-start;border:0;border-radius:var(--radius-sm);background:transparent;font-weight:var(--fw-medium)}
 .ws-account .ws-account-popover button:hover,.ws-account .ws-account-popover button:focus-visible{background:var(--s2)}
 .ws-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
@@ -112,6 +118,38 @@ body:not(.is-personal-workspace) .ws-global-search{visibility:hidden}
 #v-personal-workspace .pw-access strong{font-size:var(--fs-xl);color:var(--tp)}
 #v-personal-workspace .pw-access p{max-width:520px;color:var(--ts)}
 #v-personal-workspace .pw-access .pw-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+body.ws-page.ws-bg-flat:before{display:none}
+body.ws-page.ws-bg-white:after{background:#f6f7fb}
+body.ws-page.ws-bg-dark:after{background:#14161b}
+body.ws-page.ws-bg-flat #v-personal-workspace{border-color:var(--bd);background:var(--s1)}
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-head,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-search,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-body,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-nav,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-main,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-stat,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-panel,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-explorer,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-cal,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-time,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-agenda,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-search-results,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-cal-head,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-calendar-month .pw-cal,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-calendar-month .pw-cal-grid,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-calendar-month .pw-day,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-calendar-month .pw-day.out,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-calendar-shell .pw-mode,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-consult-layout,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-consult-columns,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-day,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-day.out,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-table th,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-time-head button,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-table tbody tr,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-agenda>button,
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-search-results>button{background:var(--s1)}
+body.ws-page.ws-bg-flat #v-personal-workspace .pw-table tbody tr:nth-child(even){background:var(--s2)}
 @media(max-width:860px){.ws-main{padding:8px 8px 0}#v-personal-workspace{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-personal-workspace .pw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-personal-workspace .pw-main{grid-row:1;min-width:0}#v-personal-workspace .pw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-personal-workspace .pw-assets-controls{align-items:flex-start;flex-direction:column}#v-personal-workspace .pw-assets-controls .pw-tabs{width:100%;overflow:visible}#v-personal-workspace .pw-assets-actions{align-self:flex-end}}
 @media(max-width:860px){.ws-global-search{width:min(400px,38vw)}}
 @media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand span{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-account{grid-column:2;grid-row:1}.ws-account-trigger{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-personal-workspace{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}

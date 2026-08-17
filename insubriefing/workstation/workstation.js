@@ -3,6 +3,19 @@
   function storedUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (_e) { return {}; } }
   function esc(value) { return String(value || '').replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
   function closeAccountMenu() { var menu = document.getElementById('ws-account-popover'), trigger = document.getElementById('ws-account-trigger'); if (menu) menu.hidden = true; if (trigger) trigger.setAttribute('aria-expanded', 'false'); }
+  function currentBgMode() { try { return localStorage.getItem('ws_bg_mode') || 'image'; } catch (_e) { return 'image'; } }
+  function applyBgMode(mode) {
+    var body = document.body;
+    body.classList.remove('ws-bg-flat', 'ws-bg-white', 'ws-bg-dark');
+    if (mode === 'white') body.classList.add('ws-bg-flat', 'ws-bg-white');
+    else if (mode === 'dark') body.classList.add('ws-bg-flat', 'ws-bg-dark');
+    try { localStorage.setItem('ws_bg_mode', mode); } catch (_e) {}
+  }
+  function bgModeButtonsHtml(active) {
+    var modes = [['image', '기본이미지'], ['white', '화이트'], ['dark', '다크']];
+    return modes.map(function (m) { return '<button type="button" class="ws-bgmode-btn' + (m[0] === active ? ' on' : '') + '" data-bg="' + m[0] + '">' + m[1] + '</button>'; }).join('');
+  }
+  applyBgMode(currentBgMode());
   function logout() {
     ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) { localStorage.removeItem(key); sessionStorage.removeItem(key); });
     window.location.replace('/insubriefing/');
@@ -24,10 +37,16 @@
     }
     var name = (window.AppState && window.AppState.name) || user.name || '사용자';
     var email = (window.AppState && window.AppState.email) || user.email || '';
-    box.innerHTML = '<button type="button" class="ws-account-trigger" id="ws-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button><div class="ws-account-popover" id="ws-account-popover" role="menu" hidden><div class="ws-account-email" aria-label="로그인된 이메일 주소">' + esc(email || '이메일 정보 없음') + '</div><button type="button" id="ws-profile-open" role="menuitem">개인정보 수정</button><button type="button" id="ws-logout" role="menuitem">로그아웃</button></div>';
+    box.innerHTML = '<button type="button" class="ws-account-trigger" id="ws-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button><div class="ws-account-popover" id="ws-account-popover" role="menu" hidden><div class="ws-account-email" aria-label="로그인된 이메일 주소">' + esc(email || '이메일 정보 없음') + '</div><div class="ws-account-bgmode"><span>배경화면</span><div class="ws-bgmode-options" role="group" aria-label="배경화면 모드">' + bgModeButtonsHtml(currentBgMode()) + '</div></div><button type="button" id="ws-profile-open" role="menuitem">개인정보 수정</button><button type="button" id="ws-logout" role="menuitem">로그아웃</button></div>';
     document.getElementById('ws-account-trigger').addEventListener('click', function () { var menu = document.getElementById('ws-account-popover'), open = menu.hidden; closeAccountMenu(); menu.hidden = !open; this.setAttribute('aria-expanded', String(open)); });
     document.getElementById('ws-profile-open').addEventListener('click', openProfile);
     document.getElementById('ws-logout').addEventListener('click', logout);
+    Array.prototype.forEach.call(box.querySelectorAll('.ws-bgmode-btn'), function (btn) {
+      btn.addEventListener('click', function () {
+        applyBgMode(btn.getAttribute('data-bg'));
+        Array.prototype.forEach.call(box.querySelectorAll('.ws-bgmode-btn'), function (b) { b.classList.toggle('on', b === btn); });
+      });
+    });
   }
   document.addEventListener('click', function (event) { var box = document.getElementById('ws-account'); if (box && !box.contains(event.target)) closeAccountMenu(); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeAccountMenu(); });
