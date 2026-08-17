@@ -416,7 +416,11 @@
       : '<div class="pw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
     return statusHtml() + controls + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSPersonalWorkspace.loadMoreAssets()');
   }
-  function assetOpenAction(item) { return item.folder ? "OSPersonalWorkspace.openAssetFolder('" + esc(item.raw.id) + "')" : "OSPersonalWorkspace.showAsset('" + item.source + "','" + esc(item.raw.id) + "')"; }
+  function assetOpenAction(item) {
+    if (item.folder) return "OSPersonalWorkspace.openAssetFolder('" + esc(item.raw.id) + "')";
+    if (previewType(item.raw) && (item.raw.storage_path || item.raw.image_url)) return "OSPersonalWorkspace.openAssetPreview('" + item.source + "','" + esc(item.raw.id) + "')";
+    return "OSPersonalWorkspace.showAsset('" + item.source + "','" + esc(item.raw.id) + "')";
+  }
   function assetDragAttributes(item) {
     var id = esc(item.raw.id), category = esc(item.type);
     if (item.folder) return 'ondragover="OSPersonalWorkspace.assetDragOver(event,\'' + id + '\',\'' + category + '\')" ondragleave="OSPersonalWorkspace.assetDragLeave(event)" ondrop="OSPersonalWorkspace.assetDrop(event,\'' + id + '\',\'' + category + '\')"';
@@ -558,7 +562,7 @@
     var head = STANDALONE ? '' : '<header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
     view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
       + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
-      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div></div></div>';
+      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
     bindSearch(); renderContent();
   }
@@ -688,22 +692,22 @@
     });
     return state.pdfJsPromise;
   }
-  function previewUi(type, name, url) {
+  function previewUi(type, name, url, assetRef) {
     var overlay = document.getElementById('pw-preview'), page = document.getElementById('pw-preview-page'), download = document.getElementById('pw-preview-download');
     if (!overlay) return false;
     closeDialog();
-    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf');
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('has-asset', !!assetRef);
     if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
     if (download) { download.href = url; download.download = name || ''; }
     document.body.classList.add('pw-preview-open');
     return true;
   }
-  function openPreviewUrl(url, name, mime) {
+  function openPreviewUrl(url, name, mime, assetRef) {
     var type = previewType({ title: name, mime_type: mime, storage_path: url });
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
-    if (!previewUi(type, name, url)) return;
+    if (!previewUi(type, name, url, assetRef)) return;
     var stage = document.getElementById('pw-preview-stage');
-    state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null };
+    state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null };
     if (type === 'image') { stage.innerHTML = '<img id="pw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '">'; renderPreviewTransform(); return; }
     stage.innerHTML = '<div class="pw-preview-loading">PDF를 불러오는 중입니다.</div>';
     Promise.all([loadPdfJs(), fetch(url).then(function (response) { if (!response.ok) throw new Error('PDF를 불러오지 못했습니다.'); return response.arrayBuffer(); })])
@@ -711,16 +715,17 @@
       .then(function (doc) { if (!state.preview || state.preview.url !== url) return; state.preview.doc = doc; state.preview.pages = doc.numPages; renderPdfPreview(); })
       .catch(function (error) { if (stage) stage.innerHTML = '<div class="pw-preview-loading">' + esc(error.message || 'PDF 미리보기를 불러오지 못했습니다.') + '</div>'; });
   }
-  function openFilePreview(id) {
+  function openFilePreview(id, assetRef) {
     var item = workspaceItem(id); if (!item || !item.storage_path) return;
-    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, item.title || '파일', item.mime_type || ''); }).catch(saveError);
+    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, item.title || '파일', item.mime_type || '', assetRef || { source: 'library', id: id }); }).catch(saveError);
   }
   function openAssetPreview(source, id) {
     var list = source === 'scripts' ? state.data.scripts : state.data.library;
     var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
-    if (item.storage_path) { openFilePreview(id); return; }
+    var assetRef = { source: source, id: id };
+    if (item.storage_path) { openFilePreview(id, assetRef); return; }
     var url = item.image_url || item.file_url || item.link_url;
-    if (url) openPreviewUrl(url, item.title || '파일', item.mime_type || (item.image_url ? 'image/*' : ''));
+    if (url) openPreviewUrl(url, item.title || '파일', item.mime_type || (item.image_url ? 'image/*' : ''), assetRef);
   }
   function renderPreviewTransform() { var p = state.preview, image = document.getElementById('pw-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
   function renderPdfPreview() {
@@ -747,6 +752,8 @@
       .then(function () { if (typeof window.toast === 'function') window.toast('복사했습니다. 카카오톡에 붙여넣으세요.'); })
       .catch(function () { if (typeof window.toast === 'function') window.toast('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.'); });
   }
+  function previewEditAsset() { var ref = state.preview && state.preview.assetRef; if (!ref) return; closePreview(); editAsset(ref.id); }
+  function previewDeleteAsset() { var ref = state.preview && state.preview.assetRef; if (!ref) return; deleteAsset(ref.id); }
   function workspaceItem(id) { return state.data.items.find(function (entry) { return String(entry.id) === String(id); }); }
   function itemAttachments(id) { return state.data.items.filter(function (entry) { var payload = entry.legacy_payload || {}; return entry.item_type === 'file' && String(entry.parent_id || '') === String(id) && payload.attachment_role !== 'inline-image'; }); }
   function showAsset(source, id) {
@@ -817,7 +824,7 @@
     if (!window.confirm('“' + String(item.title || '제목 없음') + '” 자료를 삭제할까요?')) return;
     var childIds = state.data.items.filter(function (entry) { return String(entry.parent_id || '') === String(id); }).map(function (entry) { return entry.id; });
     softDeleteChildren(id).then(function () { return softDelete('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null'); })
-      .then(function () { closeDialog(); removeWorkspaceItemsLocal(childIds.concat([id])); renderContent(); if (typeof window.toast === 'function') window.toast('자료를 삭제했습니다.'); }).catch(saveError);
+      .then(function () { closeDialog(); closePreview(); removeWorkspaceItemsLocal(childIds.concat([id])); renderContent(); if (typeof window.toast === 'function') window.toast('자료를 삭제했습니다.'); }).catch(saveError);
   }
   function openVault() {
     dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
@@ -1066,7 +1073,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, saveEvent: saveEvent, richPaste: richPaste,
