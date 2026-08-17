@@ -9,6 +9,7 @@
     body.classList.remove('ws-bg-flat', 'ws-bg-white', 'ws-bg-dark');
     if (mode === 'white') body.classList.add('ws-bg-flat', 'ws-bg-white');
     else if (mode === 'dark') body.classList.add('ws-bg-flat', 'ws-bg-dark');
+    document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
     try { localStorage.setItem('ws_bg_mode', mode); } catch (_e) {}
   }
   function bgModeButtonsHtml(active) {
