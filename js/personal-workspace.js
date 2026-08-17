@@ -69,7 +69,7 @@
     // admin-registered library/scripts entries) stays outside the workspace.
     // Missing scope (legacy rows with no scope value) counts as personal too,
     // matching the migration's own coalesce(scope,'personal') convention.
-    return "&or=(legacy_source.is.null,and(legacy_source.in.(library,scripts,myspace_folders,myspace_files),or(legacy_payload->>scope.is.null,legacy_payload->>scope.eq.personal)))";
+    return "&or=(legacy_source.is.null,and(legacy_source.in.(library,scripts,myspace_folders,myspace_files,scripts_attachment),or(legacy_payload->>scope.is.null,legacy_payload->>scope.eq.personal)))";
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || currentUserId() === PILOT_ID || currentUserEmail() === TEST_EMAIL; }
