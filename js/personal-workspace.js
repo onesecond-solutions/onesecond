@@ -20,13 +20,14 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'scripts', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'scripts', 'newsletters', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
+    newsData: null, newsLoading: false, newsCompany: 'all',
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [],
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -267,7 +268,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
-    var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향']];
+    var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향']];
     var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'system-links'], ['₩', '보험회사 결제정보', 'payment-info']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
@@ -789,6 +790,51 @@
   function filterScriptsStage(stage) { state.scriptsStage = stage; state.scriptsOpenId = null; renderContent(); }
   function toggleScriptCard(id) { state.scriptsOpenId = String(state.scriptsOpenId) === String(id) ? null : id; renderContent(); }
   function toggleScriptSection(btn) { var item = btn.closest('.pw-script-acc'); if (item) item.classList.toggle('open'); }
+  function loadNewsletterData() {
+    if (state.newsData || state.newsLoading) return;
+    state.newsLoading = true;
+    api('newsletters?status=eq.published&select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200').then(function (rows) {
+      state.newsData = rows || []; state.newsLoading = false;
+      if (state.section === 'newsletters') renderContent();
+    }).catch(function () { state.newsLoading = false; state.newsData = []; if (state.section === 'newsletters') renderContent(); });
+  }
+  function newsMonthLabel(row) { var y = row.publish_year, m = row.publish_month; if (!y) return '발행일 미상'; return y + '년' + (m ? ' ' + m + '월' : ''); }
+  function newsCompanyList(rows) {
+    var seen = {}, list = [];
+    rows.forEach(function (r) { var name = String(r.company || '').trim(); if (!name || seen[name]) return; seen[name] = true; list.push(name); });
+    return list.sort(function (a, b) { return a.localeCompare(b, 'ko-KR'); });
+  }
+  function newsletterCardHtml(row) {
+    var label = newsMonthLabel(row), company = row.company || '회사 미상';
+    return '<button type="button" class="pw-news-card" onclick="OSPersonalWorkspace.openNewsletter(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-storage-path="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
+  }
+  function newslettersHtml() {
+    if (!state.newsData && !state.newsLoading) loadNewsletterData();
+    if (state.newsLoading || !state.newsData) {
+      return '<div class="pw-toolbar"><h2>소식지</h2></div><div class="pw-empty">불러오는 중입니다…</div>';
+    }
+    var companies = newsCompanyList(state.newsData);
+    var chips = '<div class="pw-script-chips"><button type="button" class="pw-script-chip' + (state.newsCompany === 'all' ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'all\')">전체</button>' + companies.map(function (co) {
+      return '<button type="button" class="pw-script-chip' + (state.newsCompany === co ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'' + esc(co) + '\')">' + esc(co) + '</button>';
+    }).join('') + '</div>';
+    var rows = state.newsCompany === 'all' ? state.newsData : state.newsData.filter(function (r) { return r.company === state.newsCompany; });
+    var grid = rows.length ? '<div class="pw-news-grid">' + rows.map(newsletterCardHtml).join('') + '</div>' : '<div class="pw-empty">해당 회사의 소식지가 아직 없습니다.</div>';
+    return '<div class="pw-toolbar"><h2>소식지</h2></div>' + chips + grid;
+  }
+  function filterNewsCompany(company) { state.newsCompany = company; renderContent(); }
+  function hydrateNewsThumbs() {
+    document.querySelectorAll('#v-personal-workspace .pw-news-thumb img[data-storage-path]').forEach(function (img) {
+      var path = img.getAttribute('data-storage-path'); if (!path) return;
+      signStoragePath(path, 'newsletters').then(function (url) { img.src = url; }).catch(function () {});
+    });
+  }
+  function openNewsletter(id) {
+    var row = (state.newsData || []).find(function (r) { return String(r.id) === String(id); }); if (!row) return;
+    var name = (row.source_filename || (row.company || '소식지') + '_' + newsMonthLabel(row)) + '.pdf';
+    var pdfUrl = String(row.source_pdf_url || '').trim();
+    var ready = pdfUrl ? Promise.resolve(pdfUrl) : (row.source_path ? signStoragePath(row.source_path, 'newsletters') : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
+    ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'newsletter', id: id }); }).catch(saveError);
+  }
   function archiveHtml() {
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
     return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
@@ -805,6 +851,7 @@
     if (state.section === 'consultations') return consultationsHtml();
     if (state.section === 'calendar') return calendarHtml();
     if (state.section === 'scripts') return scriptsHtml();
+    if (state.section === 'newsletters') return newslettersHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     return homeHtml();
@@ -820,7 +867,7 @@
     bindSearch(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') bindNameSearch('customer'); } }
+  function renderContent() { var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') bindNameSearch('customer'); if (state.section === 'newsletters') hydrateNewsThumbs(); } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -925,12 +972,14 @@
   function removeRichFile(id) { state.pendingRichFiles = state.pendingRichFiles.filter(function (entry) { return entry.id !== id; }); renderRichFiles(); }
   function addRichImages(files) { var editor = document.querySelector('#pw-dialog .pw-rich-body'); if (!editor) return; Array.prototype.slice.call(files || []).filter(function (file) { return /^image\//.test(file.type || ''); }).forEach(function (file) { var id = crypto.randomUUID(), preview = URL.createObjectURL(file); state.pendingRichImages.push({ id: id, file: file, preview: preview }); editor.insertAdjacentHTML('beforeend', '<p><img src="' + esc(preview) + '" data-pending-image="' + id + '" alt="' + esc(file.name) + '"></p>'); }); }
   function formatBytes(bytes) { var value = Number(bytes || 0); if (value < 1024) return value + ' B'; if (value < 1048576) return (value / 1024).toFixed(1) + ' KB'; return (value / 1048576).toFixed(1) + ' MB'; }
-  function signStoragePath(path) {
-    var cached = state.signedUrlCache[path];
+  function signStoragePath(path, bucket) {
+    bucket = bucket || 'myspace';
+    var cacheKey = bucket + '/' + path;
+    var cached = state.signedUrlCache[cacheKey];
     if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.url);
-    return fetch(window.db.url('/storage/v1/object/sign/myspace/' + String(path).split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) })
+    return fetch(window.db.url('/storage/v1/object/sign/' + bucket + '/' + String(path).split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) })
       .then(function (response) { if (!response.ok) throw new Error('첨부파일을 열지 못했습니다.'); return response.json(); })
-      .then(function (data) { var url = window.db.url('/storage/v1' + data.signedURL); state.signedUrlCache[path] = { url: url, expiresAt: Date.now() + 55 * 60000 }; return url; });
+      .then(function (data) { var url = window.db.url('/storage/v1' + data.signedURL); state.signedUrlCache[cacheKey] = { url: url, expiresAt: Date.now() + 55 * 60000 }; return url; });
   }
   function hydrateRichStorage() { var nodes = document.querySelectorAll('#v-personal-workspace [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || ''; signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') { node.src = url; node.classList.add('pw-previewable'); node.title = '클릭하면 크게 보기'; node.onclick = function () { openPreviewUrl(url, title, mime || 'image/*'); }; } else { node.href = url; node.onclick = function (event) { if (previewType({ title: title, mime_type: mime, storage_path: path })) { event.preventDefault(); openPreviewUrl(url, title, mime); } }; } }).catch(function () {}); }); }
   function loadPdfJs() {
@@ -1635,6 +1684,7 @@
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
+    filterNewsCompany: filterNewsCompany, openNewsletter: openNewsletter,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
