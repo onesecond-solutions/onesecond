@@ -202,10 +202,10 @@
       api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ] : [
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=6&select=' + itemSelect),
+      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=5&select=' + itemSelect),
       api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&task_date=eq.' + today + '&order=task_time.asc&limit=20&select=id,owner_id,title,description,task_date,task_time,created_at,deleted_at'),
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
-      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=6&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
+      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=30&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ];
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
@@ -399,10 +399,10 @@
     var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
-      .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 6);
+      .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
     var customersById = {}; state.data.customers.forEach(function (customer) { customersById[customer.id] = customer; });
     var recentConsultations = state.data.consultations.slice()
-      .sort(function (a, b) { return String(b.consulted_at || b.created_at).localeCompare(String(a.consulted_at || a.created_at)); }).slice(0, 6);
+      .sort(function (a, b) { return String(b.consulted_at || b.created_at).localeCompare(String(a.consulted_at || a.created_at)); }).slice(0, 5);
     var favoritesPanel = '<section class="pw-panel pw-favorites-panel"><div class="pw-panel-head"><strong>즐겨찾기</strong></div><div class="pw-list">' + favoriteRows() + '</div></section>';
     var todayPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>오늘 일정</strong><button onclick="OSPersonalWorkspace.go(\'calendar\')">전체 보기</button></div><div class="pw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(event.title, event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="pw-empty">오늘 일정이 없습니다.</div>') + '</div></section>';
     var assetsPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSPersonalWorkspace.go(\'assets\')">전체 보기</button></div><div class="pw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSPersonalWorkspace.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="pw-empty">저장된 자료가 없습니다.</div>') + '</div></section>';
