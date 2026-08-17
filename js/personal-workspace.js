@@ -941,8 +941,8 @@
     var kind = event.event_type === 'customer' ? '고객관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
     var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
     var editable = !event.builtin && event.event_type !== 'customer';
-    var actions = editable ? '<div class="pw-detail-actions"><button type="button" class="pw-icon-btn" onclick="OSPersonalWorkspace.editEvent(\'' + esc(id) + '\')" aria-label="일정 수정" title="수정">✎</button><button type="button" class="pw-icon-btn danger" onclick="OSPersonalWorkspace.deleteEvent(\'' + esc(id) + '\')" aria-label="일정 삭제" title="삭제">🗑</button></div>' : '';
-    dialog('<div class="pw-detail">' + actions + '<span class="pw-badge">' + kind + '</span><h2 class="pw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div></div>');
+    var actions = editable ? '<div class="pw-detail-actions"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.deleteEvent(\'' + esc(id) + '\')">삭제</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.editEvent(\'' + esc(id) + '\')">수정</button></div>' : '';
+    dialog('<div class="pw-detail"><span class="pw-badge">' + kind + '</span><h2 class="pw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div>' + actions + '</div>');
   }
 
   function formField(label, input) { return '<label class="pw-field"><span>' + label + '</span>' + input + '</label>'; }
