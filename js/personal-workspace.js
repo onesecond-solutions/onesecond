@@ -619,13 +619,40 @@
   function calendarEventKind(event) { return event && event.event_type === 'customer' ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : 'schedule'; }
   function monthView() {
     var first = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), start = new Date(first); start.setDate(1 - first.getDay());
-    var today = ymd(new Date()), cells = [];
-    for (var i = 0; i < 42; i++) {
-      var day = new Date(start); day.setDate(start.getDate() + i);
-      var key = ymd(day), events = eventsFor(key), builtIns = events.filter(function (event) { return event.builtin; }), personal = events.filter(function (event) { return !event.builtin; }), outside = day.getMonth() !== first.getMonth();
-      cells.push('<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((day.getMonth() + 1) + '월 ' + day.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + day.getDate() + '</strong><span class="pw-built-ins">' + builtIns.slice(0, 2).map(function (event) { return '<i class="' + calendarEventKind(event) + '">' + esc(event.title) + '</i>'; }).join('') + '</span></span><span class="pw-day-items">' + personal.slice(0, 3).map(function (event) { return '<span class="pw-event ' + calendarEventKind(event) + '" role="button" tabindex="0" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')}">' + esc(event.title || '일정') + '</span>'; }).join('') + (events.length > builtIns.slice(0, 2).length + personal.slice(0, 3).length ? '<small class="pw-more">+' + (events.length - builtIns.slice(0, 2).length - personal.slice(0, 3).length) + '개 더보기</small>' : '') + '</span></button>');
+    var today = ymd(new Date()), days = [];
+    for (var i = 0; i < 42; i++) { var day = new Date(start); day.setDate(start.getDate() + i); days.push(ymd(day)); }
+    var gridStart = days[0], gridEnd = days[41];
+    var seen = {}, spans = [];
+    days.forEach(function (key) {
+      eventsFor(key).forEach(function (event) {
+        if (event.builtin || seen[event.id]) return;
+        seen[event.id] = true;
+        var s = String(event.event_date || '').slice(0, 10), e = String(event.event_end_date || event.event_date || '').slice(0, 10);
+        spans.push({ event: event, start: s < gridStart ? gridStart : s, end: e > gridEnd ? gridEnd : e });
+      });
+    });
+    spans.sort(function (a, b) { return a.start.localeCompare(b.start) || b.end.localeCompare(a.end); });
+    var laneLastEnd = [];
+    spans.forEach(function (sp) { var lane = 0; while (lane < laneLastEnd.length && laneLastEnd[lane] >= sp.start) lane++; sp.lane = lane; laneLastEnd[lane] = sp.end; });
+    var MAX_LANES = 3, weeks = [];
+    for (var w = 0; w < 6; w++) {
+      var weekDays = days.slice(w * 7, w * 7 + 7), weekStart = weekDays[0], weekEnd = weekDays[6];
+      var weekSpans = spans.filter(function (sp) { return sp.lane < MAX_LANES && sp.end >= weekStart && sp.start <= weekEnd; });
+      var overflow = {}; weekDays.forEach(function (d) { overflow[d] = 0; });
+      spans.forEach(function (sp) { if (sp.lane >= MAX_LANES && sp.end >= weekStart && sp.start <= weekEnd) weekDays.forEach(function (d) { if (d >= sp.start && d <= sp.end) overflow[d]++; }); });
+      var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
+      var cells = weekDays.map(function (key) {
+        var d = parseDate(key), events = eventsFor(key), builtIns = events.filter(function (event) { return event.builtin; }), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
+        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + builtIns.slice(0, 2).map(function (event) { return '<i class="' + calendarEventKind(event) + '">' + esc(event.title) + '</i>'; }).join('') + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
+      }).join('');
+      var bars = weekSpans.map(function (sp) {
+        var startIdx = weekDays.indexOf(sp.start), endIdx = weekDays.indexOf(sp.end);
+        var left = (startIdx / 7 * 100) + '%', width = ((endIdx - startIdx + 1) / 7 * 100) + '%';
+        return '<span class="pw-event-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
+      }).join('');
+      weeks.push('<div class="pw-cal-week"><div class="pw-cal-week-cells">' + cells + '</div><div class="pw-cal-week-bars" style="height:' + (laneCount * 24) + 'px">' + bars + '</div></div>');
     }
-    return '<section class="pw-calendar-month"><div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + cells.join('') + '</div></div></section>';
+    return '<section class="pw-calendar-month"><div class="pw-cal"><div class="pw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="pw-cal-grid">' + weeks.join('') + '</div></div></section>';
   }
   function timeView(days) {
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
