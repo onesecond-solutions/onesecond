@@ -6,13 +6,27 @@
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
+  var SCRIPT_STAGES = [
+    { label: '도입 인사', stage: 'opening', group: 'open' },
+    { label: '도입 반론', stage: 'opening_rejection', group: 'open' },
+    { label: '필요성 ①', stage: 'need_emphasis', group: 'mid' },
+    { label: '상황 확인', stage: 'situation_check', group: 'mid' },
+    { label: '보장 분석', stage: 'analysis', group: 'mid' },
+    { label: '상품 설명', stage: 'product', group: 'mid' },
+    { label: '필요성 ②', stage: 'need_emphasis_2', group: 'mid' },
+    { label: '클로징', stage: 'closing', group: 'close' },
+    { label: '반론 대응', stage: 'objection', group: 'close' },
+    { label: '2차 클로징', stage: 'closing_second', group: 'close' }
+  ];
+  var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'scripts', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
+    scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [],
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -239,6 +253,10 @@
     if (Array.isArray(extra)) {
       return '<details class="pw-nav-subgroup"><summary><span>' + entry[0] + '</span>' + entry[1] + '</summary>' + extra.map(function (sub) { return '<button type="button" onclick="OSPersonalWorkspace.openTool(\'' + sub[0] + '\')">' + sub[1] + '</button>'; }).join('') + '</details>';
     }
+    if (typeof extra === 'string' && extra.indexOf('section:') === 0) {
+      var sectionKey = extra.slice(8);
+      return '<button type="button" class="pw-nav-link' + (state.section === sectionKey ? ' on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + sectionKey + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
+    }
     if (typeof extra === 'string') {
       return '<button type="button" class="pw-nav-link" onclick="OSPersonalWorkspace.openTool(\'' + extra + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
@@ -249,7 +267,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
-    var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['◷', '보험연령표'], ['✎', '스크립트'], ['↗', '영업방향']];
+    var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['◷', '보험연령표'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향']];
     var toolGroup = [['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'system-links'], ['₩', '보험회사 결제정보', 'payment-info']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
@@ -688,6 +706,89 @@
     else { var selected = parseDate(state.selectedDate); selected.setDate(selected.getDate() - selected.getDay()); var week = []; for (var i = 0; i < 7; i++) week.push(addDays(selected, i)); view = timeView(week); }
     return statusHtml() + '<div class="pw-calendar-shell"><div class="pw-calendar-toolbar"><div class="pw-calendar-left"><button class="pw-btn pw-today" onclick="OSPersonalWorkspace.calendarToday()">오늘</button><span class="pw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSPersonalWorkspace.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSPersonalWorkspace.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + '</h2></div><div class="pw-actions pw-mode">' + modes.map(function (mode) { return '<button class="pw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="pw-btn primary" onclick="OSPersonalWorkspace.addEvent()">+ 일정</button></div></div>' + view + '</div>';
   }
+  function scriptStageLabel(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].label; return stage || ''; }
+  function scriptStageGroup(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].group; return 'mid'; }
+  function loadScriptsData() {
+    if (state.scriptsData || state.scriptsLoading) return;
+    state.scriptsLoading = true;
+    api('scripts?is_active=eq.true&scope=eq.global&is_sample=eq.false&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text,attachments').then(function (rows) {
+      state.scriptsData = rows || []; state.scriptsLoading = false;
+      if (state.section === 'scripts') renderContent();
+    }).catch(function () { state.scriptsLoading = false; state.scriptsData = []; if (state.section === 'scripts') renderContent(); });
+  }
+  function parseScriptSections(html) {
+    if (!html) return null;
+    var wrap = document.createElement('div'); wrap.innerHTML = html;
+    var boxes = wrap.querySelectorAll('div[style*="border:1.5px solid #DCDCDC"]');
+    if (!boxes.length) {
+      var text = (wrap.textContent || '').trim();
+      if (!text) return null;
+      return [{ title: '내용', subtitle: '', mainHtml: esc(text).replace(/\n/g, '<br>'), sub: '', coach: '' }];
+    }
+    var sections = [];
+    for (var i = 0; i < boxes.length; i++) {
+      var box = boxes[i];
+      var titleEl = box.querySelector('div[style*="color:#185FA5"]');
+      var subEl = box.querySelector('div[style*="font-weight:600"]');
+      var mainEl = box.querySelector('div[style*="font-size:15px"]');
+      var subBodyEl = box.querySelector('div[style*="border-top"]');
+      var coachEl = box.querySelector('div[style*="background:#FFF3DC"]');
+      sections.push({
+        title: titleEl ? titleEl.textContent.trim() : '',
+        subtitle: subEl ? subEl.textContent.trim() : '',
+        mainText: mainEl ? mainEl.textContent.trim().replace(/\s+/g, ' ') : '',
+        mainHtml: mainEl ? mainEl.innerHTML : '',
+        sub: subBodyEl ? subBodyEl.innerHTML : '',
+        coach: coachEl ? coachEl.textContent.trim().replace(/^⚡\s*/, '') : ''
+      });
+    }
+    return sections;
+  }
+  function scriptCardSummary(sections, fallback) {
+    if (sections && sections.length) { var first = sections[0]; if (first.mainText) return first.mainText.length > 140 ? first.mainText.slice(0, 140) + '…' : first.mainText; if (first.subtitle) return first.subtitle; }
+    return String(fallback || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
+  }
+  function scriptAttachmentsHtml(attachments) {
+    var list = Array.isArray(attachments) ? attachments.filter(function (a) { return a && a.url; }) : [];
+    if (!list.length) return '';
+    return '<div class="pw-script-attachments">' + list.map(function (a) { return '<img src="' + esc(a.url) + '" alt="' + esc(a.name || '첨부 이미지') + '" loading="lazy">'; }).join('') + '</div>';
+  }
+  function scriptAccordionHtml(sections, attachments) {
+    return sections.map(function (sec, i) {
+      var open = i === 0 ? ' open' : '';
+      return '<div class="pw-script-acc' + open + '"><button type="button" class="pw-script-acc-head" onclick="OSPersonalWorkspace.toggleScriptSection(this)"><span class="pw-script-acc-num">' + (i + 1) + '</span><span class="pw-script-acc-ttl">' + esc(sec.title) + '</span><span class="pw-script-acc-arrow">▾</span></button><div class="pw-script-acc-body">'
+        + (sec.subtitle ? '<div class="pw-script-acc-sub">' + esc(sec.subtitle) + '</div>' : '')
+        + (sec.mainHtml ? '<div class="pw-script-acc-main">' + sec.mainHtml + '</div>' : '')
+        + (sec.sub ? '<div class="pw-script-acc-sub2">' + sec.sub + '</div>' : '')
+        + (sec.coach ? '<div class="pw-script-acc-coach">⚡ ' + esc(sec.coach) + '</div>' : '')
+        + (i === 0 ? scriptAttachmentsHtml(attachments) : '')
+        + '</div></div>';
+    }).join('');
+  }
+  function scriptsHtml() {
+    if (!state.scriptsData && !state.scriptsLoading) loadScriptsData();
+    var chips = '<div class="pw-script-chips">' + SCRIPT_STAGES.map(function (g) {
+      var on = g.stage === state.scriptsStage;
+      return '<button type="button" class="pw-script-chip' + (on ? ' on' : '') + '" style="--sc:' + SCRIPT_GROUP_COLORS[g.group] + '" onclick="OSPersonalWorkspace.filterScriptsStage(\'' + g.stage + '\')">' + esc(g.label) + '</button>';
+    }).join('') + '</div>';
+    if (state.scriptsLoading || !state.scriptsData) {
+      return '<div class="pw-toolbar"><h2>스크립트</h2></div>' + chips + '<div class="pw-empty">불러오는 중입니다…</div>';
+    }
+    var rows = state.scriptsData.filter(function (s) { return s.stage === state.scriptsStage; });
+    var groupColor = SCRIPT_GROUP_COLORS[scriptStageGroup(state.scriptsStage)];
+    var cards = rows.length ? rows.map(function (s) {
+      var sections = parseScriptSections(s.script_text);
+      var isEmpty = !sections || !sections.length;
+      var openCls = String(s.id) === String(state.scriptsOpenId) ? ' open' : '';
+      return '<div class="pw-script-card' + openCls + '" style="--sc:' + groupColor + '"><button type="button" class="pw-script-card-head" onclick="OSPersonalWorkspace.toggleScriptCard(\'' + esc(s.id) + '\')"><span class="pw-script-card-badge">' + esc(scriptStageLabel(s.stage)) + '</span><strong>' + esc(s.title || '제목 없음') + '</strong>'
+        + (isEmpty ? '<span class="pw-script-card-summary">본문 준비 중입니다.</span>' : '<span class="pw-script-card-summary">' + esc(scriptCardSummary(sections, s.highlight_text)) + '</span>') + '</button>'
+        + (!isEmpty ? '<div class="pw-script-card-full">' + scriptAccordionHtml(sections, s.attachments) + '</div>' : '') + '</div>';
+    }).join('') : '<div class="pw-empty">해당 분류의 스크립트가 아직 없습니다.</div>';
+    return '<div class="pw-toolbar"><h2>스크립트</h2></div>' + chips + '<div class="pw-script-grid">' + cards + '</div>';
+  }
+  function filterScriptsStage(stage) { state.scriptsStage = stage; state.scriptsOpenId = null; renderContent(); }
+  function toggleScriptCard(id) { state.scriptsOpenId = String(state.scriptsOpenId) === String(id) ? null : id; renderContent(); }
+  function toggleScriptSection(btn) { var item = btn.closest('.pw-script-acc'); if (item) item.classList.toggle('open'); }
   function archiveHtml() {
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
     return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
@@ -703,6 +804,7 @@
     if (state.section === 'customers') return customersHtml();
     if (state.section === 'consultations') return consultationsHtml();
     if (state.section === 'calendar') return calendarHtml();
+    if (state.section === 'scripts') return scriptsHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     return homeHtml();
@@ -1532,6 +1634,7 @@
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
+    filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
