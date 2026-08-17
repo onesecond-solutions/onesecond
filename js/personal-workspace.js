@@ -1251,7 +1251,8 @@
     for (var i = 2; i < kids.length - 1; i += 2) {
       var label = kids[i].textContent.trim();
       var cards = Array.prototype.map.call(kids[i + 1].children, function (card) {
-        var nameDiv = card.children[0], detailDiv = card.children[1];
+        var divKids = Array.prototype.filter.call(card.children, function (c) { return c.tagName === 'DIV'; });
+        var nameDiv = divKids[0], detailDiv = divKids[1];
         return { name: nameDiv ? nameDiv.innerHTML : '', detail: detailDiv ? detailDiv.innerHTML : '' };
       });
       groups.push({ label: label, cards: cards });
