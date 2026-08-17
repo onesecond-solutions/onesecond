@@ -204,11 +204,13 @@
     ] : [
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=6&select=' + itemSelect),
       api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&task_date=eq.' + today + '&order=task_time.asc&limit=20&select=id,owner_id,title,description,task_date,task_time,created_at,deleted_at'),
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect)
+      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
+      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=6&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
+      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=30&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ];
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
       if (requestId !== state.requestId) return false;
-      var names = full ? ['items', 'events', 'customers', 'consultations', 'trashCustomers'] : ['items', 'events', 'favoriteSettings'];
+      var names = full ? ['items', 'events', 'customers', 'consultations', 'trashCustomers'] : ['items', 'events', 'favoriteSettings', 'consultations', 'customers'];
       var failed = [];
       results.forEach(function (result, index) {
         if (result.status === 'fulfilled' && Array.isArray(result.value)) {
