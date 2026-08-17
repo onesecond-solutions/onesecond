@@ -1243,9 +1243,10 @@
   }
   function parsePaymentInfo(html) {
     var wrapper = document.createElement('div'); wrapper.innerHTML = html;
-    var kids = Array.prototype.filter.call(wrapper.children, function (c) { return c.tagName === 'DIV'; });
+    var outer = wrapper.children[0];
+    var kids = outer ? Array.prototype.filter.call(outer.children, function (c) { return c.tagName === 'DIV'; }) : [];
     if (kids.length < 7 || kids.length % 2 !== 1) return null;
-    var headerBox = kids[0], noticeBox = kids[1], footerBox = kids[kids.length - 1];
+    var noticeBox = kids[1], footerBox = kids[kids.length - 1];
     var groups = [];
     for (var i = 2; i < kids.length - 1; i += 2) {
       var label = kids[i].textContent.trim();
@@ -1255,7 +1256,7 @@
       });
       groups.push({ label: label, cards: cards });
     }
-    return { headerHtml: headerBox ? headerBox.innerHTML : '', noticeHtml: noticeBox ? noticeBox.innerHTML : '', footerHtml: footerBox ? footerBox.innerHTML : '', groups: groups };
+    return { noticeHtml: noticeBox ? noticeBox.innerHTML : '', footerHtml: footerBox ? footerBox.innerHTML : '', groups: groups };
   }
   function paymentInfoHtml(parsed) {
     var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSPersonalWorkspace.filterQuickLinks(this.value)"></label>';
