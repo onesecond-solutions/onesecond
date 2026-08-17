@@ -101,6 +101,12 @@
     state.data.library = state.data.items.filter(function (item) { return item.item_type !== 'note' && !isWorkspaceSetting(item) && !isConsultAttachmentItem(item); }).map(function (item) { return Object.assign({}, item, { memo_text: item.item_type === 'memo' ? item.body : null, description: item.body, link_url: item.url, file_url: item.item_type === 'file' ? item.storage_path : null }); });
     state.data.events = state.data.events.map(function (item) { return Object.assign({}, item, { event_date: item.task_date, event_time: item.task_time }); });
     state.data.consultations = state.data.consultations.map(function (item) { return Object.assign({}, item, { memo: item.content }); });
+    if (state.fullLoaded) pruneFavorites();
+  }
+  function pruneFavorites() {
+    if (!state.favorites.length) return;
+    var kept = state.favorites.filter(function (entry) { return !!resolveFavorite(entry.target_type, entry.target_id); });
+    if (kept.length !== state.favorites.length) { state.favorites = kept; saveFavorites(); }
   }
   function upsertWorkspaceItem(item) {
     if (!item || !item.id) return;
@@ -211,9 +217,9 @@
         }
         else failed.push(names[index]);
       });
-      rebuildWorkspaceDerived();
       state.loadedFor = userId;
       state.fullLoaded = full;
+      rebuildWorkspaceDerived();
       state.status = failed.length ? 'partial' : 'ready';
       state.error = failed.length ? failed.join(', ') + ' 자료를 불러오지 못했습니다.' : '';
       renderContent();
