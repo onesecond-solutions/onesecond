@@ -239,7 +239,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['◷', '보험연령표'], ['↗', '영업방향']];
-    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기/변환기'], ['⇗', '원전산 설계 바로가기'], ['₩', '보험회사 결제정보']];
+    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기·변환기'], ['⇗', '원전산 설계 바로가기'], ['₩', '보험회사 결제정보']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup) + navPlannedGroupHtml('영업도구', toolGroup) + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">구)원세컨드</button></div></nav>';
