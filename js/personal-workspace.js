@@ -102,7 +102,7 @@
     applyFavoriteSetting(state.data.items);
     state.data.scripts = state.data.items.filter(function (item) { return item.item_type === 'note' && !isConsultAttachmentItem(item); }).map(function (item) { return Object.assign({}, item, { script_text: item.body }); });
     state.data.library = state.data.items.filter(function (item) { return item.item_type !== 'note' && !isWorkspaceSetting(item) && !isConsultAttachmentItem(item); }).map(function (item) { return Object.assign({}, item, { memo_text: item.item_type === 'memo' ? item.body : null, description: item.body, link_url: item.url, file_url: item.item_type === 'file' ? item.storage_path : null }); });
-    state.data.events = state.data.events.map(function (item) { return Object.assign({}, item, { event_date: item.task_date, event_time: item.task_time }); });
+    state.data.events = state.data.events.map(function (item) { return Object.assign({}, item, { event_date: item.task_date, event_time: item.task_time, event_end_date: item.end_date || item.task_date, event_end_time: item.end_time || null }); });
     state.data.consultations = state.data.consultations.map(function (item) { return Object.assign({}, item, { memo: item.content }); });
     if (state.fullLoaded) pruneFavorites();
   }
@@ -200,13 +200,13 @@
     var itemSelect = 'id,owner_id,parent_id,item_type,title,body,url,storage_path,mime_type,extension,file_size,visibility,legacy_payload,created_at,updated_at,deleted_at';
     var requests = full ? [
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=' + itemSelect),
-      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=id,owner_id,title,description,task_date,task_time,created_at,deleted_at'),
+      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=id,owner_id,title,description,task_date,task_time,end_date,end_time,created_at,deleted_at'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at'),
       api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ] : [
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=5&select=' + itemSelect),
-      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&task_date=eq.' + today + '&order=task_time.asc&limit=20&select=id,owner_id,title,description,task_date,task_time,created_at,deleted_at'),
+      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=20&select=id,owner_id,title,description,task_date,task_time,end_date,end_time,created_at,deleted_at'),
       api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
       api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,workspace_customers(id,name,phone,status)'),
       api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=30&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
@@ -615,7 +615,7 @@
     return state.cursor.getFullYear() + '년 ' + (state.cursor.getMonth() + 1) + '월';
   }
   function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'customer' ? 3 : 4; }
-  function eventsFor(date) { return allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === date; }).sort(function (a, b) { return eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); }); }
+  function eventsFor(date) { return allEvents().filter(function (event) { var start = String(event.event_date || '').slice(0, 10); if (!start) return false; var end = String(event.event_end_date || event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); }); }
   function calendarEventKind(event) { return event && event.event_type === 'customer' ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : 'schedule'; }
   function monthView() {
     var first = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), start = new Date(first); start.setDate(1 - first.getDay());
@@ -928,16 +928,18 @@
     var history = state.data.consultations.filter(function (entry) { return String(entry.customer_id) === String(id); });
     dialog('<div class="pw-detail"><span class="pw-badge">고객</span><h2 class="pw-detail-title">' + favoriteButton('customer', id, customer.name || '(이름 없음)', phoneText(customer.phone || customer.phone_raw || '')) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></h2><p>' + esc(customer.phone || customer.phone_raw || '') + '</p><h3>상담 기록</h3><div class="pw-list">' + (history.length ? history.map(function (entry) { return row(formatDate(entry.consulted_at || entry.created_at), entry.memo || '', esc(entry.channel || ''), ''); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></div>');
   }
-  function eventDateLabel(dateStr, timeStr) {
+  function eventTimeLabel(timeStr) { if (!timeStr) return ''; var parts = String(timeStr).slice(0, 5).split(':'), h = Number(parts[0]), m = parts[1], period = h < 12 ? '오전' : '오후', h12 = h % 12 === 0 ? 12 : h % 12; return period + ' ' + h12 + ':' + m; }
+  function eventDateLabel(dateStr, timeStr, endDateStr, endTimeStr) {
     if (!dateStr) return '';
     var d = parseDate(dateStr), label = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + weekday(dateStr) + ')';
-    if (timeStr) { var parts = String(timeStr).slice(0, 5).split(':'), h = Number(parts[0]), m = parts[1], period = h < 12 ? '오전' : '오후', h12 = h % 12 === 0 ? 12 : h % 12; label += ' · ' + period + ' ' + h12 + ':' + m; }
+    if (endDateStr && endDateStr !== dateStr) { var e = parseDate(endDateStr); label += ' – ' + (e.getMonth() + 1) + '월 ' + e.getDate() + '일 (' + weekday(endDateStr) + ')'; }
+    if (timeStr) { label += ' · ' + eventTimeLabel(timeStr); if (endTimeStr) label += '~' + eventTimeLabel(endTimeStr); }
     return label;
   }
   function showEvent(id) {
     var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return;
     var kind = event.event_type === 'customer' ? '고객관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
-    var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time);
+    var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
     var editable = !event.builtin && event.event_type !== 'customer';
     var actions = editable ? '<div class="pw-detail-actions"><button type="button" class="pw-icon-btn" onclick="OSPersonalWorkspace.editEvent(\'' + esc(id) + '\')" aria-label="일정 수정" title="수정">✎</button><button type="button" class="pw-icon-btn danger" onclick="OSPersonalWorkspace.deleteEvent(\'' + esc(id) + '\')" aria-label="일정 삭제" title="삭제">🗑</button></div>' : '';
     dialog('<div class="pw-detail">' + actions + '<span class="pw-badge">' + kind + '</span><h2 class="pw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div></div>');
@@ -1144,9 +1146,11 @@
   }
   function eventFormHtml(event) {
     var hasTime = !!(event && event.task_time);
+    var startDate = event ? String(event.task_date || '').slice(0, 10) : state.selectedDate;
+    var endDate = event ? String(event.end_date || event.task_date || '').slice(0, 10) : state.selectedDate;
     return '<input id="pwf-event-title" class="pw-event-title-input" required autocomplete="off" placeholder="제목 추가" value="' + esc(event ? event.title || '' : '') + '">'
-      + '<div class="pw-event-datebar"><input id="pwf-event-date" type="date" required value="' + esc(event ? String(event.task_date || '').slice(0, 10) : (state.selectedDate)) + '">' + (hasTime ? '' : '<button type="button" class="pw-event-time-toggle" id="pwf-event-time-toggle" onclick="OSPersonalWorkspace.toggleEventTime()">+ 시간 추가</button>') + '</div>'
-      + '<div class="pw-event-timerow" id="pwf-event-timerow"' + (hasTime ? '' : ' hidden') + '><select id="pwf-event-time">' + timeOptionsHtml(hasTime ? String(event.task_time).slice(0, 5) : '') + '</select></div>'
+      + '<div class="pw-event-datebar"><input id="pwf-event-date" type="date" required value="' + esc(startDate) + '"><span class="pw-event-sep">–</span><input id="pwf-event-end-date" type="date" required value="' + esc(endDate) + '">' + (hasTime ? '' : '<button type="button" class="pw-event-time-toggle" id="pwf-event-time-toggle" onclick="OSPersonalWorkspace.toggleEventTime()">+ 시간 추가</button>') + '</div>'
+      + '<div class="pw-event-timerow" id="pwf-event-timerow"' + (hasTime ? '' : ' hidden') + '><select id="pwf-event-time">' + timeOptionsHtml(hasTime ? String(event.task_time).slice(0, 5) : '') + '</select><span class="pw-event-sep">–</span><select id="pwf-event-end-time">' + timeOptionsHtml(event && event.end_time ? String(event.end_time).slice(0, 5) : '') + '</select></div>'
       + '<textarea id="pwf-event-desc" rows="4" class="pw-event-desc" placeholder="설명 추가">' + esc(event ? event.description || '' : '') + '</textarea>'
       + (event ? '<input id="pwf-event-id" type="hidden" value="' + esc(event.id) + '">' : '');
   }
@@ -1267,7 +1271,9 @@
   }
   function saveEvent() {
     var date = value('pwf-event-date'), title = value('pwf-event-title'), id = value('pwf-event-id'); if (!date || !title) return;
-    var body = { task_date: date, task_time: value('pwf-event-time') || null, title: title, description: value('pwf-event-desc') || null };
+    var endDate = value('pwf-event-end-date') || date; if (endDate < date) endDate = date;
+    var endTime = value('pwf-event-end-time');
+    var body = { task_date: date, task_time: value('pwf-event-time') || null, end_date: endDate, end_time: endTime || null, title: title, description: value('pwf-event-desc') || null };
     var promise = id ? updateOne('workspace_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('workspace_tasks', Object.assign({}, body, { owner_id: currentUserId() }));
     promise.then(function (saved) { upsertTask(saved); state.selectedDate = date; state.cursor = parseDate(date); finishSave(id ? '일정을 수정했습니다.' : '일정을 추가했습니다.'); }).catch(saveError);
   }
