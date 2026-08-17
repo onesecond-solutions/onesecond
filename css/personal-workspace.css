@@ -356,4 +356,20 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-quick-tool{padding:28px}
 #v-personal-workspace .pw-quick-tool h2{margin:0 44px 14px 0;color:var(--tp);font-size:19px;font-weight:600;letter-spacing:-.01em}
 #v-personal-workspace .pw-quick-tool-loading,#v-personal-workspace .pw-quick-tool-empty{padding:40px 0;color:var(--ts);font-size:13px;text-align:center}
-@media(max-width:680px){#v-personal-workspace .pw-quick-tool-body div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}}
+#v-personal-workspace .pw-quick-tool-raw{max-height:60vh;overflow:auto}
+#v-personal-workspace .pw-tool-search{display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;margin-bottom:16px;border-radius:21px;background:var(--s2)}
+#v-personal-workspace .pw-tool-search span{color:var(--ts);font-size:15px}
+#v-personal-workspace .pw-tool-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--tp);font:inherit;font-size:14px}
+#v-personal-workspace .pw-quick-tool-body{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-height:56vh;overflow:auto;padding-right:2px}
+#v-personal-workspace .pw-qlink-group h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--tp);font-size:13px;font-weight:800}
+#v-personal-workspace .pw-qlink-group h3:before{width:6px;height:16px;border-radius:3px;background:var(--ac);content:""}
+#v-personal-workspace .pw-qlink-group:nth-child(2) h3:before{background:#A78BFA}
+#v-personal-workspace .pw-qlink-grid{display:flex;flex-direction:column;gap:6px}
+#v-personal-workspace .pw-qlink-card{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;padding:0 14px;border:1px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--tp);font-size:13px;font-weight:600;text-decoration:none;transition:transform .1s ease,border-color .15s ease,background .15s ease}
+#v-personal-workspace .pw-qlink-card:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 6%,var(--s1));transform:translateY(-1px)}
+#v-personal-workspace .pw-qlink-card span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#v-personal-workspace .pw-qlink-card small{flex:0 0 auto;color:var(--ac);font-size:12px;font-weight:700;white-space:nowrap}
+#v-personal-workspace .pw-qlink-card.disabled{opacity:.55;cursor:default}
+#v-personal-workspace .pw-qlink-card.disabled:hover{transform:none;border-color:var(--bd);background:var(--s1)}
+#v-personal-workspace .pw-qlink-card.disabled small{color:var(--ts)}
+@media(max-width:680px){#v-personal-workspace .pw-quick-tool-body{grid-template-columns:1fr}}
