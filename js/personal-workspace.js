@@ -392,7 +392,7 @@
   function assetsHtml() {
     var items = [];
     state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
-    state.data.library.forEach(function (item) { var memo = item.item_type === 'memo', folder = item.item_type === 'folder', file = item.item_type === 'file', category = assetCategory(item); items.push({ source: 'library', type: category, folder: folder, kind: folder ? '폴더' : file ? '파일' : memo ? '메모' : item.item_type === 'link' ? '링크' : item.item_type === 'note' ? '업무노트' : '자료', title: item.title, body: item.body || item.url || item.storage_path || '', created: item.created_at, raw: item }); });
+    state.data.library.forEach(function (item) { var memo = item.item_type === 'memo', folder = item.item_type === 'folder', file = item.item_type === 'file', category = assetCategory(item); items.push({ source: 'library', type: category, folder: folder, kind: folder ? '폴더' : file ? '파일' : memo ? '메모' : item.item_type === 'link' ? '링크' : item.item_type === 'note' ? '업무노트' : '자료', title: item.title, body: item.body || item.url || '', created: item.created_at, raw: item }); });
     items = items.filter(function (item) {
       if (state.assetFilter !== 'all' && item.type !== state.assetFilter) return false;
       if (String(item.raw.parent_id || '') !== String(state.assetFolder || '')) return false;
@@ -437,7 +437,8 @@
   function assetCardHtml(item) {
     var raw = item.raw || {}, direct = raw.image_url || (/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(raw.url || '') ? raw.url : '');
     var image = direct ? '<img src="' + esc(direct) + '" alt="">' : ((raw.storage_path && /^image\//.test(raw.mime_type || '')) ? '<img data-storage-path="' + esc(raw.storage_path) + '" alt="">' : '');
-    var preview = item.folder ? '<span class="pw-folder-icon">📁</span>' : image || '<div class="pw-asset-document"><span>' + (item.type === 'note' ? '업무노트' : item.type === 'memo' ? '메모' : item.kind) + '</span><p>' + esc(String(item.body || '').slice(0, 110)) + '</p></div>';
+    var docBody = item.body ? '<p>' + esc(String(item.body).slice(0, 110)) + '</p>' : '<p class="pw-asset-ext">' + esc((fileExtension(raw) || item.kind || '파일').toUpperCase()) + '</p>';
+    var preview = item.folder ? '<span class="pw-folder-icon">📁</span>' : image || '<div class="pw-asset-document"><span>' + (item.type === 'note' ? '업무노트' : item.type === 'memo' ? '메모' : item.kind) + '</span>' + docBody + '</div>';
     return '<button type="button" class="pw-asset-card ' + (item.folder ? 'pw-folder-drop-target' : 'pw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '">' + (item.folder ? '' : favoriteButton('asset', raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<span class="pw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small></button>';
   }
   function fileExtension(item) {
@@ -562,7 +563,7 @@
     var head = STANDALONE ? '' : '<header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
     view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
       + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
-      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>';
+      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-thumbs" id="pw-preview-thumbs"></div><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
     bindSearch(); renderContent();
   }
@@ -706,13 +707,15 @@
     var type = previewType({ title: name, mime_type: mime, storage_path: url });
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
     if (!previewUi(type, name, url, assetRef)) return;
-    var stage = document.getElementById('pw-preview-stage');
+    var stage = document.getElementById('pw-preview-stage'), overlay = document.getElementById('pw-preview'), thumbs = document.getElementById('pw-preview-thumbs');
+    if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
+    if (overlay) overlay.classList.remove('has-pages');
     state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null };
     if (type === 'image') { stage.innerHTML = '<img id="pw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '">'; renderPreviewTransform(); return; }
     stage.innerHTML = '<div class="pw-preview-loading">PDF를 불러오는 중입니다.</div>';
     Promise.all([loadPdfJs(), fetch(url).then(function (response) { if (!response.ok) throw new Error('PDF를 불러오지 못했습니다.'); return response.arrayBuffer(); })])
       .then(function (values) { return values[0].getDocument({ data: values[1] }).promise; })
-      .then(function (doc) { if (!state.preview || state.preview.url !== url) return; state.preview.doc = doc; state.preview.pages = doc.numPages; renderPdfPreview(); })
+      .then(function (doc) { if (!state.preview || state.preview.url !== url) return; state.preview.doc = doc; state.preview.pages = doc.numPages; renderPdfPreview(); renderPdfThumbs(); })
       .catch(function (error) { if (stage) stage.innerHTML = '<div class="pw-preview-loading">' + esc(error.message || 'PDF 미리보기를 불러오지 못했습니다.') + '</div>'; });
   }
   function openFilePreview(id, assetRef) {
@@ -737,10 +740,41 @@
       return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
     }).then(function () { if (pageText && state.preview === p) pageText.textContent = p.page + ' / ' + p.pages; });
   }
-  function closePreview() { var overlay = document.getElementById('pw-preview'); if (overlay) { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); } state.preview = null; document.body.classList.remove('pw-preview-open'); }
+  function renderPdfThumbs() {
+    var p = state.preview, box = document.getElementById('pw-preview-thumbs'), overlay = document.getElementById('pw-preview');
+    if (!p || !box || !overlay) return;
+    var show = p.type === 'pdf' && p.doc && p.pages > 1;
+    overlay.classList.toggle('has-pages', show);
+    if (!show) { box.innerHTML = ''; box.removeAttribute('data-rendered-for'); return; }
+    if (box.getAttribute('data-rendered-for') === p.url) { highlightPdfThumb(); return; }
+    box.setAttribute('data-rendered-for', p.url);
+    box.innerHTML = '';
+    var doc = p.doc;
+    for (var n = 1; n <= p.pages; n++) {
+      (function (pageNum) {
+        var btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'pw-preview-thumb'; btn.setAttribute('data-page', String(pageNum));
+        btn.innerHTML = '<span>' + pageNum + '</span>';
+        btn.onclick = function () { if (!state.preview || state.preview.url !== p.url) return; state.preview.page = pageNum; renderPdfPreview(); highlightPdfThumb(); };
+        box.appendChild(btn);
+        doc.getPage(pageNum).then(function (page) {
+          var viewport = page.getViewport({ scale: .18 }), canvas = document.createElement('canvas');
+          canvas.width = viewport.width; canvas.height = viewport.height;
+          return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise.then(function () { btn.insertBefore(canvas, btn.firstChild); });
+        }).catch(function () {});
+      })(n);
+    }
+    highlightPdfThumb();
+  }
+  function highlightPdfThumb() {
+    var box = document.getElementById('pw-preview-thumbs'); if (!box) return;
+    var page = state.preview && state.preview.page;
+    Array.prototype.forEach.call(box.querySelectorAll('.pw-preview-thumb'), function (btn) { btn.classList.toggle('on', Number(btn.getAttribute('data-page')) === page); });
+  }
+  function closePreview() { var overlay = document.getElementById('pw-preview'), thumbs = document.getElementById('pw-preview-thumbs'); if (overlay) { overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); } if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); } state.preview = null; document.body.classList.remove('pw-preview-open'); }
   function previewZoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewRotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
-  function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) { p.page = next; renderPdfPreview(); } }
+  function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) { p.page = next; renderPdfPreview(); highlightPdfThumb(); } }
   function canvasBlob(canvas) { return new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); }); }
   function closeDdakMenu() { var menu = document.getElementById('pw-preview-ddak-menu'), trigger = document.querySelector('.pw-ddak-wrap .pw-preview-ddak'); if (menu) menu.hidden = true; if (trigger) trigger.setAttribute('aria-expanded', 'false'); }
   function toggleDdakMenu(event) { if (event) event.stopPropagation(); var menu = document.getElementById('pw-preview-ddak-menu'), trigger = event && event.currentTarget; if (!menu) return; var open = menu.hidden; menu.hidden = !open; if (trigger) trigger.setAttribute('aria-expanded', String(open)); }
