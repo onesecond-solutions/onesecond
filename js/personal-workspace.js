@@ -233,11 +233,16 @@
     return state.loadPromise;
   }
 
+  function navPlannedGroupHtml(label, entries) {
+    return '<details class="pw-nav-group"><summary>' + label + '</summary>' + entries.map(function (entry) { return '<button type="button" disabled><span>' + entry[0] + '</span>' + entry[1] + '</button>'; }).join('') + '</details>';
+  }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
+    var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['◷', '보험연령표'], ['↗', '영업방향']];
+    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기/변환기'], ['⇗', '원전산 설계 바로가기'], ['₩', '보험회사 결제정보']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
-    }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴"><button type="button" disabled><span>◫</span>소식지</button><button type="button" disabled><span>↗</span>영업방향</button><button type="button" disabled><span>≡</span>상품라인업</button></div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">구)원세컨드</button></div></nav>';
+    }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup) + navPlannedGroupHtml('영업도구', toolGroup) + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">구)원세컨드</button></div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="pw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
