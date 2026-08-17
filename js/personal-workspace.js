@@ -647,7 +647,7 @@
       }).join('');
       var bars = weekSpans.map(function (sp) {
         var startIdx = weekDays.indexOf(sp.start), endIdx = weekDays.indexOf(sp.end);
-        var left = (startIdx / 7 * 100) + '%', width = ((endIdx - startIdx + 1) / 7 * 100) + '%';
+        var left = 'calc(' + (startIdx / 7 * 100) + '% + 3px)', width = 'calc(' + ((endIdx - startIdx + 1) / 7 * 100) + '% - 6px)';
         return '<span class="pw-event-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
       }).join('');
       weeks.push('<div class="pw-cal-week"><div class="pw-cal-week-cells">' + cells + '</div><div class="pw-cal-week-bars" style="height:' + (laneCount * 24) + 'px">' + bars + '</div></div>');
