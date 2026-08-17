@@ -27,7 +27,8 @@
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
     calendarMode: 'month', selectedDate: ymd(new Date()), selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
-    newsData: null, newsLoading: false, newsCompany: 'all',
+    newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
+    newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [],
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -793,39 +794,140 @@
   function loadNewsletterData() {
     if (state.newsData || state.newsLoading) return;
     state.newsLoading = true;
-    api('newsletters?status=eq.published&select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200').then(function (rows) {
+    api('newsletters?status=eq.published&select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function (rows) {
       state.newsData = rows || []; state.newsLoading = false;
       if (state.section === 'newsletters') renderContent();
     }).catch(function () { state.newsLoading = false; state.newsData = []; if (state.section === 'newsletters') renderContent(); });
   }
   function newsMonthLabel(row) { var y = row.publish_year, m = row.publish_month; if (!y) return '발행일 미상'; return y + '년' + (m ? ' ' + m + '월' : ''); }
-  function newsCompanyList(rows) {
-    var seen = {}, list = [];
-    rows.forEach(function (r) { var name = String(r.company || '').trim(); if (!name || seen[name]) return; seen[name] = true; list.push(name); });
-    return list.sort(function (a, b) { return a.localeCompare(b, 'ko-KR'); });
+  function newsSecOf(company) {
+    var t = String(company || '');
+    if (/손해|손보|화재|해상/.test(t)) return 'nonlife';
+    if (/생명|생보|라이프|life|연금/i.test(t)) return 'life';
+    return 'nonlife';
+  }
+  function newsCompanyStats() {
+    var map = {};
+    (state.newsData || []).forEach(function (r) {
+      var name = String(r.company || '').trim() || '(회사 미상)';
+      if (!map[name]) map[name] = { name: name, sec: newsSecOf(name), count: 0 };
+      map[name].count++;
+    });
+    return Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return a.name.localeCompare(b.name, 'ko-KR'); });
+  }
+  function newsQueryHit(name) {
+    var q = (state.newsCoNameQuery || '').trim().toLowerCase();
+    return !q || String(name).toLowerCase().indexOf(q) >= 0;
+  }
+  function newsPoolCompanies() {
+    var list = newsCompanyStats().filter(function (c) { return newsQueryHit(c.name); });
+    if (state.newsPool !== 'all') list = list.filter(function (c) { return c.sec === state.newsPool; });
+    return list;
   }
   function newsletterCardHtml(row) {
     var label = newsMonthLabel(row), company = row.company || '회사 미상';
     return '<button type="button" class="pw-news-card" onclick="OSPersonalWorkspace.openNewsletter(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-storage-path="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
+  }
+  function newsPoolTabsHtml() {
+    return '<div class="pw-nl-pool">' + [['all', '전체'], ['nonlife', '손해'], ['life', '생명']].map(function (p) {
+      return '<button type="button" class="' + (state.newsPool === p[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterNewsPool(\'' + p[0] + '\')">' + p[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  function newsSidebarHtml() {
+    var groups = state.newsPool === 'all' ? [['손해보험', 'nonlife'], ['생명보험', 'life']] : state.newsPool === 'nonlife' ? [['손해보험', 'nonlife']] : [['생명보험', 'life']];
+    var stats = newsCompanyStats().filter(function (c) { return newsQueryHit(c.name); });
+    var html = '';
+    groups.forEach(function (g) {
+      var arr = stats.filter(function (c) { return c.sec === g[1]; });
+      if (!arr.length) return;
+      html += '<div class="pw-nl-grouplabel">' + esc(g[0]) + '</div>';
+      html += arr.map(function (c) {
+        var on = state.newsScope === 'co' && state.newsCoSel === c.name;
+        return '<button type="button" class="pw-nl-co' + (on ? ' on' : '') + '" style="--cl:' + (c.sec === 'life' ? 'var(--t-uw)' : 'var(--warn)') + '" onclick="OSPersonalWorkspace.selectNewsCompany(\'' + esc(jsString(c.name)) + '\')"><span class="dot"></span><span class="nm">' + esc(c.name) + '</span><span class="cnt">' + c.count + '</span></button>';
+      }).join('');
+    });
+    return html || '<div class="pw-empty">검색 결과 없음</div>';
+  }
+  function newsScopeTabsHtml() {
+    return '<div class="pw-nl-scope">' + [['all', '전체 조망'], ['co', '회사별']].map(function (s) {
+      return '<button type="button" class="' + (state.newsScope === s[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setNewsScope(\'' + s[0] + '\')">' + s[1] + '</button>';
+    }).join('') + '</div><span class="pw-nl-hint">' + (state.newsScope === 'all' ? '회사를 클릭하면 발행월별 소식지로' : '좌측에서 다른 회사를 고를 수 있어요') + '</span>';
+  }
+  function newsCountHtml() {
+    var cos = newsPoolCompanies();
+    var total = cos.reduce(function (a, c) { return a + c.count; }, 0);
+    return '<div class="pw-nl-cnt">회사 <b>' + cos.length + '곳</b> · 소식지 <b>' + total + '건</b></div>';
+  }
+  function newsPoolFilteredRows() {
+    var wanted = {};
+    newsPoolCompanies().forEach(function (c) { wanted[c.name] = true; });
+    return (state.newsData || []).filter(function (r) { return wanted[String(r.company || '').trim() || '(회사 미상)']; });
+  }
+  function newsAllViewHtml() {
+    var rows = newsPoolFilteredRows();
+    if (!rows.length) return '<div class="pw-empty">소식지가 없습니다.</div>';
+    var monthMap = {}, order = [];
+    rows.forEach(function (r) {
+      var y = Number(r.publish_year), m = Number(r.publish_month);
+      var key = (y && m) ? (y + '|' + m) : 'unknown';
+      if (!monthMap[key]) { monthMap[key] = { y: y, m: m, items: [] }; order.push(key); }
+      monthMap[key].items.push(r);
+    });
+    order.sort(function (a, b) { if (a === 'unknown') return 1; if (b === 'unknown') return -1; return (monthMap[b].y * 12 + monthMap[b].m) - (monthMap[a].y * 12 + monthMap[a].m); });
+    var now = new Date(), curKey = now.getFullYear() + '|' + (now.getMonth() + 1);
+    var first = order[0], g0 = monthMap[first];
+    var t0 = first === 'unknown' ? '발행월 미상' : (g0.y + '년 ' + g0.m + '월');
+    var hk = first === curKey ? ('이번 달 · 새 소식지 ' + g0.items.length + '건') : ('최신 발행 · ' + g0.items.length + '건');
+    var html = '<div class="pw-nl-hero"><div class="pw-nl-hero-hd"><h3>' + esc(t0) + '</h3><span class="k">' + esc(hk) + '</span></div><div class="pw-news-grid">' + g0.items.map(newsletterCardHtml).join('') + '</div></div>';
+    if (order.length > 1) {
+      html += '<div class="pw-nl-past"><div class="pw-nl-past-hd">이전 발행월 · 클릭하면 펼쳐집니다</div>';
+      for (var i = 1; i < order.length; i++) {
+        var key = order[i], g = monthMap[key];
+        var title = key === 'unknown' ? '발행월 미상' : (g.y + '년 ' + g.m + '월');
+        var open = !!state.newsOpenMonths[key];
+        html += '<button type="button" class="pw-nl-mrow' + (open ? ' open' : '') + '" onclick="OSPersonalWorkspace.toggleNewsMonth(\'' + esc(key) + '\')"><span class="t">' + esc(title) + '</span><span class="badge">' + g.items.length + '건</span><span class="chev">›</span></button>';
+        if (open) html += '<div class="pw-nl-mbody open"><div class="pw-news-grid">' + g.items.map(newsletterCardHtml).join('') + '</div></div>';
+      }
+      html += '</div>';
+    }
+    return html;
+  }
+  function newsCoViewHtml() {
+    var companies = newsPoolCompanies();
+    var sel = (state.newsCoSel && companies.some(function (c) { return c.name === state.newsCoSel; })) ? state.newsCoSel : (companies[0] && companies[0].name);
+    if (!sel) return '<div class="pw-empty">회사가 없습니다.</div>';
+    state.newsCoSel = sel;
+    var rows = (state.newsData || []).filter(function (r) { return (String(r.company || '').trim() || '(회사 미상)') === sel; })
+      .slice().sort(function (a, b) { return (Number(b.publish_year) * 12 + Number(b.publish_month || 0)) - (Number(a.publish_year) * 12 + Number(a.publish_month || 0)); });
+    var sec = newsSecOf(sel), secLb = sec === 'life' ? '생명보험' : '손해보험';
+    var latest = rows[0] ? (rows[0].publish_year + '.' + ('0' + rows[0].publish_month).slice(-2)) : '-';
+    var avatar = esc(sel.replace(/\s+/g, '').slice(0, 2));
+    var head = '<div class="pw-nl-cohead"><span class="pw-nl-avatar ' + (sec === 'life' ? 'l' : 's') + '">' + avatar + '</span><div class="info"><h3>' + esc(sel) + '</h3><div class="sub">' + secLb + ' · 최근 발행 ' + esc(latest) + '</div></div><span class="tot">총 <b>' + rows.length + '</b>건</span></div>';
+    var grid = rows.length ? '<div class="pw-news-grid">' + rows.map(newsletterCardHtml).join('') + '</div>' : '<div class="pw-empty">소식지가 없습니다.</div>';
+    return head + grid;
   }
   function newslettersHtml() {
     if (!state.newsData && !state.newsLoading) loadNewsletterData();
     if (state.newsLoading || !state.newsData) {
       return '<div class="pw-toolbar"><h2>소식지</h2></div><div class="pw-empty">불러오는 중입니다…</div>';
     }
-    var companies = newsCompanyList(state.newsData);
-    var counts = {};
-    state.newsData.forEach(function (r) { var c = String(r.company || '').trim(); if (!c) return; counts[c] = (counts[c] || 0) + 1; });
-    var sideItems = '<button type="button" class="pw-news-side-item' + (state.newsCompany === 'all' ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'all\')"><span>전체</span><em>' + state.newsData.length + '</em></button>' + companies.map(function (co) {
-      return '<button type="button" class="pw-news-side-item' + (state.newsCompany === co ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'' + esc(co) + '\')"><span>' + esc(co) + '</span><em>' + (counts[co] || 0) + '</em></button>';
-    }).join('');
-    var sidebar = '<nav class="pw-news-sidebar">' + sideItems + '</nav>';
-    var rows = state.newsCompany === 'all' ? state.newsData : state.newsData.filter(function (r) { return r.company === state.newsCompany; });
-    var grid = rows.length ? '<div class="pw-news-grid">' + rows.map(newsletterCardHtml).join('') + '</div>' : '<div class="pw-empty">해당 회사의 소식지가 아직 없습니다.</div>';
-    var main = '<div class="pw-news-main">' + grid + '</div>';
-    return '<div class="pw-toolbar"><h2>소식지</h2></div><div class="pw-news-layout">' + sidebar + main + '</div>';
+    var sidebar = '<aside class="pw-nl-side">' + newsPoolTabsHtml() + '<div class="pw-nl-search"><input id="pw-newsCo-name-input" type="text" placeholder="회사 검색" autocomplete="off" value="' + esc(state.newsCoNameQuery || '') + '"></div><div class="pw-nl-colist">' + newsSidebarHtml() + '</div></aside>';
+    var main = '<div class="pw-nl-main"><div class="pw-nl-ctrl">' + newsScopeTabsHtml() + '</div>' + newsCountHtml() + (state.newsScope === 'all' ? newsAllViewHtml() : newsCoViewHtml()) + '</div>';
+    return '<div class="pw-toolbar"><h2>소식지</h2></div><div class="pw-nl-layout">' + sidebar + main + '</div>';
   }
-  function filterNewsCompany(company) { state.newsCompany = company; renderContent(); }
+  function filterNewsPool(pool) {
+    state.newsPool = pool;
+    if (state.newsCoSel && pool !== 'all' && newsSecOf(state.newsCoSel) !== pool) state.newsCoSel = null;
+    renderContent();
+  }
+  function setNewsScope(scope) { state.newsScope = scope; renderContent(); }
+  function selectNewsCompany(name) {
+    state.newsCoSel = name; state.newsScope = 'co';
+    var sec = newsSecOf(name);
+    if (state.newsPool !== 'all' && state.newsPool !== sec) state.newsPool = sec;
+    renderContent();
+  }
+  function toggleNewsMonth(key) { state.newsOpenMonths[key] = !state.newsOpenMonths[key]; renderContent(); }
   function hydrateNewsThumbs() {
     document.querySelectorAll('#v-personal-workspace .pw-news-thumb img[data-storage-path]').forEach(function (img) {
       var path = img.getAttribute('data-storage-path'); if (!path) return;
@@ -871,7 +973,7 @@
     bindSearch(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') bindNameSearch('customer'); if (state.section === 'newsletters') hydrateNewsThumbs(); } }
+  function renderContent() { var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') bindNameSearch('customer'); if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -1688,7 +1790,7 @@
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
-    filterNewsCompany: filterNewsCompany, openNewsletter: openNewsletter,
+    filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
