@@ -235,8 +235,12 @@
 
   var CALC_TOOLS = [['calculator', '계산기'], ['bmi', 'BMI 계산기'], ['insurance-age', '보험연령 계산기'], ['image-convert', '이미지 변환']];
   function navPlannedEntryHtml(entry) {
-    if (entry.length > 2 && entry[2]) {
-      return '<details class="pw-nav-subgroup"><summary><span>' + entry[0] + '</span>' + entry[1] + '</summary>' + entry[2].map(function (sub) { return '<button type="button" onclick="OSPersonalWorkspace.openTool(\'' + sub[0] + '\')">' + sub[1] + '</button>'; }).join('') + '</details>';
+    var extra = entry[2];
+    if (Array.isArray(extra)) {
+      return '<details class="pw-nav-subgroup"><summary><span>' + entry[0] + '</span>' + entry[1] + '</summary>' + extra.map(function (sub) { return '<button type="button" onclick="OSPersonalWorkspace.openTool(\'' + sub[0] + '\')">' + sub[1] + '</button>'; }).join('') + '</details>';
+    }
+    if (typeof extra === 'string') {
+      return '<button type="button" class="pw-nav-link" onclick="OSPersonalWorkspace.openTool(\'' + extra + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
     return '<button type="button" disabled><span>' + entry[0] + '</span>' + entry[1] + '</button>';
   }
@@ -246,7 +250,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['◷', '보험연령표'], ['↗', '영업방향']];
-    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 설계 바로가기'], ['₩', '보험회사 결제정보']];
+    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'system-links'], ['₩', '보험회사 결제정보', 'payment-info']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">구)원세컨드</button></div></nav>';
@@ -1200,6 +1204,18 @@
     if (key === 'bmi') return openBmiTool();
     if (key === 'insurance-age') return openInsuranceAgeTool();
     if (key === 'image-convert') return openImageConvertTool();
+    if (key === 'system-links') return openQuickContentTool('원전산 설계 바로가기', '원전산 바로가기');
+    if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보');
+  }
+  function openQuickContentTool(tabTitle, popupTitle) {
+    dialog('<div class="pw-quick-tool"><h2>' + esc(popupTitle) + '</h2><div class="pw-quick-tool-body" id="pw-quick-tool-body"><div class="pw-quick-tool-loading">불러오는 중입니다…</div></div></div>');
+    api('quick_contents?tab_title=eq.' + encodeURIComponent(tabTitle) + '&select=content_html&limit=1').then(function (rows) {
+      var body = document.getElementById('pw-quick-tool-body'); if (!body) return;
+      var html = rows && rows[0] && rows[0].content_html;
+      body.innerHTML = html ? html : '<div class="pw-quick-tool-empty">등록된 내용이 없습니다.</div>';
+    }).catch(function () {
+      var body = document.getElementById('pw-quick-tool-body'); if (body) body.innerHTML = '<div class="pw-quick-tool-empty">불러오지 못했습니다. 다시 시도해 주세요.</div>';
+    });
   }
   function resetCalc() { state.calc = { display: '0', stored: null, operator: null, waiting: false }; }
   function calcRenderDisplay() { var el = document.getElementById('pw-calc-display'); if (el) el.textContent = state.calc.display; }
