@@ -1204,17 +1204,57 @@
     if (key === 'bmi') return openBmiTool();
     if (key === 'insurance-age') return openInsuranceAgeTool();
     if (key === 'image-convert') return openImageConvertTool();
-    if (key === 'system-links') return openQuickContentTool('원전산 설계 바로가기', '원전산 바로가기');
-    if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보');
+    if (key === 'system-links') return openQuickContentTool('원전산 설계 바로가기', '원전산 바로가기', 'links');
+    if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보', 'raw');
   }
-  function openQuickContentTool(tabTitle, popupTitle) {
-    dialog('<div class="pw-quick-tool"><h2>' + esc(popupTitle) + '</h2><div class="pw-quick-tool-body" id="pw-quick-tool-body"><div class="pw-quick-tool-loading">불러오는 중입니다…</div></div></div>');
+  function parseQuickLinks(html) {
+    var wrapper = document.createElement('div'); wrapper.innerHTML = html;
+    var grid = wrapper.querySelector('div[style*="grid-template-columns:1fr 1fr"]');
+    var columns = grid ? Array.prototype.filter.call(grid.children, function (c) { return c.tagName === 'DIV'; }) : [];
+    return columns.map(function (col) {
+      var header = col.children[0], linksBox = col.children[1];
+      var label = header ? header.textContent.trim() : '';
+      var items = linksBox ? Array.prototype.map.call(linksBox.children, function (child) {
+        var isLink = child.tagName === 'A';
+        var card = isLink ? child.firstElementChild : child;
+        var nameDiv = card ? card.firstElementChild : null;
+        var name = (nameDiv ? nameDiv.textContent : (card || child).textContent || '').trim();
+        return { name: name, href: isLink ? child.getAttribute('href') : null };
+      }) : [];
+      return { label: label, items: items };
+    }).filter(function (g) { return g.items.length; });
+  }
+  function quickLinksCardsHtml(groups) {
+    var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSPersonalWorkspace.filterQuickLinks(this.value)"></label>';
+    var body = groups.map(function (g) {
+      return '<section class="pw-qlink-group"><h3>' + esc(g.label) + '</h3><div class="pw-qlink-grid">' + g.items.map(function (item) {
+        var name = item.name || '(이름 없음)';
+        if (!item.href) return '<div class="pw-qlink-card disabled" data-name="' + esc(name.toLowerCase()) + '"><span>' + esc(name) + '</span><small>URL 없음</small></div>';
+        return '<a class="pw-qlink-card" data-name="' + esc(name.toLowerCase()) + '" href="' + esc(item.href) + '" target="_blank" rel="noopener noreferrer"><span>' + esc(name) + '</span><small>열기 →</small></a>';
+      }).join('') + '</div></section>';
+    }).join('');
+    return search + '<div class="pw-quick-tool-body" id="pw-qlink-body">' + body + '</div>';
+  }
+  function filterQuickLinks(q) {
+    q = q.trim().toLocaleLowerCase('ko-KR');
+    Array.prototype.forEach.call(document.querySelectorAll('#pw-qlink-body .pw-qlink-card'), function (card) {
+      card.style.display = (!q || (card.getAttribute('data-name') || '').indexOf(q) >= 0) ? '' : 'none';
+    });
+  }
+  function openQuickContentTool(tabTitle, popupTitle, mode) {
+    dialog('<div class="pw-quick-tool"><h2>' + esc(popupTitle) + '</h2><div id="pw-quick-tool-slot"><div class="pw-quick-tool-loading">불러오는 중입니다…</div></div></div>');
     api('quick_contents?tab_title=eq.' + encodeURIComponent(tabTitle) + '&select=content_html&limit=1').then(function (rows) {
-      var body = document.getElementById('pw-quick-tool-body'); if (!body) return;
+      var slot = document.getElementById('pw-quick-tool-slot'); if (!slot) return;
       var html = rows && rows[0] && rows[0].content_html;
-      body.innerHTML = html ? html : '<div class="pw-quick-tool-empty">등록된 내용이 없습니다.</div>';
+      if (!html) { slot.innerHTML = '<div class="pw-quick-tool-empty">등록된 내용이 없습니다.</div>'; return; }
+      if (mode === 'links') {
+        var groups = parseQuickLinks(html);
+        slot.innerHTML = groups.length ? quickLinksCardsHtml(groups) : '<div class="pw-quick-tool-raw">' + html + '</div>';
+      } else {
+        slot.innerHTML = '<div class="pw-quick-tool-raw">' + html + '</div>';
+      }
     }).catch(function () {
-      var body = document.getElementById('pw-quick-tool-body'); if (body) body.innerHTML = '<div class="pw-quick-tool-empty">불러오지 못했습니다. 다시 시도해 주세요.</div>';
+      var slot = document.getElementById('pw-quick-tool-slot'); if (slot) slot.innerHTML = '<div class="pw-quick-tool-empty">불러오지 못했습니다. 다시 시도해 주세요.</div>';
     });
   }
   function resetCalc() { state.calc = { display: '0', stored: null, operator: null, waiting: false }; }
@@ -1458,7 +1498,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload,
+    openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
