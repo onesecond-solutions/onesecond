@@ -69,7 +69,8 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-previewable{cursor:zoom-in}
 #v-personal-workspace .pw-preview{position:fixed;z-index:12000;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.88);box-sizing:border-box}
 #v-personal-workspace .pw-preview.open{display:flex}
-#v-personal-workspace .pw-preview-stage{display:flex;align-items:center;justify-content:center;width:100%;height:calc(100% - 70px);overflow:auto}
+#v-personal-workspace .pw-preview-stage{display:flex;width:100%;height:calc(100% - 70px);overflow:auto}
+#v-personal-workspace .pw-preview-stage>*{margin:auto}
 #v-personal-workspace .pw-preview-thumbs{position:absolute;z-index:2;top:16px;bottom:86px;left:16px;display:none;width:104px;flex-direction:column;gap:8px;overflow-y:auto;padding:2px}
 #v-personal-workspace .pw-preview.has-pages .pw-preview-thumbs{display:flex}
 #v-personal-workspace .pw-preview.has-pages .pw-preview-stage{margin-left:120px}
