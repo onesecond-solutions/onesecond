@@ -257,9 +257,10 @@
     return '<div class="pw-consult-stats"><label class="pw-consult-name-search"><span aria-hidden="true">⌕</span><input id="' + opts.nameInputId + '" type="search" placeholder="' + esc(opts.namePlaceholder) + '" autocomplete="off" value="' + esc(opts.nameQuery) + '">' + clearBtn + '</label><div class="pw-consult-stat-chips" role="group" aria-label="진행 단계별 보기">' + chips + '</div></div>';
   }
   function scheduleNameSearch(kind, value) {
-    var timerKey = kind + 'NameTimer', queryKey = kind + 'NameQuery', inputId = 'pw-' + kind + '-name-input';
+    var timerKey = kind + 'NameTimer', queryKey = kind + 'NameQuery', composingKey = kind + 'NameComposing', inputId = 'pw-' + kind + '-name-input';
     window.clearTimeout(state[timerKey]);
     state[timerKey] = window.setTimeout(function () {
+      if (state[composingKey]) return;
       state[queryKey] = value;
       var active = document.activeElement, hadFocus = active && active.id === inputId, selStart = hadFocus ? active.selectionStart : null;
       renderContent();
@@ -279,7 +280,7 @@
     input.addEventListener('compositionstart', function () { state[composingKey] = true; });
     input.addEventListener('compositionend', function () { state[composingKey] = false; scheduleNameSearch(kind, input.value); });
     input.addEventListener('input', function () { if (!state[composingKey]) scheduleNameSearch(kind, input.value); });
-    input.addEventListener('search', function () { state[composingKey] = false; scheduleNameSearch(kind, input.value); });
+    input.addEventListener('search', function () { if (!state[composingKey]) scheduleNameSearch(kind, input.value); });
   }
   function searchHtml() {
     var q = state.query.trim(); if (!q) return '';
