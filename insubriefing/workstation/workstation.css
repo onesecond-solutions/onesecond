@@ -150,6 +150,86 @@ body.ws-page.ws-bg-flat #v-personal-workspace .pw-table tbody tr,
 body.ws-page.ws-bg-flat #v-personal-workspace .pw-agenda>button,
 body.ws-page.ws-bg-flat #v-personal-workspace .pw-search-results>button{background:var(--s1)}
 body.ws-page.ws-bg-flat #v-personal-workspace .pw-table tbody tr:nth-child(even){background:var(--s2)}
+/* ── 다크 배경 모드: Google 스타일 블록의 하드코딩 색상을 토큰으로 재정의 ── */
+body.ws-page.ws-bg-dark #v-personal-workspace{background:var(--bg);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-head{background:var(--bg)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-title p{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-search{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-search:focus-within{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-nav{background:var(--bg)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-nav button{color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-nav button:hover{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-nav button.on{background:color-mix(in srgb,var(--ac) 22%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-nav .archive{border-top-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-nav-planned button:disabled:hover{color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-name-search{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-name-search:focus-within{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-name-search span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-name-search input{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-name-clear{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-name-clear:hover{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-stat{background:var(--s1);color:var(--bodytx);border-top-color:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 45%,var(--bd))}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-stat span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-consult-stat.on{background:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 18%,var(--s1))}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-main{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-subtitle{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-btn{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-btn:hover{border-color:var(--tf);background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-btn.primary{border-color:var(--ac);background:var(--ac);color:#fff}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-stat{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-stat span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-stat strong{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-panel,body.ws-page.ws-bg-dark #v-personal-workspace .pw-explorer,body.ws-page.ws-bg-dark #v-personal-workspace .pw-search-results,body.ws-page.ws-bg-dark #v-personal-workspace .pw-agenda,body.ws-page.ws-bg-dark #v-personal-workspace .pw-cal,body.ws-page.ws-bg-dark #v-personal-workspace .pw-time{border-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-panel-head{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-panel-head button{color:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-panel .pw-row{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-row small{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-row:hover,body.ws-page.ws-bg-dark #v-personal-workspace .pw-table tbody tr:hover,body.ws-page.ws-bg-dark #v-personal-workspace .pw-search-results>button:hover{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-fav{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-fav:hover,body.ws-page.ws-bg-dark #v-personal-workspace .pw-fav:focus-visible{border-color:var(--bd);background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-asset-card>.pw-fav{background:color-mix(in srgb,var(--s1) 92%,transparent)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-tabs button{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-tabs button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-table th{background:var(--s1);color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-table td{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-badge{background:var(--s2);color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-badge.public{background:color-mix(in srgb,var(--ok) 18%,var(--s1));color:var(--ok)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-system-note{background:color-mix(in srgb,var(--ac) 16%,var(--s1));color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-system-note small{color:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-dialog{border-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-field input,body.ws-page.ws-bg-dark #v-personal-workspace .pw-field select,body.ws-page.ws-bg-dark #v-personal-workspace .pw-field textarea{border-color:var(--bd);background:var(--s1);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-file-card{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-cal-head{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-cal-head span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-day{border-color:var(--bd);color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-day.today>strong{background:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-event{background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-shell{--pw-cal-main:var(--ac);--pw-cal-deep:color-mix(in srgb,var(--ac) 65%,black);--pw-cal-soft:color-mix(in srgb,var(--ac) 20%,var(--s1))}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-left h2{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-today{border-color:var(--bd);background:var(--s1);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-month-switcher button{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-shell .pw-mode{border-color:var(--bd);background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-shell .pw-mode .pw-btn{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-shell .pw-mode .pw-btn.primary{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-cal{border-color:var(--bd);background:var(--s1)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-cal-head{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-cal-head span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-cal-head span:first-child{color:var(--err)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-cal-head span:last-child{color:var(--t-uw)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-cal-grid{background:var(--bd)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-day{background:var(--s1);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-day:hover{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-day.out{background:color-mix(in srgb,var(--s1) 60%,var(--bg));color:var(--tf)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-day-head strong{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-day-head em{background:var(--s2);color:var(--ts)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-built-ins i{color:var(--err)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-built-ins i.term{color:var(--ok)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-built-ins i.memorial{color:var(--t-event)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-event,body.ws-page.ws-bg-dark #v-personal-workspace .pw-event-bar{background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-event:hover,body.ws-page.ws-bg-dark #v-personal-workspace .pw-event-bar:hover{background:color-mix(in srgb,var(--ac) 32%,var(--s1))}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-event.customer,body.ws-page.ws-bg-dark #v-personal-workspace .pw-event-bar.customer{background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:var(--ok)}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-event.customer:hover,body.ws-page.ws-bg-dark #v-personal-workspace .pw-event-bar.customer:hover{background:color-mix(in srgb,var(--ok) 32%,var(--s1))}
+body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-more{color:var(--ts)}
 @media(max-width:860px){.ws-main{padding:8px 8px 0}#v-personal-workspace{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-personal-workspace .pw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-personal-workspace .pw-main{grid-row:1;min-width:0}#v-personal-workspace .pw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-personal-workspace .pw-assets-controls{align-items:flex-start;flex-direction:column}#v-personal-workspace .pw-assets-controls .pw-tabs{width:100%;overflow:visible}#v-personal-workspace .pw-assets-actions{align-self:flex-end}}
 @media(max-width:860px){.ws-global-search{width:min(400px,38vw)}}
 @media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand span{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-account{grid-column:2;grid-row:1}.ws-account-trigger{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-personal-workspace{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
