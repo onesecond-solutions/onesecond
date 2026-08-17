@@ -62,11 +62,14 @@
   function consultCustomValue(profile, key) { return String((profile.custom_fields && profile.custom_fields[key]) || ''); }
   function consultCell(column, item, customer, profile, date, age, status) { var values = { date: date, name: customer.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(customer.phone || customer.phone_raw || ''), summary: stripHtml(item.memo || ''), status: status }; var value = Object.prototype.hasOwnProperty.call(values, column.key) ? values[column.key] : consultCustomValue(profile, column.key); if (column.key === 'name') return '<strong>' + esc(value) + '</strong>'; return '<span class="pw-consult-cell pw-consult-' + esc(column.key) + '">' + esc(value) + '</span>'; }
   function personalItemScope() {
-    // workspace_items.owner_id is the canonical account boundary. The legacy
-    // payloads do not consistently contain owner_email. Authored notes are kept,
-    // and only personal-scope vault rows are imported; team/branch/global bulk
-    // server material stays outside the Insurance Briefing workspace.
-    return '&or=(legacy_source.is.null,legacy_source.in.(library,scripts),and(legacy_source.in.(myspace_folders,myspace_files),legacy_payload->>scope.eq.personal))';
+    // workspace_items.owner_id is the canonical account boundary (already applied
+    // by the caller's owner_id=eq.<계정> filter). On top of that, every legacy
+    // source (library/scripts/myspace_folders/myspace_files) must also be
+    // personal-scope — team/branch/global bulk server material (including
+    // admin-registered library/scripts entries) stays outside the workspace.
+    // Missing scope (legacy rows with no scope value) counts as personal too,
+    // matching the migration's own coalesce(scope,'personal') convention.
+    return "&or=(legacy_source.is.null,and(legacy_source.in.(library,scripts,myspace_folders,myspace_files),or(legacy_payload->>scope.is.null,legacy_payload->>scope.eq.personal)))";
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || currentUserId() === PILOT_ID || currentUserEmail() === TEST_EMAIL; }
