@@ -814,12 +814,16 @@
       return '<div class="pw-toolbar"><h2>소식지</h2></div><div class="pw-empty">불러오는 중입니다…</div>';
     }
     var companies = newsCompanyList(state.newsData);
-    var chips = '<div class="pw-script-chips"><button type="button" class="pw-script-chip' + (state.newsCompany === 'all' ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'all\')">전체</button>' + companies.map(function (co) {
-      return '<button type="button" class="pw-script-chip' + (state.newsCompany === co ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'' + esc(co) + '\')">' + esc(co) + '</button>';
-    }).join('') + '</div>';
+    var counts = {};
+    state.newsData.forEach(function (r) { var c = String(r.company || '').trim(); if (!c) return; counts[c] = (counts[c] || 0) + 1; });
+    var sideItems = '<button type="button" class="pw-news-side-item' + (state.newsCompany === 'all' ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'all\')"><span>전체</span><em>' + state.newsData.length + '</em></button>' + companies.map(function (co) {
+      return '<button type="button" class="pw-news-side-item' + (state.newsCompany === co ? ' on' : '') + '" onclick="OSPersonalWorkspace.filterNewsCompany(\'' + esc(co) + '\')"><span>' + esc(co) + '</span><em>' + (counts[co] || 0) + '</em></button>';
+    }).join('');
+    var sidebar = '<nav class="pw-news-sidebar">' + sideItems + '</nav>';
     var rows = state.newsCompany === 'all' ? state.newsData : state.newsData.filter(function (r) { return r.company === state.newsCompany; });
     var grid = rows.length ? '<div class="pw-news-grid">' + rows.map(newsletterCardHtml).join('') + '</div>' : '<div class="pw-empty">해당 회사의 소식지가 아직 없습니다.</div>';
-    return '<div class="pw-toolbar"><h2>소식지</h2></div>' + chips + grid;
+    var main = '<div class="pw-news-main">' + grid + '</div>';
+    return '<div class="pw-toolbar"><h2>소식지</h2></div><div class="pw-news-layout">' + sidebar + main + '</div>';
   }
   function filterNewsCompany(company) { state.newsCompany = company; renderContent(); }
   function hydrateNewsThumbs() {

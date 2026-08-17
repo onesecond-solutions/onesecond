@@ -347,7 +347,17 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-script-acc-coach{margin-top:8px;padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--warn) 14%,var(--s1));color:var(--tp);font-size:14px;font-weight:600}
 #v-personal-workspace .pw-script-attachments{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 #v-personal-workspace .pw-script-attachments img{width:96px;height:96px;border:1px solid var(--bd);border-radius:8px;object-fit:cover}
+#v-personal-workspace .pw-news-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start}
+#v-personal-workspace .pw-news-sidebar{display:flex;flex-direction:column;gap:2px;position:sticky;top:0;max-height:calc(100vh - 180px);overflow-y:auto;padding-right:4px}
+#v-personal-workspace .pw-news-side-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border:0;border-radius:8px;background:transparent;color:var(--ts);font-size:14px;font-weight:600;text-align:left;cursor:pointer}
+#v-personal-workspace .pw-news-side-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#v-personal-workspace .pw-news-side-item em{flex:none;font-style:normal;color:var(--ts);font-size:12px;font-weight:600}
+#v-personal-workspace .pw-news-side-item:hover{background:var(--s2);color:var(--tp)}
+#v-personal-workspace .pw-news-side-item.on{background:color-mix(in srgb,var(--ac) 12%,var(--s1));color:var(--ac)}
+#v-personal-workspace .pw-news-side-item.on em{color:var(--ac)}
+#v-personal-workspace .pw-news-main{min-width:0}
 #v-personal-workspace .pw-news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px}
+@media (max-width:860px){#v-personal-workspace .pw-news-layout{grid-template-columns:1fr}#v-personal-workspace .pw-news-sidebar{position:static;max-height:none;flex-direction:row;flex-wrap:wrap;overflow-y:visible}#v-personal-workspace .pw-news-side-item{flex:none}}
 #v-personal-workspace .pw-news-card{padding:0;border:0;border-radius:14px;background:transparent;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
 #v-personal-workspace .pw-news-card:hover{transform:translateY(-4px)}
 #v-personal-workspace .pw-news-card:hover .pw-news-thumb{box-shadow:0 16px 32px color-mix(in srgb,var(--tp) 20%,transparent),0 0 0 1px var(--ac)}
