@@ -233,16 +233,23 @@
     return state.loadPromise;
   }
 
-  function navPlannedGroupHtml(label, entries) {
-    return '<details class="pw-nav-group"><summary>' + label + '</summary>' + entries.map(function (entry) { return '<button type="button" disabled><span>' + entry[0] + '</span>' + entry[1] + '</button>'; }).join('') + '</details>';
+  var CALC_TOOLS = [['calculator', '계산기'], ['bmi', 'BMI 계산기'], ['insurance-age', '보험연령 계산기'], ['image-convert', '이미지 변환']];
+  function navPlannedEntryHtml(entry) {
+    if (entry.length > 2 && entry[2]) {
+      return '<details class="pw-nav-subgroup"><summary><span>' + entry[0] + '</span>' + entry[1] + '</summary>' + entry[2].map(function (sub) { return '<button type="button" onclick="OSPersonalWorkspace.openTool(\'' + sub[0] + '\')">' + sub[1] + '</button>'; }).join('') + '</details>';
+    }
+    return '<button type="button" disabled><span>' + entry[0] + '</span>' + entry[1] + '</button>';
+  }
+  function navPlannedGroupHtml(label, entries, tone) {
+    return '<details class="pw-nav-group pw-nav-group-' + tone + '"><summary>' + label + '</summary>' + entries.map(navPlannedEntryHtml).join('') + '</details>';
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지'], ['≡', '상품라인업'], ['◷', '보험연령표'], ['↗', '영업방향']];
-    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기·변환기'], ['⇗', '원전산 설계 바로가기'], ['₩', '보험회사 결제정보']];
+    var toolGroup = [['✎', '스크립트'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 설계 바로가기'], ['₩', '보험회사 결제정보']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
-    }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup) + navPlannedGroupHtml('영업도구', toolGroup) + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">구)원세컨드</button></div></nav>';
+    }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive ' + (state.section === 'archive' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'archive\')">구)원세컨드</button></div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="pw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
@@ -1158,7 +1165,7 @@
   function refreshInsuranceAge() { var target = document.getElementById('pwf-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-consult-birth'), value('pwf-consult-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
   function refreshCustomerInsuranceAge() { var target = document.getElementById('pwf-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-customer-birth'), value('pwf-customer-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
   function searchCustomerAddress(context) { var prefix = context === 'detail' ? 'pwd-customer-' : 'pwf-customer-'; function openPostcode() { try { new window.daum.Postcode({ oncomplete: function (data) { var zip = document.getElementById(prefix + 'zip'), address = document.getElementById(prefix + 'address'), detail = document.getElementById(prefix + 'address-detail'); if (zip) zip.value = data.zonecode || data.postcode || ''; if (address) address.value = data.roadAddress || data.jibunAddress || data.address || ''; if (detail) detail.focus(); } }).open(); } catch (_) { if (typeof window.toast === 'function') window.toast('주소검색을 열지 못했습니다.'); } } if (window.daum && window.daum.Postcode) return openPostcode(); var old = document.getElementById('daum-postcode-sdk'); if (old) return; var script = document.createElement('script'); script.id = 'daum-postcode-sdk'; script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'; script.onload = openPostcode; script.onerror = function () { if (typeof window.toast === 'function') window.toast('주소검색을 불러오지 못했습니다.'); }; document.head.appendChild(script); }
-  function formatBirthInput(input, context) { if (!input) return; var raw = String(input.value || '').replace(/\D/g, '').slice(0, 8), formatted = raw; if (raw.length > 4) formatted = raw.slice(0, 4) + '-' + raw.slice(4); if (raw.length > 6) formatted = raw.slice(0, 4) + '-' + raw.slice(4, 6) + '-' + raw.slice(6); input.value = formatted; if (context === 'detail') refreshDetailInsuranceAge(); else if (context === 'customerDetail') refreshCustomerDetailInsuranceAge(); else if (context === 'customer') refreshCustomerInsuranceAge(); else refreshInsuranceAge(); }
+  function formatBirthInput(input, context) { if (!input) return; var raw = String(input.value || '').replace(/\D/g, '').slice(0, 8), formatted = raw; if (raw.length > 4) formatted = raw.slice(0, 4) + '-' + raw.slice(4); if (raw.length > 6) formatted = raw.slice(0, 4) + '-' + raw.slice(4, 6) + '-' + raw.slice(6); input.value = formatted; if (context === 'detail') refreshDetailInsuranceAge(); else if (context === 'customerDetail') refreshCustomerDetailInsuranceAge(); else if (context === 'customer') refreshCustomerInsuranceAge(); else if (context === 'tool') calcToolInsuranceAge(); else refreshInsuranceAge(); }
   function formatConsultPhone(input) { if (input) input.value = phoneText(input.value); }
   function timeOptionsHtml(selected) {
     var out = ['<option value="">시간 선택</option>'];
@@ -1187,6 +1194,104 @@
       + (event ? '<input id="pwf-event-id" type="hidden" value="' + esc(event.id) + '">' : '');
   }
   function addEvent(date) { state.selectedDate = date || state.selectedDate; dialog(formShell('일정 추가', eventFormHtml(null), 'OSPersonalWorkspace.saveEvent()')); var title = document.getElementById('pwf-event-title'); if (title) title.focus(); }
+
+  function openTool(key) {
+    if (key === 'calculator') return openCalculatorTool();
+    if (key === 'bmi') return openBmiTool();
+    if (key === 'insurance-age') return openInsuranceAgeTool();
+    if (key === 'image-convert') return openImageConvertTool();
+  }
+  function resetCalc() { state.calc = { display: '0', stored: null, operator: null, waiting: false }; }
+  function calcRenderDisplay() { var el = document.getElementById('pw-calc-display'); if (el) el.textContent = state.calc.display; }
+  function calcApply(a, b, op) { var r = op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : op === '÷' ? (b === 0 ? NaN : a / b) : b; return isNaN(r) ? 0 : Math.round(r * 1e8) / 1e8; }
+  function calcPress(key) {
+    var c = state.calc;
+    if (/^[0-9]$/.test(key)) {
+      if (c.waiting || c.display === '0') { c.display = key; c.waiting = false; }
+      else if (c.display.replace('-', '').replace('.', '').length < 12) c.display += key;
+    } else if (key === '.') {
+      if (c.waiting) { c.display = '0.'; c.waiting = false; }
+      else if (c.display.indexOf('.') < 0) c.display += '.';
+    } else if (key === 'C') {
+      resetCalc();
+    } else if (key === '±') {
+      c.display = c.display.charAt(0) === '-' ? c.display.slice(1) : (c.display === '0' ? '0' : '-' + c.display);
+    } else if (key === '%') {
+      c.display = String(parseFloat(c.display) / 100);
+    } else if (['+', '−', '×', '÷'].indexOf(key) >= 0) {
+      if (c.stored !== null && !c.waiting) c.display = String(calcApply(c.stored, parseFloat(c.display), c.operator));
+      c.stored = parseFloat(c.display); c.operator = key; c.waiting = true;
+    } else if (key === '=') {
+      if (c.stored !== null && c.operator) { c.display = String(calcApply(c.stored, parseFloat(c.display), c.operator)); c.stored = null; c.operator = null; c.waiting = true; }
+    }
+    calcRenderDisplay();
+  }
+  function openCalculatorTool() {
+    resetCalc();
+    var fnKeys = ['C', '±', '%', '÷'], numRows = ['7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+'];
+    function keyClass(k) { return k === '÷' || k === '×' || k === '−' || k === '+' ? 'op' : (k === 'C' || k === '±' || k === '%') ? 'fn' : ''; }
+    var keys = fnKeys.concat(numRows).map(function (k) { return '<button type="button" class="' + keyClass(k) + '" onclick="OSPersonalWorkspace.calcPress(\'' + k + '\')">' + k + '</button>'; }).join('')
+      + '<button type="button" class="wide" onclick="OSPersonalWorkspace.calcPress(\'0\')">0</button><button type="button" onclick="OSPersonalWorkspace.calcPress(\'.\')">.</button><button type="button" class="eq" onclick="OSPersonalWorkspace.calcPress(\'=\')">=</button>';
+    dialog('<div class="pw-tool-panel pw-calc-tool"><h2>계산기</h2><div class="pw-calc-display" id="pw-calc-display">0</div><div class="pw-calc-grid">' + keys + '</div></div>');
+  }
+  function openBmiTool() {
+    dialog('<div class="pw-tool-panel pw-bmi-tool"><h2>BMI 계산기</h2>'
+      + '<label>키 (cm)<input id="pw-bmi-height" type="number" inputmode="decimal" placeholder="170" oninput="OSPersonalWorkspace.calcBmi()"></label>'
+      + '<label>몸무게 (kg)<input id="pw-bmi-weight" type="number" inputmode="decimal" placeholder="65" oninput="OSPersonalWorkspace.calcBmi()"></label>'
+      + '<div class="pw-bmi-result" id="pw-bmi-result"><strong id="pw-bmi-value">-</strong><span id="pw-bmi-category">키와 몸무게를 입력하세요</span></div></div>');
+  }
+  function calcBmi() {
+    var h = parseFloat(value('pw-bmi-height')), w = parseFloat(value('pw-bmi-weight'));
+    var valueEl = document.getElementById('pw-bmi-value'), catEl = document.getElementById('pw-bmi-category'), resultEl = document.getElementById('pw-bmi-result');
+    if (!valueEl || !catEl || !resultEl) return;
+    if (!h || !w || h <= 0 || w <= 0) { valueEl.textContent = '-'; catEl.textContent = '키와 몸무게를 입력하세요'; resultEl.className = 'pw-bmi-result'; return; }
+    var bmi = w / Math.pow(h / 100, 2);
+    var cat = bmi < 18.5 ? '저체중' : bmi < 23 ? '정상' : bmi < 25 ? '과체중' : '비만';
+    var tone = bmi < 18.5 ? 'low' : bmi < 23 ? 'ok' : bmi < 25 ? 'warn' : 'high';
+    valueEl.textContent = bmi.toFixed(1);
+    catEl.textContent = cat;
+    resultEl.className = 'pw-bmi-result ' + tone;
+  }
+  function openInsuranceAgeTool() {
+    dialog('<div class="pw-tool-panel pw-insage-tool"><h2>보험연령 계산기</h2>'
+      + '<label>생년월일<input id="pw-insage-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'tool\')"></label>'
+      + '<label>기준일<input id="pw-insage-date" type="date" value="' + ymd(new Date()) + '" onchange="OSPersonalWorkspace.calcToolInsuranceAge()"></label>'
+      + '<div class="pw-insage-result"><strong id="pw-insage-value">-</strong><span>보험나이</span></div></div>');
+  }
+  function calcToolInsuranceAge() {
+    var el = document.getElementById('pw-insage-value'); if (!el) return;
+    var age = insuranceAge(value('pw-insage-birth'), value('pw-insage-date'));
+    el.textContent = age === '' ? '-' : age + '세';
+  }
+  function openImageConvertTool() {
+    dialog('<div class="pw-tool-panel pw-imgconv-tool"><h2>이미지 변환</h2><p class="pw-tool-desc">사진을 JPG 또는 PNG로 변환해서 저장합니다.</p>'
+      + '<label class="pw-imgconv-drop"><input id="pw-imgconv-file" type="file" accept="image/*" onchange="OSPersonalWorkspace.imgConvertLoad(this)"><span>이미지 선택</span></label>'
+      + '<div class="pw-imgconv-preview" id="pw-imgconv-preview" hidden><img id="pw-imgconv-img" alt="미리보기"><div class="pw-imgconv-options"><select id="pw-imgconv-format"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.imgConvertDownload()">변환 · 다운로드</button></div></div></div>');
+  }
+  function imgConvertLoad(input) {
+    var file = input.files && input.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = document.getElementById('pw-imgconv-img'), preview = document.getElementById('pw-imgconv-preview');
+      if (!img || !preview) return;
+      img.src = reader.result; img.dataset.name = file.name.replace(/\.[^.]+$/, ''); preview.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  }
+  function imgConvertDownload() {
+    var img = document.getElementById('pw-imgconv-img'), format = value('pw-imgconv-format');
+    if (!img || !img.src) return;
+    var canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+    var ctx = canvas.getContext('2d');
+    if (format === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob(function (blob) {
+      if (!blob) return;
+      var ext = format === 'image/jpeg' ? 'jpg' : 'png', url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url; a.download = (img.dataset.name || 'image') + '.' + ext; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, format, 0.92);
+  }
   function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSPersonalWorkspace.saveEvent()')); }
   function deleteEvent(id) {
     if (!id || !window.confirm('이 일정을 삭제할까요?')) return;
@@ -1337,6 +1442,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, openDayCreate: openDayCreate, richPaste: richPaste,
+    openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
