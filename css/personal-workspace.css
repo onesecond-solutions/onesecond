@@ -347,6 +347,17 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-script-acc-coach{margin-top:8px;padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--warn) 14%,var(--s1));color:var(--tp);font-size:14px;font-weight:600}
 #v-personal-workspace .pw-script-attachments{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 #v-personal-workspace .pw-script-attachments img{width:96px;height:96px;border:1px solid var(--bd);border-radius:8px;object-fit:cover}
+#v-personal-workspace .pw-news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px}
+#v-personal-workspace .pw-news-card{padding:0;border:0;border-radius:14px;background:transparent;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+#v-personal-workspace .pw-news-card:hover{transform:translateY(-4px)}
+#v-personal-workspace .pw-news-card:hover .pw-news-thumb{box-shadow:0 16px 32px color-mix(in srgb,var(--tp) 20%,transparent),0 0 0 1px var(--ac)}
+#v-personal-workspace .pw-news-thumb{position:relative;aspect-ratio:3/4;border:1px solid var(--bd);border-radius:14px;background:var(--s2);overflow:hidden;box-shadow:0 4px 14px color-mix(in srgb,var(--tp) 8%,transparent);transition:box-shadow .15s ease}
+#v-personal-workspace .pw-news-thumb img{display:block;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease}
+#v-personal-workspace .pw-news-thumb img[src]{opacity:1}
+#v-personal-workspace .pw-news-thumb:before{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 55%,rgba(15,20,30,.55));content:""}
+#v-personal-workspace .pw-news-overlay{position:absolute;z-index:2;left:0;right:0;bottom:0;padding:12px 14px;text-align:left;color:#fff}
+#v-personal-workspace .pw-news-overlay strong{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em}
+#v-personal-workspace .pw-news-overlay span{display:block;margin-top:2px;color:rgba(255,255,255,.82);font-size:12px}
 #v-personal-workspace .pw-dialog:has(.pw-tool-panel){width:min(380px,calc(100vw - 28px));border-radius:22px}
 #v-personal-workspace .pw-tool-panel{display:grid;gap:16px;padding:28px}
 #v-personal-workspace .pw-tool-panel h2{margin:0;color:var(--tp);font-size:18px;font-weight:600;letter-spacing:-.01em}
