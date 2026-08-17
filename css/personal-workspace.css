@@ -84,6 +84,8 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-ddak-menu{position:absolute;z-index:3;bottom:calc(100% + 8px);left:50%;display:grid;gap:2px;min-width:150px;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:var(--elevation-4);transform:translateX(-50%)}
 #v-personal-workspace .pw-ddak-menu[hidden]{display:none}
 #v-personal-workspace .pw-ddak-menu button,#v-personal-workspace .pw-ddak-menu a{justify-content:flex-start;width:100%;min-width:0;height:auto;padding:9px 10px;border-radius:var(--radius-sm);font-weight:400;text-align:left;white-space:nowrap}
+#v-personal-workspace .pw-preview:not(.has-asset) .pw-preview-asset-only{display:none}
+#v-personal-workspace .pw-preview-bar .pw-preview-delete{color:var(--danger)}
 #v-personal-workspace .pw-preview:not(.is-pdf) .pw-preview-pdf-only{display:none}
 body.pw-preview-open{overflow:hidden}
 @media(max-width:560px){#v-personal-workspace .pw-preview{padding:12px}#v-personal-workspace .pw-preview-stage{height:calc(100% - 64px)}#v-personal-workspace .pw-preview-bar{bottom:calc(10px + env(safe-area-inset-bottom));overflow-x:auto}}
