@@ -255,8 +255,10 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-built-ins i.term{color:#397269}
 #v-personal-workspace .pw-built-ins i.memorial{color:#7a5a9a}
 #v-personal-workspace .pw-day-items{display:grid;grid-auto-rows:22px;gap:2px;min-height:0;margin-top:3px;margin-left:-9px;width:calc(100% + 18px);overflow:hidden}
-#v-personal-workspace .pw-calendar-month .pw-event{min-width:0;min-height:22px;margin:0 9px;overflow:hidden;padding:2px 6px;border-radius:4px;background:#e6e9f7;color:#3f5185;font-size:12px;font-weight:500;line-height:18px;text-overflow:ellipsis;white-space:nowrap}
+#v-personal-workspace .pw-calendar-month .pw-event{display:block;min-width:0;min-height:22px;margin:0 9px;overflow:hidden;padding:2px 6px;border-radius:4px;background:#e6e9f7;color:#3f5185;font-size:12px;font-weight:500;line-height:18px;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+#v-personal-workspace .pw-calendar-month .pw-event:hover{background:#c7d4f0}
 #v-personal-workspace .pw-calendar-month .pw-event.customer{background:#dff1ed;color:#245e56}
+#v-personal-workspace .pw-calendar-month .pw-event.customer:hover{background:#c5e6de}
 #v-personal-workspace .pw-calendar-month .pw-more{margin:0 9px;padding-left:4px;color:#858c99;font-size:11px;line-height:20px}
 @media(max-width:760px){#v-personal-workspace .pw-calendar-shell .pw-calendar-toolbar{align-items:flex-start;flex-direction:column}#v-personal-workspace .pw-calendar-left{flex-wrap:wrap}#v-personal-workspace .pw-calendar-left h2{order:3;width:100%;min-width:0;font-size:18px}#v-personal-workspace .pw-calendar-shell .pw-mode{width:100%;overflow:auto}#v-personal-workspace .pw-calendar-month .pw-day{min-height:82px;padding:5px}#v-personal-workspace .pw-day-items{grid-auto-rows:7px;gap:3px;margin-left:0;width:100%}#v-personal-workspace .pw-calendar-month .pw-event{height:7px;min-height:7px;margin:0;padding:0;font-size:0}#v-personal-workspace .pw-calendar-month .pw-more{font-size:0;line-height:7px}}
 @media(max-width:860px){#v-personal-workspace .pw-body{padding:0;gap:0}#v-personal-workspace .pw-main{border-radius:0}#v-personal-workspace .pw-head{padding:14px 16px}#v-personal-workspace .pw-nav{background:#fff}#v-personal-workspace .pw-nav button{min-height:44px;border-radius:12px}}
