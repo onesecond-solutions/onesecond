@@ -845,7 +845,15 @@
       + '<button type="button" class="pw-btn" onclick="OSPersonalWorkspace.editAsset(\'' + esc(id) + '\')">수정</button>'
       + '<button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.deleteAsset(\'' + esc(id) + '\')">삭제</button>';
     var attachments = itemAttachments(id);
-    var attachmentHtml = attachments.length ? '<div class="pw-detail-files"><strong>첨부파일 ' + attachments.length + '개</strong>' + attachments.map(function (file) { return '<a href="#" data-storage-path="' + esc(file.storage_path) + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" target="_blank" rel="noopener"><span>' + (previewType(file) === 'image' ? '▧' : previewType(file) === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (previewType(file) ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>'; }).join('') + '</div>' : '';
+    var attachmentHtml = attachments.length ? '<div class="pw-detail-files"><strong>첨부파일 ' + attachments.length + '개</strong><div class="pw-detail-files-grid">' + attachments.map(function (file) {
+      var type = previewType(file);
+      if (type === 'image') {
+        if (file.storage_path) return '<img class="pw-detail-thumb" data-storage-path="' + esc(file.storage_path) + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" alt="' + esc(file.title) + '">';
+        return '<img class="pw-detail-thumb" src="' + esc(file.url) + '" alt="' + esc(file.title) + '" onclick="OSPersonalWorkspace.openUrlPreview(\'' + esc(jsString(file.url)) + '\',\'' + esc(jsString(file.title)) + '\',\'' + esc(jsString(file.mime_type || 'image/*')) + '\')">';
+      }
+      var href = file.storage_path ? '#' : esc(file.url || '#');
+      return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" target="_blank" rel="noopener"><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
+    }).join('') + '</div></div>' : '';
     var kind = source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실';
     dialog('<div class="pw-detail"><span class="pw-badge">' + kind + '</span><h2 class="pw-detail-title">' + favoriteButton('asset', id, item.title || '(제목 없음)', kind + ' · ' + formatDate(item.created_at)) + '<span>' + esc(item.title || '(제목 없음)') + '</span></h2><small>' + formatDate(item.created_at) + '</small><div class="pw-detail-body pw-rich-content">' + linkifyRich(body) + '</div>' + attachmentHtml + '<div class="pw-detail-actions">' + actions + '</div></div>');
     hydrateRichStorage();

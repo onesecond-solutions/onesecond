@@ -62,8 +62,11 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-rich-content a{color:var(--ac);overflow-wrap:anywhere}
 #v-personal-workspace .pw-detail-files{display:grid;gap:7px;margin:0 0 20px;padding:14px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2)}
 #v-personal-workspace .pw-detail-files>strong{color:var(--ts);font-size:11px}
-#v-personal-workspace .pw-detail-files>a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);text-decoration:none}
-#v-personal-workspace .pw-detail-files>a:hover{color:var(--ac)}
+#v-personal-workspace .pw-detail-files-grid{display:flex;flex-wrap:wrap;gap:8px}
+#v-personal-workspace .pw-detail-files-grid>a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);text-decoration:none;flex:1 0 100%}
+#v-personal-workspace .pw-detail-files-grid>a:hover{color:var(--ac)}
+#v-personal-workspace .pw-detail-thumb{width:88px;height:88px;object-fit:cover;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);cursor:zoom-in}
+#v-personal-workspace .pw-detail-thumb:hover{border-color:var(--ac)}
 #v-personal-workspace .pw-detail-files b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
 #v-personal-workspace .pw-detail-files small{color:var(--ts);font-size:10px}
 #v-personal-workspace .pw-previewable{cursor:zoom-in}
