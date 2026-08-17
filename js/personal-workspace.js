@@ -735,7 +735,10 @@
     var p = state.preview, stage = document.getElementById('pw-preview-stage'), pageText = document.getElementById('pw-preview-page'); if (!p || !p.doc || !stage) return;
     p.doc.getPage(p.page).then(function (page) {
       if (!state.preview || state.preview !== p) return;
-      var viewport = page.getViewport({ scale: 1.35 * p.zoom, rotation: p.rotate }), canvas = document.createElement('canvas');
+      var base = page.getViewport({ scale: 1, rotation: p.rotate });
+      var availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 32);
+      var fitScale = Math.min(availW / base.width, availH / base.height, 2);
+      var viewport = page.getViewport({ scale: fitScale * p.zoom, rotation: p.rotate }), canvas = document.createElement('canvas');
       canvas.id = 'pw-preview-canvas'; canvas.width = viewport.width; canvas.height = viewport.height; stage.innerHTML = ''; stage.appendChild(canvas);
       return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
     }).then(function () { if (pageText && state.preview === p) pageText.textContent = p.page + ' / ' + p.pages; });
