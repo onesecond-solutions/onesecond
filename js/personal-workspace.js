@@ -1205,7 +1205,7 @@
     if (key === 'insurance-age') return openInsuranceAgeTool();
     if (key === 'image-convert') return openImageConvertTool();
     if (key === 'system-links') return openQuickContentTool('원전산 설계 바로가기', '원전산 바로가기', 'links');
-    if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보', 'raw');
+    if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보', 'payment');
   }
   function parseQuickLinks(html) {
     var wrapper = document.createElement('div'); wrapper.innerHTML = html;
@@ -1237,12 +1237,40 @@
   }
   function filterQuickLinks(q) {
     q = q.trim().toLocaleLowerCase('ko-KR');
-    Array.prototype.forEach.call(document.querySelectorAll('#pw-qlink-body .pw-qlink-card'), function (card) {
+    Array.prototype.forEach.call(document.querySelectorAll('#pw-qlink-body [data-name]'), function (card) {
       card.style.display = (!q || (card.getAttribute('data-name') || '').indexOf(q) >= 0) ? '' : 'none';
     });
   }
+  function parsePaymentInfo(html) {
+    var wrapper = document.createElement('div'); wrapper.innerHTML = html;
+    var kids = Array.prototype.filter.call(wrapper.children, function (c) { return c.tagName === 'DIV'; });
+    if (kids.length < 7 || kids.length % 2 !== 1) return null;
+    var headerBox = kids[0], noticeBox = kids[1], footerBox = kids[kids.length - 1];
+    var groups = [];
+    for (var i = 2; i < kids.length - 1; i += 2) {
+      var label = kids[i].textContent.trim();
+      var cards = Array.prototype.map.call(kids[i + 1].children, function (card) {
+        var nameDiv = card.children[0], detailDiv = card.children[1];
+        return { name: nameDiv ? nameDiv.innerHTML : '', detail: detailDiv ? detailDiv.innerHTML : '' };
+      });
+      groups.push({ label: label, cards: cards });
+    }
+    return { headerHtml: headerBox ? headerBox.innerHTML : '', noticeHtml: noticeBox ? noticeBox.innerHTML : '', footerHtml: footerBox ? footerBox.innerHTML : '', groups: groups };
+  }
+  function paymentInfoHtml(parsed) {
+    var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSPersonalWorkspace.filterQuickLinks(this.value)"></label>';
+    var notice = parsed.noticeHtml ? '<div class="pw-payinfo-notice">' + parsed.noticeHtml + '</div>' : '';
+    var groups = parsed.groups.map(function (g) {
+      return '<section class="pw-qlink-group"><h3>' + esc(g.label) + '</h3><div class="pw-payinfo-grid">' + g.cards.map(function (c) {
+        return '<div class="pw-payinfo-card" data-name="' + esc(stripHtml(c.name).toLowerCase()) + '"><strong>' + c.name + '</strong><div class="pw-payinfo-detail">' + c.detail + '</div></div>';
+      }).join('') + '</div></section>';
+    }).join('');
+    var footer = parsed.footerHtml ? '<div class="pw-payinfo-footer">' + parsed.footerHtml + '</div>' : '';
+    return search + notice + '<div class="pw-quick-tool-body pw-payinfo-body" id="pw-qlink-body">' + groups + '</div>' + footer;
+  }
   function openQuickContentTool(tabTitle, popupTitle, mode) {
-    dialog('<div class="pw-quick-tool"><h2>' + esc(popupTitle) + '</h2><div id="pw-quick-tool-slot"><div class="pw-quick-tool-loading">불러오는 중입니다…</div></div></div>');
+    var toolClass = mode === 'payment' ? 'pw-quick-tool pw-payinfo-tool' : 'pw-quick-tool';
+    dialog('<div class="' + toolClass + '"><h2>' + esc(popupTitle) + '</h2><div id="pw-quick-tool-slot"><div class="pw-quick-tool-loading">불러오는 중입니다…</div></div></div>');
     api('quick_contents?tab_title=eq.' + encodeURIComponent(tabTitle) + '&select=content_html&limit=1').then(function (rows) {
       var slot = document.getElementById('pw-quick-tool-slot'); if (!slot) return;
       var html = rows && rows[0] && rows[0].content_html;
@@ -1250,6 +1278,9 @@
       if (mode === 'links') {
         var groups = parseQuickLinks(html);
         slot.innerHTML = groups.length ? quickLinksCardsHtml(groups) : '<div class="pw-quick-tool-raw">' + html + '</div>';
+      } else if (mode === 'payment') {
+        var parsed = parsePaymentInfo(html);
+        slot.innerHTML = parsed ? paymentInfoHtml(parsed) : '<div class="pw-quick-tool-raw">' + html + '</div>';
       } else {
         slot.innerHTML = '<div class="pw-quick-tool-raw">' + html + '</div>';
       }
