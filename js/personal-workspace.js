@@ -1194,7 +1194,7 @@
       var wrap = document.createElement('div'); wrap.className = 'pw-preview-page-wrap'; wrap.setAttribute('data-page', String(n));
       stage.appendChild(wrap); wraps.push(wrap);
     }
-    scrollToPreviewPage(p.page, true);
+    scrollToPreviewPage(p.page);
     wraps.forEach(function (wrap, idx) {
       doc.getPage(idx + 1).then(function (page) {
         if (!state.preview || state.preview !== p) return;
@@ -1207,10 +1207,10 @@
     });
     if (pageText) pageText.textContent = p.page + ' / ' + p.pages;
   }
-  function scrollToPreviewPage(pageNum, instant) {
+  function scrollToPreviewPage(pageNum) {
     var stage = document.getElementById('pw-preview-stage'); if (!stage) return;
     var wrap = stage.querySelector('.pw-preview-page-wrap[data-page="' + pageNum + '"]'); if (!wrap) return;
-    wrap.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' });
+    wrap.scrollIntoView({ behavior: 'auto', block: 'start' });
   }
   function handlePreviewScroll() {
     var p = state.preview, stage = document.getElementById('pw-preview-stage');
