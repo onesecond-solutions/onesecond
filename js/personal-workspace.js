@@ -1012,7 +1012,7 @@
     var head = STANDALONE ? '' : '<header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
     view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
       + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
-      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-thumbs" id="pw-preview-thumbs"></div><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()" onpointerdown="OSPersonalWorkspace.previewDragStart(event)" onpointermove="OSPersonalWorkspace.previewDragMove(event)" onpointerup="OSPersonalWorkspace.previewDragEnd(event)" onpointercancel="OSPersonalWorkspace.previewDragEnd(event)"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
+      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-thumbs" id="pw-preview-thumbs"></div><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
       + '<div class="pw-consult-hover" id="pw-row-hover" aria-hidden="true"></div>';
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
     bindSearch(); renderContent();
@@ -1161,6 +1161,7 @@
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
     if (!previewUi(type, name, url, assetRef)) return;
     var stage = document.getElementById('pw-preview-stage'), overlay = document.getElementById('pw-preview'), thumbs = document.getElementById('pw-preview-thumbs');
+    if (stage) stage.onscroll = handlePreviewScroll;
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
     state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null };
@@ -1186,15 +1187,44 @@
   function renderPreviewTransform() { var p = state.preview, image = document.getElementById('pw-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
   function renderPdfPreview() {
     var p = state.preview, stage = document.getElementById('pw-preview-stage'), pageText = document.getElementById('pw-preview-page'); if (!p || !p.doc || !stage) return;
-    p.doc.getPage(p.page).then(function (page) {
-      if (!state.preview || state.preview !== p) return;
-      var base = page.getViewport({ scale: 1, rotation: p.rotate });
-      var availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 32);
-      var fitScale = Math.min(availW / base.width, availH / base.height, 2);
-      var viewport = page.getViewport({ scale: fitScale * p.zoom, rotation: p.rotate }), canvas = document.createElement('canvas');
-      canvas.id = 'pw-preview-canvas'; canvas.width = viewport.width; canvas.height = viewport.height; stage.innerHTML = ''; stage.appendChild(canvas);
-      return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
-    }).then(function () { if (pageText && state.preview === p) pageText.textContent = p.page + ' / ' + p.pages; });
+    var doc = p.doc, availW = Math.max(160, stage.clientWidth - 32);
+    stage.innerHTML = '';
+    var wraps = [];
+    for (var n = 1; n <= p.pages; n++) {
+      var wrap = document.createElement('div'); wrap.className = 'pw-preview-page-wrap'; wrap.setAttribute('data-page', String(n));
+      stage.appendChild(wrap); wraps.push(wrap);
+    }
+    scrollToPreviewPage(p.page, true);
+    wraps.forEach(function (wrap, idx) {
+      doc.getPage(idx + 1).then(function (page) {
+        if (!state.preview || state.preview !== p) return;
+        var base = page.getViewport({ scale: 1, rotation: p.rotate });
+        var fitScale = Math.min(availW / base.width, 2);
+        var viewport = page.getViewport({ scale: fitScale * p.zoom, rotation: p.rotate }), canvas = document.createElement('canvas');
+        canvas.width = viewport.width; canvas.height = viewport.height; wrap.appendChild(canvas);
+        return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
+      }).catch(function () {});
+    });
+    if (pageText) pageText.textContent = p.page + ' / ' + p.pages;
+  }
+  function scrollToPreviewPage(pageNum, instant) {
+    var stage = document.getElementById('pw-preview-stage'); if (!stage) return;
+    var wrap = stage.querySelector('.pw-preview-page-wrap[data-page="' + pageNum + '"]'); if (!wrap) return;
+    wrap.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' });
+  }
+  function handlePreviewScroll() {
+    var p = state.preview, stage = document.getElementById('pw-preview-stage');
+    if (!p || p.type !== 'pdf' || !stage) return;
+    var wraps = stage.querySelectorAll('.pw-preview-page-wrap'); if (!wraps.length) return;
+    var stageTop = stage.getBoundingClientRect().top, closest = 1, closestDist = Infinity;
+    Array.prototype.forEach.call(wraps, function (wrap) {
+      var dist = Math.abs(wrap.getBoundingClientRect().top - stageTop);
+      if (dist < closestDist) { closestDist = dist; closest = Number(wrap.getAttribute('data-page')); }
+    });
+    if (closest === p.page) return;
+    p.page = closest;
+    var pageText = document.getElementById('pw-preview-page'); if (pageText) pageText.textContent = p.page + ' / ' + p.pages;
+    highlightPdfThumb();
   }
   function renderPdfThumbs() {
     var p = state.preview, box = document.getElementById('pw-preview-thumbs'), overlay = document.getElementById('pw-preview');
@@ -1211,7 +1241,7 @@
         var btn = document.createElement('button');
         btn.type = 'button'; btn.className = 'pw-preview-thumb'; btn.setAttribute('data-page', String(pageNum));
         btn.innerHTML = '<span>' + pageNum + '</span>';
-        btn.onclick = function () { if (!state.preview || state.preview.url !== p.url) return; state.preview.page = pageNum; renderPdfPreview(); highlightPdfThumb(); };
+        btn.onclick = function () { if (!state.preview || state.preview.url !== p.url) return; state.preview.page = pageNum; var pageText = document.getElementById('pw-preview-page'); if (pageText) pageText.textContent = pageNum + ' / ' + p.pages; highlightPdfThumb(); scrollToPreviewPage(pageNum); };
         box.appendChild(btn);
         doc.getPage(pageNum).then(function (page) {
           var viewport = page.getViewport({ scale: .18 }), canvas = document.createElement('canvas');
@@ -1230,33 +1260,14 @@
   function closePreview() { var overlay = document.getElementById('pw-preview'), thumbs = document.getElementById('pw-preview-thumbs'); if (overlay) { overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); } if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); } state.preview = null; document.body.classList.remove('pw-preview-open'); }
   function previewZoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewRotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
-  function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) { p.page = next; renderPdfPreview(); highlightPdfThumb(); } }
-  function previewDragStart(event) {
-    var p = state.preview; if (!p || p.type !== 'pdf' || p.pages <= 1) return;
-    state.previewDrag = { x: event.clientX, active: true };
-    if (event.currentTarget && event.currentTarget.setPointerCapture) { try { event.currentTarget.setPointerCapture(event.pointerId); } catch (e) {} }
-  }
-  function previewDragMove(event) {
-    var d = state.previewDrag; if (!d || !d.active) return;
-    var canvas = document.getElementById('pw-preview-canvas');
-    if (canvas) canvas.style.transform = 'translateX(' + Math.max(-120, Math.min(120, event.clientX - d.x)) + 'px)';
-  }
-  function previewDragEnd(event) {
-    var d = state.previewDrag; if (!d || !d.active) return;
-    state.previewDrag = null;
-    var canvas = document.getElementById('pw-preview-canvas');
-    if (canvas) canvas.style.transform = '';
-    var delta = event.clientX - d.x;
-    if (Math.abs(delta) < 60) return;
-    previewPage(delta < 0 ? 1 : -1);
-  }
+  function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) scrollToPreviewPage(next); }
   function canvasBlob(canvas) { return new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); }); }
   function closeDdakMenu() { var menu = document.getElementById('pw-preview-ddak-menu'), trigger = document.querySelector('.pw-ddak-wrap .pw-preview-ddak'); if (menu) menu.hidden = true; if (trigger) trigger.setAttribute('aria-expanded', 'false'); }
   function toggleDdakMenu(event) { if (event) event.stopPropagation(); var menu = document.getElementById('pw-preview-ddak-menu'), trigger = event && event.currentTarget; if (!menu) return; var open = menu.hidden; menu.hidden = !open; if (trigger) trigger.setAttribute('aria-expanded', String(open)); }
   function previewCopy() {
     var p = state.preview; if (!p) return;
     closeDdakMenu();
-    var makeBlob = p.type === 'pdf' ? canvasBlob(document.getElementById('pw-preview-canvas')) : fetch(p.url).then(function (response) { return response.blob(); }).then(function (blob) { return createImageBitmap(blob); }).then(function (bitmap) { var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap, 0, 0); return canvasBlob(canvas); });
+    var makeBlob = p.type === 'pdf' ? canvasBlob(document.querySelector('.pw-preview-page-wrap[data-page="' + p.page + '"] canvas')) : fetch(p.url).then(function (response) { return response.blob(); }).then(function (blob) { return createImageBitmap(blob); }).then(function (bitmap) { var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap, 0, 0); return canvasBlob(canvas); });
     makeBlob.then(function (blob) { if (!blob) throw new Error('이미지를 만들지 못했습니다.'); if (!navigator.clipboard || !window.ClipboardItem) throw new Error('clipboard'); return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); })
       .then(function () { if (typeof window.toast === 'function') window.toast('복사했습니다. 카카오톡에 붙여넣으세요.'); })
       .catch(function () { if (typeof window.toast === 'function') window.toast('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.'); });
@@ -1886,7 +1897,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewDragStart: previewDragStart, previewDragMove: previewDragMove, previewDragEnd: previewDragEnd, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
