@@ -102,6 +102,7 @@
   function addDays(value, count) { var d = typeof value === 'string' ? parseDate(value) : new Date(value); d.setDate(d.getDate() + count); return ymd(d); }
   function consultationStatus(item, customer) { var allowed = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결']; return allowed.indexOf(item && item.channel) >= 0 ? item.channel : allowed.indexOf(customer && customer.status) >= 0 ? customer.status : '예약'; }
   function customerProfile(customer) { return customer && customer.profile && typeof customer.profile === 'object' ? customer.profile : {}; }
+  function isRealCustomerStage(status) { return CUSTOMER_STAGES.some(function (stage) { return stage.key === status; }); }
   function digits(value) { return String(value || '').replace(/\D/g, '').slice(0, 11); }
   function phoneText(value) { var number = digits(value); if (number.length <= 3) return number; if (number.length <= 7) return number.slice(0, 3) + '-' + number.slice(3); if (number.length === 10) return number.slice(0, 3) + '-' + number.slice(3, 6) + '-' + number.slice(6); return number.slice(0, 3) + '-' + number.slice(3, 7) + '-' + number.slice(7); }
   function writtenAt() { var now = new Date(); return ymd(now) + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
@@ -585,7 +586,7 @@
     var gridStyle = '--pw-consult-template:' + consultGridTemplate(columns);
     var latest = {}; state.data.consultations.forEach(function (entry) { var old = latest[entry.customer_id]; if (!old || String(entry.consulted_at || entry.created_at || '') > String(old.consulted_at || old.created_at || '')) latest[entry.customer_id] = entry; });
     var nameQ = state.customerNameQuery.trim().toLocaleLowerCase('ko-KR');
-    var baseRows = state.data.customers.filter(function (item) { var profile = customerProfile(item); if (profile.customer_managed !== true && String(item.name || '').trim() !== '정나겸') return false; if (nameQ && String(item.name || '').toLocaleLowerCase('ko-KR').indexOf(nameQ) < 0) return false; return true; });
+    var baseRows = state.data.customers.filter(function (item) { if (!isRealCustomerStage(item.status)) return false; if (nameQ && String(item.name || '').toLocaleLowerCase('ko-KR').indexOf(nameQ) < 0) return false; return true; });
     var counts = customerStageCounts(baseRows);
     var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = item.status || '청약완료'; return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedCustomerDetail); });
