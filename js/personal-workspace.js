@@ -1027,7 +1027,7 @@
     document.getElementById('v-personal-workspace').classList.add('on');
     renderShell(); setUrl(push !== false); loadData(state.section !== 'home');
   }
-  function go(section) { if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
+  function go(section) { if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
   function dialog(html) { var box = document.getElementById('pw-dialog'), body = document.getElementById('pw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function closeDialog() { var box = document.getElementById('pw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function sanitizeRich(html) {
