@@ -1187,7 +1187,7 @@
   function renderPreviewTransform() { var p = state.preview, image = document.getElementById('pw-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
   function renderPdfPreview() {
     var p = state.preview, stage = document.getElementById('pw-preview-stage'); if (!p || !p.doc || !stage) return;
-    var doc = p.doc, availW = Math.max(160, stage.clientWidth - 32);
+    var doc = p.doc, availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 48);
     stage.innerHTML = '';
     var wraps = [];
     for (var n = 1; n <= p.pages; n++) {
@@ -1199,7 +1199,7 @@
       doc.getPage(idx + 1).then(function (page) {
         if (!state.preview || state.preview !== p) return;
         var base = page.getViewport({ scale: 1, rotation: p.rotate });
-        var fitScale = Math.min(availW / base.width, 2);
+        var fitScale = Math.min(availW / base.width, availH / base.height, 2);
         var viewport = page.getViewport({ scale: fitScale * p.zoom, rotation: p.rotate }), canvas = document.createElement('canvas');
         canvas.width = viewport.width; canvas.height = viewport.height; wrap.appendChild(canvas);
         return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
