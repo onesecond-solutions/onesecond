@@ -1186,7 +1186,7 @@
   }
   function renderPreviewTransform() { var p = state.preview, image = document.getElementById('pw-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
   function renderPdfPreview() {
-    var p = state.preview, stage = document.getElementById('pw-preview-stage'), pageText = document.getElementById('pw-preview-page'); if (!p || !p.doc || !stage) return;
+    var p = state.preview, stage = document.getElementById('pw-preview-stage'); if (!p || !p.doc || !stage) return;
     var doc = p.doc, availW = Math.max(160, stage.clientWidth - 32);
     stage.innerHTML = '';
     var wraps = [];
@@ -1205,12 +1205,15 @@
         return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
       }).catch(function () {});
     });
-    if (pageText) pageText.textContent = p.page + ' / ' + p.pages;
   }
   function scrollToPreviewPage(pageNum) {
-    var stage = document.getElementById('pw-preview-stage'); if (!stage) return;
+    var p = state.preview, stage = document.getElementById('pw-preview-stage'); if (!stage) return;
     var wrap = stage.querySelector('.pw-preview-page-wrap[data-page="' + pageNum + '"]'); if (!wrap) return;
     wrap.scrollIntoView({ behavior: 'auto', block: 'start' });
+    if (!p) return;
+    p.page = pageNum;
+    var pageText = document.getElementById('pw-preview-page'); if (pageText) pageText.textContent = pageNum + ' / ' + p.pages;
+    highlightPdfThumb();
   }
   function handlePreviewScroll() {
     var p = state.preview, stage = document.getElementById('pw-preview-stage');
@@ -1241,7 +1244,7 @@
         var btn = document.createElement('button');
         btn.type = 'button'; btn.className = 'pw-preview-thumb'; btn.setAttribute('data-page', String(pageNum));
         btn.innerHTML = '<span>' + pageNum + '</span>';
-        btn.onclick = function () { if (!state.preview || state.preview.url !== p.url) return; state.preview.page = pageNum; var pageText = document.getElementById('pw-preview-page'); if (pageText) pageText.textContent = pageNum + ' / ' + p.pages; highlightPdfThumb(); scrollToPreviewPage(pageNum); };
+        btn.onclick = function () { if (!state.preview || state.preview.url !== p.url) return; scrollToPreviewPage(pageNum); };
         box.appendChild(btn);
         doc.getPage(pageNum).then(function (page) {
           var viewport = page.getViewport({ scale: .18 }), canvas = document.createElement('canvas');
