@@ -1,17 +1,22 @@
 // supabase/functions/gemini-customer-ocr/index.ts
 //
-// 영업노트 전용 — 고객정보 화면 캡처(해피톡·뱅크샐러드·카카오페이·보맵·키워 등) → Gemini(멀티모달)
-// → 정형 고객정보(이름·성별·생년월일·나이·연락처·고객유형)만 추출한 JSON.
+// 영업노트·워크스테이션 공용 — 고객정보 화면 캡처(해피톡·뱅크샐러드·카카오페이·보맵·키워 등) → Gemini(멀티모달)
+// → 정형 고객정보를 추출한 JSON.
 //
-// ★범위 제한(2026-06-29 대표 확정):
-//  - 정형 고객정보 6항목만 추출. 상담내용 정리·요약 안 함.
+// 범위(2026-06-29 대표 확정 6항목 + 2026-08-19 대표 확정 확장 6항목, 총 12항목):
+//  - 기존 6항목(영업노트 화면): 이름·성별·생년월일·나이·연락처·고객유형.
+//  - 확장 6항목(워크스테이션 고객등록 화면, 2026-08-19): 주소·직업·약복용·병력·진단시기·현재상태.
+//    (건강정보 포함 — 2026-06-29엔 AI 요약 오류 위험으로 제외했으나, 대표가 이번에 명시적으로 확장 승인)
+//  - 상담내용 자유 정리·요약은 여전히 안 함(화면에 보이는 값만 그대로 옮겨 적는다).
 //  - 이미지는 base64로 본문 전송받아 Gemini에만 보내고 **저장하지 않는다**(원본 미보존·버킷 미사용).
 //  - 호출은 사용자가 직접 [캡처에서 정보 읽기] 실행할 때만(백그라운드 자동 분석 없음).
 //
 // 키(GEMINI_API_KEY)는 Supabase secret 에서만 읽는다(레포 평문 0). gemini-card와 동일 키 재사용.
 //
 // 입력 (POST JSON): { "imageBase64": "<base64, no prefix>", "mimeType": "image/png" }
-// 출력 (200 JSON): { "name","gender","birth_date","age","phone","customer_type" } (없는 값은 "")
+// 출력 (200 JSON): { "name","gender","birth_date","age","phone","customer_type",
+//                     "address","job","medication","medical_history","diagnosis_date","current_status" } (없는 값은 "")
+//   ⚠️ 기존 6개 키는 이름·순서·의미 그대로 유지(영업노트 화면이 이 응답 형태에 이미 의존). 확장분은 추가만.
 // 실패 (4xx/5xx JSON): { "error": "사람이 읽는 안내" }
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -65,17 +70,26 @@ const CUSTOMER_SCHEMA = {
     age: { type: "STRING", description: "나이(숫자만, 예 '45'). 없으면 빈 문자열." },
     phone: { type: "STRING", description: "연락처(예 010-1234-5678). 없으면 빈 문자열." },
     customer_type: { type: "STRING", description: "고객유형=고객이 들어온 플랫폼. 화면에 '고객 유형: X'가 있으면 X. 없으면 화면 출처(로고·UI)로 뱅크샐러드/카카오페이/보맵/키워/해피톡 중 추정. 확신 없으면 빈 문자열." },
+    address: { type: "STRING", description: "주소(우편번호 제외, 화면에 적힌 그대로). 없으면 빈 문자열." },
+    job: { type: "STRING", description: "직업(예: 사무직/운전직/농업). 없으면 빈 문자열." },
+    medication: { type: "STRING", description: "약 복용 여부. '복용 중' / '복용 안 함' / '과거 복용' 중 하나로만 판단해서 넣는다. 화면 문구가 애매하면 빈 문자열." },
+    medical_history: { type: "STRING", description: "병력(질환명 등, 화면에 적힌 그대로). 없으면 빈 문자열." },
+    diagnosis_date: { type: "STRING", description: "진단시기(예: 2025년 3월). 없으면 빈 문자열." },
+    current_status: { type: "STRING", description: "현재상태(예: 추적관찰 중 / 수술 완료). 없으면 빈 문자열." },
   },
-  required: ["name", "gender", "birth_date", "age", "phone", "customer_type"],
+  required: ["name", "gender", "birth_date", "age", "phone", "customer_type", "address", "job", "medication", "medical_history", "diagnosis_date", "current_status"],
 };
 
 const SYSTEM_PROMPT = [
-  "너는 보험 상담사가 올린 '고객정보 화면 캡처'에서 정형 고객정보만 정확히 읽어내는 추출기다.",
-  "추출 대상은 오직: 이름, 성별, 생년월일, 나이, 연락처, 고객유형. 그 외 내용(상담내용·메모·주소·금융정보)은 절대 추출/요약하지 않는다.",
+  "너는 보험 상담사가 올린 '고객정보 화면 캡처'에서 정형 고객정보를 정확히 읽어내는 추출기다.",
+  "추출 대상: 이름, 성별, 생년월일, 나이, 연락처, 고객유형, 주소, 직업, 약복용 여부, 병력, 진단시기, 현재상태.",
+  "상담내용·메모 같은 자유 서술을 요약·재구성하지 않는다. 화면에 적힌 문구를 그대로(또는 형식만 정규화해) 옮긴다.",
   "화면에 명시된 값만 읽는다. 보이지 않으면 해당 항목은 빈 문자열로 둔다. 절대 지어내지 않는다.",
   "성별은 '남'/'여'로만. 생년월일은 가능하면 YYYY-MM-DD로 정규화. 연락처는 화면 표기 그대로.",
   "고객유형 = 고객이 유입된 플랫폼(뱅크샐러드·카카오페이·보맵·키워 등). 화면에 '고객 유형: X' 라벨이 있으면 그 값을 그대로. 라벨이 없으면 화면의 로고·UI·헤더로 어느 플랫폼 화면인지 추정해 넣되, 확신이 없으면 빈 문자열.",
   "고객유형은 상담채널(전화·문자·카카오톡·해피톡=상담 수단)과 다르다. 플랫폼만 고객유형에 넣는다.",
+  "주소는 우편번호를 제외한 나머지 주소 문자열 전체(도로명/지번 + 상세주소 포함)를 하나로 합쳐 넣는다.",
+  "약복용은 화면 문구가 '없음'/'무'처럼 명확히 안 먹는다는 뜻이면 '복용 안 함', '고지혈증약 복용 중'처럼 현재 복용 중이면 '복용 중', '예전에 먹었음'류면 '과거 복용'으로 판단한다. 애매하면 빈 문자열.",
   "모든 값은 한국어/숫자. 이미지가 고객정보 화면이 아니면 모든 값을 빈 문자열로 둔다.",
 ].join(" ");
 
@@ -113,7 +127,7 @@ Deno.serve(async (req) => {
         contents: [{
           role: "user",
           parts: [
-            { text: "이 고객정보 화면에서 이름·성별·생년월일·나이·연락처·고객유형만 JSON으로 추출해줘. 없는 값은 빈 문자열." },
+            { text: "이 고객정보 화면에서 이름·성별·생년월일·나이·연락처·고객유형·주소·직업·약복용·병력·진단시기·현재상태를 JSON으로 추출해줘. 없는 값은 빈 문자열." },
             { inlineData: { mimeType, data: base64 } },
           ],
         }],
@@ -145,6 +159,12 @@ Deno.serve(async (req) => {
       age: String(o?.age || ""),
       phone: String(o?.phone || ""),
       customer_type: String(o?.customer_type || ""),
+      address: String(o?.address || ""),
+      job: String(o?.job || ""),
+      medication: String(o?.medication || ""),
+      medical_history: String(o?.medical_history || ""),
+      diagnosis_date: String(o?.diagnosis_date || ""),
+      current_status: String(o?.current_status || ""),
     });
   } catch (e) {
     console.error("[gemini-customer-ocr] 호출 오류", e);
