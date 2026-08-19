@@ -1,0 +1,50 @@
+name: Edge Function Deploy (guarded)
+
+# 제한형 Supabase Edge Function 배포 채널 (db-migrate.yml과 동일한 승인 구조).
+# - main 머지만으로 자동 배포되지 않음: 실제 deploy는 production-functions Environment 수동 승인 후에만.
+# - workflow_dispatch로 함수 디렉터리명 1개만 지정. 임의 코드·시크릿 입력 없음.
+
+on:
+  workflow_dispatch:
+    inputs:
+      function:
+        description: 'supabase/functions/ 바로 아래 함수 디렉터리명 (예: gemini-customer-ocr)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: functions-deploy
+  cancel-in-progress: false
+
+jobs:
+  validate:                      # Secret 접근 없음
+    if: github.repository == 'onesecond-solutions/onesecond'
+    runs-on: ubuntu-latest
+    outputs:
+      function: ${{ steps.pc.outputs.function }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: precheck
+        id: pc
+        env:
+          INPUT_FUNCTION: ${{ github.event.inputs.function }}
+        run: node scripts/ci/precheck_function.mjs
+
+  deploy:
+    needs: validate
+    if: github.repository == 'onesecond-solutions/onesecond'
+    runs-on: ubuntu-latest
+    environment: production-functions   # Required reviewer=대표(운영반영 직전 최종승인 1클릭) · Secret은 승인 후 접근 · main 한정
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}   # ★ production-functions Environment secret (유일 비밀)
+        run: |
+          supabase functions deploy "${{ needs.validate.outputs.function }}" --project-ref pdnwgzneooyygfejrvbg
+          echo "DONE: ${{ needs.validate.outputs.function }} 배포 성공."
