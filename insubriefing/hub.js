@@ -227,10 +227,11 @@
       flex-direction: column;
       min-height: 0;
       width: 100%;
-      max-width: none;
+      max-width: 1180px;
+      margin: 0 auto;
       padding: 24px;
       border-radius: var(--radius-lg);
-      background: color-mix(in srgb, var(--s1) 46%, transparent);
+      background: color-mix(in srgb, var(--s1) 22%, transparent);
       backdrop-filter: blur(16px) saturate(130%);
       -webkit-backdrop-filter: blur(16px) saturate(130%);
       box-shadow: 0 30px 80px color-mix(in srgb, var(--tp) 16%, transparent);
