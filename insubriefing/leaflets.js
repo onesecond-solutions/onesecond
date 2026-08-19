@@ -228,12 +228,7 @@
     });
   }
 
-  // ── 헤더(날짜 타이틀) + 월 이동 ──────────────────────────────────────────
-  function renderHeaderDate() {
-    var el = document.getElementById('ib-hero-date'); if (!el) return;
-    var d = new Date();
-    el.textContent = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + DOW[d.getDay()] + ')';
-  }
+  // ── 월 이동 ────────────────────────────────────────────────────────────
   function shiftMonth(delta) {
     var next = new Date(state.year, state.month + delta, 1);
     loadMonth(next.getFullYear(), next.getMonth());
@@ -242,7 +237,6 @@
   function init() {
     var grid = document.getElementById('ib-leaflet-grid');
     if (!grid) return;
-    renderHeaderDate();
     var today = new Date();
     loadMonth(today.getFullYear(), today.getMonth());
     var prev = document.getElementById('ib-leaflet-prev'), next = document.getElementById('ib-leaflet-next'), todayBtn = document.getElementById('ib-leaflet-today');
