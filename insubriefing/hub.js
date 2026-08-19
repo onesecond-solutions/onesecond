@@ -79,7 +79,7 @@
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 1040px;
+      max-width: none;
       padding: 28px;
       border-radius: var(--radius-lg);
       background: color-mix(in srgb, var(--s1) 92%, transparent);
