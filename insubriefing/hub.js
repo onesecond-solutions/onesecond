@@ -209,10 +209,10 @@
     .ib-hero {
       position: relative;
       max-width: none;
-      min-height: 0;
+      min-height: calc(100vh - 76px);
       grid-template-columns: 1fr;
       justify-items: stretch;
-      align-items: start;
+      align-items: stretch;
       gap: 0;
       padding: 24px 24px 56px;
       overflow: hidden;
@@ -223,6 +223,9 @@
     #leaflet-calendar {
       position: relative;
       z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       width: 100%;
       max-width: none;
       padding: 24px;

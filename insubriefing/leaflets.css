@@ -11,25 +11,25 @@
 .ib-leaflet-mode:hover{color:var(--tp)}
 .ib-leaflet-mode.on{background:var(--s1);color:var(--ac);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .ib-leaflet-admin-hint{font-size:12px;color:var(--ac);font-weight:700}
-.ib-leaflet-grid{position:relative;transition:opacity .15s ease}
+.ib-leaflet-grid{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;transition:opacity .15s ease}
 .ib-leaflet-grid.is-loading{opacity:.5}
 
 /* 월 보기 */
-.ib-leaflet-grid-month{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:color-mix(in srgb,var(--bd) 70%,transparent);border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:var(--radius-md,12px);overflow:hidden}
+.ib-leaflet-grid-month{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto;grid-auto-rows:1fr;gap:1px;background:color-mix(in srgb,var(--bd) 70%,transparent);border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:var(--radius-md,12px);overflow:hidden}
 .ib-leaflet-dow{background:color-mix(in srgb,var(--s2) 55%,transparent);padding:6px 4px;text-align:center;font-size:11px;color:var(--tf)}
 
 /* 주 보기 */
-.ib-leaflet-grid-week{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:color-mix(in srgb,var(--bd) 70%,transparent);border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:var(--radius-md,12px);overflow:hidden}
+.ib-leaflet-grid-week{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:color-mix(in srgb,var(--bd) 70%,transparent);border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:var(--radius-md,12px);overflow:hidden}
 .ib-leaflet-week-day{min-height:220px!important}
 
 /* 일 보기 */
-.ib-leaflet-grid-day{display:block}
+.ib-leaflet-grid-day{flex:1;min-height:0;display:block;overflow-y:auto}
 .ib-leaflet-day-view{min-height:320px!important;border:1px solid var(--bd);border-radius:var(--radius-md,12px)}
 .ib-leaflet-day-view .ib-leaflet-daynum{font-size:16px;font-weight:800;color:var(--tp)}
 .ib-leaflet-day-view .ib-leaflet-thumb{width:64px;height:64px}
 
 /* 목록(agenda) 보기 */
-.ib-leaflet-agenda{display:grid;gap:10px}
+.ib-leaflet-agenda{flex:1;min-height:0;display:grid;gap:10px;overflow-y:auto;align-content:start}
 .ib-leaflet-agenda-row{min-height:0!important;border:1px solid var(--bd);border-radius:var(--radius-md,10px);padding:10px 12px!important}
 .ib-leaflet-agenda-row .ib-leaflet-daynum{font-size:13px;font-weight:800;color:var(--tp)}
 .ib-leaflet-agenda-empty{padding:32px 8px;text-align:center;color:var(--tf);font-size:13px}
