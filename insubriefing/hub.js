@@ -67,11 +67,11 @@
       justify-items: stretch;
       align-items: start;
       gap: 0;
-      padding: 96px 24px 96px;
+      padding: 24px 24px 56px;
       overflow: hidden;
       text-align: center;
       background:
-        linear-gradient(180deg, color-mix(in srgb, var(--s1) 94%, transparent) 0%, color-mix(in srgb, var(--s1) 22%, transparent) 58%, color-mix(in srgb, var(--s1) 0%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--s1) 30%, transparent), color-mix(in srgb, var(--s1) 30%, transparent)),
         url("./assets/generated/briefing-toss-hero.webp") center bottom / cover no-repeat;
     }
 
@@ -80,11 +80,11 @@
       z-index: 1;
       width: 100%;
       max-width: none;
-      padding: 28px;
+      padding: 24px;
       border-radius: var(--radius-lg);
-      background: color-mix(in srgb, var(--s1) 92%, transparent);
-      backdrop-filter: blur(10px) saturate(112%);
-      -webkit-backdrop-filter: blur(10px) saturate(112%);
+      background: color-mix(in srgb, var(--s1) 46%, transparent);
+      backdrop-filter: blur(16px) saturate(130%);
+      -webkit-backdrop-filter: blur(16px) saturate(130%);
       box-shadow: 0 30px 80px color-mix(in srgb, var(--tp) 16%, transparent);
       text-align: left;
     }
@@ -541,8 +541,8 @@
       .ib-mobile-nav { grid-template-columns: repeat(4, 1fr); }
       .ib-hero {
         min-height: 0;
-        padding-top: 64px;
-        padding-bottom: 64px;
+        padding-top: 20px;
+        padding-bottom: 40px;
         background-size: auto 76%;
       }
       .ib-mobile-nav a { font-size: 11px; }

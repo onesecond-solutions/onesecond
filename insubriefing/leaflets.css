@@ -15,11 +15,11 @@
 .ib-leaflet-grid.is-loading{opacity:.5}
 
 /* 월 보기 */
-.ib-leaflet-grid-month{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden}
-.ib-leaflet-dow{background:var(--s2);padding:6px 4px;text-align:center;font-size:11px;color:var(--tf)}
+.ib-leaflet-grid-month{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:color-mix(in srgb,var(--bd) 70%,transparent);border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:var(--radius-md,12px);overflow:hidden}
+.ib-leaflet-dow{background:color-mix(in srgb,var(--s2) 55%,transparent);padding:6px 4px;text-align:center;font-size:11px;color:var(--tf)}
 
 /* 주 보기 */
-.ib-leaflet-grid-week{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden}
+.ib-leaflet-grid-week{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:color-mix(in srgb,var(--bd) 70%,transparent);border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:var(--radius-md,12px);overflow:hidden}
 .ib-leaflet-week-day{min-height:220px!important}
 
 /* 일 보기 */
@@ -35,8 +35,8 @@
 .ib-leaflet-agenda-empty{padding:32px 8px;text-align:center;color:var(--tf);font-size:13px}
 
 /* 공통 날짜 칸 */
-.ib-leaflet-day{position:relative;min-height:108px;padding:6px;background:var(--s1)}
-.ib-leaflet-day.is-other{background:var(--sh);opacity:.45}
+.ib-leaflet-day{position:relative;min-height:108px;padding:6px;background:color-mix(in srgb,var(--s1) 58%,transparent)}
+.ib-leaflet-day.is-other{background:color-mix(in srgb,var(--sh) 45%,transparent);opacity:.7}
 .ib-leaflet-day.is-today .ib-leaflet-daynum{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;border-radius:var(--radius-full,999px);background:var(--ac);color:#fff;font-weight:800}
 .ib-leaflet-daynum{display:block;font-size:12px;color:var(--ts)}
 .ib-leaflet-day.is-droppable.drag-over{outline:2px dashed var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--ac) 8%,var(--s1))}
