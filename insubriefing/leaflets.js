@@ -5,6 +5,8 @@
  *
  * 1장 드롭 = 이미지 그대로 저장. 2장 이상 함께 드롭 = pdf-lib로 1개 PDF로 병합 저장.
  * 클릭 시 미리보기는 insubriefing/leaflet-preview.js(LeafletPreview.open) 재사용.
+ * 월/주/일/목록 보기 전환 + 공휴일·절기 표시는 js/personal-workspace.js 워크스테이션
+ * 캘린더의 동일 로직을 이식(일정 등록·수정 등 개인업무 기능은 이 공개 화면에는 넣지 않음).
  */
 (function () {
   'use strict';
@@ -12,64 +14,209 @@
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var BUCKET = 'briefing-leaflets';
   var DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  var MAX_THUMBS_MONTH = 4;
 
-  var state = { year: 0, month: 0, itemsByDate: {}, pdfLibPromise: null, loading: false };
+  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null };
 
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function pad2(n) { return n < 10 ? '0' + n : String(n); }
   function ymd(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function parseDate(value) { var p = String(value).slice(0, 10).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function addDays(value, count) { var d = typeof value === 'string' ? parseDate(value) : new Date(value); d.setDate(d.getDate() + count); return ymd(d); }
+  function startOfWeek(date) { var d = new Date(date); d.setDate(d.getDate() - d.getDay()); return d; }
   function currentUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (e) { return {}; } }
   function isPilot() { return String(currentUser().id || '') === PILOT_ID; }
   function publicUrl(path) { return (window.SUPABASE_URL || '') + '/storage/v1/object/public/' + BUCKET + '/' + String(path).split('/').map(encodeURIComponent).join('/'); }
 
+  // ── 공휴일·절기(워크스테이션 캘린더와 동일 로직 이식, 일정 CRUD는 제외) ──────
+  var SOLAR_TERM_NAMES = ['소한', '대한', '입춘', '우수', '경칩', '춘분', '청명', '곡우', '입하', '소만', '망종', '하지', '소서', '대서', '입추', '처서', '백로', '추분', '한로', '상강', '입동', '소설', '대설', '동지'];
+  var SOLAR_TERM_MINUTES = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551, 218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532, 504758];
+  var LUNAR_HOLIDAYS = [[2020, '2020-01-25', '2020-04-30', '2020-10-01'], [2021, '2021-02-12', '2021-05-19', '2021-09-21'], [2022, '2022-02-01', '2022-05-08', '2022-09-10'], [2023, '2023-01-22', '2023-05-26', '2023-09-29'], [2024, '2024-02-10', '2024-05-15', '2024-09-17'], [2025, '2025-01-29', '2025-05-05', '2025-10-06'], [2026, '2026-02-17', '2026-05-24', '2026-09-25'], [2027, '2027-02-06', '2027-05-13', '2027-09-15'], [2028, '2028-01-26', '2028-05-02', '2028-10-03'], [2029, '2029-02-13', '2029-05-20', '2029-09-22'], [2030, '2030-02-03', '2030-05-09', '2030-09-12'], [2031, '2031-01-23', '2031-05-28', '2031-10-01'], [2032, '2032-02-11', '2032-05-16', '2032-09-19'], [2033, '2033-01-31', '2033-05-06', '2033-09-08'], [2034, '2034-02-19', '2034-05-25', '2034-09-27'], [2035, '2035-02-08', '2035-05-15', '2035-09-16']];
+  var builtinCache = {};
+  function builtinEvent(date, title, kind) { return { date: date, title: title, kind: kind }; }
+  function utcKey(date) { return date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()); }
+  function solarTermsForYear(year) {
+    return SOLAR_TERM_NAMES.map(function (name, index) {
+      var instant = new Date(Date.UTC(1900, 0, 6, 2, 5) + 31556925974.7 * (year - 1900) + SOLAR_TERM_MINUTES[index] * 60000);
+      return builtinEvent(utcKey(instant), name, 'term');
+    });
+  }
+  function weekdayNumber(date) { return parseDate(date).getDay(); }
+  function nextSubstituteDate(date, occupied) {
+    var next = date;
+    do { next = addDays(next, 1); } while (weekdayNumber(next) === 0 || weekdayNumber(next) === 6 || occupied[next]);
+    return next;
+  }
+  function builtinCalendarEvents(year) {
+    if (builtinCache[year]) return builtinCache[year].slice();
+    var list = [], substitutes = [], occupied = {};
+    [[1, 1, '신정', true, false], [3, 1, '삼일절', true, true], [5, 5, '어린이날', true, true], [6, 6, '현충일', true, false], [7, 17, '제헌절', false, false], [8, 15, '광복절', true, true], [10, 3, '개천절', true, true], [10, 9, '한글날', true, true], [12, 25, '크리스마스', true, true]].forEach(function (entry) {
+      var date = year + '-' + pad2(entry[0]) + '-' + pad2(entry[1]);
+      list.push(builtinEvent(date, entry[2], entry[3] ? 'holiday' : 'memorial'));
+      if (entry[3]) occupied[date] = true;
+      if (entry[3] && entry[4]) substitutes.push({ title: entry[2], dates: [date], trigger: 'weekend' });
+    });
+    (LUNAR_HOLIDAYS.find(function (row) { return row[0] === year; }) || []).slice(1).forEach(function (date, index) {
+      var title = index === 0 ? '설날' : index === 1 ? '부처님오신날' : '추석', offsets = index === 1 ? [0] : [-1, 0, 1], dates = offsets.map(function (offset) { return addDays(date, offset); });
+      dates.forEach(function (target, offsetIndex) { var suffix = offsets[offsetIndex] === 0 ? '' : ' 연휴'; list.push(builtinEvent(target, title + suffix, 'holiday')); occupied[target] = true; });
+      substitutes.push({ title: title, dates: dates, trigger: index === 1 ? 'weekend' : 'sunday' });
+    });
+    substitutes.forEach(function (target) {
+      var needs = target.dates.some(function (date) { var day = weekdayNumber(date); return target.trigger === 'weekend' ? day === 0 || day === 6 : day === 0; });
+      if (!needs) return;
+      var substitute = nextSubstituteDate(target.dates[target.dates.length - 1], occupied);
+      occupied[substitute] = true;
+      list.push(builtinEvent(substitute, target.title + ' 대체공휴일', 'holiday'));
+    });
+    list = list.concat(solarTermsForYear(year)).sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+    builtinCache[year] = list;
+    return list.slice();
+  }
+  function holidaysForDate(dateStr) {
+    var year = Number(String(dateStr).slice(0, 4));
+    return builtinCalendarEvents(year).filter(function (e) { return e.date === dateStr; });
+  }
+
   // ── 데이터 조회(공개, anon) ──────────────────────────────────────────────
-  function loadMonth(year, month) {
+  function loadRange(start, end, done) {
     if (!window.db || !window.db.fetchPublic) return;
-    state.year = year; state.month = month; state.loading = true; renderGrid();
-    var start = year + '-' + pad2(month + 1) + '-01';
-    var endD = new Date(year, month + 1, 0);
-    var end = year + '-' + pad2(month + 1) + '-' + pad2(endD.getDate());
+    state.loading = true; render();
     window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.asc,sort_order.asc&select=id,file_type,storage_path,mime_type,received_date,sort_order')
       .then(function (res) { return res.ok ? res.json() : []; })
       .then(function (rows) {
         var map = {};
         (rows || []).forEach(function (row) { (map[row.received_date] = map[row.received_date] || []).push(row); });
-        state.itemsByDate = map; state.loading = false; renderGrid();
+        state.itemsByDate = map; state.loading = false; if (done) done(); render();
       })
-      .catch(function () { state.loading = false; renderGrid(); });
+      .catch(function () { state.loading = false; render(); });
+  }
+  function loadAgenda() {
+    if (!window.db || !window.db.fetchPublic) return;
+    state.loading = true; render();
+    var end = ymd(new Date()), start = addDays(end, -120);
+    window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.desc,sort_order.asc&select=id,file_type,storage_path,mime_type,received_date,sort_order')
+      .then(function (res) { return res.ok ? res.json() : []; })
+      .then(function (rows) {
+        var map = {}, order = [];
+        (rows || []).forEach(function (row) { if (!map[row.received_date]) { map[row.received_date] = []; order.push(row.received_date); } map[row.received_date].push(row); });
+        state.agendaRows = order.map(function (date) { return { date: date, items: map[date] }; });
+        state.loading = false; render();
+      })
+      .catch(function () { state.loading = false; render(); });
   }
 
-  // ── 캘린더 렌더 ──────────────────────────────────────────────────────────
-  function renderGrid() {
-    var host = document.getElementById('ib-leaflet-grid'), label = document.getElementById('ib-leaflet-month-label');
-    if (!host) return;
-    if (label) label.textContent = state.year + '년 ' + (state.month + 1) + '월';
-    var first = new Date(state.year, state.month, 1), startOffset = first.getDay();
-    var daysInMonth = new Date(state.year, state.month + 1, 0).getDate();
-    var todayStr = ymd(new Date());
-    var admin = isPilot();
-    var html = DOW.map(function (d) { return '<div class="ib-leaflet-dow">' + d + '</div>'; }).join('');
-    for (var i = 0; i < startOffset; i++) html += '<div class="ib-leaflet-day is-other"></div>';
-    for (var day = 1; day <= daysInMonth; day++) {
-      var dateStr = state.year + '-' + pad2(state.month + 1) + '-' + pad2(day);
-      var items = state.itemsByDate[dateStr] || [];
-      var isToday = dateStr === todayStr;
-      var thumbs = items.map(function (item) {
-        var url = publicUrl(item.storage_path), isPdf = item.file_type === 'pdf';
-        return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + '" data-url="' + esc(url) + '" data-name="' + esc(dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
-          + (isPdf ? '<span class="ib-leaflet-pdf-badge">PDF</span>' : '<img loading="lazy" src="' + esc(url) + '" alt="리플렛">')
-          + '</span>';
-      }).join('');
-      html += '<div class="ib-leaflet-day' + (isToday ? ' is-today' : '') + (admin ? ' is-droppable' : '') + '" data-date="' + dateStr + '">'
-        + '<span class="ib-leaflet-daynum">' + day + '</span>'
-        + '<div class="ib-leaflet-thumbs">' + thumbs + '</div>'
-        + '</div>';
-    }
-    host.innerHTML = html;
+  // ── 툴바(모드 전환 + 이전/다음 + 오늘) ──────────────────────────────────
+  function toolbarLabel() {
+    var c = state.cursor;
+    if (state.mode === 'month') return c.getFullYear() + '년 ' + (c.getMonth() + 1) + '월';
+    if (state.mode === 'day') return (c.getMonth() + 1) + '월 ' + c.getDate() + '일 (' + DOW[c.getDay()] + ')';
+    if (state.mode === 'week') { var s = startOfWeek(c), e = new Date(s); e.setDate(e.getDate() + 6); return (s.getMonth() + 1) + '.' + s.getDate() + ' - ' + (e.getMonth() + 1) + '.' + e.getDate(); }
+    return '최근 리플렛';
+  }
+  function renderToolbar() {
+    var label = document.getElementById('ib-leaflet-month-label'); if (label) label.textContent = toolbarLabel();
+    var modes = document.querySelectorAll('.ib-leaflet-mode');
+    Array.prototype.forEach.call(modes, function (btn) { btn.classList.toggle('on', btn.getAttribute('data-mode') === state.mode); });
+    var nav = document.getElementById('ib-leaflet-nav-arrows'); if (nav) nav.hidden = state.mode === 'agenda';
+  }
+
+  function setMode(mode) {
+    state.mode = mode; renderToolbar();
+    if (mode === 'agenda') { loadAgenda(); return; }
+    loadForCursor();
+  }
+  function loadForCursor() {
+    var c = state.cursor;
+    if (state.mode === 'month') { var start = c.getFullYear() + '-' + pad2(c.getMonth() + 1) + '-01', endD = new Date(c.getFullYear(), c.getMonth() + 1, 0), end = c.getFullYear() + '-' + pad2(c.getMonth() + 1) + '-' + pad2(endD.getDate()); loadRange(start, end); return; }
+    if (state.mode === 'week') { var s = startOfWeek(c), e = new Date(s); e.setDate(e.getDate() + 6); loadRange(ymd(s), ymd(e)); return; }
+    loadRange(ymd(c), ymd(c));
+  }
+  function moveCursor(delta) {
+    var c = new Date(state.cursor);
+    if (state.mode === 'month') c.setMonth(c.getMonth() + delta);
+    else if (state.mode === 'week') c.setDate(c.getDate() + delta * 7);
+    else c.setDate(c.getDate() + delta);
+    state.cursor = c; renderToolbar(); loadForCursor();
+  }
+  function goToday() { state.cursor = new Date(); renderToolbar(); if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
+  function goToDate(dateStr) { state.cursor = parseDate(dateStr); state.mode = 'day'; renderToolbar(); loadForCursor(); }
+
+  // ── 렌더 디스패치 ────────────────────────────────────────────────────────
+  function render() {
+    var host = document.getElementById('ib-leaflet-grid'); if (!host) return;
     host.classList.toggle('is-loading', state.loading);
-    hydratePdfThumbs();
-    bindThumbEvents();
-    if (admin) bindDropEvents();
+    if (state.mode === 'month') renderMonth(host);
+    else if (state.mode === 'week') renderWeek(host);
+    else if (state.mode === 'day') renderDay(host);
+    else renderAgenda(host);
+    hydratePdfThumbs(); bindThumbEvents(); if (isPilot()) bindDropEvents();
+  }
+
+  function dayCellHtml(dateStr, opts) {
+    opts = opts || {};
+    var items = state.itemsByDate[dateStr] || [];
+    var holidays = holidaysForDate(dateStr);
+    var todayStr = ymd(new Date());
+    var isToday = dateStr === todayStr;
+    var admin = isPilot();
+    var cap = opts.cap || 0;
+    var shown = cap ? items.slice(0, cap) : items;
+    var overflow = cap && items.length > cap ? items.length - cap : 0;
+    var thumbs = shown.map(function (item) {
+      var url = publicUrl(item.storage_path), isPdf = item.file_type === 'pdf';
+      return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + '" data-url="' + esc(url) + '" data-name="' + esc(dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
+        + (isPdf ? '<span class="ib-leaflet-pdf-badge">PDF</span>' : '<img loading="lazy" src="' + esc(url) + '" alt="리플렛">')
+        + '</span>';
+    }).join('');
+    var holidayHtml = holidays.map(function (h) { return '<span class="ib-leaflet-holiday ib-leaflet-holiday-' + h.kind + '">' + esc(h.title) + '</span>'; }).join('');
+    var moreHtml = overflow ? '<button type="button" class="ib-leaflet-more" data-date="' + esc(dateStr) + '">+' + overflow + '개 더보기</button>' : '';
+    return '<div class="ib-leaflet-day' + (isToday ? ' is-today' : '') + (admin ? ' is-droppable' : '') + (opts.cls ? ' ' + opts.cls : '') + '" data-date="' + esc(dateStr) + '">'
+      + '<span class="ib-leaflet-daynum">' + parseDate(dateStr).getDate() + '</span>'
+      + holidayHtml
+      + '<div class="ib-leaflet-thumbs">' + thumbs + '</div>' + moreHtml + '</div>';
+  }
+
+  function renderMonth(host) {
+    var c = state.cursor, year = c.getFullYear(), month = c.getMonth();
+    var first = new Date(year, month, 1), startOffset = first.getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var html = '<div class="ib-leaflet-grid-month">' + DOW.map(function (d) { return '<div class="ib-leaflet-dow">' + d + '</div>'; }).join('');
+    var leadStart = addDays(year + '-' + pad2(month + 1) + '-01', -startOffset);
+    for (var i = 0; i < startOffset; i++) html += dayCellHtml(addDays(leadStart, i), { cls: 'is-other', cap: MAX_THUMBS_MONTH });
+    for (var day = 1; day <= daysInMonth; day++) html += dayCellHtml(year + '-' + pad2(month + 1) + '-' + pad2(day), { cap: MAX_THUMBS_MONTH });
+    html += '</div>';
+    host.innerHTML = html;
+    bindMoreEvents();
+  }
+
+  function renderWeek(host) {
+    var s = startOfWeek(state.cursor);
+    var html = '<div class="ib-leaflet-grid-week">';
+    for (var i = 0; i < 7; i++) html += dayCellHtml(addDays(ymd(s), i), { cls: 'ib-leaflet-week-day' });
+    html += '</div>';
+    host.innerHTML = html;
+  }
+
+  function renderDay(host) {
+    host.innerHTML = '<div class="ib-leaflet-grid-day">' + dayCellHtml(ymd(state.cursor), { cls: 'ib-leaflet-day-view' }) + '</div>';
+  }
+
+  function renderAgenda(host) {
+    var rows = state.agendaRows;
+    if (!rows) { host.innerHTML = '<div class="ib-leaflet-agenda-empty">불러오는 중…</div>'; return; }
+    if (!rows.length) { host.innerHTML = '<div class="ib-leaflet-agenda-empty">최근 120일 안에 등록된 리플렛이 없습니다.</div>'; return; }
+    var html = '<div class="ib-leaflet-agenda">' + rows.map(function (row) {
+      var d = parseDate(row.date);
+      return dayCellHtml(row.date, { cls: 'ib-leaflet-agenda-row' });
+    }).join('') + '</div>';
+    host.innerHTML = html;
+  }
+
+  function bindMoreEvents() {
+    var nodes = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-more');
+    Array.prototype.forEach.call(nodes, function (btn) {
+      btn.addEventListener('click', function (e) { e.stopPropagation(); goToDate(btn.getAttribute('data-date')); });
+    });
   }
 
   // ── PDF 첫 페이지 썸네일(지연 렌더) ──────────────────────────────────────
@@ -193,6 +340,7 @@
       });
     }).then(function (res) { if (!res.ok) throw new Error('저장 실패'); });
   }
+  function reloadCurrent() { if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
   function handleDrop(receivedDate, fileList) {
     var files = Array.prototype.filter.call(fileList, function (f) { return /^image\//.test(f.type) || f.type === 'application/pdf'; });
     if (!files.length) return;
@@ -212,7 +360,7 @@
         return chain.then(function () { return uploadBlob(f, isPdf ? 'pdf' : 'image', f.type, receivedDate, null, ext); });
       }, Promise.resolve());
     }
-    task.then(function () { loadMonth(state.year, state.month); if (typeof window.toast === 'function') window.toast('리플렛을 추가했습니다.'); })
+    task.then(function () { reloadCurrent(); if (typeof window.toast === 'function') window.toast('리플렛을 추가했습니다.'); })
       .catch(function (err) { if (typeof window.toast === 'function') window.toast(err.message || '업로드에 실패했습니다.'); else alert(err.message || '업로드에 실패했습니다.'); });
   }
   function bindDropEvents() {
@@ -228,23 +376,19 @@
     });
   }
 
-  // ── 월 이동 ────────────────────────────────────────────────────────────
-  function shiftMonth(delta) {
-    var next = new Date(state.year, state.month + delta, 1);
-    loadMonth(next.getFullYear(), next.getMonth());
-  }
-
   function init() {
     var grid = document.getElementById('ib-leaflet-grid');
     if (!grid) return;
-    var today = new Date();
-    loadMonth(today.getFullYear(), today.getMonth());
     var prev = document.getElementById('ib-leaflet-prev'), next = document.getElementById('ib-leaflet-next'), todayBtn = document.getElementById('ib-leaflet-today');
-    if (prev) prev.addEventListener('click', function () { shiftMonth(-1); });
-    if (next) next.addEventListener('click', function () { shiftMonth(1); });
-    if (todayBtn) todayBtn.addEventListener('click', function () { var t = new Date(); loadMonth(t.getFullYear(), t.getMonth()); });
+    if (prev) prev.addEventListener('click', function () { moveCursor(-1); });
+    if (next) next.addEventListener('click', function () { moveCursor(1); });
+    if (todayBtn) todayBtn.addEventListener('click', goToday);
+    var modeButtons = document.querySelectorAll('.ib-leaflet-mode');
+    Array.prototype.forEach.call(modeButtons, function (btn) { btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); }); });
     var hint = document.getElementById('ib-leaflet-admin-hint');
     if (hint) hint.hidden = !isPilot();
+    renderToolbar();
+    loadForCursor();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
