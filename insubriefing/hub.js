@@ -214,7 +214,7 @@
       justify-items: stretch;
       align-items: stretch;
       gap: 0;
-      padding: 24px 24px 56px;
+      padding: 0;
       overflow: hidden;
       text-align: center;
       background: transparent;
@@ -227,14 +227,14 @@
       flex-direction: column;
       min-height: 0;
       width: 100%;
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 24px;
-      border-radius: var(--radius-lg);
-      background: color-mix(in srgb, var(--s1) 22%, transparent);
-      backdrop-filter: blur(16px) saturate(130%);
-      -webkit-backdrop-filter: blur(16px) saturate(130%);
-      box-shadow: 0 30px 80px color-mix(in srgb, var(--tp) 16%, transparent);
+      max-width: none;
+      margin: 0;
+      padding: 16px 20px;
+      border-radius: 0;
+      background: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      box-shadow: none;
       text-align: left;
     }
 
