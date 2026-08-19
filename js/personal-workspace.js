@@ -1488,7 +1488,9 @@
   }
   function addCustomer() {
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
-    var form = '<div class="pw-consult-registration pw-customer-registration"><div class="pw-consult-form-grid">'
+    var form = '<div class="pw-consult-registration pw-customer-registration">'
+      + customerOcrHtml()
+      + '<div class="pw-consult-form-grid">'
       + formField('청약일자', '<input id="pwf-customer-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + ymd(new Date()) + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')">')
       + formField('이름', '<input id="pwf-customer-name" required autocomplete="name">')
       + formField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>')
@@ -1497,8 +1499,72 @@
       + formField('고객상태', '<select id="pwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>') + '</div>'
       + customerExtraFieldsHtml({}, 'pwf-customer')
       + '<div class="pw-consult-editor">' + formField('고객내용', richEditorField('pwf-customer-note', '')) + '</div></div>';
-    resetRichPending(); dialog(formShell('고객 등록', form, 'OSPersonalWorkspace.saveCustomer()')); refreshCustomerInsuranceAge();
+    resetRichPending(); dialog(formShell('고객 등록', form, 'OSPersonalWorkspace.saveCustomer()')); refreshCustomerInsuranceAge(); bindCustomerOcr();
   }
+  var customerOcrPending = { base64: '', mime: '' };
+  function customerOcrHtml() {
+    return '<div class="pw-ocr"><div class="pw-ocr-hint">📷 고객정보 화면을 캡처해 아래에 <b>Ctrl+V</b>로 붙여넣고 [캡처에서 정보 읽기]를 누르면 아래 항목이 자동으로 채워집니다(원본 이미지는 저장하지 않습니다). 채워진 값은 자유롭게 고쳐 쓸 수 있습니다.</div>'
+      + '<div id="pw-ocr-drop" class="pw-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
+      + '<div class="pw-ocr-acts"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.runCustomerOcr()">캡처에서 정보 읽기</button><span class="pw-ocr-stat" id="pw-ocr-stat"></span></div></div>';
+  }
+  function bindCustomerOcr() {
+    customerOcrPending = { base64: '', mime: '' };
+    var box = document.getElementById('pw-ocr-drop'); if (!box || box._bound) return; box._bound = true;
+    box.addEventListener('paste', function (event) {
+      try {
+        var clipboard = event.clipboardData; if (!clipboard || !clipboard.items) return;
+        for (var i = 0; i < clipboard.items.length; i++) {
+          var item = clipboard.items[i];
+          if (item.kind === 'file' && /^image\//.test(item.type || '')) {
+            var file = item.getAsFile(); if (!file) continue; event.preventDefault();
+            var reader = new FileReader();
+            reader.onload = function (e) {
+              var url = String(e.target.result || '');
+              customerOcrPending.base64 = url.split(',')[1] || '';
+              customerOcrPending.mime = (url.match(/^data:([^;]+);/) || [])[1] || 'image/png';
+              box.innerHTML = '<img src="' + url + '" alt="캡처">';
+              var stat = document.getElementById('pw-ocr-stat'); if (stat) stat.textContent = '캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요';
+            };
+            reader.readAsDataURL(file); return;
+          }
+        }
+      } catch (e) { /* 붙여넣기 무시 */ }
+    });
+  }
+  function setCustomerRadio(name, value) {
+    if (!value) return;
+    var input = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+    if (input) input.checked = true;
+  }
+  function setCustomerSelectExact(id, value) {
+    var el = document.getElementById(id); if (!el || !value) return;
+    for (var i = 0; i < el.options.length; i++) { if (el.options[i].value === value || el.options[i].text === value) { el.selectedIndex = i; return; } }
+  }
+  function runCustomerOcr() {
+    if (!customerOcrPending.base64) { alert('먼저 고객정보 화면 캡처를 붙여넣어 주세요 (Ctrl+V).'); return; }
+    var stat = document.getElementById('pw-ocr-stat'); if (stat) stat.textContent = '읽는 중…';
+    if (!window.db || !window.db.fetch) { if (stat) stat.textContent = '연결 오류'; return; }
+    window.db.fetch('/functions/v1/gemini-customer-ocr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: customerOcrPending.base64, mimeType: customerOcrPending.mime }) })
+      .then(function (response) { return response.json().then(function (body) { return { ok: response.ok, body: body }; }); })
+      .then(function (result) {
+        if (!result.ok) { if (stat) stat.textContent = (result.body && result.body.error) || '추출 실패'; return; }
+        var d = result.body || {};
+        if (d.name) setValue('pwf-customer-name', d.name);
+        if (d.phone) setValue('pwf-customer-phone', phoneText(d.phone));
+        if (d.birth_date) setValue('pwf-customer-birth', d.birth_date);
+        if (d.gender) setCustomerRadio('pwf-customer-gender', d.gender);
+        if (d.address) setValue('pwf-customer-address', d.address);
+        if (d.job) setValue('pwf-customer-job', d.job);
+        if (d.medication) setCustomerSelectExact('pwf-customer-medication', d.medication);
+        if (d.medical_history) setValue('pwf-customer-history', d.medical_history);
+        if (d.diagnosis_date) setValue('pwf-customer-diagnosis', d.diagnosis_date);
+        if (d.current_status) setValue('pwf-customer-current-status', d.current_status);
+        refreshCustomerInsuranceAge();
+        if (stat) stat.textContent = '반영됨 — 확인·수정 후 저장하세요';
+      })
+      .catch(function (error) { if (stat) stat.textContent = '오류: ' + (error && error.message || error); });
+  }
+  function setValue(id, value) { var el = document.getElementById(id); if (el) el.value = value; }
   function customerOptions() { return state.data.customers.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name || '이름 없음') + '</option>'; }).join(''); }
   function consultationForm(item, customer) {
     item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
@@ -1908,7 +1974,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
