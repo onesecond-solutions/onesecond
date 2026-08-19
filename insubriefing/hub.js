@@ -62,12 +62,12 @@
     .ib-hero {
       position: relative;
       max-width: none;
-      min-height: 760px;
+      min-height: 0;
       grid-template-columns: 1fr;
-      justify-items: center;
+      justify-items: stretch;
       align-items: start;
       gap: 0;
-      padding: 120px 24px 360px;
+      padding: 96px 24px 96px;
       overflow: hidden;
       text-align: center;
       background:
@@ -75,21 +75,18 @@
         url("./assets/generated/briefing-toss-hero.webp") center bottom / cover no-repeat;
     }
 
-    .ib-hero-copy {
+    #leaflet-calendar {
       position: relative;
       z-index: 1;
-      max-width: 860px;
-    }
-
-    .ib-hero h1 {
-      font-size: clamp(48px, 5.2vw, 76px);
-      line-height: 1.14;
-    }
-
-    .ib-hero-copy > p:not(.ib-kicker) {
-      max-width: 720px;
-      margin-left: auto;
-      margin-right: auto;
+      width: 100%;
+      max-width: 1040px;
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--s1) 92%, transparent);
+      backdrop-filter: blur(10px) saturate(112%);
+      -webkit-backdrop-filter: blur(10px) saturate(112%);
+      box-shadow: 0 30px 80px color-mix(in srgb, var(--tp) 16%, transparent);
+      text-align: left;
     }
 
     .ib-hero-panel {
@@ -543,24 +540,18 @@
 @media (max-width: 560px) {
       .ib-mobile-nav { grid-template-columns: repeat(4, 1fr); }
       .ib-hero {
-        min-height: 640px;
-        padding-top: 76px;
-        padding-bottom: 300px;
+        min-height: 0;
+        padding-top: 64px;
+        padding-bottom: 64px;
         background-size: auto 76%;
       }
-      .ib-hero h1 { font-size: 38px; }
       .ib-mobile-nav a { font-size: 11px; }
-      .ib-hero-copy > p:not(.ib-kicker) br { display: none; }
+      #leaflet-calendar { padding: 16px; }
       .ib-hero-panel .ib-hero-dashboard { grid-template-columns: 1fr; }
       .ib-three article { min-height: 280px; }
     }
   `;
   document.head.appendChild(fix);
-
-  var lead = document.querySelector(".ib-hero-copy > p:not(.ib-kicker)");
-  if (lead) {
-    lead.innerHTML = "보험 소식부터 보장별 정보, 건강 통계와 보험금 청구 방법까지<br>복잡하지 않게 확인하세요.";
-  }
 
   var menu = document.querySelector(".ib-menu");
   var nav = document.getElementById("ib-nav");
