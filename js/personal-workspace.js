@@ -1503,7 +1503,7 @@
   }
   var customerOcrPending = { base64: '', mime: '' };
   function customerOcrHtml() {
-    return '<div class="pw-ocr"><div class="pw-ocr-hint">📷 고객정보 화면을 캡처해 아래에 <b>Ctrl+V</b>로 붙여넣고 [캡처에서 정보 읽기]를 누르면 아래 항목이 자동으로 채워집니다(원본 이미지는 저장하지 않습니다). 채워진 값은 자유롭게 고쳐 쓸 수 있습니다.</div>'
+    return '<div class="pw-ocr"><div class="pw-ocr-hint">고객정보 캡처를 Ctrl+V로 붙여넣고 [캡처에서 정보 읽기]를 누르면 자동 입력됩니다.</div>'
       + '<div id="pw-ocr-drop" class="pw-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
       + '<div class="pw-ocr-acts"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.runCustomerOcr()">캡처에서 정보 읽기</button><span class="pw-ocr-stat" id="pw-ocr-stat"></span></div></div>';
   }
