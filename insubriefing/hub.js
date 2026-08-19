@@ -146,6 +146,31 @@
     }
     .ib-account-popover button:hover,
     .ib-account-popover button:focus-visible { background: var(--s2); }
+    .ib-account-bgmode { margin: 0 6px 6px; padding: 2px 2px 12px; border-bottom: 1px solid var(--bd); }
+    .ib-account-bgmode > span { display: block; margin-bottom: 7px; color: var(--ts); font-size: 12px; font-weight: 700; }
+    .ib-bgmode-options { display: flex; gap: 6px; }
+    .ib-account-popover .ib-bgmode-btn { width: auto; flex: 1; min-height: 34px; justify-content: center; padding: 0 4px; border: 1px solid var(--bd); border-radius: var(--radius-sm); background: var(--s1); color: var(--tp); font-size: 11px; font-weight: 700; }
+    .ib-account-popover .ib-bgmode-btn:hover { background: var(--s2); }
+    .ib-account-popover .ib-bgmode-btn.on { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 12%, var(--s1)); color: var(--ac); }
+
+    /* 배경화면 모드(워크스테이션과 동일 개념·동일 localStorage 키 ws_bg_mode 공유) */
+    body.ib-bg-flat:before { display: none; }
+    body.ib-bg-white:after { background: #f6f7fb; }
+    body.ib-bg-dark:after { background: #14161b; }
+    body.ib-bg-dark {
+      --bg: #14161b; --s1: #1c1f26; --s2: #22262e; --sh: #1c1f26; --bd: #2c313a;
+      --tp: #f4f5f7; --ts: #c7cad1; --tf: #8b8f98; --bodytx: #d7d9dd;
+      --ac: #818cf8; --ach: #a5b4fc;
+    }
+    body.ib-bg-flat #leaflet-calendar,
+    body.ib-bg-flat .ib-leaflet-dow,
+    body.ib-bg-flat .ib-leaflet-day {
+      background: var(--s1);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    body.ib-bg-flat .ib-tint { background: var(--s2); }
+    body.ib-bg-flat .ib-leaflet-day.is-other { background: var(--sh); }
 
     .ib-profile-dialog {
       position: fixed;
@@ -677,6 +702,24 @@
   var toggle = document.getElementById("ib-topic-toggle");
   var all = document.getElementById("ib-all-topics");
 
+  /* 배경화면 모드 — 워크스테이션과 동일 localStorage 키(ws_bg_mode) 공유.
+     로그인 여부와 무관하게 항상 적용(브라우저 단위 취향), 변경 버튼만
+     계정 드롭다운(로그인 시)에 노출 — 워크스테이션과 동일한 동작. */
+  function currentBgMode() { try { return localStorage.getItem("ws_bg_mode") || "image"; } catch (_e) { return "image"; } }
+  function applyBgMode(mode) {
+    var body = document.body;
+    body.classList.remove("ib-bg-flat", "ib-bg-white", "ib-bg-dark");
+    if (mode === "white") body.classList.add("ib-bg-flat", "ib-bg-white");
+    else if (mode === "dark") body.classList.add("ib-bg-flat", "ib-bg-dark");
+    document.documentElement.setAttribute("data-theme", mode === "dark" ? "dark" : "light");
+    try { localStorage.setItem("ws_bg_mode", mode); } catch (_e) {}
+  }
+  function bgModeButtonsHtml(active) {
+    var modes = [["image", "기본이미지"], ["white", "화이트"], ["dark", "다크"]];
+    return modes.map(function (m) { return '<button type="button" class="ib-bgmode-btn' + (m[0] === active ? " on" : "") + '" data-bg="' + m[0] + '">' + m[1] + "</button>"; }).join("");
+  }
+  applyBgMode(currentBgMode());
+
   function currentAccount() {
     try { return JSON.parse(window.localStorage.getItem("os_user") || window.sessionStorage.getItem("os_user") || "{}"); }
     catch (_e) { return {}; }
@@ -752,6 +795,7 @@
     accountBox.innerHTML = '<button type="button" class="ib-account-trigger" id="ib-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button>'
       + '<div class="ib-account-popover" id="ib-account-popover" role="menu" hidden>'
       + '<div class="ib-account-email" aria-label="로그인된 이메일 주소">' + esc(email || "이메일 정보 없음") + '</div>'
+      + '<div class="ib-account-bgmode"><span>배경화면</span><div class="ib-bgmode-options" role="group" aria-label="배경화면 모드">' + bgModeButtonsHtml(currentBgMode()) + '</div></div>'
       + '<button type="button" id="ib-profile-open" role="menuitem">개인정보 수정</button>'
       + '<button type="button" id="ib-logout-btn" role="menuitem">로그아웃</button>'
       + '</div>';
@@ -764,6 +808,12 @@
     });
     accountBox.querySelector("#ib-profile-open").addEventListener("click", openProfileDialog);
     accountBox.querySelector("#ib-logout-btn").addEventListener("click", logoutAdvisor);
+    Array.prototype.forEach.call(accountBox.querySelectorAll(".ib-bgmode-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        applyBgMode(btn.getAttribute("data-bg"));
+        Array.prototype.forEach.call(accountBox.querySelectorAll(".ib-bgmode-btn"), function (b) { b.classList.toggle("on", b === btn); });
+      });
+    });
   }
 
   if (nav) {
