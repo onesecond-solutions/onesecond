@@ -1162,7 +1162,7 @@
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
     if (!previewUi(type, name, url, assetRef)) return;
     var stage = document.getElementById('pw-preview-stage'), overlay = document.getElementById('pw-preview'), thumbs = document.getElementById('pw-preview-thumbs');
-    if (stage) stage.onscroll = handlePreviewScroll;
+    if (stage) { stage.onscroll = handlePreviewScroll; stage.onwheel = handlePreviewWheel; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
     state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null };
@@ -1219,6 +1219,11 @@
     p.page = pageNum;
     var pageText = document.getElementById('pw-preview-page'); if (pageText) pageText.textContent = pageNum + ' / ' + p.pages;
     highlightPdfThumb();
+  }
+  function handlePreviewWheel(event) {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    previewZoom(event.deltaY < 0 ? 1 : -1);
   }
   function handlePreviewScroll() {
     var p = state.preview, stage = document.getElementById('pw-preview-stage');
