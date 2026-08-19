@@ -1503,14 +1503,13 @@
   }
   var customerOcrPending = { base64: '', mime: '' };
   function customerOcrHtml() {
-    return '<div class="pw-ocr"><div class="pw-ocr-hint">고객정보 캡처를 Ctrl+V로 붙여넣고 [캡처에서 정보 읽기]를 누르면 자동 입력됩니다.</div>'
-      + '<div id="pw-ocr-drop" class="pw-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
-      + '<div class="pw-ocr-acts"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.runCustomerOcr()">캡처에서 정보 읽기</button><span class="pw-ocr-stat" id="pw-ocr-stat"></span></div></div>';
+    return '<div class="pw-ocr"><div class="pw-ocr-hint">고객정보 캡처를 <b>Ctrl+V</b>로 붙여넣으면 자동 입력됩니다. <span class="pw-ocr-stat" id="pw-ocr-stat"></span></div></div>';
   }
   function bindCustomerOcr() {
     customerOcrPending = { base64: '', mime: '' };
-    var box = document.getElementById('pw-ocr-drop'); if (!box || box._bound) return; box._bound = true;
+    var box = document.getElementById('pw-dialog'); if (!box || box._ocrBound) return; box._ocrBound = true;
     box.addEventListener('paste', function (event) {
+      if (!document.getElementById('pw-ocr-stat')) return;   /* 고객등록 폼이 열려 있을 때만 반응 */
       try {
         var clipboard = event.clipboardData; if (!clipboard || !clipboard.items) return;
         for (var i = 0; i < clipboard.items.length; i++) {
@@ -1522,8 +1521,7 @@
               var url = String(e.target.result || '');
               customerOcrPending.base64 = url.split(',')[1] || '';
               customerOcrPending.mime = (url.match(/^data:([^;]+);/) || [])[1] || 'image/png';
-              box.innerHTML = '<img src="' + url + '" alt="캡처">';
-              var stat = document.getElementById('pw-ocr-stat'); if (stat) stat.textContent = '캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요';
+              runCustomerOcr();
             };
             reader.readAsDataURL(file); return;
           }
