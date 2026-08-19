@@ -726,7 +726,8 @@
         return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + builtIns.slice(0, 2).map(function (event) { return '<i class="' + calendarEventKind(event) + '">' + esc(event.title) + '</i>'; }).join('') + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
       }).join('');
       var bars = weekSpans.map(function (sp) {
-        var startIdx = weekDays.indexOf(sp.start), endIdx = weekDays.indexOf(sp.end);
+        var barStart = sp.start < weekStart ? weekStart : sp.start, barEnd = sp.end > weekEnd ? weekEnd : sp.end;
+        var startIdx = weekDays.indexOf(barStart), endIdx = weekDays.indexOf(barEnd);
         var left = 'calc(' + (startIdx / 7 * 100) + '% + 3px)', width = 'calc(' + ((endIdx - startIdx + 1) / 7 * 100) + '% - 6px)';
         return '<span class="pw-event-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
       }).join('');
