@@ -15,6 +15,30 @@
       --brief-blue: color-mix(in srgb, var(--ac) 88%, #2563eb);
     }
 
+    /* 워크스테이션과 동일한 고정 배경 이미지 + 투명 레이어 패턴.
+       body 자체 background는 캔버스로 전파되어 아래 fixed 의사요소보다
+       뒤에 그려지므로(HTML/BODY 특례) 그대로 두고 :before/:after만 추가. */
+    body:before {
+      content: "";
+      position: fixed;
+      z-index: -2;
+      inset: 0;
+      background-image: url("./assets/generated/briefing-toss-hero.webp");
+      background-position: center;
+      background-size: cover;
+      transform: scale(1.01);
+    }
+    body:after {
+      content: "";
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--s1) 16%, transparent), color-mix(in srgb, var(--s1) 6%, transparent));
+    }
+    .ib-tint {
+      background: color-mix(in srgb, var(--s2) 40%, transparent);
+    }
+
     #ib-app footer {
       display: flex;
       min-height: 120px;
@@ -53,6 +77,104 @@
       background: var(--s1);
     }
 
+    /* 계정 드롭다운(워크스테이션 ws-account와 동일 패턴) */
+    .ib-account { position: relative; }
+    .ib-account-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 16px;
+      border: 1px solid var(--brief-line);
+      border-radius: var(--radius-full);
+      background: color-mix(in srgb, var(--s1) 88%, transparent);
+      color: var(--brief-navy);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .ib-account-trigger:hover {
+      border-color: color-mix(in srgb, var(--ac) 44%, var(--brief-line));
+      color: var(--ac);
+      background: var(--s1);
+    }
+    .ib-account-trigger:after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: translateY(-2px) rotate(45deg);
+      transition: transform .18s ease;
+    }
+    .ib-account-trigger[aria-expanded="true"]:after { transform: translateY(2px) rotate(225deg); }
+    .ib-account-popover {
+      position: absolute;
+      z-index: 40;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 220px;
+      padding: 6px;
+      border: 1px solid var(--bd);
+      border-radius: var(--radius-md);
+      background: var(--s1);
+      box-shadow: 0 16px 40px color-mix(in srgb, var(--tp) 16%, transparent);
+    }
+    .ib-account-popover[hidden] { display: none; }
+    .ib-account-email {
+      margin: 0 6px 6px;
+      padding: 10px 8px 12px;
+      border-bottom: 1px solid var(--bd);
+      color: var(--ts);
+      font-size: 12px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .ib-account-popover button {
+      width: 100%;
+      min-height: 40px;
+      justify-content: flex-start;
+      display: flex;
+      align-items: center;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--tp);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .ib-account-popover button:hover,
+    .ib-account-popover button:focus-visible { background: var(--s2); }
+
+    .ib-profile-dialog {
+      position: fixed;
+      inset: 50% auto auto 50%;
+      width: min(440px, calc(100vw - 32px));
+      max-height: calc(100dvh - 32px);
+      margin: 0;
+      padding: 0;
+      overflow: auto;
+      border: 1px solid var(--bd);
+      border-radius: var(--radius-lg, 16px);
+      background: var(--s1);
+      color: var(--tp);
+      box-shadow: 0 24px 80px color-mix(in srgb, var(--tp) 24%, transparent);
+      transform: translate(-50%, -50%);
+    }
+    .ib-profile-dialog::backdrop { background: color-mix(in srgb, var(--tp) 42%, transparent); backdrop-filter: blur(4px); }
+    .ib-profile-dialog form { display: grid; gap: 18px; padding: 24px; }
+    .ib-profile-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .ib-profile-head strong { font-size: 18px; }
+    .ib-profile-head p { margin: 6px 0 0; color: var(--ts); font-size: 12px; }
+    .ib-profile-dialog label { display: grid; gap: 8px; color: var(--ts); font-size: 12px; font-weight: 700; }
+    .ib-profile-dialog input { min-height: 44px; padding: 0 13px; border: 1px solid var(--bd); border-radius: var(--radius-sm); background: var(--s1); color: var(--tp); font: inherit; }
+    .ib-profile-close { width: 34px; height: 34px; border: 0; border-radius: var(--radius-full); background: var(--s2); color: var(--tp); font-size: 20px; cursor: pointer; }
+    .ib-profile-message { min-height: 20px; margin: 0; color: var(--ts); font-size: 12px; }
+    .ib-profile-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .ib-profile-actions button { min-height: 40px; padding: 0 18px; border: 1px solid var(--bd); border-radius: var(--radius-full); background: var(--s1); color: var(--tp); font-weight: 700; cursor: pointer; }
+    .ib-profile-actions .ib-profile-save { border-color: var(--ac); background: var(--ac); color: var(--s1); }
+
     #ib-app footer:after {
       content: "onesecond.solutions";
       margin-left: auto;
@@ -70,9 +192,7 @@
       padding: 24px 24px 56px;
       overflow: hidden;
       text-align: center;
-      background:
-        linear-gradient(180deg, color-mix(in srgb, var(--s1) 30%, transparent), color-mix(in srgb, var(--s1) 30%, transparent)),
-        url("./assets/generated/briefing-toss-hero.webp") center bottom / cover no-repeat;
+      background: transparent;
     }
 
     #leaflet-calendar {
@@ -543,7 +663,6 @@
         min-height: 0;
         padding-top: 20px;
         padding-bottom: 40px;
-        background-size: auto 76%;
       }
       .ib-mobile-nav a { font-size: 11px; }
       #leaflet-calendar { padding: 16px; }
@@ -567,10 +686,33 @@
     return !!((window.localStorage.getItem("os_token") || window.sessionStorage.getItem("os_token")) && currentAccount().id);
   }
 
+  function esc(value) { return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function logoutAdvisor() {
+    ["os_token", "os_refresh_token", "os_user", "selected_menu"].forEach(function (key) {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    });
+    renderAdvisorNav();
+  }
+  function closeAccountMenu() {
+    var popover = document.getElementById("ib-account-popover"), trigger = document.getElementById("ib-account-trigger");
+    if (popover) popover.hidden = true;
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  }
+  function openProfileDialog() {
+    closeAccountMenu();
+    var dialog = document.getElementById("ib-profile-dialog");
+    if (!dialog) return;
+    var user = currentAccount(), state = window.AppState || {};
+    document.getElementById("ib-profile-name").value = state.name || user.name || (user.user_metadata && user.user_metadata.name) || "";
+    document.getElementById("ib-profile-phone").value = state.phone || user.phone || (user.user_metadata && user.user_metadata.phone) || "";
+    document.getElementById("ib-profile-message").textContent = "";
+    dialog.showModal();
+  }
+
   function renderAdvisorNav() {
     if (!nav) return;
     var workstationLink = nav.querySelector(".ib-workstation-link");
-    var loginButton = nav.querySelector(".ib-login-button");
     var loggedIn = hasAccountSession();
 
     if (!workstationLink) {
@@ -582,14 +724,46 @@
       nav.appendChild(workstationLink);
     }
 
-    if (!loginButton) {
-      loginButton = document.createElement("button");
-      loginButton.className = "ib-login-button";
-      loginButton.type = "button";
-      nav.appendChild(loginButton);
+    var loginButton = nav.querySelector(".ib-login-button");
+    var accountBox = nav.querySelector(".ib-account");
+
+    if (!loggedIn) {
+      if (accountBox) accountBox.remove();
+      if (!loginButton) {
+        loginButton = document.createElement("button");
+        loginButton.className = "ib-login-button";
+        loginButton.type = "button";
+        nav.appendChild(loginButton);
+      }
+      loginButton.textContent = "원세컨드 로그인";
+      loginButton.setAttribute("aria-label", "설계사 로그인");
+      return;
     }
-    loginButton.textContent = loggedIn ? "로그아웃" : "원세컨드 로그인";
-    loginButton.setAttribute("aria-label", loggedIn ? "설계사 로그아웃" : "설계사 로그인");
+
+    if (loginButton) loginButton.remove();
+    var user = currentAccount();
+    var name = (window.AppState && window.AppState.name) || user.name || "사용자";
+    var email = (window.AppState && window.AppState.email) || user.email || "";
+    if (!accountBox) {
+      accountBox = document.createElement("div");
+      accountBox.className = "ib-account";
+      nav.appendChild(accountBox);
+    }
+    accountBox.innerHTML = '<button type="button" class="ib-account-trigger" id="ib-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button>'
+      + '<div class="ib-account-popover" id="ib-account-popover" role="menu" hidden>'
+      + '<div class="ib-account-email" aria-label="로그인된 이메일 주소">' + esc(email || "이메일 정보 없음") + '</div>'
+      + '<button type="button" id="ib-profile-open" role="menuitem">개인정보 수정</button>'
+      + '<button type="button" id="ib-logout-btn" role="menuitem">로그아웃</button>'
+      + '</div>';
+    accountBox.querySelector("#ib-account-trigger").addEventListener("click", function (event) {
+      event.stopPropagation();
+      var popover = document.getElementById("ib-account-popover"), open = popover.hidden;
+      closeAccountMenu();
+      popover.hidden = !open;
+      this.setAttribute("aria-expanded", String(open));
+    });
+    accountBox.querySelector("#ib-profile-open").addEventListener("click", openProfileDialog);
+    accountBox.querySelector("#ib-logout-btn").addEventListener("click", logoutAdvisor);
   }
 
   if (nav) {
@@ -597,17 +771,50 @@
     nav.addEventListener("click", function (event) {
       var loginButton = event.target.closest(".ib-login-button");
       if (!loginButton) return;
-
-      if (hasAccountSession()) {
-        ["os_token", "os_refresh_token", "os_user", "selected_menu"].forEach(function (key) {
-          window.localStorage.removeItem(key);
-          window.sessionStorage.removeItem(key);
-        });
-        renderAdvisorNav();
-      } else {
-        window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Fworkstation%2F";
-      }
+      window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Fworkstation%2F";
     });
+  }
+
+  document.addEventListener("click", function (event) {
+    var box = document.querySelector(".ib-account");
+    if (box && !box.contains(event.target)) closeAccountMenu();
+  });
+  document.addEventListener("keydown", function (event) { if (event.key === "Escape") closeAccountMenu(); });
+
+  var profileDialog = document.getElementById("ib-profile-dialog");
+  if (profileDialog) {
+    profileDialog.querySelector(".ib-profile-close").addEventListener("click", function () { profileDialog.close(); });
+    profileDialog.querySelector(".ib-profile-cancel").addEventListener("click", function () { profileDialog.close(); });
+    document.getElementById("ib-profile-form").addEventListener("submit", function (event) {
+      event.preventDefault();
+      var name = document.getElementById("ib-profile-name").value.trim(), phone = document.getElementById("ib-profile-phone").value.trim(), message = document.getElementById("ib-profile-message");
+      if (!name) { message.textContent = "이름을 입력해 주세요."; return; }
+      message.textContent = "저장 중입니다.";
+      if (!window.Auth || !window.Auth.saveUser) { message.textContent = "사용자 정보를 불러온 뒤 다시 시도해 주세요."; return; }
+      window.Auth.saveUser({ name: name, phone: phone || null }).then(function (ok) {
+        if (!ok) { message.textContent = "저장하지 못했습니다. 잠시 후 다시 시도해 주세요."; return; }
+        var user = currentAccount();
+        user.name = name; user.phone = phone;
+        user.user_metadata = Object.assign({}, user.user_metadata || {}, { name: name, phone: phone });
+        localStorage.setItem("os_user", JSON.stringify(user));
+        sessionStorage.setItem("os_user", JSON.stringify(user));
+        renderAdvisorNav();
+        profileDialog.close();
+      });
+    });
+  }
+
+  /* 개인정보 수정(saveUser)은 window.AppState.userId만 있으면 동작한다.
+     ⚠️ window.Auth.init()은 절대 호출하지 않는다 — 이 페이지는 공개
+     홈이라, 토큰이 만료된 방문자가 우연히 들렀다가 로그인 페이지로
+     강제 리다이렉트되면 안 된다(로컬 검수에서 실제로 재현됨: 유효하지
+     않은 토큰으로 Auth.init() 호출 시 /index.html로 튕겨나감). 대신
+     이미 신뢰 가능한 os_user 값만으로 AppState를 직접 채운다. */
+  if (window.AppState && hasAccountSession()) {
+    var _acctUser = currentAccount();
+    window.AppState.userId = _acctUser.id;
+    window.AppState.name = _acctUser.name || (_acctUser.user_metadata && _acctUser.user_metadata.name) || "";
+    window.AppState.email = _acctUser.email || "";
   }
 
   var mobileNav = document.querySelector(".ib-mobile-nav");
