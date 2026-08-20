@@ -322,18 +322,23 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-ocr{margin-bottom:10px}
 #v-personal-workspace .pw-ocr-hint{font-size:12px;color:var(--tf)}
 #v-personal-workspace .pw-ocr-stat{color:var(--ac);font-weight:600}
-#v-personal-workspace .pw-consult-care-fields[hidden]{display:none}#v-personal-workspace .pw-consult-care-fields{margin-bottom:14px}#v-personal-workspace .pw-customer-extra{display:grid;gap:12px}#v-personal-workspace .pw-customer-extra section{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 3%,var(--s1))}#v-personal-workspace .pw-customer-extra h3{margin:0 0 10px;color:var(--tp);font-size:14px}#v-personal-workspace .pw-customer-address{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1;min-width:0}#v-personal-workspace .pw-customer-address input,#v-personal-workspace .pw-customer-extra section>input{box-sizing:border-box;min-height:40px;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}#v-personal-workspace .pw-customer-zip-input{flex:0 0 110px;width:110px}#v-personal-workspace .pw-customer-address-input{flex:1;min-width:140px}#v-personal-workspace .pw-customer-address input[readonly]{cursor:pointer}#v-personal-workspace .pw-customer-underwriting{display:grid;grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);gap:9px 14px}#v-personal-workspace .pw-customer-underwriting .pw-inline-field input,#v-personal-workspace .pw-customer-underwriting .pw-inline-field select{width:100%;box-sizing:border-box}
+#v-personal-workspace .pw-consult-care-fields[hidden]{display:none}#v-personal-workspace .pw-consult-care-fields{margin-bottom:14px}#v-personal-workspace .pw-customer-extra{display:grid;gap:12px}#v-personal-workspace .pw-customer-extra section{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 3%,var(--s1))}#v-personal-workspace .pw-customer-extra h3{margin:0 0 10px;color:var(--tp);font-size:14px}#v-personal-workspace .pw-customer-address{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1;min-width:0}#v-personal-workspace .pw-customer-address input,#v-personal-workspace .pw-customer-extra section>input{box-sizing:border-box;min-height:40px;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}#v-personal-workspace .pw-customer-zip-input{flex:0 0 110px;width:110px}#v-personal-workspace .pw-customer-address-input{flex:1;min-width:140px}#v-personal-workspace .pw-customer-address input[readonly]{cursor:pointer}#v-personal-workspace .pw-customer-underwriting{display:grid;grid-template-columns:410px 395px;gap:9px 14px}#v-personal-workspace .pw-customer-underwriting .pw-inline-field input,#v-personal-workspace .pw-customer-underwriting .pw-inline-field select{width:100%;box-sizing:border-box}
 #v-personal-workspace .pw-customer-address-row{margin-bottom:10px}
 @media(max-width:680px){#v-personal-workspace .pw-customer-address-row{flex-direction:column;align-items:flex-start}#v-personal-workspace .pw-customer-underwriting{grid-template-columns:1fr}}
 
 /* ── 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()의 라벨-위 스타일과 별개(다른 화면 영향 없음) ── */
 #v-personal-workspace .pw-inline-field{display:flex;align-items:center;gap:8px;min-width:0}
-#v-personal-workspace .pw-inline-field>span:first-child{flex:0 0 auto;color:var(--ts);font-size:var(--ts-meta);font-weight:700;white-space:nowrap}
+#v-personal-workspace .pw-inline-field>span:first-child{display:inline-block;width:72px;flex:0 0 72px;color:var(--ts);font-size:var(--ts-meta);font-weight:700;text-align:justify;text-align-last:justify;text-justify:inter-character;white-space:normal}
 #v-personal-workspace .pw-inline-field input,#v-personal-workspace .pw-inline-field select{flex:1;min-width:0;box-sizing:border-box;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);outline:0;background:var(--s1);color:var(--tp);font:inherit}
 #v-personal-workspace .pw-inline-field input:focus,#v-personal-workspace .pw-inline-field select:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
 #v-personal-workspace .pw-inline-form-block{display:grid;gap:10px;margin-bottom:14px}
 #v-personal-workspace .pw-inline-form-row{display:flex;gap:14px;flex-wrap:wrap}
 #v-personal-workspace .pw-inline-form-row>.pw-inline-field{flex:1;min-width:170px}
+/* 열 체계 통일(2026-08-20, 대표 확정 — 엑셀 K~S열 기준) — 이름/전화번호(입력1 그룹)와
+   직업/병력/진단시기(.pw-customer-underwriting 입력1 그룹)가 같은 폭(410px=라벨72+간격8+입력330)을
+   공유. 고객상태(입력2 그룹)와 운전여부/약복용/현재상태가 같은 폭(395px=라벨72+간격8+입력315) 공유. */
+#v-personal-workspace .pw-inline-form-row>.pw-inline-field:first-child{flex:0 0 410px;min-width:0}
+#v-personal-workspace .pw-inline-form-row>.pw-inline-field:has([id$="-status"]){flex:0 0 395px;min-width:0}
 #v-personal-workspace .pw-inline-form-row>.pw-inline-field:has(.pw-birth-age){flex:0 0 260px;min-width:0}
 #v-personal-workspace .pw-birth-age{min-width:0;flex:1;overflow:hidden}
 #v-personal-workspace .pw-birth-age>input{width:100px;flex:0 0 100px}
@@ -349,10 +354,12 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace #pwf-consult-date,#v-personal-workspace #pwd-consult-date{flex:0 0 128px;width:128px}
 #v-personal-workspace .pw-inline-row{display:flex;align-items:center;gap:8px}
 #v-personal-workspace .pw-inline-row-label{flex:0 0 auto;min-width:56px;color:var(--ts);font-size:var(--ts-meta);font-weight:700;white-space:nowrap}
-/* 균등분할 라벨 정렬(2026-08-20, 대표 확정) — 각 줄 첫 라벨(청약일자·이름·전화번호·주소·상세주소·직업·병력·진단시기)을
-   동일 고정폭+글자간격 균등분할로 맞춰, 줄마다 다르던 입력칸 시작 x좌표를 세로로 정렬(오와 열 정렬).
-   두번째 라벨(생년월일·고객상태·운전여부·약복용·현재상태)은 자연폭 유지(정렬 대상 아님, 스케치 기준). */
-#v-personal-workspace .pw-inline-row-label,#v-personal-workspace .pw-inline-form-row>.pw-inline-field:first-child>span:first-child,#v-personal-workspace .pw-customer-underwriting .pw-inline-field:nth-child(odd)>span:first-child,#v-personal-workspace .pw-customer-extra section>.pw-inline-field>span:first-child{display:inline-block;width:72px;flex:0 0 72px;text-align:justify;text-align-last:justify;text-justify:inter-character;white-space:normal}
+/* 균등분할 라벨 정렬(2026-08-20, 대표 확정) — 모든 라벨(청약일자·이름·전화번호·생년월일·보험나이·
+   고객상태·주소·상세주소·직업·운전여부·병력·약복용·진단시기·현재상태)을 예외 없이 동일 고정폭(72px)+
+   글자간격 균등분할로 통일(대표 엑셀 셀서식 "균등분할(들여쓰기)" 확정 지시). 기본 규칙은 위
+   .pw-inline-field>span:first-child에 이미 반영, 여기서는 .pw-inline-row-label(청약일자·주소·상세주소
+   행 라벨)만 동일 폭으로 맞춘다. */
+#v-personal-workspace .pw-inline-row-label{display:inline-block;width:72px;flex:0 0 72px;text-align:justify;text-align-last:justify;text-justify:inter-character;white-space:normal}
 #v-personal-workspace .pw-inline-sub-label{flex:0 0 auto;color:var(--ts);font-size:var(--ts-meta);font-weight:600;white-space:nowrap}
 @media(max-width:680px){#v-personal-workspace .pw-inline-form-row{flex-direction:column}}
 /* 고객 등록 다이얼로그·고객 상세카드 — 기존 pw-consult-form-grid/pw-consult-detail-head가 갖던 테마 박스를 새 압축 블록에도 유지 */
