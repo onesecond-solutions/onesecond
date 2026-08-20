@@ -345,6 +345,10 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace #pwf-consult-date,#v-personal-workspace #pwd-consult-date{flex:0 0 128px;width:128px}
 #v-personal-workspace .pw-inline-row{display:flex;align-items:center;gap:8px}
 #v-personal-workspace .pw-inline-row-label{flex:0 0 auto;min-width:56px;color:var(--ts);font-size:var(--ts-meta);font-weight:700;white-space:nowrap}
+/* 균등분할 라벨 정렬(2026-08-20, 대표 확정) — 각 줄 첫 라벨(청약일자·이름·전화번호·주소·상세주소·직업·병력·진단시기)을
+   동일 고정폭+글자간격 균등분할로 맞춰, 줄마다 다르던 입력칸 시작 x좌표를 세로로 정렬(오와 열 정렬).
+   두번째 라벨(생년월일·고객상태·운전여부·약복용·현재상태)은 자연폭 유지(정렬 대상 아님, 스케치 기준). */
+#v-personal-workspace .pw-inline-row-label,#v-personal-workspace .pw-inline-form-row>.pw-inline-field:first-child>span:first-child,#v-personal-workspace .pw-customer-underwriting .pw-inline-field:nth-child(odd)>span:first-child{display:inline-block;width:72px;flex:0 0 72px;text-align:justify;text-align-last:justify;text-justify:inter-character;white-space:normal}
 #v-personal-workspace .pw-inline-sub-label{flex:0 0 auto;color:var(--ts);font-size:var(--ts-meta);font-weight:600;white-space:nowrap}
 @media(max-width:680px){#v-personal-workspace .pw-inline-form-row{flex-direction:column}}
 /* 고객 등록 다이얼로그·고객 상세카드 — 기존 pw-consult-form-grid/pw-consult-detail-head가 갖던 테마 박스를 새 압축 블록에도 유지 */
