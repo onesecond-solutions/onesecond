@@ -62,6 +62,10 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-rich-color-pop summary::-webkit-details-marker{display:none}
 #v-personal-workspace .pw-rich-color{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);color:var(--tp);font-size:13px;font-weight:700;cursor:pointer}
 #v-personal-workspace .pw-rich-color:hover{background:var(--s1)}
+/* 둘 다 "A"라 구분이 안 된다는 지적(2026-08-20) — 글자색은 글자 아래 빨간 밑줄,
+   형광펜은 글자 뒤에 노란 마커 배경으로 한눈에 구분(구글독스식 관례). */
+#v-personal-workspace .pw-rich-color-fg span{border-bottom:3px solid #e03131;line-height:1;padding-bottom:1px}
+#v-personal-workspace .pw-rich-color-hl span{background:#ffec99;padding:1px 3px;border-radius:2px}
 #v-personal-workspace .pw-rich-color-menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;display:flex;align-items:center;gap:6px;padding:8px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 8px 24px rgba(0,0,0,0.14)}
 #v-personal-workspace .pw-rich-color-swatch{width:22px;height:22px;padding:0;border:1px solid color-mix(in srgb,var(--bd) 60%,transparent);border-radius:50%;cursor:pointer}
 #v-personal-workspace .pw-rich-color-swatch:hover{transform:scale(1.12)}

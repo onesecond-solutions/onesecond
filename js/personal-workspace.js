@@ -1145,8 +1145,8 @@
   function richEditorField(id, html) {
     var buttons = [['bold', '<b>B</b>', '굵게'], ['italic', '<i>I</i>', '기울임'], ['underline', '<u>U</u>', '밑줄'], ['strikeThrough', '<s>S</s>', '취소선'], ['formatBlock', '제목', '제목', 'h2'], ['insertUnorderedList', '• 목록', '글머리 목록'], ['insertOrderedList', '1. 목록', '번호 목록'], ['formatBlock', '인용', '인용문', 'blockquote'], ['justifyLeft', '왼쪽', '왼쪽 정렬'], ['justifyCenter', '가운데', '가운데 정렬'], ['justifyRight', '오른쪽', '오른쪽 정렬'], ['removeFormat', '서식 지우기', '서식 지우기']];
     var filesId = id + '-files';
-    var colorHtml = richColorPickerHtml(id, 'foreColor', '글자색', 'A', ['#e03131', '#f08c00', '#2f9e44', '#1971c2', '#9c36b6'], 'inherit')
-      + richColorPickerHtml(id, 'hiliteColor', '형광펜', 'A', ['#ffec99', '#b2f2bb', '#a5d8ff', '#fcc2d7', '#ffd8a8'], 'transparent');
+    var colorHtml = richColorPickerHtml(id, 'foreColor', '글자색', 'A', 'pw-rich-color-fg', ['#e03131', '#f08c00', '#2f9e44', '#1971c2', '#9c36b6'], 'inherit')
+      + richColorPickerHtml(id, 'hiliteColor', '형광펜', 'A', 'pw-rich-color-hl', ['#ffec99', '#b2f2bb', '#a5d8ff', '#fcc2d7', '#ffd8a8'], 'transparent');
     return '<div class="pw-rich"><div class="pw-rich-toolbar" role="toolbar" aria-label="본문 서식">' + buttons.map(function (button) { return '<button type="button" tabindex="-1" title="' + button[2] + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richCommand(\'' + button[0] + '\',\'' + (button[3] || '') + '\',\'' + id + '\')">' + button[1] + '</button>'; }).join('') + colorHtml + '<label class="pw-rich-upload">+ 이미지 삽입<input type="file" accept="image/*" multiple hidden onchange="OSPersonalWorkspace.addRichImages(this.files,\'' + id + '\');this.value=\'\'"></label><label class="pw-rich-upload">+ 파일 첨부<input type="file" multiple hidden onchange="OSPersonalWorkspace.addRichFiles(this.files,\'' + filesId + '\');this.value=\'\'"></label></div><div id="' + id + '" class="pw-rich-body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="내용" tabindex="0" data-placeholder="내용을 입력하세요" onmousedown="OSPersonalWorkspace.prepareRichFocus(event,this)" onfocus="OSPersonalWorkspace.focusRichBody(event,this)" onclick="OSPersonalWorkspace.focusRichBody(event,this)" onpaste="OSPersonalWorkspace.richPaste(event)">' + sanitizeRich(html) + '</div><div class="pw-rich-files" id="' + filesId + '"></div></div>';
   }
   function richEditorEmpty(editor) { return !!editor && !String(editor.textContent || '').trim() && !editor.querySelector('img,[data-storage-path],[data-pending-image]'); }
@@ -1180,11 +1180,11 @@
     document.execCommand('styleWithCSS', false, true);
     document.execCommand(command, false, value);
   }
-  function richColorPickerHtml(id, command, label, icon, colors, clearValue) {
+  function richColorPickerHtml(id, command, label, icon, modifierClass, colors, clearValue) {
     var swatches = colors.map(function (color) {
       return '<button type="button" class="pw-rich-color-swatch" style="background:' + color + '" title="' + color + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + color + '\',\'' + id + '\');this.closest(\'details\').open=false"></button>';
     }).join('');
-    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color" title="' + label + '">' + icon + '</summary><div class="pw-rich-color-menu">'
+    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
       + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
       + swatches + '</div></details>';
   }
