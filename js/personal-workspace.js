@@ -1191,8 +1191,14 @@
        잘려 "없음" 말고 나머지 색상이 안 보이던 문제("잘린거였구나") → position:fixed로
        바꾸고 열 때 summary의 실제 화면 좌표(getBoundingClientRect)로 top/left를 JS에서
        계산해 씀(overflow:hidden은 fixed 포지셔닝엔 안 걸림 — 컨테이닝 블록이 뷰포트라
-       조상 박스 밖으로 자유롭게 나감). 뷰포트 오른쪽으로 넘치면 왼쪽으로 당겨 보정. */
-    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();var d=this.parentNode,m=d.querySelector(\'.pw-rich-color-menu\'),willOpen=!d.open;d.open=willOpen;if(willOpen){var r=this.getBoundingClientRect();m.style.top=(r.bottom+4)+\'px\';m.style.left=\'auto\';m.style.right=(window.innerWidth-r.right)+\'px\';}"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
+       조상 박스 밖으로 자유롭게 나감). 뷰포트 오른쪽으로 넘치면 왼쪽으로 당겨 보정.
+       ④ 실측 버그 4건째(2026-08-20, 자료 페이지 "먹통" 재보고 후 재현) — ③의 보정이
+       "오른쪽 넘침"만 막고 "왼쪽 넘침"은 안 막아서, 툴바가 줄바꿈될 때 왼쪽 끝에
+       붙는 형광펜 버튼처럼 summary가 뷰포트 왼쪽에 가까우면 고정폭 드롭다운이 대부분
+       화면 밖(음수 left)으로 나가 안 보였음(대표 눈엔 "클릭해도 반응 없음"으로 보임,
+       실제론 열리긴 열렸으나 안 보인 것 — .open은 true였음). 열고 나서 실제 렌더된
+       메뉴의 left가 8px 미만이면 right 앵커를 버리고 left:8px로 강제 고정해 보정. */
+    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();var d=this.parentNode,m=d.querySelector(\'.pw-rich-color-menu\'),willOpen=!d.open;d.open=willOpen;if(willOpen){var r=this.getBoundingClientRect();m.style.top=(r.bottom+4)+\'px\';m.style.left=\'auto\';m.style.right=(window.innerWidth-r.right)+\'px\';var mr=m.getBoundingClientRect();if(mr.left<8){m.style.right=\'auto\';m.style.left=\'8px\';}}"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
       + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
       + swatches + '</div></details>';
   }
@@ -2104,6 +2110,7 @@
   window.addEventListener('popstate', function () { if (!allowed() || !restoreFromUrl()) return; openWorkspace(state.section, false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
   document.addEventListener('click', function (event) { var menu = document.getElementById('pw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.pw-preview-ddak')) closeDdakMenu(); });
+  document.addEventListener('click', function (event) { var open = document.querySelectorAll('.pw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
