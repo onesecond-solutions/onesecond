@@ -1387,7 +1387,7 @@
   function contractDatesField(prefix, dates, ageContext) {
     var list = dates && dates.length ? dates : [ymd(new Date())];
     var rows = list.map(function (date) { return contractDateRowHtml(date, ageContext); }).join('');
-    return '<div class="pw-inline-row pw-contract-dates-field"><span class="pw-inline-row-label">청약일자</span><div class="pw-contract-dates-wrap"><div class="pw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="pw-btn ghost pw-contract-date-add" onclick="OSPersonalWorkspace.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
+    return '<div class="pw-inline-row pw-contract-dates-field"><span class="pw-inline-row-label">청약일자</span><div class="pw-contract-dates-wrap"><div class="pw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="pw-link-btn pw-contract-date-add" onclick="OSPersonalWorkspace.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
   }
   function addContractDateRow(prefix) {
     var box = document.getElementById(prefix + '-appl-list'); if (!box) return;
@@ -1414,7 +1414,7 @@
       + '<div class="pw-inline-row pw-customer-address-row"><span class="pw-inline-row-label">주소</span><div class="pw-customer-address">'
       + '<input id="' + prefix + '-zip" class="pw-customer-zip-input" placeholder="우편번호" value="' + esc(profile.zip || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">'
       + '<input id="' + prefix + '-address" class="pw-customer-address-input" placeholder="주소" value="' + esc(profile.address || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">'
-      + '<button type="button" class="pw-btn" onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">주소검색</button>'
+      + '<button type="button" class="pw-link-btn" onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">주소검색</button>'
       + '</div></div>'
       + inlineField('상세주소', '<input id="' + prefix + '-address-detail" placeholder="동·호수 등 상세 주소 (주소 선택 후 입력)" value="' + esc(profile.address_detail || '') + '">')
       + '</section><section><h3>인수 정보</h3><div class="pw-customer-underwriting">'
