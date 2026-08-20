@@ -1145,8 +1145,8 @@
   function richEditorField(id, html) {
     var buttons = [['bold', '<b>B</b>', '굵게'], ['italic', '<i>I</i>', '기울임'], ['underline', '<u>U</u>', '밑줄'], ['strikeThrough', '<s>S</s>', '취소선'], ['formatBlock', '제목', '제목', 'h2'], ['insertUnorderedList', '• 목록', '글머리 목록'], ['insertOrderedList', '1. 목록', '번호 목록'], ['formatBlock', '인용', '인용문', 'blockquote'], ['justifyLeft', '왼쪽', '왼쪽 정렬'], ['justifyCenter', '가운데', '가운데 정렬'], ['justifyRight', '오른쪽', '오른쪽 정렬'], ['removeFormat', '서식 지우기', '서식 지우기']];
     var filesId = id + '-files';
-    var colorHtml = '<label class="pw-rich-color" title="글자색">A<input type="color" value="#e03131" onmousedown="OSPersonalWorkspace.richColorSave(\'' + id + '\')" onchange="OSPersonalWorkspace.richColorApply(\'foreColor\',this.value,\'' + id + '\');this.parentNode.style.boxShadow=\'inset 0 -3px 0 0 \'+this.value"></label>'
-      + '<label class="pw-rich-color pw-rich-hl" title="형광펜" style="background:#ffec99">A<input type="color" value="#ffec99" onmousedown="OSPersonalWorkspace.richColorSave(\'' + id + '\')" onchange="OSPersonalWorkspace.richColorApply(\'hiliteColor\',this.value,\'' + id + '\');this.parentNode.style.background=this.value"></label>';
+    var colorHtml = richColorPickerHtml(id, 'foreColor', '글자색', 'A', ['#e03131', '#f08c00', '#2f9e44', '#1971c2', '#9c36b6'], 'inherit')
+      + richColorPickerHtml(id, 'hiliteColor', '형광펜', 'A', ['#ffec99', '#b2f2bb', '#a5d8ff', '#fcc2d7', '#ffd8a8'], 'transparent');
     return '<div class="pw-rich"><div class="pw-rich-toolbar" role="toolbar" aria-label="본문 서식">' + buttons.map(function (button) { return '<button type="button" tabindex="-1" title="' + button[2] + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richCommand(\'' + button[0] + '\',\'' + (button[3] || '') + '\',\'' + id + '\')">' + button[1] + '</button>'; }).join('') + colorHtml + '<label class="pw-rich-upload">+ 이미지 삽입<input type="file" accept="image/*" multiple hidden onchange="OSPersonalWorkspace.addRichImages(this.files,\'' + id + '\');this.value=\'\'"></label><label class="pw-rich-upload">+ 파일 첨부<input type="file" multiple hidden onchange="OSPersonalWorkspace.addRichFiles(this.files,\'' + filesId + '\');this.value=\'\'"></label></div><div id="' + id + '" class="pw-rich-body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="내용" tabindex="0" data-placeholder="내용을 입력하세요" onmousedown="OSPersonalWorkspace.prepareRichFocus(event,this)" onfocus="OSPersonalWorkspace.focusRichBody(event,this)" onclick="OSPersonalWorkspace.focusRichBody(event,this)" onpaste="OSPersonalWorkspace.richPaste(event)">' + sanitizeRich(html) + '</div><div class="pw-rich-files" id="' + filesId + '"></div></div>';
   }
   function richEditorEmpty(editor) { return !!editor && !String(editor.textContent || '').trim() && !editor.querySelector('img,[data-storage-path],[data-pending-image]'); }
@@ -1168,22 +1168,25 @@
   }
   function prepareRichFocus(event, editor) { if (editor && richEditorEmpty(editor)) window.setTimeout(function () { placeRichCaret(editor); }, 0); }
   function richCommand(command, commandValue, editorId) { var editor = editorId ? document.getElementById(editorId) : document.querySelector('#pw-dialog .pw-rich-body'); if (!editor) return; placeRichCaret(editor); document.execCommand(command, false, commandValue || null); }
-  /* 글자색·형광펜(2026-08-20, 대표 확정) — <input type="color">는 네이티브 색상 선택 팝업이라
-     mousedown에 preventDefault를 못 건다(다른 툴바 버튼과 달리) → 팝업이 뜨는 동안 에디터
-     포커스가 빠지면서 선택 영역이 풀릴 수 있어, 여는 시점에 선택 범위를 저장해뒀다가
-     색 선택 후(change) 그 범위를 복원한 다음 명령을 적용한다. */
-  var richColorRange = null;
-  function richColorSave(editorId) {
-    var editor = document.getElementById(editorId), selection = window.getSelection();
-    richColorRange = (editor && selection && selection.rangeCount && editor.contains(selection.anchorNode)) ? selection.getRangeAt(0).cloneRange() : null;
-  }
-  function richColorApply(command, value, editorId) {
-    var editor = document.getElementById(editorId); if (!editor) return;
-    try { editor.focus({ preventScroll: true }); } catch (_) { editor.focus(); }
-    var selection = window.getSelection();
-    if (richColorRange && selection) { selection.removeAllRanges(); selection.addRange(richColorRange); }
+  /* 글자색·형광펜(2026-08-20, 대표 확정) — 대표 색상 5개 + "없음"(제거) 프리셋 버튼 방식(네이티브
+     색상 선택 팝업은 사용법이 어렵다는 대표 피드백으로 폐기). 다른 툴바 버튼과 동일하게
+     mousedown+preventDefault로 에디터 선택 영역을 유지한 채 바로 적용.
+     "없음" = foreColor는 'inherit'(기본 글자색으로 복귀), hiliteColor는 'transparent'
+     (실측: hiliteColor는 transparent 적용 시 감싸던 span이 통째로 풀림 — 완전 제거). */
+  function richColorCommand(command, value, editorId) {
+    var editor = editorId ? document.getElementById(editorId) : document.querySelector('#pw-dialog .pw-rich-body');
+    if (!editor) return;
+    placeRichCaret(editor);
     document.execCommand('styleWithCSS', false, true);
     document.execCommand(command, false, value);
+  }
+  function richColorPickerHtml(id, command, label, icon, colors, clearValue) {
+    var swatches = colors.map(function (color) {
+      return '<button type="button" class="pw-rich-color-swatch" style="background:' + color + '" title="' + color + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + color + '\',\'' + id + '\');this.closest(\'details\').open=false"></button>';
+    }).join('');
+    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color" title="' + label + '">' + icon + '</summary><div class="pw-rich-color-menu">'
+      + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
+      + swatches + '</div></details>';
   }
   function focusRich(id) { placeRichCaret(document.getElementById(id)); }
   function richPaste(event) { var text = String(event && event.clipboardData && event.clipboardData.getData('text/plain') || '').trim(); if (!/^https?:\/\/\S+$/i.test(text)) return; event.preventDefault(); var safe = esc(text); document.execCommand('insertHTML', false, '<a href="' + safe + '" target="_blank" rel="noopener">' + safe + '</a>'); }
@@ -2103,7 +2106,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorSave: richColorSave, richColorApply: richColorApply, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,

@@ -54,12 +54,19 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-rich-toolbar button{min-width:32px;height:30px;padding:0 8px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);font:inherit;font-size:12px;cursor:pointer}
 #v-personal-workspace .pw-rich-toolbar button:hover{background:var(--s1);color:var(--ac)}
 #v-personal-workspace .pw-rich-upload{display:inline-flex;align-items:center;min-height:30px;padding:0 9px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font-size:12px;font-weight:600;cursor:pointer}
-/* 글자색·형광펜 스와치(2026-08-20, 대표 확정) — 네이티브 color input을 작은 원 안에 숨기고
-   글자 "A" 아래에 현재 색을 밑줄처럼 보여주는 흔한 에디터 UI 패턴. */
-#v-personal-workspace .pw-rich-color{position:relative;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);color:var(--tp);font-size:13px;font-weight:700;cursor:pointer;box-shadow:inset 0 -3px 0 0 #e03131}
+/* 글자색·형광펜 프리셋 팔레트(2026-08-20, 대표 확정) — 네이티브 색상 선택 팝업이 "사용법이
+   어렵다"는 피드백으로 폐기, 대표색 5개+"없음"(제거) 버튼 드롭다운으로 교체. <details>로
+   열림/닫힘 상태 관리(별도 JS 상태 불필요). */
+#v-personal-workspace .pw-rich-color-pop{position:relative;display:inline-block}
+#v-personal-workspace .pw-rich-color-pop summary{list-style:none}
+#v-personal-workspace .pw-rich-color-pop summary::-webkit-details-marker{display:none}
+#v-personal-workspace .pw-rich-color{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);color:var(--tp);font-size:13px;font-weight:700;cursor:pointer}
 #v-personal-workspace .pw-rich-color:hover{background:var(--s1)}
-#v-personal-workspace .pw-rich-color.pw-rich-hl{box-shadow:none;background:#ffec99;border-radius:var(--radius-sm)}
-#v-personal-workspace .pw-rich-color input[type="color"]{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;opacity:0;cursor:pointer}
+#v-personal-workspace .pw-rich-color-menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;display:flex;align-items:center;gap:6px;padding:8px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 8px 24px rgba(0,0,0,0.14)}
+#v-personal-workspace .pw-rich-color-swatch{width:22px;height:22px;padding:0;border:1px solid color-mix(in srgb,var(--bd) 60%,transparent);border-radius:50%;cursor:pointer}
+#v-personal-workspace .pw-rich-color-swatch:hover{transform:scale(1.12)}
+#v-personal-workspace .pw-rich-color-none{padding:0 8px;height:22px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2);color:var(--ts);font-size:11px;white-space:nowrap;cursor:pointer}
+#v-personal-workspace .pw-rich-color-none:hover{color:var(--ac);border-color:var(--ac)}
 #v-personal-workspace .pw-rich-upload:hover{border-color:var(--ac);color:var(--ac)}
 #v-personal-workspace .pw-rich-body{position:relative;min-height:220px;max-height:42vh;overflow:auto;padding:13px 14px;outline:0;color:var(--tp);line-height:1.75;white-space:pre-wrap;word-break:break-word;cursor:text}
 #v-personal-workspace .pw-rich-body:empty::before{content:attr(data-placeholder);display:block;color:var(--tf);pointer-events:none;user-select:none}
