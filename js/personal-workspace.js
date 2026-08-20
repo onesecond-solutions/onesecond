@@ -1184,7 +1184,15 @@
     var swatches = colors.map(function (color) {
       return '<button type="button" class="pw-rich-color-swatch" style="background:' + color + '" title="' + color + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + color + '\',\'' + id + '\');this.closest(\'details\').open=false"></button>';
     }).join('');
-    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
+    /* 실측 버그 2건(2026-08-20, 대표 보고 "보이는데 작동을 안하네") — ① summary 클릭 시 포커스가
+       summary로 넘어가며 에디터에서 선택해둔 텍스트가 풀림 → mousedown에서 preventDefault로
+       막음(다른 툴바 버튼과 동일 패턴). ② mousedown의 preventDefault는 CLICK 이벤트의 네이티브
+       토글 동작까지는 못 막아서(디테일즈는 click 시점에 열림/닫힘이 결정됨), mousedown에서
+       열어놓은 상태를 뒤이은 click이 다시 닫아버림(열렸다 바로 닫히는 것처럼 보임) → click에도
+       별도로 preventDefault + 수동 토글을 걸어 이중 처리. 둘 다 실제 마우스 클릭으로만
+       재현됨(프로그램적 .click()/dispatchEvent 테스트는 이 포커스·이벤트 순서를 재현 못 해
+       처음엔 통과된 것처럼 보였음 — 다음부터는 computer 툴 실클릭으로 재검증할 것). */
+    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();var d=this.parentNode;d.open=!d.open"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
       + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
       + swatches + '</div></details>';
   }
