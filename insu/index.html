@@ -1536,6 +1536,16 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .mr-att-file{font-size:0.6rem;color:var(--ts);padding:4px;text-align:center;word-break:break-all;line-height:1.2}
 .mr-att-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,0.6);color:#fff;font-size:var(--ts-badge);cursor:pointer;line-height:1;padding:0}
 
+/* ── 고객관리(salesnote) 청약일자 다중 입력행 — 카드폼 상단(.ci-ffld 재사용, .ci-fgrid input 규칙이 날짜칸에 그대로 적용됨) 2026-08-20 ── */
+.ci-appl-wrap{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+.ci-appl-list{display:flex;flex-direction:column;gap:6px}
+.ci-appl-row{display:flex;align-items:center;gap:8px}
+.ci-appl-row input[type="date"]{flex:1;min-width:0}
+.ci-appl-empty{font-size:var(--ts-badge);color:var(--tf);padding:6px 0}
+.ci-appl-addbtn{align-self:flex-start;padding:6px 14px!important;font-size:var(--ts-badge)}
+/* 청약일자 행 추가로 위쪽 공간이 늘어난 만큼 상담내용 입력창 여유 확보(2026-08-20) — app-views.css의 .ci-consult-new textarea{min-height:240px}는 클래스 규칙(특이도 0,1,1)이라, id 선택자(특이도 1,0,0)로 index.html 안에서만 웃돈다(그 파일은 이번 작업 범위 밖이라 무접촉). */
+#cif-consult-new{min-height:280px}
+
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
 /* 2026-05-25 정정: v-voice 누락 격차 자료. 본 view 통째 정합 */
@@ -17179,16 +17189,33 @@ window._ciTodayMatch=_ciTodayMatch;
 window.CI_CARE_TRACK_SINCE='2026-07-28';
 function _ciYmdOf(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 window._ciYmdOf=_ciYmdOf;
-function _ciCareDue(c,k){  /* 순수 함수(부작용 없음) — {ymd, doneKey} 또는 null(대상 아님/계산 불가) */
+/* 청약일자 다중화(2026-08-20, 대표 확정) — profile.appl_dates(배열) 신규, profile.appl_date(단일)는 배열의 최이른 날짜와 계속 동기화(표뷰 계약일 컬럼·_ciTodayMatch 등 기존 단일값 소비처 무변경 보존).
+   _ciApplDates(c)=순수 헬퍼: appl_dates 있으면 그대로(정렬), 없고 appl_date만 있는 기존 고객은 [appl_date]로 그 자리에서 승격(하위호환, 데이터 손실 없음). */
+function _ciApplDates(c){
+  var p=(c&&c.profile&&typeof c.profile==='object')?c.profile:{};
+  var arr;
+  if(p.appl_dates && Array.isArray(p.appl_dates)) arr=p.appl_dates.slice();
+  else if(p.appl_date) arr=[p.appl_date];
+  else arr=[];
+  arr=arr.filter(function(d){ return !!d; }).map(function(d){ return String(d).slice(0,10); });
+  arr.sort();
+  return arr;
+}
+window._ciApplDates=_ciApplDates;
+function _ciCareDue(c,k,applDate){  /* 순수 함수(부작용 없음) — {ymd, doneKey, applDate} 또는 null(대상 아님/계산 불가).
+   applDate 생략 시 profile.appl_date(하위호환, 기존 2-인자 호출부 무변경 동작) 사용.
+   doneKey: applDate가 profile.appl_date(=appl_dates 중 최이른 날짜)와 같으면 기존 포맷 그대로(완료 이력 무손실) — 그 외 청약(2번째 이후)만 '@'+날짜를 붙여 유니크화(충돌 방지). */
   if((c.status||'')!=='청약완료') return null;
-  var ad=(c.profile&&c.profile.appl_date)?String(c.profile.appl_date).slice(0,10):'';
+  var legacyAd=(c.profile&&c.profile.appl_date)?String(c.profile.appl_date).slice(0,10):'';
+  var ad=applDate!=null?String(applDate).slice(0,10):legacyAd;
   if(!ad) return null;
   var base=new Date(ad+'T00:00:00'); if(isNaN(base.getTime())) return null;
   var t=new Date();
+  var sfx=(ad===legacyAd)?'':('@'+ad);
   if(k==='appl91'||k==='appl181'){
     var n=(k==='appl91')?91:181;
     var x=new Date(base.getTime()); x.setDate(x.getDate()+n);
-    return {ymd:_ciYmdOf(x), doneKey:k};                                 /* 고정 1회성 — appl_date+91/+181 */
+    return {ymd:_ciYmdOf(x), doneKey:k+sfx, applDate:ad};                /* 고정 1회성 — 그 청약일자+91/+181 */
   }
   if(k==='bday'){                                                        /* 매년 반복 — 올해 월-일(지났으면 내년), 최소 계약 다음해부터(_ciTodayMatch 기존 규칙과 동일 소스·동일 기준 유지) */
     var mm=base.getMonth(), dd=base.getDate();
@@ -17196,23 +17223,26 @@ function _ciCareDue(c,k){  /* 순수 함수(부작용 없음) — {ymd, doneKey}
     var due=_ciYmdOf(new Date(y,mm,dd));
     var todayYmd=_ciYmdOf(t);
     if(due<todayYmd){ y+=1; due=_ciYmdOf(new Date(y,mm,dd)); }
-    return {ymd:due, doneKey:'bday_'+y};
+    return {ymd:due, doneKey:'bday_'+y+sfx, applDate:ad};
   }
   return null;
 }
 window._ciCareDue=_ciCareDue;
-function _ciCareChecklistData(){  /* 놓침/오늘 판정: care_done[doneKey] 있으면 완료 / due<오늘=놓침(baseline 이전 제외) / due==오늘=오늘 / due>오늘=예정(P1 미표시) */
+function _ciCareChecklistData(){  /* 놓침/오늘 판정: care_done[doneKey] 있으면 완료 / due<오늘=놓침(baseline 이전 제외) / due==오늘=오늘 / due>오늘=예정(P1 미표시). 청약 건별(appl_dates 각각)로 3종씩 계산 */
   var data=_ciViewData(), t=new Date(), todayYmd=_ciYmdOf(t), since=window.CI_CARE_TRACK_SINCE||'2026-07-28';
   var overdue=[], todayList=[];
   data.forEach(function(c){
-    ['appl91','appl181','bday'].forEach(function(k){
-      var d=_ciCareDue(c,k); if(!d) return;
-      if(d.ymd<since) return;  /* 도입일 이전 due=이력 없음 취급(가짜 놓침 방지) */
-      var cd=(c.profile&&c.profile.care_done&&typeof c.profile.care_done==='object')?c.profile.care_done:{};
-      var done=!!cd[d.doneKey];
-      var row={id:c.id, name:c.name||'(이름없음)', key:k, doneKey:d.doneKey, due:d.ymd, done:done};
-      if(d.ymd<todayYmd) overdue.push(row);
-      else if(d.ymd===todayYmd) todayList.push(row);
+    var applDates=_ciApplDates(c);
+    applDates.forEach(function(ad){
+      ['appl91','appl181','bday'].forEach(function(k){
+        var d=_ciCareDue(c,k,ad); if(!d) return;
+        if(d.ymd<since) return;  /* 도입일 이전 due=이력 없음 취급(가짜 놓침 방지) */
+        var cd=(c.profile&&c.profile.care_done&&typeof c.profile.care_done==='object')?c.profile.care_done:{};
+        var done=!!cd[d.doneKey];
+        var row={id:c.id, name:c.name||'(이름없음)', key:k, doneKey:d.doneKey, due:d.ymd, done:done, applDate:ad, multi:applDates.length>1};
+        if(d.ymd<todayYmd) overdue.push(row);
+        else if(d.ymd===todayYmd) todayList.push(row);
+      });
     });
   });
   overdue.sort(function(a,b){ return a.due<b.due?-1:(a.due>b.due?1:0); });      /* 오래 놓친 순 */
@@ -17225,7 +17255,7 @@ function _ciCareChecklistHtml(){  /* #ci-today 하단에 추가되는 체크리�
   var data=_ciCareChecklistData(), todayYmd=_ciYmdOf(new Date());
   var dayDiff=function(due){ return Math.round((new Date(todayYmd+'T00:00:00').getTime()-new Date(due+'T00:00:00').getTime())/86400000); };
   var row=function(r, showDue){
-    var label=labels[r.key]||r.key;
+    var label=(labels[r.key]||r.key)+(r.multi?(' · 청약 '+r.applDate):'');  /* 청약이 여러 건이면 어느 건인지 날짜로 구분 */
     var chkAttr=r.done?' checked':'';
     var due=showDue?('<span class="ci-care-due">'+_ciEsc(r.due)+'</span>'):'';
     var late=showDue?('<span class="ci-care-late">'+_ciNum(dayDiff(r.due))+'일 지남</span>'):'';
@@ -17291,14 +17321,17 @@ function _ciCareWeekEnsure(){  /* 최초 진입 기본값 = 이번 주 · 오늘
   if(!window._ciCareSelDay) window._ciCareSelDay=todayYmd;
 }
 window._ciCareWeekEnsure=_ciCareWeekEnsure;
-function _ciCareDayItems(ymd, data, todayYmd, since){  /* 순수 — 그날 due인 케어 3종(완료여부 포함), baseline 이전 제외 */
+function _ciCareDayItems(ymd, data, todayYmd, since){  /* 순수 — 그날 due인 케어 3종(완료여부 포함), baseline 이전 제외. 청약 건별(appl_dates 각각)로 계산 */
   var out=[];
   data.forEach(function(c){
-    ['appl91','appl181','bday'].forEach(function(k){
-      var d=_ciCareDue(c,k); if(!d||d.ymd!==ymd) return;
-      if(d.ymd<since) return;
-      var cd=(c.profile&&c.profile.care_done&&typeof c.profile.care_done==='object')?c.profile.care_done:{};
-      out.push({id:c.id, name:c.name||'(이름없음)', key:k, doneKey:d.doneKey, due:d.ymd, done:!!cd[d.doneKey]});
+    var applDates=_ciApplDates(c);
+    applDates.forEach(function(ad){
+      ['appl91','appl181','bday'].forEach(function(k){
+        var d=_ciCareDue(c,k,ad); if(!d||d.ymd!==ymd) return;
+        if(d.ymd<since) return;
+        var cd=(c.profile&&c.profile.care_done&&typeof c.profile.care_done==='object')?c.profile.care_done:{};
+        out.push({id:c.id, name:c.name||'(이름없음)', key:k, doneKey:d.doneKey, due:d.ymd, done:!!cd[d.doneKey], applDate:ad, multi:applDates.length>1});
+      });
     });
   });
   out.sort(function(a,b){ return String(a.name).localeCompare(String(b.name)); });
@@ -17987,10 +18020,15 @@ function _ciFormHtml(c){
   var medOpt=['','복용 중','복용 안 함','과거 복용'].map(function(o){ return '<option value="'+_ciEsc(o)+'"'+(o===med?' selected':'')+'>'+(o||'선택')+'</option>'; }).join('');
   var nameLen=(c.name||'').length;
   window._ciConsultLog=(p.consult_log&&Array.isArray(p.consult_log))?p.consult_log.slice():[];  /* 현재 폼의 상담이력(최신순) */
+  /* 청약일자 다중 입력(2026-08-20, 대표 확정) — 고객관리(salesnote) 전용, 상담관리(care)는 이 블록 자체를 렌더하지 않음(기존 동작 무변경).
+     window._ciApplList=현재 폼 세션의 청약일자 배열(_ciApplDates로 하위호환 승격) — 행 추가/삭제(_ciApplAdd/_ciApplDel)가 이 배열을 갱신하며 재렌더, 저장(_ciSaveForm)은 DOM에서 직접 수집(_ciApplGather). */
+  window._ciApplList=isSN?_ciApplDates(c):[];
+  var applFld=isSN?('<div class="ci-ffld full" id="cif-appl-fld" style="align-items:flex-start"><label>청약일자</label><div class="ci-appl-wrap"><div class="ci-appl-list" id="cif-appl-list">'+_ciApplRowsHtml()+'</div><button type="button" class="ci-btn ghost ci-appl-addbtn" onclick="_ciApplAdd()">+ 청약추가</button></div></div>'):'';
   return '<div class="ci-form">'
     +'<div class="ci-banner"><span class="ci-banner-ic">📋</span><span>보장분석·고객정보 화면을 캡처해서 이 페이지에 <b>Ctrl+V</b> 하면 자동으로 입력됩니다</span><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
     +'<div id="cif-draft-banner" class="ci-draft-banner" style="display:none"></div>'
     +'<div class="ci-fgrid">'
+    +applFld
     /* 1행: 입력일자 | 속성 */
     +'<div class="ci-ffld"><label>입력일자</label><input id="cif-date" type="date" value="'+v(inDate)+'"></div>'
     +'<div class="ci-ffld"><label>속성</label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="직접 입력 (예: 지인, 소개, 카카오페이 D)"></div>'
@@ -18026,7 +18064,7 @@ function _ciFormHtml(c){
     +'</div>'
     /* 비고 = profile.비고 — 표(시트) 뷰 비고 셀과 양방향 연동. 정보수정(잠금해제) 후 편집·[저장] 시 반영(다른 profile 필드와 동일 흐름) */
     +'<div class="ci-sec">비고</div>'
-    +'<div class="ci-fgrid"><div class="ci-ffld full"><textarea id="cif-bigo" class="ci-bigo-ta" rows="2" placeholder="비고 — 표(시트) 뷰 비고와 연동됩니다">'+v(p['비고'])+'</textarea></div></div>'
+    +'<div class="ci-fgrid"><div class="ci-ffld full"><textarea id="cif-bigo" class="ci-bigo-ta" rows="4" placeholder="비고 — 표(시트) 뷰 비고와 연동됩니다">'+v(p['비고'])+'</textarea></div></div>'
     /* 파일 첨부 — 표(시트) 뷰 '첨부' 열과 같은 첨부함(profile.attachments) 공유. 기존 첨부는 renderCiEditAtts()가 편집 진입 시 채움(2026-07-29) */
     +'<div class="ci-sec">파일 첨부</div>'
     +'<div class="ci-fgrid">'
@@ -18038,6 +18076,51 @@ function _ciFormHtml(c){
     +'<div class="ci-form-acts"><button type="button" class="ci-btn" id="cif-primary" onclick="_ciFormPrimary()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
     +'</div>';
 }
+/* ── 청약일자 다중 입력행(고객관리 전용) — window._ciApplList(현재 폼 세션 배열) 기준 렌더. add/del은 먼저 DOM 현재값을 배열에 동기화(_ciApplSyncFromDom)한 뒤 배열을 갱신·재렌더해, 편집 중이던 다른 행의 값이 유실되지 않게 한다. ── */
+function _ciApplRowHtml(d,i){
+  return '<div class="ci-appl-row" data-i="'+i+'"><input type="date" class="ci-appl-in" value="'+_ciEsc(d||'')+'" onchange="if(window._ciDraftSave) _ciDraftSave();"><button type="button" class="ci-clog-btn del ci-appl-del" onclick="_ciApplDel('+i+')" title="삭제">✕</button></div>';
+}
+function _ciApplRowsHtml(){
+  var list=window._ciApplList||[];
+  if(!list.length) return '<div class="ci-appl-empty">등록된 청약일자가 없습니다</div>';
+  return list.map(function(d,i){ return _ciApplRowHtml(d,i); }).join('');
+}
+window._ciApplRowsHtml=_ciApplRowsHtml;
+function _ciApplListRender(){
+  var box=document.getElementById('cif-appl-list'); if(!box) return;
+  box.innerHTML=_ciApplRowsHtml();
+}
+window._ciApplListRender=_ciApplListRender;
+function _ciApplSyncFromDom(){  /* 재렌더 직전, 사용자가 편집 중이던 날짜값을 배열에 먼저 반영(add/del 시 유실 방지) */
+  var box=document.getElementById('cif-appl-list'); if(!box) return;
+  var ins=box.querySelectorAll('.ci-appl-in'), out=[];
+  for(var i=0;i<ins.length;i++){ out.push(String(ins[i].value||'')); }
+  window._ciApplList=out;
+}
+function _ciApplAdd(){
+  _ciApplSyncFromDom();
+  var t=new Date(); var today=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  (window._ciApplList=window._ciApplList||[]).push(today);  /* 새 행 기본값=오늘 날짜(바로 편집 가능) */
+  _ciApplListRender();
+  if(window._ciDraftSave) _ciDraftSave();
+}
+window._ciApplAdd=_ciApplAdd;
+function _ciApplDel(i){
+  _ciApplSyncFromDom();
+  var list=window._ciApplList||[]; if(i<0||i>=list.length) return;
+  list.splice(i,1);
+  _ciApplListRender();
+  if(window._ciDraftSave) _ciDraftSave();
+}
+window._ciApplDel=_ciApplDel;
+function _ciApplGather(){  /* 저장 시 호출 — DOM 입력행의 현재 값을 직접 수집(빈 값 제외), 오름차순 정렬 */
+  var box=document.getElementById('cif-appl-list'); if(!box) return [];
+  var ins=box.querySelectorAll('.ci-appl-in'), out=[];
+  for(var i=0;i<ins.length;i++){ var val=String(ins[i].value||'').trim(); if(val) out.push(val); }
+  out.sort();
+  return out;
+}
+window._ciApplGather=_ciApplGather;
 /* ── 상담이력: [상담입력]→오늘 날짜 자동+[저장하기]로 토글, 저장 시 최신순(위로) 누적 ── */
 function _ciConsultToday(){ var t=new Date(); return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); }
 function _ciConsultRender(){
@@ -18112,6 +18195,7 @@ function _ciFormSetMode(mode){
   var stgs=form.querySelectorAll('.ci-stagepick .ci-stagebtn');  /* 고객 분류 단계 */
   for(var j=0;j<stgs.length;j++){ stgs[j].disabled=locked; }
   var _ab=form.querySelector('.ci-addr button'); if(_ab) _ab.disabled=locked;  /* 주소검색 버튼도 잠금 — 기존 고객은 정보수정(잠금해제) 후에만 작동 (2026-07-15 대표) */
+  var _applBtns=form.querySelectorAll('.ci-appl-addbtn, .ci-appl-del'); for(var k=0;k<_applBtns.length;k++){ _applBtns[k].disabled=locked; }  /* 청약일자 추가/삭제 버튼도 잠금(고객관리 전용, 2026-08-20) */
   var pb=document.getElementById('cif-primary'); if(pb) pb.textContent=locked?'정보수정':'저장';
 }
 window._ciFormSetMode=_ciFormSetMode;
@@ -18126,7 +18210,9 @@ function _ciDraftGather(){
     phone:g('cif-phone'), zip:g('cif-zip'), addr1:g('cif-addr1'), addr2:g('cif-addr2'),
     job:g('cif-job'), med:g('cif-med'), history:g('cif-history'), dx:g('cif-dx'), uw:g('cif-uw'), bigo:g('cif-bigo'),
     stage:sp?sp.getAttribute('data-st'):'', consultNew:g('cif-consult-new'),
-    consultLog:(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:[], ts:Date.now() };
+    consultLog:(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:[],
+    applDates:(typeof _ciApplGather==='function')?_ciApplGather():[],  /* 청약일자 입력행(고객관리 전용, 없으면 빈 배열) */
+    ts:Date.now() };
 }
 function _ciDraftSave(){
   try{ var d=_ciDraftGather();
@@ -18145,6 +18231,7 @@ function _ciDraftApply(d){
   if(d.stage){ var sp=document.getElementById('cif-stagepick'); if(sp){ sp.setAttribute('data-st',d.stage); var bs=sp.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].getAttribute('data-st')===d.stage); } } }
   if(d.consultNew){ var cn=document.getElementById('cif-consult-new'); if(cn){ cn.value=d.consultNew; var inp=document.getElementById('cif-consult-input'); if(inp) inp.style.display=''; var btn=document.getElementById('cif-consult-btn'); if(btn){ btn.textContent='저장하기'; btn.setAttribute('data-mode','save'); } var dd=document.getElementById('cif-consult-date'); if(dd) dd.textContent=_ciConsultToday(); } }
   if(d.consultLog&&Array.isArray(d.consultLog)){ window._ciConsultLog=d.consultLog.slice(); _ciConsultRender(); }
+  if(d.applDates&&Array.isArray(d.applDates)&&d.applDates.length){ window._ciApplList=d.applDates.slice(); if(typeof _ciApplListRender==='function') _ciApplListRender(); }  /* 청약일자 임시저장 복원 */
   if(window._ciUpdIns) _ciUpdIns();
 }
 function _ciDraftRestore(){ try{ var raw=localStorage.getItem(_ciDraftKey()); if(!raw) return; _ciDraftApply(JSON.parse(raw)); var b=document.getElementById('cif-draft-banner'); if(b) b.style.display='none'; }catch(e){} }
@@ -18312,7 +18399,16 @@ async function _ciSaveForm(){
   }
   prof.attachments=(window._ciEditAtts||[]).concat(_newAtts);  /* 남은 기존 첨부 + 새 업로드 — 항상 포함(다 지운 경우 빈 배열 반영) */
   var _wasAppl=false;
-  if(stage==='청약완료' && !prof.appl_date){ prof.appl_date=now.slice(0,10); _wasAppl=true; }  /* 청약완료 전환 시 청약완료일(오늘) 기록 → 오늘의 할 일 +91·+181·보험생일 근거(Phase 2/3) */
+  if(isSN){
+    /* 청약일자 다중화(2026-08-20, 대표 확정) — 카드폼 청약일자 입력행(DOM)에서 직접 수집해 profile.appl_dates(배열)로 저장.
+       profile.appl_date(단일)는 항상 배열의 최이른 날짜와 동기화 — 표뷰 계약일 컬럼(_ciSheetAppl)·_ciTodayMatch 등 기존 단일값 소비처를 깨지 않기 위함. */
+    var applArr=_ciApplGather();
+    if(stage==='청약완료' && !applArr.length){ applArr=[now.slice(0,10)]; _wasAppl=true; }  /* 청약완료 전환인데 입력행이 비어있으면 기존 로직과 동일하게 오늘 날짜를 첫 항목으로 자동 추가 */
+    prof.appl_dates=applArr;
+    prof.appl_date=applArr.length?applArr[0]:null;
+  } else if(stage==='청약완료' && !prof.appl_date){
+    prof.appl_date=now.slice(0,10); _wasAppl=true;  /* 청약완료 전환 시 청약완료일(오늘) 기록 → 오늘의 할 일 +91·+181·보험생일 근거(Phase 2/3). care 모드 무변경(appl_dates 미사용) */
+  }
   body.profile=prof;
   if(inDate && /^\d{4}-\d{2}-\d{2}$/.test(inDate)){ body.created_at=inDate+'T00:00:00Z'; }
   var wasEdit=(window._ciEditId!=null);
@@ -19247,7 +19343,15 @@ function _ciCellCommit(td){
     var vaD=_ciFmtBirth(String((ctrls[0]&&ctrls[0].value)||'').trim());  /* 20260727→2026-07-27 자동(idate와 동일 포맷 규칙 재사용) */
     if(vaD && !/^\d{4}-\d{2}-\d{2}$/.test(vaD)){ alert('계약일은 8자리 숫자(예: 20260727) 또는 2026-07-27 형식으로 입력하세요(비워도 됩니다)'); restore(); return; }
     if(vaD===(td.getAttribute('data-raw')||'')){ restore(); return; }
-    _ciSaveProfileKey(id, 'appl_date', vaD||'', function(){ _ciCellApply(td,'appl',{value:vaD}); if(typeof window._cfSalesnoteTop==='function') window._cfSalesnoteTop(); }, restore);  /* profile.appl_date=care-flow.js 케어 플로우 배치 기준 키 재사용 → 저장 즉시 상단 케어 플로우 카드 재계산 */
+    _ciPatchProfile(id, function(prof){  /* profile.appl_date=care-flow.js 케어 플로우 배치 기준 키 재사용. 청약일자 다중화(2026-08-20): 이 표뷰 셀은 여전히 단일값 편집(범위 밖) — 다만 카드폼에서 이미 appl_dates 배열을 갖게 된 고객이면, 그 배열 중 기존 appl_date와 같던 항목을 이 표 셀이 방금 입력한 값으로 함께 갱신해 케어계산이 표뷰 수정을 무시하지 않게 한다(appl_dates가 없으면 예전처럼 appl_date만 갱신 — _ciApplDates 하위호환 승격으로 그대로 반영됨). */
+      var oldAd=prof.appl_date?String(prof.appl_date).slice(0,10):'';
+      if(prof.appl_dates && Array.isArray(prof.appl_dates) && prof.appl_dates.length){
+        var arr=prof.appl_dates.slice(); var idx=arr.indexOf(oldAd);
+        if(vaD){ if(idx>=0) arr[idx]=vaD; else arr.unshift(vaD); } else if(idx>=0){ arr.splice(idx,1); }
+        prof.appl_dates=arr.filter(function(d){ return !!d; });
+      }
+      prof.appl_date=vaD||null;
+    }, function(){ _ciCellApply(td,'appl',{value:vaD}); if(typeof window._cfSalesnoteTop==='function') window._cfSalesnoteTop(); }, restore);
   } else { restore(); }
 }
 window._ciCellEdit=_ciCellEdit; window._ciCellCommit=_ciCellCommit; window._ciCellCancel=_ciCellCancel;
@@ -19307,7 +19411,7 @@ function _ciNewRowCommitSalesnote(){
   var idate=_ciFmtBirth((v.idate||'').trim());  /* 입력일자 직접입력(20260727→2026-07-27) → created_at */
   var createdAt=(idate && /^\d{4}-\d{2}-\d{2}$/.test(idate)) ? (idate+'T00:00:00Z') : now;
   var phone=_ciFmtPhone((v.phone||'').trim());  /* 01012345678→010-1234-5678 자동 */
-  var profile={}; if(v.attr) profile.attr=v.attr; if(v.bigo) profile['비고']=v.bigo; if(appl) profile.appl_date=appl;
+  var profile={}; if(v.attr) profile.attr=v.attr; if(v.bigo) profile['비고']=v.bigo; if(appl){ profile.appl_date=appl; profile.appl_dates=[appl]; }  /* 청약일자 다중화(2026-08-20): 신규 고객이라 appl_dates=단일 항목 배열로 처음부터 정합 */
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birth||null, gender:v.gender||null, channel:null, status:'청약완료',  /* PR2(2026-07-30, 대표 확정) — 고객관리는 청약완료 고정, 폼(_ciSaveForm)과 동일 원칙 */
     profile:profile, owner_id:owner, created_at:createdAt, updated_at:now, source_ref:null };
