@@ -316,11 +316,41 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-consult-existing{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:10px;padding:9px 10px;border-radius:var(--radius-sm);background:color-mix(in srgb,var(--ac) 6%,var(--s2))}#v-personal-workspace .pw-consult-existing>strong{width:100%;color:var(--ts);font-size:11px}#v-personal-workspace .pw-consult-existing>a{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:7px 10px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-size:12px;text-decoration:none}#v-personal-workspace .pw-consult-existing small{color:var(--ts)}
 @media(max-width:760px){#v-personal-workspace .pw-dialog:has(.pw-consult-registration) .pw-form{padding:18px 14px}#v-personal-workspace .pw-consult-registration .pw-consult-form-grid{grid-template-columns:1fr 1fr;padding:11px}#v-personal-workspace .pw-consult-editor{padding:10px}#v-personal-workspace .pw-consult-editor .pw-rich-body{min-height:240px;max-height:46vh}}@media(max-width:480px){#v-personal-workspace .pw-consult-registration .pw-consult-form-grid{grid-template-columns:1fr}}
 #v-personal-workspace .pw-customer-registration .pw-rich-body{min-height:180px}
+/* 청약일자 다중 입력행이 늘어난 만큼 고객내용 입력창 세로 공간 확장(2026-08-20) — id 선택자로 클래스 규칙(위)보다 확실히 이기게 함 */
+#v-personal-workspace #pwf-customer-note{min-height:280px}
+#v-personal-workspace #pwd-customer-new{min-height:280px}
 #v-personal-workspace .pw-ocr{margin-bottom:10px}
 #v-personal-workspace .pw-ocr-hint{font-size:12px;color:var(--tf)}
 #v-personal-workspace .pw-ocr-stat{color:var(--ac);font-weight:600}
-#v-personal-workspace .pw-consult-care-fields[hidden]{display:none}#v-personal-workspace .pw-consult-care-fields{margin-bottom:14px}#v-personal-workspace .pw-customer-extra{display:grid;gap:12px}#v-personal-workspace .pw-customer-extra section{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 3%,var(--s1))}#v-personal-workspace .pw-customer-extra h3{margin:0 0 10px;color:var(--tp);font-size:14px}#v-personal-workspace .pw-customer-address{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:8px;margin-bottom:8px}#v-personal-workspace .pw-customer-address input,#v-personal-workspace .pw-customer-extra section>input{box-sizing:border-box;width:100%;min-height:40px;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}#v-personal-workspace .pw-customer-address input[readonly]{cursor:pointer}#v-personal-workspace .pw-customer-underwriting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px}#v-personal-workspace .pw-customer-underwriting .pw-field:nth-child(3){grid-column:1/-1}#v-personal-workspace .pw-customer-underwriting .pw-field input,#v-personal-workspace .pw-customer-underwriting .pw-field select{width:100%;box-sizing:border-box}
-@media(max-width:680px){#v-personal-workspace .pw-customer-address{grid-template-columns:100px 1fr}#v-personal-workspace .pw-customer-address .pw-btn{grid-column:1/-1}#v-personal-workspace .pw-customer-underwriting{grid-template-columns:1fr}#v-personal-workspace .pw-customer-underwriting .pw-field:nth-child(3){grid-column:auto}}
+#v-personal-workspace .pw-consult-care-fields[hidden]{display:none}#v-personal-workspace .pw-consult-care-fields{margin-bottom:14px}#v-personal-workspace .pw-customer-extra{display:grid;gap:12px}#v-personal-workspace .pw-customer-extra section{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 3%,var(--s1))}#v-personal-workspace .pw-customer-extra h3{margin:0 0 10px;color:var(--tp);font-size:14px}#v-personal-workspace .pw-customer-address{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:1;min-width:0}#v-personal-workspace .pw-customer-address input,#v-personal-workspace .pw-customer-extra section>input{box-sizing:border-box;min-height:40px;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}#v-personal-workspace .pw-customer-zip-input{flex:0 0 110px;width:110px}#v-personal-workspace .pw-customer-address-input{flex:1;min-width:140px}#v-personal-workspace .pw-customer-address input[readonly]{cursor:pointer}#v-personal-workspace .pw-customer-underwriting{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px}#v-personal-workspace .pw-customer-underwriting .pw-inline-field input,#v-personal-workspace .pw-customer-underwriting .pw-inline-field select{width:100%;box-sizing:border-box}
+@media(max-width:680px){#v-personal-workspace .pw-customer-address-row{flex-direction:column;align-items:flex-start}#v-personal-workspace .pw-customer-underwriting{grid-template-columns:1fr}}
+
+/* ── 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()의 라벨-위 스타일과 별개(다른 화면 영향 없음) ── */
+#v-personal-workspace .pw-inline-field{display:flex;align-items:center;gap:8px;min-width:0}
+#v-personal-workspace .pw-inline-field>span:first-child{flex:0 0 auto;color:var(--ts);font-size:var(--ts-meta);font-weight:700;white-space:nowrap}
+#v-personal-workspace .pw-inline-field input,#v-personal-workspace .pw-inline-field select{flex:1;min-width:0;box-sizing:border-box;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);outline:0;background:var(--bg);color:var(--tp);font:inherit}
+#v-personal-workspace .pw-inline-field input:focus,#v-personal-workspace .pw-inline-field select:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
+#v-personal-workspace .pw-inline-form-block{display:grid;gap:10px;margin-bottom:14px}
+#v-personal-workspace .pw-inline-form-row{display:flex;gap:14px;flex-wrap:wrap}
+#v-personal-workspace .pw-inline-form-row>.pw-inline-field{flex:1;min-width:170px}
+#v-personal-workspace .pw-inline-row{display:flex;align-items:center;gap:8px}
+#v-personal-workspace .pw-inline-row-label{flex:0 0 auto;min-width:56px;color:var(--ts);font-size:var(--ts-meta);font-weight:700;white-space:nowrap}
+#v-personal-workspace .pw-inline-sub-label{flex:0 0 auto;color:var(--ts);font-size:var(--ts-meta);font-weight:600;white-space:nowrap}
+@media(max-width:680px){#v-personal-workspace .pw-inline-form-row{flex-direction:column}}
+/* 고객 등록 다이얼로그·고객 상세카드 — 기존 pw-consult-form-grid/pw-consult-detail-head가 갖던 테마 박스를 새 압축 블록에도 유지 */
+#v-personal-workspace .pw-consult-registration .pw-inline-form-block{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 20%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 5%,var(--s1))}
+#v-personal-workspace .pw-consult-detail .pw-inline-form-block{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 6%,var(--s1))}
+
+/* ── 청약일자 다중 입력행(고객관리 전용, 2026-08-20) — 라벨+입력칸+버튼이 필요한 만큼만 폭을 차지(inline-flex/fit-content), 폼 전체 가로폭을 차지하지 않는다(대표 지적 반영). 여러 줄이어도 각 줄은 좁게 유지 ── */
+#v-personal-workspace .pw-contract-dates-field{align-items:flex-start}
+#v-personal-workspace .pw-contract-dates-wrap{display:inline-flex;flex-direction:column;gap:6px;width:fit-content}
+#v-personal-workspace .pw-contract-dates-list{display:flex;flex-direction:column;gap:6px}
+#v-personal-workspace .pw-contract-date-row{display:inline-flex;align-items:center;gap:6px;width:fit-content}
+#v-personal-workspace .pw-contract-date-input{flex:0 0 128px;width:128px;box-sizing:border-box;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);outline:0;background:var(--bg);color:var(--tp);font:inherit}
+#v-personal-workspace .pw-contract-date-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
+#v-personal-workspace .pw-contract-date-del{flex:0 0 auto;width:26px;height:26px;padding:0;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:13px;line-height:1;cursor:pointer}
+#v-personal-workspace .pw-contract-date-del:hover{color:var(--tp);border-color:var(--ac)}
+#v-personal-workspace .pw-contract-date-add{align-self:flex-start;padding:6px 14px;font-size:var(--ts-badge)}
 #v-personal-workspace .pw-load-more{display:flex;justify-content:center;padding:14px 0}
 #v-personal-workspace .pw-script-chips{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 18px}
 #v-personal-workspace .pw-script-chip{display:flex;align-items:center;gap:6px;min-height:38px;padding:0 16px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--ts);font-size:14px;font-weight:600;cursor:pointer}

@@ -418,6 +418,18 @@
   function scopeBadge(item) { var global = String(item.visibility || 'private') === 'public'; return '<span class="pw-badge ' + (global ? 'public' : '') + '">' + (global ? '전체 공개' : '나만 보기') + '</span>'; }
 
   var CARE_STEPS = [[31, '+31일'], [91, '+91일'], [181, '+181일'], [365, '+365일']];
+  /* 계약일 다중화(2026-08-20, 대표 확정) — profile.contract_dates(배열) 신규, profile.contract_date(단일)는 배열의 최이른 날짜와 계속 동기화(고객 목록 컬럼 등 기존 단일값 소비처는 무변경 보존).
+     contractDatesOf(customer)=순수 헬퍼: contract_dates 있으면 그대로(정렬·중복제거), 없고 contract_date만 있는 기존 고객은 [contract_date]로 그 자리에서 승격(하위호환, 데이터 손실 없음). */
+  function contractDatesOf(customer) {
+    var profile = customerProfile(customer), arr;
+    if (profile.contract_dates && Array.isArray(profile.contract_dates)) arr = profile.contract_dates.slice();
+    else if (profile.contract_date) arr = [profile.contract_date];
+    else arr = [];
+    arr = arr.filter(function (d) { return !!d; }).map(function (d) { return String(d).slice(0, 10); });
+    arr = arr.filter(function (d, i) { return arr.indexOf(d) === i; });
+    arr.sort();
+    return arr;
+  }
   function careAnniversaryDate(base, year) {
     var source = parseDate(base), month = source.getMonth(), day = source.getDate();
     var date = new Date(year, month, day);
@@ -426,24 +438,28 @@
   }
   function careTaskTargets(customer, base) {
     var name = customer.name || '고객', phone = phoneText(customer.phone || customer.phone_raw || ''), applyLabel = '청약일자 ' + base;
+    /* legacyId 충돌 방지 — 가장 이른(=customerProfile(customer).contract_date와 같은) 계약일만 옛 legacyId 포맷을 유지(기존 케어 완료·생성 이력 보존), 그 외 계약일은 '@날짜'를 붙여 유니크화 */
+    var legacyBase = String(customerProfile(customer).contract_date || '').slice(0, 10);
+    var suffix = base === legacyBase ? '' : '@' + base;
+    var titleSuffix = suffix ? ' (청약 ' + base + ')' : '';
     var targets = [], offsetDates = {};
     CARE_STEPS.forEach(function (step) {
       var date = addDays(base, step[0]);
       offsetDates[date] = true;
-      targets.push({ legacyId: customer.id + ':' + step[0], date: date, title: name + ' 청약 ' + step[1] + ' 케어', description: name + ' 고객 ' + applyLabel + ' 기준 ' + step[1] + ' 확인 일정입니다.' + (phone ? ' 연락처: ' + phone : '') });
+      targets.push({ legacyId: customer.id + ':' + step[0] + suffix, date: date, title: name + ' 청약 ' + step[1] + ' 케어' + titleSuffix, description: name + ' 고객 ' + applyLabel + ' 기준 ' + step[1] + ' 확인 일정입니다.' + (phone ? ' 연락처: ' + phone : '') });
     });
     var contractYear = parseDate(base).getFullYear(), currentYear = new Date().getFullYear();
     for (var year = contractYear + 1; year <= currentYear + 2; year++) {
       var annivDate = careAnniversaryDate(base, year);
       if (offsetDates[annivDate]) continue;
-      targets.push({ legacyId: customer.id + ':anniversary:' + year, date: annivDate, title: name + ' 청약 기념일', description: name + ' 고객 청약 기념일입니다. (' + applyLabel + ')' + (phone ? ' 연락처: ' + phone : '') });
+      targets.push({ legacyId: customer.id + ':anniversary:' + year + suffix, date: annivDate, title: name + ' 청약 기념일' + titleSuffix, description: name + ' 고객 청약 기념일입니다. (' + applyLabel + ')' + (phone ? ' 연락처: ' + phone : '') });
     }
     return targets;
   }
   function syncCareTasksForCustomer(customer) {
-    var profile = customerProfile(customer), base = String(profile.contract_date || '').slice(0, 10);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(base) || !customer || !customer.id) return Promise.resolve();
-    var targets = careTaskTargets(customer, base);
+    var bases = contractDatesOf(customer).filter(function (base) { return /^\d{4}-\d{2}-\d{2}$/.test(base); });
+    if (!bases.length || !customer || !customer.id) return Promise.resolve();
+    var targets = bases.reduce(function (all, base) { return all.concat(careTaskTargets(customer, base)); }, []);
     return api('workspace_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,task_date,description').then(function (existing) {
       var have = {}; (existing || []).forEach(function (row) { have[row.legacy_id] = row; });
       var toCreate = targets.filter(function (t) { return !have[t.legacyId]; });
@@ -645,7 +661,18 @@
   function customerDetailHtml(item) {
     var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), status = item.status || '청약완료';
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
-    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectCustomerDetail()">‹ 목록</button><div class="pw-consult-detail-head"><div><input id="pwd-customer-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customerDetail\')"><div class="pw-detail-name">' + favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="pwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름"><div class="pw-gender"><label><input type="radio" name="pwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div></div></div></div><dl><div><dt>생년월일</dt><dd><input id="pwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customerDetail\')"></dd></div><div><dt>보험나이</dt><dd id="pwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</dd></div><div><dt>전화번호</dt><dd><input id="pwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)"></dd></div><div><dt>고객상태</dt><dd><select id="pwd-customer-status">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></dd></div></dl>' + customerExtraFieldsHtml(profile, 'pwd-customer') + '<section><h3>고객내용</h3>' + richEditorField('pwd-customer-new', profile.note || latestConsultationMemo(item.id)) + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectCustomerDetail()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveCustomerDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectCustomerDetail()">‹ 목록</button>'
+      + '<div class="pw-inline-form-block">'
+      + contractDatesField('pwd-customer', contractDatesOf(item), 'customerDetail')
+      + '<div class="pw-inline-form-row">'
+      + inlineField('이름', favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="pwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름">')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customerDetail\')"><span id="pwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
+      + '</div><div class="pw-inline-form-row">'
+      + inlineField('전화번호', '<input id="pwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
+      + inlineField('고객상태', '<select id="pwd-customer-status">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
+      + '</div></div>'
+      + customerExtraFieldsHtml(profile, 'pwd-customer') + '<section><h3>고객내용</h3>' + richEditorField('pwd-customer-new', profile.note || latestConsultationMemo(item.id)) + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectCustomerDetail()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveCustomerDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -683,7 +710,18 @@
   function consultationDetailHtml(item, customer) {
     var profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
-    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button><div class="pw-consult-detail-head"><div><input id="pwd-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')"><div class="pw-detail-name">' + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름"><div class="pw-gender"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div></div></div></div><dl><div><dt>생년월일</dt><dd><input id="pwd-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')"></dd></div><div><dt>보험나이</dt><dd id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</dd></div><div><dt>전화번호</dt><dd><input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)"></dd></div><div><dt>상담상태</dt><dd><select id="pwd-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select></dd></div></dl>' + '<div class="pw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="pwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'pwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('pwd-consult-new', item.memo || '') + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(customer.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectConsultation()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button>'
+      + '<div class="pw-inline-form-block">'
+      + '<div class="pw-inline-form-row">' + inlineField('등록일자', '<input id="pwd-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')">') + '</div>'
+      + '<div class="pw-inline-form-row">'
+      + inlineField('이름', favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름">')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')"><span id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
+      + '</div><div class="pw-inline-form-row">'
+      + inlineField('전화번호', '<input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
+      + inlineField('상담상태', '<select id="pwd-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
+      + '</div></div>'
+      + '<div class="pw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="pwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'pwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('pwd-consult-new', item.memo || '') + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(customer.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectConsultation()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -1340,9 +1378,53 @@
   function openCustomerFromEvent(customerId) { closeDialog(); state.customerStatusFilter = 'all'; state.customerNameQuery = ''; go('customers'); selectCustomerDetail(customerId); }
 
   function formField(label, input) { return '<label class="pw-field"><span>' + label + '</span>' + input + '</label>'; }
+  /* 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()는 다른 화면(자료실 등)에서도 쓰여서 그대로 두고, 여기서만 별도 헬퍼로 분리 */
+  function inlineField(label, input) { return '<label class="pw-inline-field"><span>' + label + '</span>' + input + '</label>'; }
+  /* 청약일자 다중 입력행(고객관리 전용, 2026-08-20) — DOM에서 직접 값을 수집/추가/삭제(별도 JS 배열 보관 없음). 좁은 폭(fit-content)으로 렌더되도록 CSS(.pw-contract-dates-*)가 잡아준다. */
+  function contractDateRowHtml(date, ageContext) {
+    return '<div class="pw-contract-date-row"><input type="text" class="pw-contract-date-input" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'' + (ageContext || '') + '\')"><button type="button" class="pw-contract-date-del" aria-label="청약일자 삭제" onclick="OSPersonalWorkspace.removeContractDateRow(this)">×</button></div>';
+  }
+  function contractDatesField(prefix, dates, ageContext) {
+    var list = dates && dates.length ? dates : [ymd(new Date())];
+    var rows = list.map(function (date) { return contractDateRowHtml(date, ageContext); }).join('');
+    return '<div class="pw-inline-row pw-contract-dates-field"><span class="pw-inline-row-label">청약일자</span><div class="pw-contract-dates-wrap"><div class="pw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="pw-btn ghost pw-contract-date-add" onclick="OSPersonalWorkspace.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
+  }
+  function addContractDateRow(prefix) {
+    var box = document.getElementById(prefix + '-appl-list'); if (!box) return;
+    box.insertAdjacentHTML('beforeend', contractDateRowHtml(ymd(new Date()), box.getAttribute('data-age-context')));
+  }
+  function removeContractDateRow(button) {
+    var row = button && button.closest ? button.closest('.pw-contract-date-row') : null; if (!row) return;
+    var box = row.parentElement;
+    row.remove();
+    if (box && !box.children.length) box.insertAdjacentHTML('beforeend', contractDateRowHtml(ymd(new Date()), box.getAttribute('data-age-context')));
+  }
+  function gatherContractDates(prefix) {
+    var box = document.getElementById(prefix + '-appl-list'); if (!box) return [];
+    var inputs = box.querySelectorAll('.pw-contract-date-input'), out = [];
+    for (var i = 0; i < inputs.length; i++) { var v = String(inputs[i].value || '').trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(v)) out.push(v); }
+    out = out.filter(function (d, i) { return out.indexOf(d) === i; });
+    out.sort();
+    return out;
+  }
+  function earliestContractDateValue(prefix) { var dates = gatherContractDates(prefix); return dates.length ? dates[0] : ''; }
   function customerExtraFieldsHtml(profile, prefix) {
     profile = profile || {};
-    return '<div class="pw-customer-extra"><section><h3>주소 정보</h3><div class="pw-customer-address"><input id="' + prefix + '-zip" placeholder="우편번호" value="' + esc(profile.zip || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')"><input id="' + prefix + '-address" placeholder="주소" value="' + esc(profile.address || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">주소검색</button></div><input id="' + prefix + '-address-detail" placeholder="동·호수 등 상세 주소 (주소 선택 후 입력)" value="' + esc(profile.address_detail || '') + '"></section><section><h3>인수 정보</h3><div class="pw-customer-underwriting">' + formField('직업', '<input id="' + prefix + '-job" value="' + esc(profile.job || '') + '" placeholder="예: 사무직 / 운전직 / 농업">') + formField('약복용', '<select id="' + prefix + '-medication"><option value="">선택</option><option' + (profile.medication === '복용 중' ? ' selected' : '') + '>복용 중</option><option' + (profile.medication === '복용 안 함' ? ' selected' : '') + '>복용 안 함</option><option' + (profile.medication === '과거 복용' ? ' selected' : '') + '>과거 복용</option></select>') + formField('병력', '<input id="' + prefix + '-history" value="' + esc(profile.medical_history || '') + '" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨">') + formField('진단시기', '<input id="' + prefix + '-diagnosis" value="' + esc(profile.diagnosis_date || '') + '" placeholder="예: 2025년 3월">') + formField('현재상태', '<input id="' + prefix + '-current-status" value="' + esc(profile.current_condition || '') + '" placeholder="예: 추적관찰 중 / 수술 완료">') + '</div></section></div>';
+    return '<div class="pw-customer-extra"><section><h3>주소 정보</h3>'
+      + '<div class="pw-inline-row pw-customer-address-row"><span class="pw-inline-row-label">주소</span><div class="pw-customer-address">'
+      + '<span class="pw-inline-sub-label">우편번호</span><input id="' + prefix + '-zip" class="pw-customer-zip-input" placeholder="우편번호" value="' + esc(profile.zip || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">'
+      + '<span class="pw-inline-sub-label">주소</span><input id="' + prefix + '-address" class="pw-customer-address-input" placeholder="주소" value="' + esc(profile.address || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">'
+      + '<button type="button" class="pw-btn" onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">주소검색</button>'
+      + '</div></div>'
+      + inlineField('상세주소', '<input id="' + prefix + '-address-detail" placeholder="동·호수 등 상세 주소 (주소 선택 후 입력)" value="' + esc(profile.address_detail || '') + '">')
+      + '</section><section><h3>인수 정보</h3><div class="pw-customer-underwriting">'
+      + inlineField('직업', '<input id="' + prefix + '-job" value="' + esc(profile.job || '') + '" placeholder="예: 사무직 / 운전직 / 농업">')
+      + inlineField('운전여부', '<input id="' + prefix + '-driving" value="' + esc(profile.driving_status || '') + '" placeholder="예: 자가운전 / 대중교통 / 없음">')
+      + inlineField('병력', '<input id="' + prefix + '-history" value="' + esc(profile.medical_history || '') + '" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨">')
+      + inlineField('약복용', '<select id="' + prefix + '-medication"><option value="">선택</option><option' + (profile.medication === '복용 중' ? ' selected' : '') + '>복용 중</option><option' + (profile.medication === '복용 안 함' ? ' selected' : '') + '>복용 안 함</option><option' + (profile.medication === '과거 복용' ? ' selected' : '') + '>과거 복용</option></select>')
+      + inlineField('진단시기', '<input id="' + prefix + '-diagnosis" value="' + esc(profile.diagnosis_date || '') + '" placeholder="예: 2025년 3월">')
+      + inlineField('현재상태', '<input id="' + prefix + '-current-status" value="' + esc(profile.current_condition || '') + '" placeholder="예: 추적관찰 중 / 수술 완료">')
+      + '</div></section></div>';
   }
   function formShell(title, body, saveAction) { return '<form class="pw-form" onsubmit="event.preventDefault();' + saveAction + '"><h2>' + title + '</h2>' + body + '<div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.closeDialog()">취소</button><button type="submit" class="pw-btn primary">저장</button></div></form>'; }
   function write(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
@@ -1495,13 +1577,16 @@
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
     var form = '<div class="pw-consult-registration pw-customer-registration">'
       + customerOcrHtml()
-      + '<div class="pw-consult-form-grid">'
-      + formField('청약일자', '<input id="pwf-customer-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + ymd(new Date()) + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')">')
-      + formField('이름', '<input id="pwf-customer-name" required autocomplete="name">')
-      + formField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>')
-      + formField('생년월일', '<div class="pw-birth-age"><input id="pwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')"><span id="pwf-customer-insurance-age">보험나이 -</span></div>')
-      + formField('전화번호', '<input id="pwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
-      + formField('고객상태', '<select id="pwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>') + '</div>'
+      + '<div class="pw-inline-form-block">'
+      + contractDatesField('pwf-customer', [ymd(new Date())], 'customer')
+      + '<div class="pw-inline-form-row">'
+      + inlineField('이름', '<input id="pwf-customer-name" required autocomplete="name">')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')"><span id="pwf-customer-insurance-age">보험나이 -</span></div>')
+      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>')
+      + '</div><div class="pw-inline-form-row">'
+      + inlineField('전화번호', '<input id="pwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
+      + inlineField('고객상태', '<select id="pwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>')
+      + '</div></div>'
       + customerExtraFieldsHtml({}, 'pwf-customer')
       + '<div class="pw-consult-editor">' + formField('고객내용', richEditorField('pwf-customer-note', '')) + '</div></div>';
     resetRichPending(); dialog(formShell('고객 등록', form, 'OSPersonalWorkspace.saveCustomer()')); refreshCustomerInsuranceAge(); bindCustomerOcr();
@@ -1572,12 +1657,16 @@
   function consultationForm(item, customer) {
     item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
-    return '<div class="pw-consult-registration"><div class="pw-consult-form-grid">' + formField('등록일자', '<input id="pwf-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this)">')
-      + formField('이름', '<input id="pwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
-      + formField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
-      + formField('생년월일', '<div class="pw-birth-age"><input id="pwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'form\')"><span id="pwf-insurance-age">보험나이 -</span></div>')
-      + formField('전화번호', '<input id="pwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
-      + formField('상담상태', '<select id="pwf-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>') + '</div>'
+    return '<div class="pw-consult-registration"><div class="pw-inline-form-block">'
+      + '<div class="pw-inline-form-row">' + inlineField('등록일자', '<input id="pwf-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this)">') + '</div>'
+      + '<div class="pw-inline-form-row">'
+      + inlineField('이름', '<input id="pwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'form\')"><span id="pwf-insurance-age">보험나이 -</span></div>')
+      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
+      + '</div><div class="pw-inline-form-row">'
+      + inlineField('전화번호', '<input id="pwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
+      + inlineField('상담상태', '<select id="pwf-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
+      + '</div></div>'
       + '<div class="pw-consult-editor">' + formField('상담내용', richEditorField('pwf-consult-memo', item.memo || '')) + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</div>'
       + '<input id="pwf-consult-customer-id" type="hidden" value="' + esc(customer.id || '') + '"><input id="pwf-consult-id" type="hidden" value="' + esc(item.id || '') + '"></div>';
   }
@@ -1588,7 +1677,7 @@
   function addConsultation(customerId) { resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId || ''); }) || {}; dialog(formShell('상담 등록', consultationForm(null, customer), 'OSPersonalWorkspace.saveConsultation()')); refreshInsuranceAge(); }
   function editConsultation(id) { var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return; resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }) || {}; dialog(formShell('상담 수정', consultationForm(item, customer), 'OSPersonalWorkspace.saveConsultation()')); refreshInsuranceAge(); hydrateRichStorage(); }
   function refreshInsuranceAge() { var target = document.getElementById('pwf-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-consult-birth'), value('pwf-consult-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
-  function refreshCustomerInsuranceAge() { var target = document.getElementById('pwf-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-customer-birth'), value('pwf-customer-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
+  function refreshCustomerInsuranceAge() { var target = document.getElementById('pwf-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-customer-birth'), earliestContractDateValue('pwf-customer')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
   function searchCustomerAddress(idPrefix) { var prefix = (idPrefix || 'pwf-customer') + '-'; function openPostcode() { try { new window.daum.Postcode({ oncomplete: function (data) { var zip = document.getElementById(prefix + 'zip'), address = document.getElementById(prefix + 'address'), detail = document.getElementById(prefix + 'address-detail'); if (zip) zip.value = data.zonecode || data.postcode || ''; if (address) address.value = data.roadAddress || data.jibunAddress || data.address || ''; if (detail) detail.focus(); } }).open(); } catch (_) { if (typeof window.toast === 'function') window.toast('주소검색을 열지 못했습니다.'); } } if (window.daum && window.daum.Postcode) return openPostcode(); var old = document.getElementById('daum-postcode-sdk'); if (old) return; var script = document.createElement('script'); script.id = 'daum-postcode-sdk'; script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'; script.onload = openPostcode; script.onerror = function () { if (typeof window.toast === 'function') window.toast('주소검색을 불러오지 못했습니다.'); }; document.head.appendChild(script); }
   function formatBirthInput(input, context) { if (!input) return; var raw = String(input.value || '').replace(/\D/g, '').slice(0, 8), formatted = raw; if (raw.length > 4) formatted = raw.slice(0, 4) + '-' + raw.slice(4); if (raw.length > 6) formatted = raw.slice(0, 4) + '-' + raw.slice(4, 6) + '-' + raw.slice(6); input.value = formatted; if (context === 'detail') refreshDetailInsuranceAge(); else if (context === 'customerDetail') refreshCustomerDetailInsuranceAge(); else if (context === 'customer') refreshCustomerInsuranceAge(); else if (context === 'tool') calcToolInsuranceAge(); else refreshInsuranceAge(); }
   function formatConsultPhone(input) { if (input) input.value = phoneText(input.value); }
@@ -1859,7 +1948,7 @@
       return write('workspace_items', row).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return row; });
     }).then(function (row) { state.assetFilter = category; state.assetFolder = parent; upsertWorkspaceItem(row); resetRichPending(); finishSave('자료를 저장했습니다.'); }).catch(saveError);
   }
-  function saveCustomer() { var name = value('pwf-customer-name'), phone = phoneText(value('pwf-customer-phone')), note = richValue('pwf-customer-note'), contractDate = value('pwf-customer-date'), birth = value('pwf-customer-birth'), genderInput = document.querySelector('input[name="pwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDate) return; var profile = { customer_managed: true, contract_date: contractDate, birth_date: birth || null, gender: gender || null, zip: value('pwf-customer-zip') || null, address: value('pwf-customer-address') || null, address_detail: value('pwf-customer-address-detail') || null, job: value('pwf-customer-job') || null, medication: value('pwf-customer-medication') || null, medical_history: value('pwf-customer-history') || null, diagnosis_date: value('pwf-customer-diagnosis') || null, current_condition: value('pwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
+  function saveCustomer() { var name = value('pwf-customer-name'), phone = phoneText(value('pwf-customer-phone')), note = richValue('pwf-customer-note'), contractDates = gatherContractDates('pwf-customer'), birth = value('pwf-customer-birth'), genderInput = document.querySelector('input[name="pwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('pwf-customer-zip') || null, address: value('pwf-customer-address') || null, address_detail: value('pwf-customer-address-detail') || null, job: value('pwf-customer-job') || null, driving_status: value('pwf-customer-driving') || null, medication: value('pwf-customer-medication') || null, medical_history: value('pwf-customer-history') || null, diagnosis_date: value('pwf-customer-diagnosis') || null, current_condition: value('pwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
   function saveCustomerRich(customer, profile, body) { var root = customerAttachmentRoot(customer.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(customer); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '고객 첨부 · ' + customer.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customer.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('workspace_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'customer'); }).then(function (prepared) { return updateOne('workspace_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { var updatedProfile = Object.assign({}, profile, { note: prepared.body }); return updateOne('workspace_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { profile: updatedProfile }); }); }); }
   function saveConsultation() {
     var customerId = value('pwf-consult-customer-id'), consultationId = value('pwf-consult-id'), name = value('pwf-consult-name'), birth = value('pwf-consult-birth'), date = value('pwf-consult-date'), phone = phoneText(value('pwf-consult-phone')), status = value('pwf-consult-status'), memo = richValue('pwf-consult-memo');
@@ -1909,14 +1998,14 @@
   function refreshCustomerDetailInsuranceAge() { var target = document.getElementById('pwd-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('pwd-customer-birth'), ymd(new Date())); target.textContent = age === '' ? '-' : age + '세'; }
   function saveCustomerDetail(id) {
     var item = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
-    var name = value('pwd-customer-name'), birth = value('pwd-customer-birth'), date = value('pwd-customer-date'), phone = phoneText(value('pwd-customer-phone')), status = value('pwd-customer-status'), note = sanitizeRich(richValue('pwd-customer-new'));
+    var name = value('pwd-customer-name'), birth = value('pwd-customer-birth'), contractDates = gatherContractDates('pwd-customer'), phone = phoneText(value('pwd-customer-phone')), status = value('pwd-customer-status'), note = sanitizeRich(richValue('pwd-customer-new'));
     var genderInput = document.querySelector('input[name="pwd-customer-gender"]:checked'), gender = genderInput ? genderInput.value : '';
-    if (!name || !date) return;
+    if (!name || !contractDates.length) return;
     var existingProfile = customerProfile(item);
     var profile = Object.assign({}, existingProfile, {
-      customer_managed: true, contract_date: date, birth_date: birth || null, gender: gender || null,
+      customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null,
       zip: value('pwd-customer-zip') || null, address: value('pwd-customer-address') || null, address_detail: value('pwd-customer-address-detail') || null,
-      job: value('pwd-customer-job') || null, medication: value('pwd-customer-medication') || null, medical_history: value('pwd-customer-history') || null,
+      job: value('pwd-customer-job') || null, driving_status: value('pwd-customer-driving') || null, medication: value('pwd-customer-medication') || null, medical_history: value('pwd-customer-history') || null,
       diagnosis_date: value('pwd-customer-diagnosis') || null, current_condition: value('pwd-customer-current-status') || null, note: note
     });
     updateOne('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '청약완료', profile: profile })
@@ -1933,7 +2022,7 @@
     var profile = Object.assign({}, customerProfile(customer), {
       birth_date: birth || null, gender: gender || null, custom_fields: customValues,
       zip: value('pwd-consult-care-zip') || null, address: value('pwd-consult-care-address') || null, address_detail: value('pwd-consult-care-address-detail') || null,
-      job: value('pwd-consult-care-job') || null, medication: value('pwd-consult-care-medication') || null, medical_history: value('pwd-consult-care-history') || null,
+      job: value('pwd-consult-care-job') || null, driving_status: value('pwd-consult-care-driving') || null, medication: value('pwd-consult-care-medication') || null, medical_history: value('pwd-consult-care-history') || null,
       diagnosis_date: value('pwd-consult-care-diagnosis') || null, current_condition: value('pwd-consult-care-current-status') || null
     });
     var content = sanitizeRich(richValue('pwd-consult-new'));
@@ -1977,7 +2066,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
