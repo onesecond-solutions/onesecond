@@ -57,9 +57,16 @@ self.addEventListener('fetch', (event) => {
 
   /* network-first 통째 박음 — HTML + 정적 자산 정합
      옛 v1 격차: 정적 자산 cache-first 박혀 PWA 진입 시 옛 화면 박힘
-     v2 처방: network-first + 새 응답 박힘 시 캐시 박음 + 네트워크 실패 시 폴백 */
+     v2 처방: network-first + 새 응답 박힘 시 캐시 박음 + 네트워크 실패 시 폴백
+     2026-08-20 추가 처방: HTML/JS/CSS는 fetch()가 브라우저 자체 HTTP 캐시(디스크 캐시)를
+     암묵적으로 재사용해 "network-first"인데도 실제로는 네트워크를 안 타고 오래된 응답을
+     돌려주는 경우가 있음(쿼리스트링 캐시버스터를 바꿔도, 그 쿼리스트링이 담긴 HTML 자체가
+     이 경로로 오래된 채 서빙되면 무의미해짐) — cache:'reload'로 강제해 항상 origin에
+     재검증하도록 함(이미지 등 그 외 자산은 기존 동작 유지, 대역폭 낭비 방지). */
+  const isCriticalAsset = req.mode === 'navigate' || /\.(html|js|css)(\?|$)/.test(url.pathname + url.search) || url.pathname.endsWith('/');
+  const fetchInit = isCriticalAsset ? { cache: 'reload' } : undefined;
   event.respondWith(
-    fetch(req).then((resp) => {
+    fetch(req, fetchInit).then((resp) => {
       /* 새 응답 박힘 = 캐시 박음 (다음 오프라인 진입 시 폴백 정합) */
       if (resp && resp.ok) {
         const copy = resp.clone();
