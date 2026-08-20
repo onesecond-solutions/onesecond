@@ -667,7 +667,7 @@
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="pwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름">')
       + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customerDetail\')"><span id="pwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
-      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
+      + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="pw-inline-form-row">'
       + inlineField('전화번호', '<input id="pwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="pwd-customer-status">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
@@ -716,7 +716,7 @@
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름">')
       + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')"><span id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
-      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
+      + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="pw-inline-form-row">'
       + inlineField('전화번호', '<input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="pwd-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
@@ -1582,7 +1582,7 @@
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', '<input id="pwf-customer-name" required autocomplete="name">')
       + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')"><span id="pwf-customer-insurance-age">보험나이 -</span></div>')
-      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>')
+      + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>'
       + '</div><div class="pw-inline-form-row">'
       + inlineField('전화번호', '<input id="pwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="pwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>')
@@ -1662,7 +1662,7 @@
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', '<input id="pwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
       + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'form\')"><span id="pwf-insurance-age">보험나이 -</span></div>')
-      + inlineField('성별', '<div class="pw-gender"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>')
+      + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="pw-inline-form-row">'
       + inlineField('전화번호', '<input id="pwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="pwf-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')

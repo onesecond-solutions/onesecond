@@ -340,6 +340,10 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-birth-age span{min-width:0;white-space:nowrap;font-size:11px}
 #v-personal-workspace .pw-inline-form-row>.pw-inline-field:has(.pw-gender){flex:0 0 190px;min-width:0}
 #v-personal-workspace .pw-inline-field .pw-gender{width:auto;flex:1;min-width:0}
+/* 성별 라벨 텍스트 제거(2026-08-20, 대표 확정) — .pw-gender가 더 이상 .pw-inline-field로 안 감싸이고
+   .pw-inline-form-row에 직접 들어가므로, 옛 legacy 규칙(width:100%·flex:0 0 auto)이 다시 적용돼
+   본문 겹침 재발하는 것을 막기 위해 이 컨텍스트 전용으로 자기 내용 크기만큼만 차지하도록 고정 */
+#v-personal-workspace .pw-inline-form-row>.pw-gender{width:auto;flex:0 0 auto;min-width:0}
 /* 등록일자(상담)는 청약일자와 같은 좁은 고정폭 유지 — 혼자 있는 줄이라 flex:1이면 가로 전체로 늘어남(대표 지적) */
 #v-personal-workspace .pw-inline-form-row>.pw-inline-field:has(#pwf-consult-date),#v-personal-workspace .pw-inline-form-row>.pw-inline-field:has(#pwd-consult-date){flex:0 0 auto}
 #v-personal-workspace #pwf-consult-date,#v-personal-workspace #pwd-consult-date{flex:0 0 128px;width:128px}
