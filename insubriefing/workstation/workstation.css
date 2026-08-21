@@ -12,22 +12,6 @@ body.ws-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linea
 .ws-global-search{position:absolute;left:50%;display:flex;width:min(560px,42vw);height:42px;align-items:center;gap:8px;padding:0 16px;border:1px solid color-mix(in srgb,var(--bd) 72%,transparent);border-radius:var(--radius-full);background:color-mix(in srgb,var(--s1) 62%,transparent);color:var(--ts);transform:translateX(-50%)}
 .ws-global-search input{width:100%;border:0;outline:0;background:transparent;color:var(--tp);font:inherit}
 body:not(.is-personal-workspace) .ws-global-search{visibility:hidden}
-.ws-account{position:relative;display:flex;align-items:center;gap:8px;color:var(--ts);font-size:var(--fs-meta)}
-.ws-account a,.ws-account button{display:inline-flex;min-height:36px;align-items:center;padding:0 14px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);text-decoration:none;cursor:pointer}
-.ws-account-trigger{gap:8px;font-weight:var(--fw-medium)}
-.ws-account-trigger:after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .18s ease}
-.ws-account-trigger[aria-expanded="true"]:after{transform:translateY(2px) rotate(225deg)}
-.ws-account-popover{position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:240px;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 16px 40px color-mix(in srgb,var(--tp) 16%,transparent)}
-.ws-account-popover[hidden]{display:none}
-.ws-account-email{margin:0 6px 6px;padding:10px 8px 12px;border-bottom:1px solid var(--bd);color:var(--ts);font-size:var(--fs-meta);line-height:1.4;overflow-wrap:anywhere}
-.ws-account-bgmode{margin:0 6px 6px;padding:2px 2px 12px;border-bottom:1px solid var(--bd)}
-.ws-account-bgmode>span{display:block;margin-bottom:7px;color:var(--ts);font-size:var(--fs-meta);font-weight:var(--fw-medium)}
-.ws-bgmode-options{display:flex;gap:6px}
-.ws-account .ws-account-popover .ws-bgmode-btn{width:auto;flex:1;min-height:34px;justify-content:center;padding:0 4px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font-size:11px;font-weight:var(--fw-medium)}
-.ws-account .ws-account-popover .ws-bgmode-btn:hover{background:var(--s2)}
-.ws-account .ws-account-popover .ws-bgmode-btn.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));color:var(--ac)}
-.ws-account .ws-account-popover button{width:100%;min-height:40px;justify-content:flex-start;border:0;border-radius:var(--radius-sm);background:transparent;font-weight:var(--fw-medium)}
-.ws-account .ws-account-popover button:hover,.ws-account .ws-account-popover button:focus-visible{background:var(--s2)}
 .ws-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
 .ws-profile-dialog::backdrop{background:color-mix(in srgb,var(--tp) 42%,transparent);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .ws-profile-dialog form{display:grid;gap:18px;padding:24px}
