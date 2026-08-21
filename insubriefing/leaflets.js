@@ -324,24 +324,41 @@
   }
 
   // ── 업로드(대표 전용) ────────────────────────────────────────────────────
+  function uploadError(response, fallback) {
+    var status = response && response.status;
+    return response.clone().json().catch(function () { return {}; }).then(function (payload) {
+      var serverMessage = payload && (payload.message || payload.error || payload.error_description);
+      var message = fallback || '업로드에 실패했습니다.';
+      if (status === 401) message = '로그인 인증이 만료되었습니다. 잠시 후 다시 시도해 주세요.';
+      else if (status === 403) message = '캘린더 저장 권한이 없습니다.';
+      else if (status === 413) message = '파일이 20MB 업로드 제한을 초과했습니다.';
+      else if (status === 507 || /storage|quota|limit|exceed/i.test(String(serverMessage || ''))) message = '캘린더 저장소 용량을 확인해 주세요.';
+      else if (serverMessage) message += ' (' + serverMessage + ')';
+      var error = new Error(message);
+      error.status = status;
+      return error;
+    });
+  }
   function uploadBlob(blob, fileType, mimeType, receivedDate, pageCount, ext) {
-    var token = window.db.getToken(), owner = currentUser().id;
+    var owner = currentUser().id;
     var id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
     var path = owner + '/' + receivedDate + '/' + id + '.' + ext;
     var encodedPath = path.split('/').map(encodeURIComponent).join('/');
-    return fetch(window.db.url('/storage/v1/object/' + BUCKET + '/' + encodedPath), {
+    return window.db.fetch('/storage/v1/object/' + BUCKET + '/' + encodedPath, {
       method: 'POST',
-      headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': mimeType || 'application/octet-stream', 'x-upsert': 'false' },
+      headers: { 'Content-Type': mimeType || 'application/octet-stream', 'x-upsert': 'false' },
       body: blob
     }).then(function (res) {
-      if (!res.ok) throw new Error('업로드 실패');
+      if (!res.ok) return uploadError(res, '리플렛 업로드에 실패했습니다.').then(function (error) { throw error; });
       var row = { id: id, owner_id: owner, file_type: fileType, storage_path: path, mime_type: mimeType, file_size: blob.size, page_count: pageCount || null, received_date: receivedDate, sort_order: 0 };
-      return fetch(window.db.url('/rest/v1/briefing_leaflets'), {
+      return window.db.fetch('/rest/v1/briefing_leaflets', {
         method: 'POST',
-        headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify(row)
       });
-    }).then(function (res) { if (!res.ok) throw new Error('저장 실패'); });
+    }).then(function (res) {
+      if (!res.ok) return uploadError(res, '캘린더 정보 저장에 실패했습니다.').then(function (error) { throw error; });
+    });
   }
   function reloadCurrent() { if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
   function handleDrop(receivedDate, fileList) {
