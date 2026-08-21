@@ -26,6 +26,27 @@
   function currentUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (e) { return {}; } }
   function isPilot() { return String(currentUser().id || '') === PILOT_ID; }
   function publicUrl(path) { return (window.SUPABASE_URL || '') + '/storage/v1/object/public/' + BUCKET + '/' + String(path).split('/').map(encodeURIComponent).join('/'); }
+  function showNotice(message) {
+    if (typeof window.toast === 'function') { window.toast(message); return; }
+    var notice = document.createElement('div');
+    notice.className = 'ib-leaflet-notice'; notice.setAttribute('role', 'status'); notice.textContent = message;
+    document.body.appendChild(notice);
+    window.setTimeout(function () { notice.remove(); }, 3200);
+  }
+  function confirmAction(title, message) {
+    return new Promise(function (resolve) {
+      var dialog = document.createElement('dialog');
+      dialog.className = 'ib-confirm-dialog';
+      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">보험브리핑</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="is-danger">삭제</button></div></form>';
+      dialog.querySelector('h2').textContent = title;
+      dialog.querySelector('p').textContent = message;
+      document.body.appendChild(dialog);
+      dialog.addEventListener('cancel', function (e) { e.preventDefault(); dialog.close('cancel'); });
+      dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close('cancel'); });
+      dialog.addEventListener('close', function () { var confirmed = dialog.returnValue === 'confirm'; dialog.remove(); resolve(confirmed); }, { once: true });
+      dialog.showModal();
+    });
+  }
 
   // ── 공휴일·절기(워크스테이션 캘린더와 동일 로직 이식, 일정 CRUD는 제외) ──────
   var SOLAR_TERM_NAMES = ['소한', '대한', '입춘', '우수', '경칩', '춘분', '청명', '곡우', '입하', '소만', '망종', '하지', '소서', '대서', '입추', '처서', '백로', '추분', '한로', '상강', '입동', '소설', '대설', '동지'];
@@ -275,8 +296,10 @@
       button.addEventListener('click', function (e) {
         e.preventDefault(); e.stopPropagation();
         var thumb = button.closest('.ib-leaflet-thumb');
-        if (!thumb || !window.confirm('이 리플렛을 삭제할까요?')) return;
-        deleteLeaflet(thumb.getAttribute('data-id'), thumb.getAttribute('data-path'), button);
+        if (!thumb) return;
+        confirmAction('리플렛 삭제', '삭제한 자료는 다시 복구할 수 없습니다. 삭제할까요?').then(function (confirmed) {
+          if (confirmed) deleteLeaflet(thumb.getAttribute('data-id'), thumb.getAttribute('data-path'), button);
+        });
       });
     });
   }
@@ -368,12 +391,11 @@
       .then(function (res) {
         if (!res.ok) return uploadError(res, '캘린더 기록 삭제에 실패했습니다.').then(function (error) { throw error; });
         reloadCurrent();
-        if (typeof window.toast === 'function') window.toast('리플렛을 삭제했습니다.');
+        showNotice('리플렛을 삭제했습니다.');
       })
       .catch(function (err) {
         button.disabled = false;
-        if (typeof window.toast === 'function') window.toast(err.message || '삭제에 실패했습니다.');
-        else alert(err.message || '삭제에 실패했습니다.');
+        showNotice(err.message || '삭제에 실패했습니다.');
       });
   }
   function uploadBlob(blob, fileType, mimeType, receivedDate, pageCount, ext) {
@@ -417,8 +439,8 @@
         return chain.then(function () { return uploadBlob(f, isPdf ? 'pdf' : 'image', f.type, receivedDate, null, ext); });
       }, Promise.resolve());
     }
-    task.then(function () { reloadCurrent(); if (typeof window.toast === 'function') window.toast('리플렛을 추가했습니다.'); })
-      .catch(function (err) { if (typeof window.toast === 'function') window.toast(err.message || '업로드에 실패했습니다.'); else alert(err.message || '업로드에 실패했습니다.'); });
+    task.then(function () { reloadCurrent(); showNotice('리플렛을 추가했습니다.'); })
+      .catch(function (err) { showNotice(err.message || '업로드에 실패했습니다.'); });
   }
   function bindDropEvents() {
     var days = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-day.is-droppable');
