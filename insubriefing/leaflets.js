@@ -14,9 +14,7 @@
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var BUCKET = 'briefing-leaflets';
   var DOW = ['일', '월', '화', '수', '목', '금', '토'];
-  var MAX_THUMBS_MONTH = 4;
-
-  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null };
+  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5 };
 
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function pad2(n) { return n < 10 ? '0' + n : String(n); }
@@ -24,6 +22,7 @@
   function parseDate(value) { var p = String(value).slice(0, 10).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
   function addDays(value, count) { var d = typeof value === 'string' ? parseDate(value) : new Date(value); d.setDate(d.getDate() + count); return ymd(d); }
   function startOfWeek(date) { var d = new Date(date); d.setDate(d.getDate() - d.getDay()); return d; }
+  function monthThumbCap() { return window.innerWidth <= 560 ? 2 : window.innerWidth <= 900 ? 3 : 5; }
   function currentUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (e) { return {}; } }
   function isPilot() { return String(currentUser().id || '') === PILOT_ID; }
   function publicUrl(path) { return (window.SUPABASE_URL || '') + '/storage/v1/object/public/' + BUCKET + '/' + String(path).split('/').map(encodeURIComponent).join('/'); }
@@ -178,12 +177,13 @@
 
   function renderMonth(host) {
     var c = state.cursor, year = c.getFullYear(), month = c.getMonth();
+    var cap = state.monthCap;
     var first = new Date(year, month, 1), startOffset = first.getDay();
     var daysInMonth = new Date(year, month + 1, 0).getDate();
     var html = '<div class="ib-leaflet-grid-month">' + DOW.map(function (d) { return '<div class="ib-leaflet-dow">' + d + '</div>'; }).join('');
     var leadStart = addDays(year + '-' + pad2(month + 1) + '-01', -startOffset);
-    for (var i = 0; i < startOffset; i++) html += dayCellHtml(addDays(leadStart, i), { cls: 'is-other', cap: MAX_THUMBS_MONTH });
-    for (var day = 1; day <= daysInMonth; day++) html += dayCellHtml(year + '-' + pad2(month + 1) + '-' + pad2(day), { cap: MAX_THUMBS_MONTH });
+    for (var i = 0; i < startOffset; i++) html += dayCellHtml(addDays(leadStart, i), { cls: 'is-other', cap: cap });
+    for (var day = 1; day <= daysInMonth; day++) html += dayCellHtml(year + '-' + pad2(month + 1) + '-' + pad2(day), { cap: cap });
     html += '</div>';
     host.innerHTML = html;
     bindMoreEvents();
@@ -390,6 +390,17 @@
     Array.prototype.forEach.call(modeButtons, function (btn) { btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); }); });
     var hint = document.getElementById('ib-leaflet-admin-hint');
     if (hint) hint.hidden = !isPilot();
+    state.monthCap = monthThumbCap();
+    var resizeTimer = 0;
+    window.addEventListener('resize', function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        var nextCap = monthThumbCap();
+        if (nextCap === state.monthCap) return;
+        state.monthCap = nextCap;
+        if (state.mode === 'month') render();
+      }, 120);
+    });
     renderToolbar();
     loadForCursor();
   }
