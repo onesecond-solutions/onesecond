@@ -20,7 +20,7 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'scripts', 'newsletters', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'scripts', 'newsletters', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -30,7 +30,7 @@
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
-    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [],
+    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false,
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
 
@@ -280,7 +280,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향']];
-    var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'system-links'], ['₩', '보험회사 결제정보', 'payment-info']];
+    var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'payment-info']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
@@ -336,7 +336,36 @@
     state.data.customers.forEach(function (item) { if (matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || ''))) results.push({ icon: '👤', kind: '고객', title: item.name, sub: item.phone || item.phone_raw || '', action: "OSPersonalWorkspace.showCustomer('" + esc(item.id) + "')" }); });
     state.data.consultations.forEach(function (item) { var customer = state.data.customers.find(function (c) { return String(c.id) === String(item.customer_id); }) || {}; if (matches((customer.name || '') + ' ' + (item.memo || '') + ' ' + (item.channel || ''))) results.push({ icon: '✎', kind: '상담', title: customer.name || '고객 상담', sub: item.memo || '', action: "OSPersonalWorkspace.showCustomer('" + esc(item.customer_id) + "')" }); });
     allEvents().forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || ''))) results.push({ icon: '▦', kind: '일정', title: item.title, sub: String(item.event_date || '').slice(0, 10), action: "OSPersonalWorkspace.showEvent('" + esc(item.id) + "')" }); });
-    return '<div class="pw-toolbar"><div><h2>‘' + esc(q) + '’ 검색 결과</h2><p class="pw-subtitle">자료, 고객, 상담, 일정을 한 번에 검색했습니다.</p></div><span class="pw-result-count">' + results.length + '건</span></div><div class="pw-search-results">' + (results.length ? results.map(function (item) { return '<button type="button" onclick="' + item.action + '"><span class="pw-result-icon">' + item.icon + '</span><span><small>' + item.kind + '</small><b>' + esc(item.title || '(제목 없음)') + '</b><em>' + esc(item.sub) + '</em></span><span>›</span></button>'; }).join('') : '<div class="pw-empty"><strong>검색 결과가 없습니다.</strong><span>띄어쓰기나 검색어를 바꿔 보세요.</span></div>') + '</div>';
+    carrierDirectory().forEach(function (item) { if (matches(item.name)) results.push({ icon: '↗', kind: '보험사 원전산', title: item.name, sub: item.systemUrl ? '원전산 열기' : '연결 정보 확인 중', action: "OSPersonalWorkspace.openCarrierSystem('" + esc(jsString(item.name)) + "')" }); });
+    return '<div class="pw-toolbar"><div><h2>‘' + esc(q) + '’ 검색 결과</h2><p class="pw-subtitle">자료, 고객, 상담, 일정과 보험사를 한 번에 검색했습니다.</p></div><span class="pw-result-count">' + results.length + '건</span></div><div class="pw-search-results">' + (results.length ? results.map(function (item) { return '<button type="button" onclick="' + item.action + '"><span class="pw-result-icon">' + item.icon + '</span><span><small>' + item.kind + '</small><b>' + esc(item.title || '(제목 없음)') + '</b><em>' + esc(item.sub) + '</em></span><span>›</span></button>'; }).join('') : '<div class="pw-empty"><strong>검색 결과가 없습니다.</strong><span>띄어쓰기나 검색어를 바꿔 보세요.</span></div>') + '</div>';
+  }
+
+  function carrierDirectory() { return Array.isArray(window.OS_WORKSTATION_CARRIERS) ? window.OS_WORKSTATION_CARRIERS : []; }
+  function normalizeCarrierName(value) { return String(value || '').toLocaleLowerCase('ko-KR').replace(/주식회사|보험|손해|생명|화재|라이프|[^0-9a-z가-힣]/g, ''); }
+  function loadCarrierDirectory() {
+    if (state.carriersLoaded || state.carriersLoading || !window.db || !window.db.fetch) return;
+    state.carriersLoading = true;
+    window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent('원전산 설계 바로가기') + '&select=content_html&limit=1').then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); }).then(function (rows) {
+      parseQuickLinks(rows && rows[0] && rows[0].content_html || '').forEach(function (group) { group.items.forEach(function (link) {
+        var key = normalizeCarrierName(link.name), found = carrierDirectory().find(function (carrier) { var own = normalizeCarrierName(carrier.name); return own === key || own.indexOf(key) >= 0 || key.indexOf(own) >= 0; });
+        if (found && link.href) found.systemUrl = link.href;
+      }); });
+      state.carriersLoaded = true;
+    }).catch(function () {}).finally(function () { state.carriersLoading = false; if (state.section === 'carriers' || state.query.trim()) renderContent(); });
+  }
+  function carrierCardHtml(carrier) {
+    var open = carrier.systemUrl ? '<a class="pw-carrier-open" href="' + esc(carrier.systemUrl) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(carrier.name) + ' 원전산 새 창 열기">↗</a>' : '<span class="pw-carrier-open disabled" title="연결 정보 확인 중">↗</span>';
+    return '<article class="pw-carrier-card"><div class="pw-carrier-head"><img src="' + esc(carrier.logo) + '" alt="' + esc(carrier.name) + ' 로고"><span class="pw-carrier-name">' + esc(carrier.name) + '</span>' + open + '</div><dl><div><dt>고객센터</dt><dd>' + esc(carrier.customer) + '</dd></div><div><dt>모니터링</dt><dd>' + esc(carrier.monitoring) + '</dd></div><div><dt>보험금청구</dt><dd>' + esc(carrier.claim) + '</dd></div></dl></article>';
+  }
+  function carriersHtml() {
+    loadCarrierDirectory();
+    var rows = carrierDirectory().filter(function (carrier) { return carrier.type === state.carrierType; });
+    return '<div class="pw-toolbar pw-carrier-toolbar"><h2>원전산 바로가기</h2><div class="pw-carrier-tabs" role="tablist"><button type="button" class="' + (state.carrierType === 'nonlife' ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCarrierType(\'nonlife\')">손해보험</button><button type="button" class="' + (state.carrierType === 'life' ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCarrierType(\'life\')">생명보험</button></div></div><div class="pw-carrier-grid">' + rows.map(carrierCardHtml).join('') + '</div>';
+  }
+  function openCarrierSystem(name) {
+    var carrier = carrierDirectory().find(function (item) { return item.name === name; });
+    if (carrier && carrier.systemUrl) { window.open(carrier.systemUrl, '_blank', 'noopener,noreferrer'); return; }
+    state.section = 'carriers'; state.query = ''; renderShell(); setUrl(true); loadCarrierDirectory();
   }
   function row(title, subtitle, right, action) {
     return '<button type="button" class="pw-row" onclick="' + action + '"><span><b>' + esc(title || '(제목 없음)') + '</b><small>' + esc(subtitle || '') + '</small></span><span>' + right + '</span></button>';
@@ -1039,6 +1068,7 @@
     if (state.section === 'customers') return customersHtml();
     if (state.section === 'consultations') return consultationsHtml();
     if (state.section === 'calendar') return calendarHtml();
+    if (state.section === 'carriers') return carriersHtml();
     if (state.section === 'scripts') return scriptsHtml();
     if (state.section === 'newsletters') return newslettersHtml();
     if (state.section === 'trash') return trashHtml();
@@ -1048,6 +1078,7 @@
 
   function renderShell() {
     var view = document.getElementById('v-personal-workspace'); if (!view) return;
+    loadCarrierDirectory();
     var head = STANDALONE ? '' : '<header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
     view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
       + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
@@ -1800,7 +1831,7 @@
     if (key === 'bmi') return openBmiTool();
     if (key === 'insurance-age') return openInsuranceAgeTool();
     if (key === 'image-convert') return openImageConvertTool();
-    if (key === 'system-links') { window.location.href = '/insubriefing/workstation/carriers/'; return; }
+    if (key === 'system-links') { go('carriers'); return; }
     if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보', 'payment');
   }
   function parseQuickLinks(html) {
@@ -2154,7 +2185,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
+    openTool: openTool, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
