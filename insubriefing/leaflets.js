@@ -464,8 +464,6 @@
     if (todayBtn) todayBtn.addEventListener('click', goToday);
     var modeButtons = document.querySelectorAll('.ib-leaflet-mode');
     Array.prototype.forEach.call(modeButtons, function (btn) { btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); }); });
-    var hint = document.getElementById('ib-leaflet-admin-hint');
-    if (hint) hint.hidden = !isPilot();
     state.monthCap = monthThumbCap();
     var resizeTimer = 0;
     window.addEventListener('resize', function () {
