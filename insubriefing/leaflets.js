@@ -275,7 +275,10 @@
     hoverEl.className = 'ib-leaflet-hover';
     hoverEl.innerHTML = '<img src="' + esc(node.getAttribute('data-url')) + '" alt="">';
     document.body.appendChild(hoverEl);
-    var top = Math.max(8, rect.top - 180), left = Math.min(window.innerWidth - 220, rect.left);
+    var hoverRect = hoverEl.getBoundingClientRect(), gap = 8;
+    var top = rect.top - hoverRect.height - gap;
+    if (top < gap) top = Math.max(gap, Math.min(window.innerHeight - hoverRect.height - gap, rect.bottom + gap));
+    var left = Math.min(Math.max(gap, rect.left), Math.max(gap, window.innerWidth - hoverRect.width - gap));
     hoverEl.style.top = top + 'px'; hoverEl.style.left = left + 'px';
   }
   function hideHover() { if (hoverEl) { hoverEl.remove(); hoverEl = null; } }
