@@ -57,7 +57,9 @@
   }
 
   // ── 3. 토큰 갱신 ─────────────────────────────────────────────────────────
-  async function refreshToken() {
+  var refreshInFlight = null;
+
+  async function refreshTokenOnce() {
     var refreshTk = getRefreshToken();
     if (!refreshTk) return null;
     try {
@@ -78,6 +80,36 @@
       return data.access_token;
     } catch (e) {
       return null;
+    }
+  }
+
+  function refreshToken() {
+    if (refreshInFlight) return refreshInFlight;
+    refreshInFlight = refreshTokenOnce().finally(function () { refreshInFlight = null; });
+    return refreshInFlight;
+  }
+
+  function tokenExpiresSoon(token) {
+    if (!token) return false;
+    try {
+      var part = token.split('.')[1];
+      if (!part) return false;
+      part = part.replace(/-/g, '+').replace(/_/g, '/');
+      while (part.length % 4) part += '=';
+      var payload = JSON.parse(atob(part));
+      return !!payload.exp && payload.exp <= Math.floor(Date.now() / 1000) + 30;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  async function isExpiredClaimResponse(response) {
+    if (!response || [400, 401, 403].indexOf(response.status) === -1) return false;
+    try {
+      var text = await response.clone().text();
+      return /exp(?:iration)?[\s"']*claim|claim[\s"']*timestamp|jwt expired/i.test(text);
+    } catch (_e) {
+      return false;
     }
   }
 
@@ -110,12 +142,19 @@
        빈 'Bearer ' 는 Supabase가 401(PGRST301 Empty JWT)로 거부 → 비로그인 홈 콘솔 빨간 에러.
        토큰 없을 땐 헤더 자체를 생략 = anon 조회(공개 데이터 노출 / 보호 데이터는 빈 결과). */
     var _authTk = getToken();
+    if (_authTk && tokenExpiresSoon(_authTk)) {
+      _authTk = await refreshToken();
+      if (!_authTk) {
+        handleTokenExpired();
+        throw new Error('TOKEN_EXPIRED');
+      }
+    }
     if (_authTk) { options.headers['Authorization'] = 'Bearer ' + _authTk; }
     else { try { delete options.headers['Authorization']; } catch (e) { options.headers['Authorization'] = undefined; } }
 
     var res = await fetch(SUPABASE_URL + path, options);
 
-    if (res.status === 401) {
+    if (res.status === 401 || await isExpiredClaimResponse(res)) {
       /* 2026-06-04: 토큰이 아예 없을 때(부팅/OAuth 콜백 진행 중)는 '만료'가 아니라 '아직 미인증'.
          이 경우 handleTokenExpired(클리어+세션만료 알림+/index 리다이렉트)를 호출하면
          Google OAuth 콜백이 토큰 저장 전에 튕겨나가 무한 루프 → 401 응답만 반환하고 끝낸다.
