@@ -31,7 +31,26 @@
   function publicUrl(path) { return (window.SUPABASE_URL || '') + '/storage/v1/object/public/' + BUCKET + '/' + String(path).split('/').map(encodeURIComponent).join('/'); }
   function fileExtension(name) { var clean = String(name || '').split('?')[0], dot = clean.lastIndexOf('.'); return dot >= 0 ? clean.slice(dot + 1).toLowerCase() : ''; }
   function formatBytes(bytes) { var size = Number(bytes || 0); if (!size) return ''; return size < 1024 * 1024 ? Math.max(1, Math.round(size / 1024)) + 'KB' : (size / 1024 / 1024).toFixed(1) + 'MB'; }
-  function originalName(path) { var base = String(path || '').split('/').pop() || '', marker = base.indexOf('--'); return marker >= 0 ? base.slice(marker + 2) : base; }
+  function encodeStoredName(value) {
+    var bytes = new TextEncoder().encode(String(value || '파일')), binary = '';
+    Array.prototype.forEach.call(bytes, function (byte) { binary += String.fromCharCode(byte); });
+    return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+  function decodeStoredName(value) {
+    try {
+      var encoded = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+      while (encoded.length % 4) encoded += '=';
+      var binary = window.atob(encoded), bytes = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    } catch (e) { return ''; }
+  }
+  function originalName(path) {
+    var base = String(path || '').split('/').pop() || '', marker = base.indexOf('--');
+    if (marker < 0) return base;
+    var stored = base.slice(marker + 2);
+    return stored.indexOf('b64_') === 0 ? (decodeStoredName(stored.slice(4)) || stored) : stored;
+  }
   function safeFileName(name) { return String(name || '파일').replace(/[\\/:*?"<>|%]/g, '_').replace(/\s+/g, ' ').trim().slice(-120) || '파일'; }
   function normalizedHttpUrl(value) { try { var raw = String(value || '').trim(); if (!/^https?:\/\/\S+$/i.test(raw)) return ''; var url = new URL(raw); return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : ''; } catch (e) { return ''; } }
   function linkName(url) { try { return (new URL(url).hostname || '링크') + '.url'; } catch (e) { return '링크.url'; } }
@@ -472,7 +491,7 @@
     var id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
     var storedName = safeFileName(sourceName || (id + '.' + ext));
     if (!fileExtension(storedName) && ext) storedName += '.' + ext;
-    var path = owner + '/' + receivedDate + '/' + id + '--' + storedName;
+    var path = owner + '/' + receivedDate + '/' + id + '--b64_' + encodeStoredName(storedName);
     var encodedPath = path.split('/').map(encodeURIComponent).join('/');
     return window.db.fetch('/storage/v1/object/' + BUCKET + '/' + encodedPath, {
       method: 'POST',
