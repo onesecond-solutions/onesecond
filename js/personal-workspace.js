@@ -1800,7 +1800,7 @@
     if (key === 'bmi') return openBmiTool();
     if (key === 'insurance-age') return openInsuranceAgeTool();
     if (key === 'image-convert') return openImageConvertTool();
-    if (key === 'system-links') return openQuickContentTool('원전산 설계 바로가기', '원전산 바로가기', 'links');
+    if (key === 'system-links') { window.location.href = '/insubriefing/workstation/carriers/'; return; }
     if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보', 'payment');
   }
   function parseQuickLinks(html) {
