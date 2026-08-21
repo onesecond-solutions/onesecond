@@ -163,8 +163,9 @@
     var overflow = cap && items.length > cap ? items.length - cap : 0;
     var thumbs = shown.map(function (item) {
       var url = publicUrl(item.storage_path), isPdf = item.file_type === 'pdf';
-      return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + '" data-url="' + esc(url) + '" data-name="' + esc(dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
+      return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + '" data-id="' + esc(item.id) + '" data-path="' + esc(item.storage_path) + '" data-url="' + esc(url) + '" data-name="' + esc(dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
         + (isPdf ? '<span class="ib-leaflet-pdf-badge">PDF</span>' : '<img loading="lazy" src="' + esc(url) + '" alt="리플렛">')
+        + (admin ? '<button type="button" class="ib-leaflet-delete" aria-label="리플렛 삭제" title="삭제">×</button>' : '')
         + '</span>';
     }).join('');
     var holidayHtml = holidays.map(function (h) { return '<span class="ib-leaflet-holiday ib-leaflet-holiday-' + h.kind + '">' + esc(h.title) + '</span>'; }).join('');
@@ -266,6 +267,18 @@
       node.addEventListener('mouseenter', function () { showHover(node); });
       node.addEventListener('mouseleave', hideHover);
     });
+    if (isPilot()) bindDeleteEvents();
+  }
+  function bindDeleteEvents() {
+    var buttons = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-delete');
+    Array.prototype.forEach.call(buttons, function (button) {
+      button.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var thumb = button.closest('.ib-leaflet-thumb');
+        if (!thumb || !window.confirm('이 리플렛을 삭제할까요?')) return;
+        deleteLeaflet(thumb.getAttribute('data-id'), thumb.getAttribute('data-path'), button);
+      });
+    });
   }
   function showHover(node) {
     if (node.getAttribute('data-pdf') === '1') return; // PDF는 클릭 미리보기로만(호버 확대는 이미지만)
@@ -338,6 +351,30 @@
       error.status = status;
       return error;
     });
+  }
+  function deleteLeaflet(id, storagePath, button) {
+    if (!id || !storagePath || !window.db || !window.db.fetch) return;
+    hideHover();
+    button.disabled = true;
+    var encodedPath = String(storagePath).split('/').map(encodeURIComponent).join('/');
+    window.db.fetch('/storage/v1/object/' + BUCKET + '/' + encodedPath, { method: 'DELETE' })
+      .then(function (res) {
+        if (!res.ok && res.status !== 404) return uploadError(res, '저장 파일 삭제에 실패했습니다.').then(function (error) { throw error; });
+        return window.db.fetch('/rest/v1/briefing_leaflets?id=eq.' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { Prefer: 'return=minimal' }
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) return uploadError(res, '캘린더 기록 삭제에 실패했습니다.').then(function (error) { throw error; });
+        reloadCurrent();
+        if (typeof window.toast === 'function') window.toast('리플렛을 삭제했습니다.');
+      })
+      .catch(function (err) {
+        button.disabled = false;
+        if (typeof window.toast === 'function') window.toast(err.message || '삭제에 실패했습니다.');
+        else alert(err.message || '삭제에 실패했습니다.');
+      });
   }
   function uploadBlob(blob, fileType, mimeType, receivedDate, pageCount, ext) {
     var owner = currentUser().id;
