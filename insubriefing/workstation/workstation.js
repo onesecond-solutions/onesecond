@@ -6,14 +6,15 @@
   function currentBgMode() { try { return localStorage.getItem('ws_bg_mode') || 'image'; } catch (_e) { return 'image'; } }
   function applyBgMode(mode) {
     var body = document.body;
-    body.classList.remove('ws-bg-flat', 'ws-bg-white', 'ws-bg-dark');
+    body.classList.remove('ws-bg-flat', 'ws-bg-white', 'ws-bg-dark', 'ws-bg-namsan');
     if (mode === 'white') body.classList.add('ws-bg-flat', 'ws-bg-white');
     else if (mode === 'dark') body.classList.add('ws-bg-flat', 'ws-bg-dark');
+    else if (mode === 'namsan') body.classList.add('ws-bg-namsan');
     document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
     try { localStorage.setItem('ws_bg_mode', mode); } catch (_e) {}
   }
   function bgModeButtonsHtml(active) {
-    var modes = [['image', '기본이미지'], ['white', '화이트'], ['dark', '다크']];
+    var modes = [['image', '기본이미지'], ['namsan', '남산'], ['white', '화이트'], ['dark', '다크']];
     return modes.map(function (m) { return '<button type="button" class="ws-bgmode-btn' + (m[0] === active ? ' on' : '') + '" data-bg="' + m[0] + '">' + m[1] + '</button>'; }).join('');
   }
   applyBgMode(currentBgMode());
