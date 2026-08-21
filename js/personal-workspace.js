@@ -20,7 +20,7 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'scripts', 'newsletters', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -30,7 +30,7 @@
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
-    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false,
+    status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentData: null, paymentLoading: false, paymentError: '',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
 
@@ -280,7 +280,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향']];
-    var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'payment-info']];
+    var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
@@ -1069,6 +1069,7 @@
     if (state.section === 'consultations') return consultationsHtml();
     if (state.section === 'calendar') return calendarHtml();
     if (state.section === 'carriers') return carriersHtml();
+    if (state.section === 'payments') return paymentSectionHtml();
     if (state.section === 'scripts') return scriptsHtml();
     if (state.section === 'newsletters') return newslettersHtml();
     if (state.section === 'trash') return trashHtml();
@@ -1832,7 +1833,7 @@
     if (key === 'insurance-age') return openInsuranceAgeTool();
     if (key === 'image-convert') return openImageConvertTool();
     if (key === 'system-links') { go('carriers'); return; }
-    if (key === 'payment-info') return openQuickContentTool('보험회사 결제정보', '보험회사 결제정보', 'payment');
+    if (key === 'payment-info') { go('payments'); return; }
   }
   function parseQuickLinks(html) {
     var wrapper = document.createElement('div'); wrapper.innerHTML = html;
@@ -1896,6 +1897,30 @@
     }).join('');
     var footer = parsed.footerHtml ? '<div class="pw-payinfo-footer">' + parsed.footerHtml + '</div>' : '';
     return search + notice + '<div class="pw-quick-tool-body pw-payinfo-body" id="pw-qlink-body">' + groups + '</div>' + footer;
+  }
+  function loadPaymentInfo() {
+    if (state.paymentData || state.paymentLoading) return;
+    state.paymentLoading = true; state.paymentError = '';
+    api('quick_contents?tab_title=eq.' + encodeURIComponent('보험회사 결제정보') + '&select=content_html&limit=1').then(function (rows) {
+      var html = rows && rows[0] && rows[0].content_html;
+      state.paymentData = html ? parsePaymentInfo(html) : null;
+      if (!state.paymentData) state.paymentError = '등록된 결제정보가 없습니다.';
+    }).catch(function () { state.paymentError = '결제정보를 불러오지 못했습니다. 다시 시도해 주세요.'; }).finally(function () { state.paymentLoading = false; if (state.section === 'payments') renderContent(); });
+  }
+  function paymentSectionHtml() {
+    loadPaymentInfo();
+    var head = '<div class="pw-toolbar"><h2>보험회사 결제정보</h2></div>';
+    if (state.paymentLoading && !state.paymentData) return head + '<div class="pw-state"><strong>결제정보를 불러오는 중입니다.</strong></div>';
+    if (!state.paymentData) return head + '<div class="pw-state"><strong>' + esc(state.paymentError || '결제정보가 없습니다.') + '</strong><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.reloadPaymentInfo()">다시 불러오기</button></div>';
+    var parsed = state.paymentData;
+    var notice = parsed.noticeHtml ? '<div class="pw-payinfo-notice">' + parsed.noticeHtml + '</div>' : '';
+    var groups = parsed.groups.map(function (group) {
+      return '<section class="pw-payment-group"><h3>' + esc(group.label) + '</h3><div class="pw-payinfo-grid">' + group.cards.map(function (card) {
+        return '<article class="pw-payinfo-card"><strong>' + card.name + '</strong><div class="pw-payinfo-detail">' + card.detail + '</div></article>';
+      }).join('') + '</div></section>';
+    }).join('');
+    var footer = parsed.footerHtml ? '<div class="pw-payinfo-footer">' + parsed.footerHtml + '</div>' : '';
+    return head + '<div class="pw-payment-page">' + notice + '<div class="pw-payment-groups">' + groups + '</div>' + footer + '</div>';
   }
   function openQuickContentTool(tabTitle, popupTitle, mode) {
     var toolClass = mode === 'payment' ? 'pw-quick-tool pw-payinfo-tool' : 'pw-quick-tool';
@@ -2185,7 +2210,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
+    openTool: openTool, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
