@@ -354,8 +354,9 @@
     }).catch(function () {}).finally(function () { state.carriersLoading = false; if (state.section === 'carriers' || state.query.trim()) renderContent(); });
   }
   function carrierCardHtml(carrier) {
-    var open = carrier.systemUrl ? '<a class="pw-carrier-open" href="' + esc(carrier.systemUrl) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(carrier.name) + ' 원전산 새 창 열기">↗</a>' : '<span class="pw-carrier-open disabled" title="연결 정보 확인 중">↗</span>';
-    return '<article class="pw-carrier-card"><div class="pw-carrier-head"><img src="' + esc(carrier.logo) + '" alt="' + esc(carrier.name) + ' 로고"><span class="pw-carrier-name">' + esc(carrier.name) + '</span>' + open + '</div><dl><div><dt>고객센터</dt><dd>' + esc(carrier.customer) + '</dd></div><div><dt>모니터링</dt><dd>' + esc(carrier.monitoring) + '</dd></div><div><dt>보험금청구</dt><dd>' + esc(carrier.claim) + '</dd></div></dl></article>';
+    var homepage = carrier.homepageUrl ? '<a class="pw-carrier-open home" href="' + esc(carrier.homepageUrl) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(carrier.name) + ' 홈페이지 새 창 열기" title="홈페이지">⌂</a>' : '';
+    var system = carrier.systemUrl ? '<a class="pw-carrier-open" href="' + esc(carrier.systemUrl) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(carrier.name) + ' 원전산 새 창 열기" title="원전산 열기">↗</a>' : '<span class="pw-carrier-open disabled" title="원전산 연결 정보 확인 중">↗</span>';
+    return '<article class="pw-carrier-card"><div class="pw-carrier-head"><img src="' + esc(carrier.logo) + '" alt="' + esc(carrier.name) + ' 로고"><span class="pw-carrier-name">' + esc(carrier.name) + '</span><span class="pw-carrier-actions">' + homepage + system + '</span></div><dl><div><dt>고객센터</dt><dd>' + esc(carrier.customer) + '</dd></div><div><dt>모니터링</dt><dd>' + esc(carrier.monitoring) + '</dd></div><div><dt>보험금청구</dt><dd>' + esc(carrier.claim) + '</dd></div></dl></article>';
   }
   function carriersHtml() {
     loadCarrierDirectory();
