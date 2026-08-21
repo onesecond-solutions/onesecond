@@ -62,6 +62,10 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-rich-color-pop summary::-webkit-details-marker{display:none}
 #v-personal-workspace .pw-rich-color{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);color:var(--tp);font-size:13px;font-weight:700;cursor:pointer}
 #v-personal-workspace .pw-rich-color:hover{background:var(--s1)}
+/* 드롭다운이 열렸는데도 버튼 자체엔 아무 시각 반응이 없어 "눌렀는데 반응 없다"고
+   오인하기 쉬웠음(2026-08-20) — 열려 있는 동안 버튼 배경을 hover와 동일하게
+   눌린 상태로 표시해 "지금 열려 있다"는 확신을 줌. */
+#v-personal-workspace .pw-rich-color-pop[open] summary{background:var(--s2);box-shadow:inset 0 0 0 1px var(--bd)}
 /* 둘 다 "A"라 구분이 안 된다는 지적(2026-08-20) — 글자색은 글자 아래 빨간 밑줄,
    형광펜은 글자 뒤에 노란 마커 배경으로 한눈에 구분(구글독스식 관례).
    추가 지적(2026-08-20, "글자색이 활성이 안 된 것처럼 보인다") — 형광펜은 노란
