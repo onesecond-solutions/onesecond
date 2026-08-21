@@ -14,7 +14,10 @@
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var BUCKET = 'briefing-leaflets';
   var DOW = ['일', '월', '화', '수', '목', '금', '토'];
-  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5 };
+  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5, selectedDate: '' };
+  var MAX_FILE_SIZE = 20 * 1024 * 1024;
+  var OFFICE_EXTENSIONS = ['xls', 'xlsx', 'csv', 'doc', 'docx', 'ppt', 'pptx', 'hwp', 'hwpx', 'odt', 'ods', 'odp', 'rtf'];
+  var TEXT_EXTENSIONS = ['txt', 'md', 'log', 'json', 'xml', 'yaml', 'yml'];
 
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function pad2(n) { return n < 10 ? '0' + n : String(n); }
@@ -26,6 +29,21 @@
   function currentUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (e) { return {}; } }
   function isPilot() { return String(currentUser().id || '') === PILOT_ID; }
   function publicUrl(path) { return (window.SUPABASE_URL || '') + '/storage/v1/object/public/' + BUCKET + '/' + String(path).split('/').map(encodeURIComponent).join('/'); }
+  function fileExtension(name) { var clean = String(name || '').split('?')[0], dot = clean.lastIndexOf('.'); return dot >= 0 ? clean.slice(dot + 1).toLowerCase() : ''; }
+  function formatBytes(bytes) { var size = Number(bytes || 0); if (!size) return ''; return size < 1024 * 1024 ? Math.max(1, Math.round(size / 1024)) + 'KB' : (size / 1024 / 1024).toFixed(1) + 'MB'; }
+  function originalName(path) { var base = String(path || '').split('/').pop() || '', marker = base.indexOf('--'); return marker >= 0 ? base.slice(marker + 2) : base; }
+  function safeFileName(name) { return String(name || '파일').replace(/[\\/:*?"<>|%]/g, '_').replace(/\s+/g, ' ').trim().slice(-120) || '파일'; }
+  function normalizedHttpUrl(value) { try { var raw = String(value || '').trim(); if (!/^https?:\/\/\S+$/i.test(raw)) return ''; var url = new URL(raw); return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : ''; } catch (e) { return ''; } }
+  function linkName(url) { try { return (new URL(url).hostname || '링크') + '.url'; } catch (e) { return '링크.url'; } }
+  function fileKind(file) {
+    var ext = fileExtension(file && file.name), mime = String(file && file.type || '').toLowerCase();
+    if (/^image\//.test(mime) || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'avif'].indexOf(ext) >= 0) return 'image';
+    if (mime === 'application/pdf' || ext === 'pdf') return 'pdf';
+    if (mime === 'text/uri-list' || ext === 'url') return 'link';
+    if (OFFICE_EXTENSIONS.indexOf(ext) >= 0) return 'document';
+    if (/^text\//.test(mime) || TEXT_EXTENSIONS.indexOf(ext) >= 0) return 'text';
+    return '';
+  }
   function showNotice(message) {
     if (typeof window.toast === 'function') { window.toast(message); return; }
     var notice = document.createElement('div');
@@ -33,13 +51,16 @@
     document.body.appendChild(notice);
     window.setTimeout(function () { notice.remove(); }, 3200);
   }
-  function confirmAction(title, message) {
+  function confirmAction(title, message, confirmLabel, dangerous) {
     return new Promise(function (resolve) {
       var dialog = document.createElement('dialog');
       dialog.className = 'ib-confirm-dialog';
-      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">보험브리핑</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="is-danger">삭제</button></div></form>';
+      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">보험브리핑</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="ib-confirm-submit">확인</button></div></form>';
       dialog.querySelector('h2').textContent = title;
       dialog.querySelector('p').textContent = message;
+      var submit = dialog.querySelector('.ib-confirm-submit');
+      submit.textContent = confirmLabel || '확인';
+      if (dangerous) submit.classList.add('is-danger');
       document.body.appendChild(dialog);
       dialog.addEventListener('cancel', function (e) { e.preventDefault(); dialog.close('cancel'); });
       dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close('cancel'); });
@@ -101,7 +122,7 @@
   function loadRange(start, end, done) {
     if (!window.db || !window.db.fetchPublic) return;
     state.loading = true; render();
-    window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.asc,sort_order.asc&select=id,file_type,storage_path,mime_type,received_date,sort_order')
+    window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.asc,sort_order.asc&select=id,file_type,storage_path,mime_type,file_size,received_date,sort_order')
       .then(function (res) { return res.ok ? res.json() : []; })
       .then(function (rows) {
         var map = {};
@@ -114,7 +135,7 @@
     if (!window.db || !window.db.fetchPublic) return;
     state.loading = true; render();
     var end = ymd(new Date()), start = addDays(end, -120);
-    window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.desc,sort_order.asc&select=id,file_type,storage_path,mime_type,received_date,sort_order')
+    window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.desc,sort_order.asc&select=id,file_type,storage_path,mime_type,file_size,received_date,sort_order')
       .then(function (res) { return res.ok ? res.json() : []; })
       .then(function (rows) {
         var map = {}, order = [];
@@ -141,7 +162,7 @@
   }
 
   function setMode(mode) {
-    state.mode = mode; renderToolbar();
+    state.mode = mode; state.selectedDate = ''; renderToolbar();
     if (mode === 'agenda') { loadAgenda(); return; }
     loadForCursor();
   }
@@ -156,10 +177,10 @@
     if (state.mode === 'month') c.setMonth(c.getMonth() + delta);
     else if (state.mode === 'week') c.setDate(c.getDate() + delta * 7);
     else c.setDate(c.getDate() + delta);
-    state.cursor = c; renderToolbar(); loadForCursor();
+    state.cursor = c; state.selectedDate = ''; renderToolbar(); loadForCursor();
   }
-  function goToday() { state.cursor = new Date(); renderToolbar(); if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
-  function goToDate(dateStr) { state.cursor = parseDate(dateStr); state.mode = 'day'; renderToolbar(); loadForCursor(); }
+  function goToday() { state.cursor = new Date(); state.selectedDate = ''; renderToolbar(); if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
+  function goToDate(dateStr) { state.cursor = parseDate(dateStr); state.mode = 'day'; state.selectedDate = ''; renderToolbar(); loadForCursor(); }
 
   // ── 렌더 디스패치 ────────────────────────────────────────────────────────
   function render() {
@@ -183,15 +204,19 @@
     var shown = cap ? items.slice(0, cap) : items;
     var overflow = cap && items.length > cap ? items.length - cap : 0;
     var thumbs = shown.map(function (item) {
-      var url = publicUrl(item.storage_path), isPdf = item.file_type === 'pdf';
-      return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + '" data-id="' + esc(item.id) + '" data-path="' + esc(item.storage_path) + '" data-url="' + esc(url) + '" data-name="' + esc(dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
-        + (isPdf ? '<span class="ib-leaflet-pdf-badge">PDF</span>' : '<img loading="lazy" src="' + esc(url) + '" alt="리플렛">')
+      var url = publicUrl(item.storage_path), name = originalName(item.storage_path), ext = fileExtension(name);
+      var kind = fileKind({ name: name, type: item.mime_type || '' }), isPdf = kind === 'pdf', isDocument = kind === 'document' || kind === 'text' || kind === 'link';
+      var content = isPdf ? '<span class="ib-leaflet-pdf-badge">PDF</span>' : isDocument
+        ? '<span class="ib-leaflet-file-card"><b>' + esc(kind === 'link' ? 'LINK' : (ext || 'FILE').toUpperCase()) + '</b><small>' + esc(name) + '</small><em>' + esc(formatBytes(item.file_size)) + '</em></span>'
+        : '<img loading="lazy" src="' + esc(url) + '" alt="리플렛">';
+      return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + (isDocument ? ' is-document' : '') + '" data-id="' + esc(item.id) + '" data-path="' + esc(item.storage_path) + '" data-url="' + esc(url) + '" data-name="' + esc(name || dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-kind="' + esc(kind) + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
+        + content
         + (admin ? '<button type="button" class="ib-leaflet-delete" aria-label="리플렛 삭제" title="삭제">×</button>' : '')
         + '</span>';
     }).join('');
     var holidayHtml = holidays.map(function (h) { return '<span class="ib-leaflet-holiday ib-leaflet-holiday-' + h.kind + '">' + esc(h.title) + '</span>'; }).join('');
     var moreHtml = overflow ? '<button type="button" class="ib-leaflet-more" data-date="' + esc(dateStr) + '">+' + overflow + '개 더보기</button>' : '';
-    return '<div class="ib-leaflet-day' + (isToday ? ' is-today' : '') + (admin ? ' is-droppable' : '') + (opts.cls ? ' ' + opts.cls : '') + '" data-date="' + esc(dateStr) + '">'
+    return '<div class="ib-leaflet-day' + (isToday ? ' is-today' : '') + (admin ? ' is-droppable' : '') + (state.selectedDate === dateStr ? ' is-selected' : '') + (opts.cls ? ' ' + opts.cls : '') + '" data-date="' + esc(dateStr) + '"' + (admin ? ' tabindex="0" role="button" aria-label="' + esc(dateStr) + ' 자료 등록 날짜 선택"' : '') + '>'
       + '<span class="ib-leaflet-daynum">' + parseDate(dateStr).getDate() + '</span>'
       + holidayHtml
       + '<div class="ib-leaflet-thumbs">' + thumbs + '</div>' + moreHtml + '</div>';
@@ -283,7 +308,11 @@
     Array.prototype.forEach.call(nodes, function (node) {
       node.addEventListener('click', function (e) {
         e.stopPropagation();
-        if (window.LeafletPreview) window.LeafletPreview.open(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-mime'));
+        var kind = node.getAttribute('data-kind');
+        if (kind === 'document') downloadFile(node.getAttribute('data-url'), node.getAttribute('data-name'));
+        else if (kind === 'link') openStoredLink(node.getAttribute('data-url'));
+        else if (kind === 'text') openTextPreview(node.getAttribute('data-url'), node.getAttribute('data-name'));
+        else if (window.LeafletPreview) window.LeafletPreview.open(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-mime'));
       });
       node.addEventListener('mouseenter', function () { showHover(node); });
       node.addEventListener('mouseleave', hideHover);
@@ -302,6 +331,46 @@
         });
       });
     });
+  }
+  function downloadFile(url, name) {
+    var link = document.createElement('a');
+    link.href = url; link.download = name || ''; link.target = '_blank'; link.rel = 'noopener';
+    document.body.appendChild(link); link.click(); link.remove();
+  }
+  function openStoredLink(url) {
+    fetch(url).then(function (res) { if (!res.ok) throw new Error('링크를 불러오지 못했습니다.'); return res.text(); })
+      .then(function (content) {
+        var target = normalizedHttpUrl(content) || normalizedHttpUrl((String(content).match(/^URL=(.+)$/im) || [])[1]);
+        if (!target) throw new Error('안전하지 않거나 올바르지 않은 URL입니다.');
+        window.open(target, '_blank', 'noopener');
+      }).catch(function (err) { showNotice(err.message || '링크를 열지 못했습니다.'); });
+  }
+  function renderLinkedText(host, content) {
+    var regex = /https?:\/\/[^\s<>"']+/gi, cursor = 0, match;
+    while ((match = regex.exec(content))) {
+      if (match.index > cursor) host.appendChild(document.createTextNode(content.slice(cursor, match.index)));
+      var href = normalizedHttpUrl(match[0]);
+      if (href) { var link = document.createElement('a'); link.href = href; link.target = '_blank'; link.rel = 'noopener'; link.textContent = match[0]; host.appendChild(link); }
+      else host.appendChild(document.createTextNode(match[0]));
+      cursor = regex.lastIndex;
+    }
+    if (cursor < content.length) host.appendChild(document.createTextNode(content.slice(cursor)));
+  }
+  function openTextPreview(url, name) {
+    fetch(url).then(function (res) { if (!res.ok) throw new Error('텍스트를 불러오지 못했습니다.'); return res.text(); })
+      .then(function (content) {
+        var dialog = document.createElement('dialog');
+        dialog.className = 'ib-text-dialog';
+        dialog.innerHTML = '<div class="ib-text-head"><div><span>보험브리핑</span><h2></h2></div><button type="button" aria-label="닫기">×</button></div><pre></pre><div class="ib-text-actions"><a target="_blank" rel="noopener" download>다운로드</a></div>';
+        dialog.querySelector('h2').textContent = name || '텍스트 자료';
+        renderLinkedText(dialog.querySelector('pre'), content);
+        var close = dialog.querySelector('button'), download = dialog.querySelector('a');
+        close.addEventListener('click', function () { dialog.close(); });
+        download.href = url; download.download = name || '';
+        dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close(); });
+        dialog.addEventListener('close', function () { dialog.remove(); }, { once: true });
+        document.body.appendChild(dialog); dialog.showModal();
+      }).catch(function (err) { showNotice(err.message || '텍스트를 불러오지 못했습니다.'); });
   }
   function showHover(node) {
     if (node.getAttribute('data-pdf') === '1') return; // PDF는 클릭 미리보기로만(호버 확대는 이미지만)
@@ -398,10 +467,12 @@
         showNotice(err.message || '삭제에 실패했습니다.');
       });
   }
-  function uploadBlob(blob, fileType, mimeType, receivedDate, pageCount, ext) {
+  function uploadBlob(blob, fileType, mimeType, receivedDate, pageCount, ext, sourceName) {
     var owner = currentUser().id;
     var id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
-    var path = owner + '/' + receivedDate + '/' + id + '.' + ext;
+    var storedName = safeFileName(sourceName || (id + '.' + ext));
+    if (!fileExtension(storedName) && ext) storedName += '.' + ext;
+    var path = owner + '/' + receivedDate + '/' + id + '--' + storedName;
     var encodedPath = path.split('/').map(encodeURIComponent).join('/');
     return window.db.fetch('/storage/v1/object/' + BUCKET + '/' + encodedPath, {
       method: 'POST',
@@ -420,27 +491,59 @@
     });
   }
   function reloadCurrent() { if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
-  function handleDrop(receivedDate, fileList) {
-    var files = Array.prototype.filter.call(fileList, function (f) { return /^image\//.test(f.type) || f.type === 'application/pdf'; });
-    if (!files.length) return;
-    var allImages = files.every(function (f) { return /^image\//.test(f.type); });
+  function runUpload(receivedDate, files) {
+    var allImages = files.every(function (f) { return fileKind(f) === 'image'; });
     var task;
     if (files.length === 1) {
-      var f = files[0], isPdf = f.type === 'application/pdf';
-      var ext = isPdf ? 'pdf' : (f.name.split('.').pop() || 'jpg');
-      task = uploadBlob(f, isPdf ? 'pdf' : 'image', f.type, receivedDate, null, ext);
+      var f = files[0], kind = fileKind(f), ext = fileExtension(f.name) || (kind === 'image' ? 'jpg' : kind === 'text' ? 'txt' : 'bin');
+      task = uploadBlob(f, kind === 'image' ? 'image' : 'pdf', f.type || 'application/octet-stream', receivedDate, null, ext, f.name);
     } else if (allImages) {
       task = mergeImagesToPdf(files).then(function (bytes) {
-        return uploadBlob(new Blob([bytes], { type: 'application/pdf' }), 'pdf', 'application/pdf', receivedDate, files.length, 'pdf');
+        return uploadBlob(new Blob([bytes], { type: 'application/pdf' }), 'pdf', 'application/pdf', receivedDate, files.length, 'pdf', receivedDate + ' 리플렛 ' + files.length + '장.pdf');
       });
     } else {
       task = files.reduce(function (chain, f) {
-        var isPdf = f.type === 'application/pdf', ext = isPdf ? 'pdf' : (f.name.split('.').pop() || 'jpg');
-        return chain.then(function () { return uploadBlob(f, isPdf ? 'pdf' : 'image', f.type, receivedDate, null, ext); });
+        var kind = fileKind(f), ext = fileExtension(f.name) || (kind === 'image' ? 'jpg' : kind === 'text' ? 'txt' : 'bin');
+        return chain.then(function () { return uploadBlob(f, kind === 'image' ? 'image' : 'pdf', f.type || 'application/octet-stream', receivedDate, null, ext, f.name); });
       }, Promise.resolve());
     }
     task.then(function () { reloadCurrent(); showNotice('리플렛을 추가했습니다.'); })
       .catch(function (err) { showNotice(err.message || '업로드에 실패했습니다.'); });
+  }
+  function normalizeLinkFiles(files) {
+    return Promise.all(files.map(function (file) {
+      if (fileKind(file) !== 'link') return Promise.resolve(file);
+      return file.text().then(function (content) {
+        var target = normalizedHttpUrl(content) || normalizedHttpUrl((String(content).match(/^URL=(.+)$/im) || [])[1]);
+        if (!target) { showNotice('안전한 http/https 주소가 아닌 바로가기 파일은 등록할 수 없습니다: ' + (file.name || '링크')); return null; }
+        return new File([target], linkName(target), { type: 'text/uri-list' });
+      }).catch(function () { showNotice('바로가기 파일을 읽지 못했습니다: ' + (file.name || '링크')); return null; });
+    })).then(function (rows) { return rows.filter(Boolean); });
+  }
+  function handleFiles(receivedDate, fileList, warningMessage) {
+    var incoming = Array.prototype.slice.call(fileList || []), files = [], unsupported = [], oversized = [];
+    incoming.forEach(function (file) {
+      if (!fileKind(file)) unsupported.push(file.name || '알 수 없는 파일');
+      else if (file.size > MAX_FILE_SIZE) oversized.push(file.name || '파일');
+      else files.push(file);
+    });
+    if (oversized.length) showNotice('20MB를 초과해 등록하지 못했습니다: ' + oversized.join(', '));
+    if (unsupported.length) showNotice('지원하지 않는 파일 형식입니다: ' + unsupported.join(', '));
+    if (!files.length) return;
+    normalizeLinkFiles(files).then(function (normalizedFiles) {
+      if (!normalizedFiles.length) return;
+      var needsPublicWarning = normalizedFiles.some(function (file) { var kind = fileKind(file); return kind === 'document' || kind === 'text' || kind === 'link'; });
+      if (!needsPublicWarning) { runUpload(receivedDate, normalizedFiles); return; }
+      confirmAction('공개 자료 등록', warningMessage || '보험브리핑 캘린더의 자료는 로그인하지 않은 방문자도 볼 수 있습니다. 개인정보가 없는 공개용 자료와 링크만 등록해 주세요.', '등록', false)
+        .then(function (confirmed) { if (confirmed) runUpload(receivedDate, normalizedFiles); });
+    });
+  }
+  function selectDate(dateStr) {
+    state.selectedDate = dateStr;
+    Array.prototype.forEach.call(document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-day'), function (cell) {
+      cell.classList.toggle('is-selected', cell.getAttribute('data-date') === dateStr);
+    });
+    showNotice(dateStr + ' 선택됨 · 복사한 자료를 붙여넣을 수 있습니다.');
   }
   function bindDropEvents() {
     var days = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-day.is-droppable');
@@ -450,8 +553,38 @@
       cell.addEventListener('drop', function (e) {
         e.preventDefault(); cell.classList.remove('drag-over');
         var files = e.dataTransfer && e.dataTransfer.files;
-        if (files && files.length) handleDrop(cell.getAttribute('data-date'), files);
+        if (files && files.length) handleFiles(cell.getAttribute('data-date'), files);
       });
+      cell.addEventListener('click', function () { selectDate(cell.getAttribute('data-date')); });
+      cell.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectDate(cell.getAttribute('data-date')); } });
+    });
+  }
+  function bindPasteEvents() {
+    document.addEventListener('paste', function (e) {
+      if (!isPilot()) return;
+      var target = e.target;
+      if (target && (target.matches('input,textarea') || target.isContentEditable)) return;
+      if (!state.selectedDate) { showNotice('먼저 자료를 등록할 날짜를 선택해 주세요.'); return; }
+      var clipboard = e.clipboardData;
+      if (!clipboard) return;
+      var files = Array.prototype.slice.call(clipboard.files || []);
+      if (!files.length && clipboard.items) {
+        Array.prototype.forEach.call(clipboard.items, function (item) { var file = item.kind === 'file' && item.getAsFile ? item.getAsFile() : null; if (file) files.push(file); });
+      }
+      if (files.length) { e.preventDefault(); handleFiles(state.selectedDate, files); return; }
+      var text = clipboard.getData('text/plain');
+      if (!text) return;
+      e.preventDefault();
+      var stamp = new Date(), name = '붙여넣은 메모 ' + ymd(stamp) + ' ' + pad2(stamp.getHours()) + pad2(stamp.getMinutes()) + '.txt';
+      var directUrl = normalizedHttpUrl(text);
+      if (directUrl) {
+        handleFiles(state.selectedDate, [new File([directUrl], linkName(directUrl), { type: 'text/uri-list' })], '붙여넣은 링크는 로그인하지 않은 방문자도 볼 수 있습니다. 공개해도 되는 주소인지 확인해 주세요.');
+        return;
+      }
+      var sensitive = /\b\d{6}\s*[- ]?\s*[1-4]\d{6}\b|\b01[016789]\s*[- ]?\s*\d{3,4}\s*[- ]?\s*\d{4}\b/.test(text);
+      handleFiles(state.selectedDate, [new File([text], name, { type: 'text/plain' })], sensitive
+        ? '붙여넣은 텍스트에서 주민번호 또는 전화번호 형태가 감지됐습니다. 이 캘린더는 외부에 공개됩니다. 내용을 다시 확인한 뒤 공개용 자료만 등록해 주세요.'
+        : '붙여넣은 텍스트는 로그인하지 않은 방문자도 볼 수 있습니다. 개인정보가 없는 공개용 내용만 등록해 주세요.');
     });
   }
 
@@ -465,6 +598,7 @@
     var modeButtons = document.querySelectorAll('.ib-leaflet-mode');
     Array.prototype.forEach.call(modeButtons, function (btn) { btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); }); });
     state.monthCap = monthThumbCap();
+    bindPasteEvents();
     var resizeTimer = 0;
     window.addEventListener('resize', function () {
       window.clearTimeout(resizeTimer);
