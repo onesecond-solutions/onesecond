@@ -79,6 +79,7 @@
 
     /* 배경화면 모드(워크스테이션과 동일 개념·동일 localStorage 키 ws_bg_mode 공유) */
     body.ib-bg-flat:before { display: none; }
+    body.ib-bg-namsan:before { background-image: url("./assets/generated/namsan-sunny.webp"); }
     body.ib-bg-white:after { background: #f6f7fb; }
     body.ib-bg-dark:after { background: #14161b; }
     body.ib-bg-dark {
@@ -636,14 +637,15 @@
   function currentBgMode() { try { return localStorage.getItem("ws_bg_mode") || "image"; } catch (_e) { return "image"; } }
   function applyBgMode(mode) {
     var body = document.body;
-    body.classList.remove("ib-bg-flat", "ib-bg-white", "ib-bg-dark");
+    body.classList.remove("ib-bg-flat", "ib-bg-white", "ib-bg-dark", "ib-bg-namsan");
     if (mode === "white") body.classList.add("ib-bg-flat", "ib-bg-white");
     else if (mode === "dark") body.classList.add("ib-bg-flat", "ib-bg-dark");
+    else if (mode === "namsan") body.classList.add("ib-bg-namsan");
     document.documentElement.setAttribute("data-theme", mode === "dark" ? "dark" : "light");
     try { localStorage.setItem("ws_bg_mode", mode); } catch (_e) {}
   }
   function bgModeButtonsHtml(active) {
-    var modes = [["image", "기본이미지"], ["white", "화이트"], ["dark", "다크"]];
+    var modes = [["image", "기본이미지"], ["namsan", "남산"], ["white", "화이트"], ["dark", "다크"]];
     return modes.map(function (m) { return '<button type="button" class="ib-bgmode-btn' + (m[0] === active ? " on" : "") + '" data-bg="' + m[0] + '">' + m[1] + "</button>"; }).join("");
   }
   applyBgMode(currentBgMode());
