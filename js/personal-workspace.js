@@ -1085,9 +1085,9 @@
     view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
       + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
       + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-thumbs" id="pw-preview-thumbs"></div><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'pw-preview-page-wrap\')))OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
-      + '<div class="pw-consult-hover" id="pw-row-hover" aria-hidden="true"></div>';
+      + '<div class="pw-consult-hover" id="pw-row-hover" aria-hidden="true"></div><div class="pw-asset-drop-overlay" id="pw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 복사 저장합니다.</span></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
-    bindSearch(); renderContent();
+    bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
   function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } } }
@@ -1618,6 +1618,79 @@
     softDelete('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()))
       .then(function () { removeWorkspaceItemsLocal([id]); state.assetFolder = null; state.assetFilter = category; renderContent(); if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
   }
+  function externalFileDrag(event) { return !!(event.dataTransfer && event.dataTransfer.types && Array.prototype.indexOf.call(event.dataTransfer.types, 'Files') >= 0); }
+  function setAssetDropOverlay(show, message) {
+    var overlay = document.getElementById('pw-asset-drop-overlay');
+    if (!overlay) return;
+    overlay.classList.toggle('on', !!show); overlay.setAttribute('aria-hidden', String(!show));
+    var strong = overlay.querySelector('strong'); if (strong && message) strong.textContent = message;
+  }
+  function bindAssetWorkspaceDrop() {
+    var view = document.getElementById('v-personal-workspace'); if (!view || view._assetExternalDropBound) return;
+    view._assetExternalDropBound = true;
+    view.addEventListener('dragenter', function (event) {
+      if (state.section !== 'assets' || !externalFileDrag(event)) return;
+      event.preventDefault(); state.externalDragDepth = (state.externalDragDepth || 0) + 1; setAssetDropOverlay(true, '폴더와 파일을 여기에 놓으세요');
+    });
+    view.addEventListener('dragover', function (event) {
+      if (state.section !== 'assets' || !externalFileDrag(event)) return;
+      event.preventDefault(); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    });
+    view.addEventListener('dragleave', function (event) {
+      if (state.section !== 'assets' || !externalFileDrag(event)) return;
+      state.externalDragDepth = Math.max(0, (state.externalDragDepth || 1) - 1); if (!state.externalDragDepth) setAssetDropOverlay(false);
+    });
+    view.addEventListener('drop', function (event) {
+      if (state.section !== 'assets' || !externalFileDrag(event)) return;
+      event.preventDefault(); state.externalDragDepth = 0; setAssetDropOverlay(false); importExternalAssetDrop(event.dataTransfer);
+    });
+  }
+  function readAllDirectoryEntries(entry) {
+    return new Promise(function (resolve, reject) {
+      var reader = entry.createReader(), found = [];
+      function next() { reader.readEntries(function (rows) { if (!rows.length) { resolve(found); return; } found = found.concat(Array.prototype.slice.call(rows)); next(); }, reject); }
+      next();
+    });
+  }
+  function collectDroppedEntry(entry, parents, folders, files) {
+    if (entry.isFile) return new Promise(function (resolve, reject) { entry.file(function (file) { files.push({ file: file, parents: parents.slice() }); resolve(); }, reject); });
+    if (!entry.isDirectory) return Promise.resolve();
+    var nextParents = parents.concat([entry.name]); folders.push(nextParents);
+    return readAllDirectoryEntries(entry).then(function (children) { return Promise.all(children.map(function (child) { return collectDroppedEntry(child, nextParents, folders, files); })); });
+  }
+  function droppedTree(dataTransfer) {
+    var folders = [], files = [], items = Array.prototype.slice.call(dataTransfer && dataTransfer.items || []), entries = items.map(function (item) { return item.webkitGetAsEntry ? item.webkitGetAsEntry() : null; }).filter(Boolean);
+    if (!entries.length) return Promise.resolve({ folders: folders, files: Array.prototype.slice.call(dataTransfer && dataTransfer.files || []).map(function (file) { return { file: file, parents: [] }; }) });
+    return Promise.all(entries.map(function (entry) { return collectDroppedEntry(entry, [], folders, files); })).then(function () { return { folders: folders, files: files }; });
+  }
+  function uploadAssetFile(file, category, parent) {
+    var token = window.db.getToken(), owner = currentUserId(), folderPath = parent || category;
+    var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/' + folderPath + '/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : '');
+    var row = { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category }, created_at: new Date().toISOString() };
+    return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('workspace_items', row).then(function () { return row; }); });
+  }
+  function importExternalAssetDrop(dataTransfer, categoryOverride, parentOverride) {
+    if (state.externalImporting) return;
+    var category = categoryOverride || currentAssetCategory() || 'file';
+    var baseParent = parentOverride !== undefined ? parentOverride : (state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null);
+    state.externalImporting = true; setAssetDropOverlay(true, '폴더 구조를 복사하는 중입니다…');
+    droppedTree(dataTransfer).then(function (tree) {
+      if (!tree.folders.length && !tree.files.length) throw new Error('복사할 파일을 찾지 못했습니다.');
+      var folderIds = {}, ordered = tree.folders.slice().sort(function (a, b) { return a.length - b.length; });
+      return ordered.reduce(function (promise, parts) {
+        return promise.then(function () {
+          var key = parts.join('/'), parentKey = parts.slice(0, -1).join('/'), parent = parentKey ? folderIds[parentKey] : baseParent;
+          return writeOne('workspace_items', { owner_id: currentUserId(), parent_id: parent || null, item_type: 'folder', title: parts[parts.length - 1], visibility: 'private', legacy_payload: { workspace_category: category } }).then(function (created) { folderIds[key] = created.id; upsertWorkspaceItem(created); });
+        });
+      }, Promise.resolve()).then(function () {
+        setAssetDropOverlay(true, '파일 ' + tree.files.length + '개를 복사하는 중입니다…');
+        return Promise.all(tree.files.map(function (entry) { var parent = entry.parents.length ? folderIds[entry.parents.join('/')] : baseParent; return uploadAssetFile(entry.file, category, parent || null); }));
+      }).then(function (rows) { rows.forEach(upsertWorkspaceItem); return { folders: ordered.length, files: rows.length }; });
+    }).then(function (count) {
+      state.assetFilter = category; state.assetFolder = baseParent || null; rebuildWorkspaceDerived(); renderContent();
+      if (typeof window.toast === 'function') window.toast('폴더 ' + count.folders + '개와 파일 ' + count.files + '개를 복사했습니다.');
+    }).catch(saveError).finally(function () { state.externalImporting = false; setAssetDropOverlay(false); });
+  }
   function assetDragStart(event, id, category) {
     state.draggingAsset = { id: String(id), category: String(category) };
     if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(id)); }
@@ -1643,6 +1716,9 @@
   function assetDrop(event, folderId, folderCategory) {
     event.preventDefault(); event.stopPropagation();
     if (event.currentTarget) event.currentTarget.classList.remove('is-drag-over');
+    var droppedItems = Array.prototype.slice.call(event.dataTransfer && event.dataTransfer.items || []);
+    var hasDirectory = droppedItems.some(function (item) { var entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null; return !!(entry && entry.isDirectory); });
+    if (hasDirectory) { importExternalAssetDrop(event.dataTransfer, String(folderCategory), String(folderId)); return; }
     var files = event.dataTransfer && event.dataTransfer.files ? Array.prototype.slice.call(event.dataTransfer.files) : [];
     if (files.length) { performAssetFileUpload(files, String(folderCategory), String(folderId)); return; }
     var dragging = state.draggingAsset;

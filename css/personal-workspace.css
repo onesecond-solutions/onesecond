@@ -2,7 +2,7 @@ body:not(.is-personal-workspace) #nav-personal-workspace{display:none!important}
 body.is-personal-workspace:not(.is-admin) .side .nav{display:none!important}
 body.is-personal-workspace.is-uat-homedesk:not(.is-admin) .side #nav-personal-workspace{display:flex!important}
 body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:flex!important}
-#v-personal-workspace{padding:0!important;height:100%;overflow:hidden;background:var(--bg)}
+#v-personal-workspace{position:relative;padding:0!important;height:100%;overflow:hidden;background:var(--bg)}
 #v-personal-workspace.on{display:block}
 #v-personal-workspace .pw-shell{display:grid;grid-template-rows:auto 1fr;height:100%;min-height:0}
 #v-personal-workspace .pw-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px clamp(16px,3vw,34px);border-bottom:1px solid var(--bd);background:var(--s1)}
@@ -590,3 +590,11 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-carrier-card dt{color:var(--tp);font-size:14px;font-weight:600}
 #v-personal-workspace .pw-carrier-card dd{margin:0;color:var(--ac);font-size:14px;font-weight:700}
 @media(max-width:640px){#v-personal-workspace .pw-carrier-toolbar{align-items:flex-start}#v-personal-workspace .pw-carrier-grid{grid-template-columns:1fr}}
+
+/* 자료 화면 전체 외부 폴더·파일 드롭 */
+#v-personal-workspace .pw-asset-drop-overlay{position:absolute;inset:10px;z-index:80;display:none;place-items:center;border:2px dashed var(--ac);border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 10%,var(--s1) 90%);box-shadow:0 12px 34px color-mix(in srgb,var(--ac) 18%,transparent);pointer-events:none}
+#v-personal-workspace .pw-asset-drop-overlay.on{display:grid}
+#v-personal-workspace .pw-asset-drop-overlay>div{padding:28px 34px;border:1px solid color-mix(in srgb,var(--ac) 26%,var(--bd));border-radius:var(--radius-md);background:var(--s1);text-align:center}
+#v-personal-workspace .pw-asset-drop-overlay strong,#v-personal-workspace .pw-asset-drop-overlay span{display:block}
+#v-personal-workspace .pw-asset-drop-overlay strong{color:var(--tp);font-size:20px}
+#v-personal-workspace .pw-asset-drop-overlay span{margin-top:7px;color:var(--ts);font-size:14px}
