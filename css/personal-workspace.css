@@ -63,8 +63,12 @@ body.is-personal-workspace:not(.is-admin) .side #nav-personal-workspace{display:
 #v-personal-workspace .pw-rich-color{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);color:var(--tp);font-size:13px;font-weight:700;cursor:pointer}
 #v-personal-workspace .pw-rich-color:hover{background:var(--s1)}
 /* 둘 다 "A"라 구분이 안 된다는 지적(2026-08-20) — 글자색은 글자 아래 빨간 밑줄,
-   형광펜은 글자 뒤에 노란 마커 배경으로 한눈에 구분(구글독스식 관례). */
-#v-personal-workspace .pw-rich-color-fg span{border-bottom:3px solid #e03131;line-height:1;padding-bottom:1px}
+   형광펜은 글자 뒤에 노란 마커 배경으로 한눈에 구분(구글독스식 관례).
+   추가 지적(2026-08-20, "글자색이 활성이 안 된 것처럼 보인다") — 형광펜은 노란
+   배경이 꽉 채워져 눈에 띄는데 글자색은 밑줄만 얇게 있어 상대적으로 "비활성/장식"
+   처럼 보였음(실제로는 클릭 동작 정상, 시각적 무게감 차이 문제) → 글자 자체도
+   빨간색으로 채워 눈에 띄는 정도를 형광펜과 맞춤. */
+#v-personal-workspace .pw-rich-color-fg span{color:#e03131;font-weight:800;border-bottom:3px solid #e03131;line-height:1;padding-bottom:1px}
 #v-personal-workspace .pw-rich-color-hl span{background:#ffec99;padding:1px 3px;border-radius:2px}
 /* position:fixed(2026-08-20) — .pw-rich의 overflow:hidden에 잘리는 문제를 피하려고
    absolute 대신 fixed로 바꿈. top/left는 JS가 열릴 때마다 실좌표로 계산해서 넣음. */
