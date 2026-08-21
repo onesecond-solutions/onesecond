@@ -399,15 +399,15 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-consult-registration .pw-inline-form-block{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 20%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 5%,var(--s1))}
 #v-personal-workspace .pw-consult-detail .pw-inline-form-block{padding:14px;border:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 6%,var(--s1))}
 
-/* ── 청약일자 다중 입력행(고객관리 전용, 2026-08-20) — 라벨+입력칸+버튼이 필요한 만큼만 폭을 차지(inline-flex/fit-content), 폼 전체 가로폭을 차지하지 않는다(대표 지적 반영). 여러 줄이어도 각 줄은 좁게 유지 ── */
-#v-personal-workspace .pw-contract-dates-field{align-items:flex-start}
-#v-personal-workspace .pw-contract-dates-wrap{display:inline-flex;flex-direction:row;align-items:flex-start;gap:8px;width:fit-content}
-#v-personal-workspace .pw-contract-dates-list{display:flex;flex-direction:column;gap:6px}
-#v-personal-workspace .pw-contract-date-row{display:inline-flex;align-items:center;gap:6px;width:fit-content}
-#v-personal-workspace .pw-contract-date-input{flex:0 0 128px;width:128px;box-sizing:border-box;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);outline:0;background:var(--s1);color:var(--tp);font:inherit}
-#v-personal-workspace .pw-contract-date-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
-#v-personal-workspace .pw-contract-date-del{flex:0 0 auto;width:26px;height:26px;padding:0;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:13px;line-height:1;cursor:pointer}
-#v-personal-workspace .pw-contract-date-del:hover{color:var(--tp);border-color:var(--ac)}
+/* ── 청약일자 다중 입력(고객관리 전용) — 추가 날짜는 한 줄의 날짜 칩으로 이어지고, 공간이 부족하면 가로 스크롤한다. ── */
+#v-personal-workspace .pw-contract-dates-field{align-items:center;min-width:0}
+#v-personal-workspace .pw-contract-dates-wrap{display:flex;flex:1;min-width:0;align-items:center;gap:8px;overflow-x:auto;padding:3px 2px 5px;scrollbar-width:thin}
+#v-personal-workspace .pw-contract-dates-list{display:flex;flex:0 0 auto;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px}
+#v-personal-workspace .pw-contract-date-row{display:inline-flex;flex:0 0 auto;align-items:center;width:154px;overflow:hidden;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1)}
+#v-personal-workspace .pw-contract-date-row:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
+#v-personal-workspace .pw-contract-date-input{width:120px;min-width:0;box-sizing:border-box;padding:9px 4px 9px 10px;border:0;outline:0;background:transparent;color:var(--tp);font:inherit}
+#v-personal-workspace .pw-contract-date-del{display:grid;flex:0 0 28px;width:28px;height:28px;place-items:center;padding:0;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--ts);font-size:14px;line-height:1;cursor:pointer}
+#v-personal-workspace .pw-contract-date-del:hover,#v-personal-workspace .pw-contract-date-del:focus-visible{background:var(--s2);color:var(--ac);outline:0}
 #v-personal-workspace .pw-contract-date-add{align-self:center}
 /* 텍스트 링크 스타일 버튼(2026-08-20, 대표 확정) — "+청약추가"·"주소검색"을 테두리 박스 버튼이 아니라
    색 있는 글자 링크로. 접근성상 버튼 태그는 유지하되 시각만 링크처럼. */
