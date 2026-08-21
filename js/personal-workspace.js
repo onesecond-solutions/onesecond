@@ -1197,8 +1197,18 @@
        붙는 형광펜 버튼처럼 summary가 뷰포트 왼쪽에 가까우면 고정폭 드롭다운이 대부분
        화면 밖(음수 left)으로 나가 안 보였음(대표 눈엔 "클릭해도 반응 없음"으로 보임,
        실제론 열리긴 열렸으나 안 보인 것 — .open은 true였음). 열고 나서 실제 렌더된
-       메뉴의 left가 8px 미만이면 right 앵커를 버리고 left:8px로 강제 고정해 보정. */
-    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();var d=this.parentNode,m=d.querySelector(\'.pw-rich-color-menu\'),willOpen=!d.open;d.open=willOpen;if(willOpen){var r=this.getBoundingClientRect();m.style.top=(r.bottom+4)+\'px\';m.style.left=\'auto\';m.style.right=(window.innerWidth-r.right)+\'px\';var mr=m.getBoundingClientRect();if(mr.left<8){m.style.right=\'auto\';m.style.left=\'8px\';}}"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
+       메뉴의 left가 8px 미만이면 right 앵커를 버리고 left:8px로 강제 고정해 보정.
+       ⑤ 실측 버그 5건째(2026-08-20, 글자색만 재차 "먹통" 재보고) — summary onclick과
+       "바깥 클릭 시 닫기"용 document 클릭 리스너(④에서 추가)가 같은 클릭 이벤트의
+       버블링 경로에서 함께 실행됨. 로직상 서로 안 부딪히는 걸 확인했지만, 재현이 하도
+       안 잡혀 혹시 모를 상호작용 여지를 원천 차단하고자 summary 클릭에
+       stopPropagation을 추가해 이 클릭이 document 리스너까지 아예 안 올라가게 함
+       (버튼 자체의 열기/닫기 토글은 summary 안에서 완결). stopPropagation 때문에
+       "다른 색상 팝업이 열려있을 때 이 버튼을 누르면 그쪽도 닫혀야" 하는 동작을
+       더 이상 document 리스너가 대신 해줄 수 없어, 여기서 직접 다른 팝업을 먼저
+       닫음. 겸사겸사 버튼이 열려있는 동안 배경을 눌린 상태로 표시(CSS)해 "눌렀는데
+       반응이 있는지" 육안으로 바로 확인되게 함. */
+    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();event.stopPropagation();var d=this.parentNode,m=d.querySelector(\'.pw-rich-color-menu\'),willOpen=!d.open;var others=document.querySelectorAll(\'.pw-rich-color-pop[open]\');for(var i=0;i<others.length;i++){if(others[i]!==d)others[i].open=false;}d.open=willOpen;if(willOpen){var r=this.getBoundingClientRect();m.style.top=(r.bottom+4)+\'px\';m.style.left=\'auto\';m.style.right=(window.innerWidth-r.right)+\'px\';var mr=m.getBoundingClientRect();if(mr.left<8){m.style.right=\'auto\';m.style.left=\'8px\';}}"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
       + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
       + swatches + '</div></details>';
   }
