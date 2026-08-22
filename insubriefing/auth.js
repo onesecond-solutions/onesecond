@@ -12,6 +12,8 @@
 
   var PKCE_KEY = 'ib_pkce_verifier';
   var OAUTH_REDIRECT_KEY = 'ib_oauth_redirect';
+  var companyTimer = 0;
+  var companyController = null;
 
   function dbUrl(path) {
     if (window.db && typeof window.db.url === 'function') return window.db.url(path);
@@ -266,6 +268,7 @@
       if (event.target.closest('[data-ib-auth-verify]')) verifyOtp();
       if (event.target.closest('[data-ib-auth-resend]')) resendOtp();
       if (event.target.closest('[data-ib-auth-google]')) signInWithGoogle();
+      if (event.target.closest('[data-ib-company-pick]')) pickCompany(event.target.closest('[data-ib-company-pick]'));
       if (event.target.closest('[data-ib-auth-back]')) {
         state.step = 'form';
         state.busy = false;
@@ -292,6 +295,80 @@
     Array.prototype.forEach.call(document.querySelectorAll('#ib-auth-dialog input'), function (input) {
       input.disabled = state.busy;
     });
+  }
+
+  function clearCompanyList() {
+    var list = document.getElementById('ib-auth-company-list');
+    if (!list) return;
+    list.hidden = true;
+    list.innerHTML = '';
+  }
+
+  function companyListItem(row) {
+    return '<button type="button" class="ib-auth-company-item" data-ib-company-pick data-company-id="' + esc(row.id || '') + '" data-company-name="' + esc(row.name || '') + '">' + esc(row.name || '') + '</button>';
+  }
+
+  async function fetchCompanySuggestions(query) {
+    if (companyController) {
+      try { companyController.abort(); } catch (_e) {}
+    }
+    companyController = new AbortController();
+    var list = document.getElementById('ib-auth-company-list');
+    if (!list) return;
+    try {
+      var res = await fetch(dbUrl('/rest/v1/companies?select=id,name&search_text=ilike.*' + encodeURIComponent(query) + '*&order=agent_count.desc.nullslast&limit=10'), {
+        headers: { 'apikey': dbKey() },
+        signal: companyController.signal
+      });
+      if (!res.ok) { clearCompanyList(); return; }
+      var rows = await res.json();
+      if (!Array.isArray(rows) || !rows.length) { clearCompanyList(); return; }
+      list.innerHTML = rows.map(companyListItem).join('');
+      list.hidden = false;
+    } catch (error) {
+      if (!error || error.name !== 'AbortError') clearCompanyList();
+    }
+  }
+
+  function companyInputChanged() {
+    var input = document.getElementById('ib-auth-company');
+    var id = document.getElementById('ib-auth-company-id');
+    if (id) id.value = '';
+    if (companyTimer) clearTimeout(companyTimer);
+    var query = input ? input.value.trim() : '';
+    if (query.length < 2) { clearCompanyList(); return; }
+    companyTimer = setTimeout(function () { fetchCompanySuggestions(query); }, 180);
+  }
+
+  function pickCompany(button) {
+    if (!button) return;
+    var input = document.getElementById('ib-auth-company');
+    var id = document.getElementById('ib-auth-company-id');
+    if (input) input.value = button.getAttribute('data-company-name') || '';
+    if (id) id.value = button.getAttribute('data-company-id') || '';
+    clearCompanyList();
+  }
+
+  function companyKeydown(event) {
+    var list = document.getElementById('ib-auth-company-list');
+    if (!list || list.hidden) return;
+    var items = Array.prototype.slice.call(list.querySelectorAll('.ib-auth-company-item'));
+    if (!items.length) return;
+    var current = items.findIndex(function (item) { return item.classList.contains('active'); });
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      items.forEach(function (item) { item.classList.remove('active'); });
+      items[(current + 1) % items.length].classList.add('active');
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      items.forEach(function (item) { item.classList.remove('active'); });
+      items[current <= 0 ? items.length - 1 : current - 1].classList.add('active');
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      pickCompany(items[current >= 0 ? current : 0]);
+    } else if (event.key === 'Escape') {
+      clearCompanyList();
+    }
   }
 
   function setMode(mode) {
@@ -335,13 +412,12 @@
     }
     if (state.mode === 'signup') {
       title.textContent = '보험브리핑 회원가입';
-      desc.textContent = '이름, 연락처, 이메일 인증만 확인되면 바로 가입됩니다.';
+      desc.textContent = '이름, 연락처, 이메일, 소속회사명 확인 후 바로 가입됩니다.';
       fields.innerHTML = '<label class="ib-auth-field">이름<input id="ib-auth-name" type="text" autocomplete="name" maxlength="30" required></label>'
         + '<label class="ib-auth-field">전화번호<input id="ib-auth-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="010-0000-0000" required></label>'
-        + '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
-      actions.innerHTML = googleButton
-        + '<div class="ib-auth-divider"><span>또는</span></div>'
-        + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
+        + '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>'
+        + '<label class="ib-auth-field ib-auth-company-wrap">소속회사명<input id="ib-auth-company" type="text" autocomplete="organization" maxlength="50" placeholder="회사명을 입력하세요" required><input id="ib-auth-company-id" type="hidden"><span class="ib-auth-company-list" id="ib-auth-company-list" hidden></span></label>';
+      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
     } else {
       title.textContent = '보험브리핑 로그인';
       desc.textContent = '기존 원세컨드 가입자는 같은 이메일로 로그인할 수 있습니다.';
@@ -354,6 +430,12 @@
     setTimeout(function () {
       var first = document.querySelector('#ib-auth-fields input');
       if (first) first.focus();
+      var company = document.getElementById('ib-auth-company');
+      if (company) {
+        company.addEventListener('input', companyInputChanged);
+        company.addEventListener('keydown', companyKeydown);
+        company.addEventListener('blur', function () { setTimeout(clearCompanyList, 160); });
+      }
     }, 50);
   }
 
@@ -386,8 +468,12 @@
     if (state.mode === 'signup') {
       var nameEl = document.getElementById('ib-auth-name');
       var phoneEl = document.getElementById('ib-auth-phone');
+      var companyEl = document.getElementById('ib-auth-company');
+      var companyIdEl = document.getElementById('ib-auth-company-id');
       result.name = nameEl ? nameEl.value.trim() : '';
       result.phone = phoneEl ? phoneEl.value.trim() : '';
+      result.company = companyEl ? companyEl.value.trim() : '';
+      result.companyId = companyIdEl ? companyIdEl.value.trim() : '';
     }
     return result;
   }
@@ -401,6 +487,8 @@
         email: state.email,
         name: state.signup.name,
         phone: state.signup.phone,
+        company: state.signup.company,
+        company_id: state.signup.companyId,
         role: 'ga_member',
         status: 'active',
         site: 'insubriefing'
@@ -424,7 +512,11 @@
         setStatus('전화번호를 정확히 입력해 주세요.', 'error');
         return;
       }
-      state.signup = { name: form.name, phone: form.phone };
+      if (!form.company) {
+        setStatus('소속회사명을 입력해 주세요.', 'error');
+        return;
+      }
+      state.signup = { name: form.name, phone: form.phone, company: form.company, companyId: form.companyId };
     } else {
       state.signup = null;
     }
@@ -484,6 +576,7 @@
       name: state.signup.name,
       phone: state.signup.phone,
       email: state.email,
+      company: state.signup.company,
       role: 'ga_member',
       status: 'active'
     };

@@ -135,6 +135,54 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac, #3867f6) 15%, transparent);
 }
 
+.ib-auth-company-wrap {
+  position: relative;
+}
+
+.ib-auth-company-list {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--bd, #d7deea);
+  border-radius: 12px;
+  background: var(--s1, #fff);
+  box-shadow: 0 12px 32px color-mix(in srgb, #10233f 14%, transparent);
+}
+
+.ib-auth-company-list[hidden] {
+  display: none;
+}
+
+.ib-auth-company-item {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--bd, #d7deea) 72%, transparent);
+  background: var(--s1, #fff);
+  color: var(--tp, #152033);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ib-auth-company-item:last-child {
+  border-bottom: 0;
+}
+
+.ib-auth-company-item:hover,
+.ib-auth-company-item.active {
+  background: color-mix(in srgb, var(--ac, #3867f6) 10%, #fff);
+  color: var(--ac, #3867f6);
+}
+
 .ib-auth-otp {
   letter-spacing: .16em;
   text-align: center;
