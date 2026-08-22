@@ -136,8 +136,10 @@ body.ws-page.ws-bg-flat #v-personal-workspace .pw-agenda>button,
 body.ws-page.ws-bg-flat #v-personal-workspace .pw-search-results>button{background:var(--s1)}
 body.ws-page.ws-bg-flat #v-personal-workspace .pw-table tbody tr:nth-child(even){background:var(--s2)}
 
-.ws-brand .ws-brand-mark{display:grid;width:36px;height:36px;place-items:center;border-radius:0;background:transparent;color:inherit;font-size:0}
-.ws-brand .ws-brand-mark img{display:block;width:36px;height:36px;object-fit:contain}
+.ws-brand{gap:12px}
+.ws-brand .ws-brand-mark{display:grid;width:42px;height:42px;place-items:center;border-radius:0;background:transparent;color:inherit;font-size:0}
+.ws-brand .ws-brand-mark img{display:block;width:42px;height:42px;object-fit:contain}
+.ws-brand strong{font-size:18px;font-weight:900;letter-spacing:-.035em}
 /* ── 다크 배경 모드: Google 스타일 블록의 하드코딩 색상을 토큰으로 재정의 ── */
 body.ws-page.ws-bg-dark #v-personal-workspace{background:var(--bg);color:var(--tp)}
 body.ws-page.ws-bg-dark #v-personal-workspace .pw-head{background:var(--bg)}
@@ -222,4 +224,4 @@ body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-event.custo
 body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-more{color:var(--ts)}
 @media(max-width:860px){.ws-main{padding:8px 8px 0}#v-personal-workspace{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-personal-workspace .pw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-personal-workspace .pw-main{grid-row:1;min-width:0}#v-personal-workspace .pw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-personal-workspace .pw-assets-controls{align-items:flex-start;flex-direction:column}#v-personal-workspace .pw-assets-controls .pw-tabs{width:100%;overflow:visible}#v-personal-workspace .pw-assets-actions{align-self:flex-end}}
 @media(max-width:860px){.ws-global-search{width:min(400px,38vw)}}
-@media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand .ws-brand-mark,.ws-brand .ws-brand-mark img{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-account{grid-column:2;grid-row:1}.ws-account-trigger{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-personal-workspace{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
+@media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:8px}.ws-brand .ws-brand-mark,.ws-brand .ws-brand-mark img{width:36px;height:36px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-account{grid-column:2;grid-row:1}.ws-account-trigger{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-personal-workspace{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
