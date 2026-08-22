@@ -310,6 +310,34 @@
     return sectionHtml('내일 상담 준비', body);
   }
 
+  /* feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — 헤더 부가버튼(PC로 보기/
+     로그아웃)을 "⋯" 메뉴로 숨기고 보험브리핑 홈 복귀 링크를 추가한다. 바깥 클릭 닫기 리스너는 document에
+     한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로, 클릭 시점에 getElementById로 최신
+     DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
+  var menuOutsideBound = false;
+  function bindHeaderMenu() {
+    var menuBtn = document.getElementById('wsm-menu-btn');
+    var menuPanel = document.getElementById('wsm-menu-panel');
+    if (menuBtn && menuPanel) {
+      menuBtn.addEventListener('click', function () {
+        var willOpen = menuPanel.hidden;
+        menuPanel.hidden = !willOpen;
+        menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
+    if (!menuOutsideBound) {
+      menuOutsideBound = true;
+      document.addEventListener('click', function (event) {
+        var panel = document.getElementById('wsm-menu-panel');
+        var btn = document.getElementById('wsm-menu-btn');
+        if (!panel || panel.hidden) return;
+        if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
+        panel.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    }
+  }
+
   var lastRenderedJson = '';
   function renderToday() {
     if (!window.OSPersonalWorkspace) return;
@@ -334,12 +362,18 @@
 
     var view = root(); if (!view) return;
     /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(캘린더/고객/자료)은 하단 고정 탭바로 옮겼다.
-       상단 헤더에는 화면 제목 + PC로 보기 + 로그아웃만 남긴다(중복 제거, 훨씬 가볍게). */
+       feat/workstation-mobile-header-consistency — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고,
+       보험브리핑 홈으로 돌아가는 링크를 새로 추가했다(이전에는 "오늘" 화면에 이 진입로가 아예 없었다). */
     view.innerHTML = '<header class="wsm-header"><strong>오늘</strong>'
       + '<div class="wsm-header-actions">'
-      + '<a class="wsm-pc-link" href="/insubriefing/workstation/">PC로 보기</a>'
-      + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
-      + '</div></header>'
+      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+      + '</div>'
+      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
+      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/workstation/">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '</div>'
+      + '</header>'
       + '<main class="wsm-main">'
       + agendaSectionHtml(excludeIds)
       + careSectionHtml(summary.care)
@@ -350,6 +384,7 @@
 
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
+    bindHeaderMenu();
 
     setupAgendaObserver();
     var nextAgendaScrollBox = document.getElementById('wsm-agenda-scroll');

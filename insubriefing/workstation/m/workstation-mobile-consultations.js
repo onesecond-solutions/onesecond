@@ -21,7 +21,11 @@
      대신 짧은 간격으로 재조회 → 직전 렌더와 동일하면 스킵하는 폴링으로 최종 일관성을 맞춘다(추가 API 호출 아님, 순수 재조회). */
   var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
 
-  var state = { channel: 'all', expandedId: null, limit: PAGE_SIZE, directory: [] };
+  /* feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — 카드 안에 인라인으로 펼쳐지는
+     아코디언 방식(expandedId)을 customers.js와 동일한 리스트→풀스크린 상세 전환 구조로 바꿨다.
+     view='list'|'detail' + selectedId로 상세 화면을 관리한다. channel(필터)·limit(더 보기)은 상세 화면을
+     오가도 유지된다(리스트 쪽 상태라 건드리지 않음 — customers.js의 검색어 유지 패턴과 동일). */
+  var state = { view: 'list', channel: 'all', selectedId: null, limit: PAGE_SIZE, directory: [] };
   var lastRenderedJson = '';
 
   function esc(value) {
@@ -100,19 +104,48 @@
     view.innerHTML = '<div class="wsm-gate"><strong>상담 목록을 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
   }
 
-  /* 화면 이동 탭(오늘/캘린더/고객/자료)은 하단 고정 탭바로 처리한다. 상단 헤더에는 화면 제목 + PC로 보기 +
-     로그아웃만 남긴다(다른 화면들과 동일한 구조). */
+  /* 화면 이동 탭(오늘/캘린더/고객/자료)은 하단 고정 탭바로 처리한다. feat/workstation-mobile-header-consistency
+     (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는
+     링크를 추가했다(다른 화면들과 동일한 구조). */
   function headerHtml() {
     return '<header class="wsm-header"><strong>상담관리</strong>'
       + '<div class="wsm-header-actions">'
-      + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=consultations">PC로 보기</a>'
-      + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
-      + '</div></header>';
+      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+      + '</div>'
+      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
+      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/workstation/?view=personal-workspace&section=consultations">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '</div>'
+      + '</header>';
   }
 
+  /* 바깥 클릭 닫기 리스너는 document에 한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로,
+     클릭 시점에 getElementById로 최신 DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
+  var menuOutsideBound = false;
   function bindHeaderEvents() {
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
+    var menuBtn = document.getElementById('wsm-menu-btn');
+    var menuPanel = document.getElementById('wsm-menu-panel');
+    if (menuBtn && menuPanel) {
+      menuBtn.addEventListener('click', function () {
+        var willOpen = menuPanel.hidden;
+        menuPanel.hidden = !willOpen;
+        menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
+    if (!menuOutsideBound) {
+      menuOutsideBound = true;
+      document.addEventListener('click', function (event) {
+        var panel = document.getElementById('wsm-menu-panel');
+        var btn = document.getElementById('wsm-menu-btn');
+        if (!panel || panel.hidden) return;
+        if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
+        panel.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    }
   }
 
   function bottomNavHtml() {
@@ -158,28 +191,18 @@
     return state.directory.filter(function (entry) { return entry.channel === state.channel; });
   }
 
-  /* 카드를 탭하면 같은 화면 안에서 펼쳐 전체 메모를 보여준다(별도 페이지 이동 없음). "이 고객 상세로 이동"
-     링크는 customers.html로만 보낸다 — 고객 id 딥링크 기능은 이번 범위 밖이라 새로 만들지 않는다. */
+  /* feat/workstation-mobile-header-consistency (2026-08-22) — 카드는 목록 화면에서 미리보기만 보여주고,
+     탭하면 openDetail()로 풀스크린 상세 화면으로 전환한다(customers.js와 동일 패턴, 카드 안 인라인 펼침 없음). */
   function consultationCardHtml(entry) {
-    var expanded = state.expandedId === entry.id;
     var memo = entry.memo || '';
     var preview = memo.length > PREVIEW_LEN ? memo.slice(0, PREVIEW_LEN) + '…' : memo;
     var metaBits = [shortDate(entry.date) || '날짜 없음'];
     if (entry.channel) metaBits.push(entry.channel);
-    var html = '<div class="wsm-consult-item' + (expanded ? ' is-open' : '') + '">'
-      + '<button type="button" class="wsm-card wsm-consult-card" data-id="' + esc(entry.id) + '" aria-expanded="' + (expanded ? 'true' : 'false') + '">'
+    return '<button type="button" class="wsm-card wsm-consult-card" data-id="' + esc(entry.id) + '">'
       + '<div class="wsm-card-title">' + esc(entry.customerName) + '</div>'
       + '<div class="wsm-card-sub">' + esc(metaBits.join(' · ')) + '</div>'
       + (preview ? '<div class="wsm-card-meta">' + esc(preview) + '</div>' : '')
       + '</button>';
-    if (expanded) {
-      html += '<div class="wsm-consult-detail">'
-        + (memo ? '<p class="wsm-consult-detail-memo">' + esc(memo) + '</p>' : '<p class="wsm-consult-detail-memo wsm-consult-detail-empty">상담 메모가 없습니다.</p>')
-        + '<a class="wsm-consult-detail-link" href="./customers.html">이 고객 상세로 이동 →</a>'
-        + '</div>';
-    }
-    html += '</div>';
-    return html;
   }
 
   function loadMoreButtonHtml(remaining) {
@@ -198,53 +221,91 @@
       + '</div>';
   }
 
-  function bindBodyEvents(container) {
+  function findConsultation(id) {
+    return state.directory.find(function (entry) { return String(entry.id) === String(id); });
+  }
+
+  function openDetail(id) {
+    if (!id) return;
+    state.view = 'detail'; state.selectedId = id; lastRenderedJson = '';
+    renderCurrent();
+  }
+
+  function bindListBodyEvents(container) {
     var chipWrap = document.getElementById('wsm-consult-chips');
     if (chipWrap) {
       Array.prototype.forEach.call(chipWrap.querySelectorAll('.wsm-consult-chip'), function (chip) {
         chip.addEventListener('click', function () {
           state.channel = chip.getAttribute('data-channel');
           state.limit = PAGE_SIZE;
-          state.expandedId = null;
-          renderBody();
+          renderListBody();
           lastRenderedJson = snapshotJson();
         });
       });
     }
     var cards = container.querySelectorAll('.wsm-consult-card');
     Array.prototype.forEach.call(cards, function (card) {
-      card.addEventListener('click', function () {
-        var id = card.getAttribute('data-id');
-        state.expandedId = state.expandedId === id ? null : id;
-        renderBody();
-        lastRenderedJson = snapshotJson();
-      });
+      card.addEventListener('click', function () { openDetail(card.getAttribute('data-id')); });
     });
     var more = document.getElementById('wsm-consult-more');
     if (more) more.addEventListener('click', function () {
       state.limit += PAGE_SIZE;
-      renderBody();
+      renderListBody();
       lastRenderedJson = snapshotJson();
     });
   }
 
-  function renderBody() {
+  function renderListBody() {
     var container = document.getElementById('wsm-consult-body'); if (!container) return;
     container.innerHTML = filterChipsHtml(state.directory) + listBodyHtml();
-    bindBodyEvents(container);
+    bindListBodyEvents(container);
   }
 
-  function renderShell() {
+  function renderListShell() {
     var view = root(); if (!view) return;
     view.innerHTML = headerHtml()
       + '<main class="wsm-main"><div id="wsm-consult-body"></div></main>'
       + bottomNavHtml();
     bindHeaderEvents();
-    renderBody();
+    renderListBody();
+  }
+
+  /* 대표 지시(2026-08-22) — 카드 안 인라인 펼침을 customers.js와 동일한 "리스트→풀스크린 상세" 구조로
+     통일한다. "← 목록" 뒤로가기 버튼 + 하단 탭바를 유지한다(customers.js가 이미 하는 그대로). 필터(channel)·
+     더보기(limit)는 state에 그대로 남아 있어 상세 화면을 다녀와도 유지된다. */
+  function renderDetailShell() {
+    var view = root(); if (!view) return;
+    var entry = findConsultation(state.selectedId);
+    if (!entry) { state.view = 'list'; state.selectedId = null; renderListShell(); return; }
+
+    var memo = entry.memo || '';
+    var metaBits = [shortDate(entry.date) || '날짜 없음'];
+    if (entry.channel) metaBits.push(entry.channel);
+
+    view.innerHTML = headerHtml()
+      + '<main class="wsm-main">'
+      + '<button type="button" class="wsm-btn wsm-consult-back" id="wsm-consult-back">← 목록</button>'
+      + '<section class="wsm-consult-detail-head">'
+      + '<div class="wsm-consult-detail-name">' + esc(entry.customerName || '(이름 없음)') + '</div>'
+      + '<div class="wsm-consult-detail-meta">' + esc(metaBits.join(' · ')) + '</div>'
+      + '</section>'
+      + '<div class="wsm-consult-detail-body">'
+      + (memo ? '<p class="wsm-consult-detail-memo">' + esc(memo) + '</p>' : '<p class="wsm-consult-detail-memo wsm-consult-detail-empty">상담 메모가 없습니다.</p>')
+      + '<a class="wsm-consult-detail-link" href="./customers.html">이 고객 상세로 이동 →</a>'
+      + '</div>'
+      + '</main>'
+      + bottomNavHtml();
+    bindHeaderEvents();
+
+    var back = document.getElementById('wsm-consult-back');
+    if (back) back.addEventListener('click', function () {
+      state.view = 'list'; state.selectedId = null; lastRenderedJson = '';
+      renderCurrent();
+    });
   }
 
   function snapshotJson() {
-    return JSON.stringify({ ch: state.channel, exp: state.expandedId, limit: state.limit, dir: state.directory });
+    return JSON.stringify({ view: state.view, id: state.selectedId, ch: state.channel, limit: state.limit, dir: state.directory });
   }
 
   function refreshDirectory() {
@@ -257,7 +318,8 @@
     var json = snapshotJson();
     if (json === lastRenderedJson) return;
     lastRenderedJson = json;
-    renderShell();
+    if (state.view === 'detail' && state.selectedId) renderDetailShell();
+    else renderListShell();
   }
 
   function pollAndRender(index) {

@@ -37,8 +37,13 @@
     productLineup: '/insu/?view=product-lineup'
   };
 
+  /* feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — 카드 안에서 본문(bodyHtml)이
+     펼쳐지던 아코디언 방식(expandedKey)을 customers.js와 동일한 리스트→풀스크린 상세 전환 구조로 바꿨다.
+     view='list'|'detail' + selectedKey로 상세 화면을 관리한다. query(검색어)·각 섹션 limit(더 보기)은
+     상세 화면을 오가도 유지된다(리스트 쪽 상태라 건드리지 않음). sanitize/linkify 로직(entry.bodyHtml)
+     자체는 전혀 손대지 않는다 — 그 안전한 HTML을 어느 화면(카드 안 vs 풀스크린)에 꽂을지만 바뀐다. */
   var state = {
-    query: '', expandedKey: null,
+    view: 'list', query: '', selectedKey: null,
     libraryLimit: RECENT_PAGE_SIZE, scriptsLimit: RECENT_PAGE_SIZE, newsLimit: RECENT_PAGE_SIZE, strategyLimit: RECENT_PAGE_SIZE,
     directory: [], feed: { newsletters: [], strategies: [], newsletterLoading: false, strategyLoading: false }
   };
@@ -123,18 +128,47 @@
   }
 
   /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/캘린더/고객)은 하단 고정 탭바로 옮겼다.
-     상단 헤더에는 화면 제목 + PC로 보기 + 로그아웃만 남긴다(중복 제거, 훨씬 가볍게). */
+     feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은
+     "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는 링크를 추가했다. */
   function headerHtml() {
     return '<header class="wsm-header"><strong>자료</strong>'
       + '<div class="wsm-header-actions">'
-      + '<a class="wsm-pc-link" href="' + esc(PC_LINKS.assets) + '">PC로 보기</a>'
-      + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
-      + '</div></header>';
+      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+      + '</div>'
+      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
+      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="wsm-menu-item" href="' + esc(PC_LINKS.assets) + '">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '</div>'
+      + '</header>';
   }
 
+  /* 바깥 클릭 닫기 리스너는 document에 한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로,
+     클릭 시점에 getElementById로 최신 DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
+  var menuOutsideBound = false;
   function bindHeaderEvents() {
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
+    var menuBtn = document.getElementById('wsm-menu-btn');
+    var menuPanel = document.getElementById('wsm-menu-panel');
+    if (menuBtn && menuPanel) {
+      menuBtn.addEventListener('click', function () {
+        var willOpen = menuPanel.hidden;
+        menuPanel.hidden = !willOpen;
+        menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
+    if (!menuOutsideBound) {
+      menuOutsideBound = true;
+      document.addEventListener('click', function (event) {
+        var panel = document.getElementById('wsm-menu-panel');
+        var btn = document.getElementById('wsm-menu-btn');
+        if (!panel || panel.hidden) return;
+        if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
+        panel.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    }
   }
 
   function emptyHtml(message) {
@@ -156,25 +190,22 @@
 
   function byCreatedDesc(a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); }
 
-  /* 검색·미리보기 대상 통합 목록(자료실+업무노트) 카드. entry.bodyHtml은
-     js/personal-workspace.js의 libraryDirectory()가 데스크탑 showAsset()과 동일하게
-     linkifyRich()(내부적으로 sanitizeRich() 재실행)를 거쳐 돌려준 안전한 HTML 문자열이다 —
-     여기서 다시 이스케이프하지 않고 그대로 innerHTML에 꽂는다(데스크탑과 동일 처리, 새 판단 없음).
-     제목·미리보기 스니펫은 평문이라 esc()로 이스케이프한다. */
+  /* 검색·미리보기 대상 통합 목록(자료실+업무노트) 카드. feat/workstation-mobile-header-consistency
+     (2026-08-22) — 카드 안 인라인 펼침(아코디언)을 없애고, 탭하면 openDetail()로 풀스크린 상세 화면으로
+     전환한다(customers.js와 동일 패턴). entry.bodyHtml은 js/personal-workspace.js의 libraryDirectory()가
+     데스크탑 showAsset()과 동일하게 linkifyRich()(내부적으로 sanitizeRich() 재실행)를 거쳐 돌려준 안전한
+     HTML 문자열이다 — expandBodyHtml()에서 그대로 innerHTML에 꽂는 처리는 그대로 유지한다(데스크탑과 동일
+     처리, sanitize/linkify 로직 자체는 손대지 않음 — 화면 전환 방식만 바뀜). 제목·미리보기 스니펫은 평문이라
+     esc()로 이스케이프한다. */
   function entryCardHtml(entry) {
     var key = entry.source + ':' + entry.id;
-    var expanded = state.expandedKey === key;
     var snippet = entry.previewText ? esc(entry.previewText) + (entry.previewText.length >= 100 ? '…' : '') : '';
-    var html = '<div class="wsm-lib-item' + (expanded ? ' is-open' : '') + '">'
-      + '<button type="button" class="wsm-card wsm-lib-card" data-key="' + esc(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') + '">'
+    return '<button type="button" class="wsm-card wsm-lib-card" data-key="' + esc(key) + '">'
       + '<span class="wsm-lib-kind">' + esc(entry.kind) + '</span>'
       + '<div class="wsm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
       + (snippet ? '<div class="wsm-card-sub">' + snippet + '</div>' : '')
       + (entry.createdAt ? '<div class="wsm-card-meta">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
       + '</button>';
-    if (expanded) html += '<div class="wsm-lib-detail">' + expandBodyHtml(entry) + '</div>';
-    html += '</div>';
-    return html;
   }
 
   function expandBodyHtml(entry) {
@@ -260,15 +291,20 @@
     return q ? searchResultsHtml(q) : browseHtml();
   }
 
-  function bindBodyEvents(container) {
+  function findEntry(key) {
+    return state.directory.find(function (entry) { return (entry.source + ':' + entry.id) === key; });
+  }
+
+  function openDetail(key) {
+    if (!key) return;
+    state.view = 'detail'; state.selectedKey = key; lastRenderedJson = '';
+    renderCurrent();
+  }
+
+  function bindListBodyEvents(container) {
     var cards = container.querySelectorAll('.wsm-lib-card');
     Array.prototype.forEach.call(cards, function (btn) {
-      btn.addEventListener('click', function () {
-        var key = btn.getAttribute('data-key');
-        state.expandedKey = state.expandedKey === key ? null : key;
-        renderBody();
-        lastRenderedJson = snapshotJson();
-      });
+      btn.addEventListener('click', function () { openDetail(btn.getAttribute('data-key')); });
     });
     bindMoreButton(container, 'wsm-lib-more-library', function () { state.libraryLimit += RECENT_PAGE_SIZE; });
     bindMoreButton(container, 'wsm-lib-more-scripts', function () { state.scriptsLimit += RECENT_PAGE_SIZE; });
@@ -280,18 +316,18 @@
     var btn = container.querySelector('#' + id); if (!btn) return;
     btn.addEventListener('click', function () {
       apply();
-      renderBody();
+      renderListBody();
       lastRenderedJson = snapshotJson();
     });
   }
 
-  function renderBody() {
+  function renderListBody() {
     var container = document.getElementById('wsm-lib-body'); if (!container) return;
     container.innerHTML = bodyHtml();
-    bindBodyEvents(container);
+    bindListBodyEvents(container);
   }
 
-  function renderShell() {
+  function renderListShell() {
     var view = root(); if (!view) return;
     view.innerHTML = headerHtml()
       + '<main class="wsm-main">'
@@ -305,19 +341,47 @@
       input.value = state.query;
       input.addEventListener('input', function () {
         state.query = input.value;
-        state.expandedKey = null;
-        renderBody();
-        /* 검색어 갱신은 검색창 자체를 다시 그리지 않는 부분 업데이트(renderBody)로 처리해 포커스를 보존한다.
+        renderListBody();
+        /* 검색어 갱신은 검색창 자체를 다시 그리지 않는 부분 업데이트(renderListBody)로 처리해 포커스를 보존한다.
            이후 폴링이 같은 스냅샷을 보고 전체 재렌더(포커스 소실)하지 않도록 스냅샷 캐시도 함께 갱신한다. */
         lastRenderedJson = snapshotJson();
       });
     }
-    renderBody();
+    renderListBody();
+  }
+
+  /* 대표 지시(2026-08-22) — 카드 탭하면 본문이 카드 안에서 펼쳐지던 방식을 customers.js와 동일한
+     "리스트→풀스크린 상세" 구조로 통일한다. "← 목록" 뒤로가기 버튼 + 하단 탭바를 유지한다(customers.js가
+     이미 하는 그대로). expandBodyHtml()이 그대로 반환하는 신뢰된 HTML(entry.bodyHtml)을 그대로 꽂는다 —
+     sanitize/linkify 로직은 건드리지 않는다. 검색어(query)·각 섹션 limit은 상세 화면을 다녀와도 유지된다. */
+  function renderDetailShell() {
+    var view = root(); if (!view) return;
+    var entry = findEntry(state.selectedKey);
+    if (!entry) { state.view = 'list'; state.selectedKey = null; renderListShell(); return; }
+
+    view.innerHTML = headerHtml()
+      + '<main class="wsm-main">'
+      + '<button type="button" class="wsm-btn wsm-lib-back" id="wsm-lib-back">← 목록</button>'
+      + '<section class="wsm-lib-detail-head">'
+      + '<span class="wsm-lib-kind">' + esc(entry.kind) + '</span>'
+      + '<div class="wsm-lib-detail-title">' + esc(entry.title || '(제목 없음)') + '</div>'
+      + (entry.createdAt ? '<div class="wsm-lib-detail-date">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
+      + '</section>'
+      + '<div class="wsm-lib-detail-full">' + expandBodyHtml(entry) + '</div>'
+      + '</main>'
+      + (window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('library') : '');
+    bindHeaderEvents();
+
+    var back = document.getElementById('wsm-lib-back');
+    if (back) back.addEventListener('click', function () {
+      state.view = 'list'; state.selectedKey = null; lastRenderedJson = '';
+      renderCurrent();
+    });
   }
 
   function snapshotJson() {
     return JSON.stringify({
-      q: state.query, exp: state.expandedKey,
+      view: state.view, key: state.selectedKey, q: state.query,
       ll: state.libraryLimit, sl: state.scriptsLimit, nl: state.newsLimit, stl: state.strategyLimit,
       dir: state.directory, feed: state.feed
     });
@@ -335,7 +399,8 @@
     var json = snapshotJson();
     if (json === lastRenderedJson) return;
     lastRenderedJson = json;
-    renderShell();
+    if (state.view === 'detail' && state.selectedKey) renderDetailShell();
+    else renderListShell();
   }
 
   function pollAndRender(index) {
