@@ -280,7 +280,7 @@
     return '<details class="pw-nav-group pw-nav-group-' + tone + '"><summary>' + label + '</summary>' + entries.map(navPlannedEntryHtml).join('') + '</details>';
   }
   function navHtml() {
-    var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
+    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향', 'section:sales-strategy']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
