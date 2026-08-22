@@ -157,6 +157,7 @@
     view.innerHTML = '<header class="wsm-header"><strong>오늘</strong>'
       + '<div class="wsm-header-actions">'
       + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
+      + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
       + '<a class="wsm-pc-link" href="/insubriefing/workstation/">PC 버전으로 보기</a>'
       + '</div></header>'
       + '<main class="wsm-main">'

@@ -180,6 +180,7 @@
     view.innerHTML = '<header class="wsm-header"><strong>캘린더</strong>'
       + '<div class="wsm-header-actions">'
       + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
+      + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
       + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">PC 버전에서 월간 캘린더 보기</a>'
       + '</div></header>'
       + '<main class="wsm-main">'
