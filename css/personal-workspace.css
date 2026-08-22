@@ -602,6 +602,57 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-insage-table tr.youth td{background:#e6f4ea;color:#137333;font-weight:700}
 @media(max-width:1020px){#v-personal-workspace .pw-insage-table-wrap{grid-template-columns:repeat(2,minmax(180px,1fr))}}
 @media(max-width:680px){#v-personal-workspace .pw-insage-toolbar{align-items:flex-start}#v-personal-workspace .pw-insage-calc{grid-template-columns:1fr}#v-personal-workspace .pw-insage-fields{grid-template-columns:1fr}#v-personal-workspace .pw-insage-note{align-items:flex-start;flex-direction:column;gap:4px}#v-personal-workspace .pw-insage-table-wrap{grid-template-columns:1fr}}
+/* 계산기 · 변환기 — 워크스테이션 본문형 도구 */
+#v-personal-workspace .pw-tools-page{display:grid;gap:16px;width:100%}
+#v-personal-workspace .pw-tools-toolbar{align-items:flex-end;padding-bottom:12px;border-bottom:1px solid #e8eaed}
+#v-personal-workspace .pw-tool-cards{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:12px}
+#v-personal-workspace .pw-tool-card{display:flex;min-height:76px;flex-direction:column;justify-content:center;gap:4px;padding:14px 16px;border:1px solid #dadce0;border-radius:12px;background:#fff;color:#3c4043;text-align:left;cursor:pointer}
+#v-personal-workspace .pw-tool-card:hover{border-color:#a8c7fa;background:#f8fafd}
+#v-personal-workspace .pw-tool-card.on{border-color:#a8c7fa;background:#d3e3fd;color:#041e49}
+#v-personal-workspace .pw-tool-card strong{font-size:16px;font-weight:700}
+#v-personal-workspace .pw-tool-card span{color:#5f6368;font-size:13px;font-weight:500}
+#v-personal-workspace .pw-tool-workspace{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:16px;align-items:start}
+#v-personal-workspace .pw-tool-pane{min-width:0;padding:18px;border:1px solid #e0e3e7;border-radius:12px;background:#fff}
+#v-personal-workspace .pw-tool-pane h3{margin:0 0 14px;color:#3c4043;font-size:15px;font-weight:700}
+#v-personal-workspace .pw-calc-shell{outline:0}
+#v-personal-workspace .pw-calc-shell:focus-visible{box-shadow:0 0 0 3px rgba(11,87,208,.14)}
+#v-personal-workspace .pw-calc-display{width:100%;min-height:72px;box-sizing:border-box;margin:0 0 10px;padding:14px 16px;border:1px solid #e0e3e7;border-radius:12px;background:#f8fafd;color:#1f1f1f;font-size:28px;font-weight:700;text-align:right}
+#v-personal-workspace .pw-calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#v-personal-workspace .pw-calc-grid button{min-height:54px;border:1px solid #e0e3e7;border-radius:10px;background:#fff;color:#3c4043;font:inherit;font-size:18px;font-weight:700;cursor:pointer}
+#v-personal-workspace .pw-calc-grid button:hover,#v-personal-workspace .pw-calc-grid button.kbd{border-color:#a8c7fa;background:#f0f4f9}
+#v-personal-workspace .pw-calc-grid button.fn{color:#5f6368;background:#f8fafd}
+#v-personal-workspace .pw-calc-grid button.op{color:#0b57d0;background:#eaf2ff}
+#v-personal-workspace .pw-calc-grid button.eq{border-color:#0b57d0;background:#0b57d0;color:#fff}
+#v-personal-workspace .pw-calc-help{display:grid;min-height:156px;place-content:center;gap:8px;border-radius:12px;background:#f8fafd;text-align:center}
+#v-personal-workspace .pw-calc-help strong{color:#0b57d0;font-size:36px;font-weight:800;letter-spacing:0}
+#v-personal-workspace .pw-calc-help span{color:#5f6368;font-size:14px;font-weight:600}
+#v-personal-workspace .pw-tool-field{display:grid;gap:7px;margin-bottom:12px;color:#5f6368;font-size:13px;font-weight:600}
+#v-personal-workspace .pw-tool-field input{min-height:42px;padding:0 12px;border:1px solid #c4c7c5;border-radius:8px;background:#fff;color:#1f1f1f;font:inherit;font-size:15px}
+#v-personal-workspace .pw-tool-fire{width:100%;margin-top:14px}
+#v-personal-workspace .pw-tool-empty{display:grid;min-height:180px;place-content:center;border:1px dashed #c4c7c5;border-radius:12px;background:#f8fafd;color:#5f6368;font-size:14px;text-align:center}
+#v-personal-workspace .pw-imgconv-drop{position:relative;display:grid;min-height:210px;place-items:center;align-content:center;gap:8px;border:2px dashed #c4c7c5;border-radius:12px;background:#f8fafd;color:#3c4043;text-align:center;cursor:pointer}
+#v-personal-workspace .pw-imgconv-drop.drag,#v-personal-workspace .pw-imgconv-drop:hover{border-color:#0b57d0;background:#eaf2ff}
+#v-personal-workspace .pw-imgconv-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+#v-personal-workspace .pw-imgconv-drop .pw-imgconv-icon{font-size:34px;color:#0b57d0}
+#v-personal-workspace .pw-imgconv-drop strong{font-size:15px;font-weight:700}
+#v-personal-workspace .pw-imgconv-drop em{color:#5f6368;font-size:13px;font-style:normal}
+#v-personal-workspace .pw-imgconv-file-info{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px 12px;border:1px solid #e0e3e7;border-radius:10px;background:#fff;color:#3c4043;font-size:14px}
+#v-personal-workspace .pw-imgconv-file-info button{width:28px;height:28px;border:0;border-radius:50%;background:#f0f4f9;color:#5f6368;cursor:pointer}
+#v-personal-workspace .pw-imgconv-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+#v-personal-workspace .pw-imgconv-compare>div{display:grid;gap:4px;padding:14px;border-radius:10px;background:#f8fafd;text-align:center}
+#v-personal-workspace .pw-imgconv-compare small,#v-personal-workspace .pw-imgconv-summary span{color:#5f6368;font-size:12px}
+#v-personal-workspace .pw-imgconv-compare strong{color:#1f1f1f;font-size:18px}
+#v-personal-workspace .pw-imgconv-summary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+#v-personal-workspace .pw-imgconv-summary span{padding:5px 10px;border-radius:999px;background:#f0f4f9}
+#v-personal-workspace .pw-imgconv-preview img{display:block;width:100%;max-height:360px;border:1px solid #e0e3e7;border-radius:12px;object-fit:contain;background:#f8fafd}
+#v-personal-workspace .pw-imgconv-actions{display:flex;gap:8px;margin-top:12px}
+#v-personal-workspace .pw-imgconv-pdf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+#v-personal-workspace .pw-imgconv-pdf-grid article{display:grid;gap:8px;padding:10px;border:1px solid #e0e3e7;border-radius:10px;background:#fff}
+#v-personal-workspace .pw-imgconv-pdf-grid img{width:100%;aspect-ratio:3/4;border-radius:8px;object-fit:cover;background:#f8fafd}
+#v-personal-workspace .pw-imgconv-pdf-grid article div{display:flex;gap:6px}
+#v-personal-workspace .pw-imgconv-pdf-note{margin:12px 0 0;color:#5f6368;font-size:13px}
+@media(max-width:900px){#v-personal-workspace .pw-tool-workspace{grid-template-columns:1fr}#v-personal-workspace .pw-tool-cards{grid-template-columns:1fr}}
+@media(max-width:520px){#v-personal-workspace .pw-calc-display{font-size:23px}#v-personal-workspace .pw-calc-grid button{min-height:48px;font-size:16px}#v-personal-workspace .pw-imgconv-actions{flex-direction:column}}
 /* 원전산 바로가기 — 워크스테이션 공통 콘텐츠 영역 */
 #v-personal-workspace .pw-carrier-toolbar{align-items:flex-end;border-bottom:1px solid var(--bd);padding-bottom:14px}
 #v-personal-workspace .pw-carrier-tabs{display:flex;gap:4px}

@@ -20,7 +20,7 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -30,7 +30,7 @@
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
     strategyData: null, strategyLoading: false, strategyPool: 'all', strategyScope: 'all', strategyCoSel: null, strategyOpenMonths: {},
-    strategyCoNameQuery: '', strategyCoNameComposing: false, strategyCoNameTimer: 0,
+    strategyCoNameQuery: '', strategyCoNameComposing: false, strategyCoNameTimer: 0, toolMode: 'calculator', toolFile: null, toolResult: null, toolPages: null,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -282,7 +282,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향', 'section:sales-strategy']];
-    var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
+    var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
@@ -1224,6 +1224,7 @@
     if (state.section === 'newsletters') return newslettersHtml();
     if (state.section === 'sales-strategy') return strategyHtml();
     if (state.section === 'insurance-age') return insuranceAgePageHtml();
+    if (state.section === 'tools') return toolsPageHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     return homeHtml();
@@ -1241,7 +1242,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -1249,7 +1250,7 @@
     input.addEventListener('input', function () { if (!state.composing) scheduleSearch(input.value); });
   }
   function scheduleSearch(value) { window.clearTimeout(state.searchTimer); state.searchTimer = window.setTimeout(function () { state.query = value; if (state.query.trim() && !state.fullLoaded) loadData(true); else renderContent(); }, 180); }
-  function setUrl(push) { var url = '?view=personal-workspace&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; try { history[push ? 'pushState' : 'replaceState']({ view: 'personal-workspace', section: state.section }, '', url); } catch (_) {} }
+  function setUrl(push) { var url = '?view=personal-workspace&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; if (state.section === 'tools') url += '&tool=' + encodeURIComponent(state.toolMode || 'calculator'); try { history[push ? 'pushState' : 'replaceState']({ view: 'personal-workspace', section: state.section }, '', url); } catch (_) {} }
 
   function openWorkspace(section, push) {
     if (!ensureShell()) { if (!STANDALONE && window.showView) window.showView('home'); return; }
@@ -2171,44 +2172,54 @@
       var slot = document.getElementById('pw-quick-tool-slot'); if (slot) slot.innerHTML = '<div class="pw-quick-tool-empty">불러오지 못했습니다. 다시 시도해 주세요.</div>';
     });
   }
-  function resetCalc() { state.calc = { display: '0', stored: null, operator: null, waiting: false }; }
-  function calcRenderDisplay() { var el = document.getElementById('pw-calc-display'); if (el) el.textContent = state.calc.display; }
-  function calcApply(a, b, op) { var r = op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : op === '÷' ? (b === 0 ? NaN : a / b) : b; return isNaN(r) ? 0 : Math.round(r * 1e8) / 1e8; }
+  function setToolMode(mode) { state.toolMode = ['calculator', 'bmi', 'image'].indexOf(mode) >= 0 ? mode : 'calculator'; renderContent(); setUrl(false); }
+  function openCalculatorTool() { state.toolMode = 'calculator'; go('tools'); }
+  function openBmiTool() { state.toolMode = 'bmi'; go('tools'); }
+  function openImageConvertTool() { state.toolMode = 'image'; go('tools'); }
+  function fmtBytes(bytes) { var n = Number(bytes) || 0, units = ['B', 'KB', 'MB', 'GB']; var i = 0; while (n >= 1024 && i < units.length - 1) { n /= 1024; i += 1; } return (i ? n.toFixed(n >= 10 ? 1 : 2) : Math.round(n)) + units[i]; }
+  function toolsPageHtml() {
+    var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG']];
+    var tabs = cards.map(function (card) { return '<button type="button" class="pw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSPersonalWorkspace.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
+    var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : toolsCalculatorHtml();
+    return statusHtml() + '<div class="pw-tools-page"><div class="pw-toolbar pw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="pw-subtitle">자주 쓰는 계산과 이미지 변환을 워크스테이션 안에서 바로 처리합니다.</p></div></div><div class="pw-tool-cards">' + tabs + '</div>' + body + '</div>';
+  }
+  function toolsCalculatorHtml() {
+    var keys = [['C', 'C', 'fn'], ['back', '←', 'fn'], ['%', '%', 'fn'], ['/', '÷', 'op'], ['7', '7', ''], ['8', '8', ''], ['9', '9', ''], ['*', '×', 'op'], ['4', '4', ''], ['5', '5', ''], ['6', '6', ''], ['-', '−', 'op'], ['1', '1', ''], ['2', '2', ''], ['3', '3', ''], ['+', '+', 'op'], ['+/-', '±', 'fn'], ['0', '0', ''], ['.', '.', ''], ['=', '=', 'eq']];
+    var buttons = keys.map(function (k) { return '<button type="button" class="' + k[2] + '" data-calc-key="' + k[0] + '" onclick="OSPersonalWorkspace.calcPress(\'' + k[0] + '\')">' + k[1] + '</button>'; }).join('');
+    return '<section class="pw-tool-workspace pw-tool-calc-page"><div class="pw-tool-pane"><h3>입력</h3><div class="pw-calc-shell" id="pw-calc-shell" tabindex="0" aria-label="계산기 키보드 입력"><input class="pw-calc-display" id="pw-calc-display" value="0" readonly aria-label="계산식과 결과"><div class="pw-calc-grid">' + buttons + '</div></div></div><div class="pw-tool-pane"><h3>기록</h3><div class="pw-calc-help"><strong id="pw-calc-result">0</strong><span id="pw-calc-status">숫자와 연산자를 입력하세요. 키보드 입력도 가능합니다.</span></div></div></section>';
+  }
+  function resetCalc() { state.calc = { cur: '0', prev: null, op: null, fresh: true, expr: '', justEq: false, eqLine: '' }; }
+  function calcFmt(text) { var s = String(text == null ? '0' : text); if (s === '오류') return s; var neg = s.charAt(0) === '-'; if (neg) s = s.slice(1); var p = s.split('.'); if (!/^\d*$/.test(p[0])) return (neg ? '-' : '') + s; return (neg ? '-' : '') + (p[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (p.length > 1 ? '.' + p[1] : ''); }
+  var CALC_SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+  function calcLine(c) { if (!c) return '0'; if (c.cur === '오류') return '오류'; if (c.justEq) return c.eqLine || calcFmt(c.cur); if (c.fresh && c.expr) return c.expr.replace(/\s+$/, ''); return (c.expr || '') + calcFmt(c.cur); }
+  function calcRenderDisplay() { var c = state.calc || (resetCalc(), state.calc), display = document.getElementById('pw-calc-display'), result = document.getElementById('pw-calc-result'), status = document.getElementById('pw-calc-status'); if (display) display.value = calcLine(c); if (result) result.textContent = calcFmt(c.cur); if (status) status.textContent = c.justEq ? '결과값' : (c.expr ? '계산 중' : '입력 대기'); }
+  function calcEquals() { var c = state.calc; if (!c || c.op == null || c.prev == null) return; var a = c.prev, b = parseFloat(c.cur), r = c.op === '+' ? a + b : c.op === '-' ? a - b : c.op === '*' ? a * b : c.op === '/' ? (b === 0 ? NaN : a / b) : b; c.cur = (!isFinite(r) || isNaN(r)) ? '오류' : String(Math.round(r * 1e10) / 1e10); c.prev = null; c.fresh = true; }
   function calcPress(key) {
-    var c = state.calc;
-    if (/^[0-9]$/.test(key)) {
-      if (c.waiting || c.display === '0') { c.display = key; c.waiting = false; }
-      else if (c.display.replace('-', '').replace('.', '').length < 12) c.display += key;
-    } else if (key === '.') {
-      if (c.waiting) { c.display = '0.'; c.waiting = false; }
-      else if (c.display.indexOf('.') < 0) c.display += '.';
-    } else if (key === 'C') {
-      resetCalc();
-    } else if (key === '±') {
-      c.display = c.display.charAt(0) === '-' ? c.display.slice(1) : (c.display === '0' ? '0' : '-' + c.display);
-    } else if (key === '%') {
-      c.display = String(parseFloat(c.display) / 100);
-    } else if (['+', '−', '×', '÷'].indexOf(key) >= 0) {
-      if (c.stored !== null && !c.waiting) c.display = String(calcApply(c.stored, parseFloat(c.display), c.operator));
-      c.stored = parseFloat(c.display); c.operator = key; c.waiting = true;
-    } else if (key === '=') {
-      if (c.stored !== null && c.operator) { c.display = String(calcApply(c.stored, parseFloat(c.display), c.operator)); c.stored = null; c.operator = null; c.waiting = true; }
-    }
+    var c = state.calc || (resetCalc(), state.calc);
+    if (c.cur === '오류' && key !== 'C') return;
+    if (key === 'C') resetCalc();
+    else if (key === 'back') { if (!c.fresh) { c.cur = c.cur.length > 1 ? c.cur.slice(0, -1) : '0'; if (c.cur === '-') c.cur = '0'; } }
+    else if (key === '.') { if (c.justEq) { c.cur = '0.'; c.expr = ''; c.justEq = false; c.fresh = false; } else if (c.fresh) { c.cur = '0.'; c.fresh = false; } else if (c.cur.indexOf('.') < 0) c.cur += '.'; }
+    else if (/^[0-9]$/.test(key)) { if (c.justEq) { c.expr = ''; c.justEq = false; c.cur = key; c.fresh = false; } else if (c.fresh || c.cur === '0') { c.cur = key; c.fresh = false; } else if (c.cur.replace('-', '').replace('.', '').length < 16) c.cur += key; }
+    else if (['+', '-', '*', '/'].indexOf(key) >= 0) { if (c.op != null && !c.fresh) calcEquals(); c.prev = parseFloat(c.cur); c.op = key; c.fresh = true; c.justEq = false; c.expr = calcFmt(c.cur) + ' ' + CALC_SYMBOLS[key] + ' '; }
+    else if (key === '=') { if (c.op != null && c.prev != null) { var left = calcFmt(String(c.prev)) + ' ' + CALC_SYMBOLS[c.op] + ' ' + calcFmt(c.cur); calcEquals(); c.eqLine = left + ' = ' + calcFmt(c.cur); c.op = null; c.justEq = true; } }
+    else if (key === '%') { c.cur = String(parseFloat(c.cur) / 100); c.fresh = true; }
+    else if (key === '+/-') { if (c.cur !== '0' && c.cur !== '오류') c.cur = c.cur.charAt(0) === '-' ? c.cur.slice(1) : '-' + c.cur; }
     calcRenderDisplay();
   }
-  function openCalculatorTool() {
-    resetCalc();
-    var fnKeys = ['C', '±', '%', '÷'], numRows = ['7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+'];
-    function keyClass(k) { return k === '÷' || k === '×' || k === '−' || k === '+' ? 'op' : (k === 'C' || k === '±' || k === '%') ? 'fn' : ''; }
-    var keys = fnKeys.concat(numRows).map(function (k) { return '<button type="button" class="' + keyClass(k) + '" onclick="OSPersonalWorkspace.calcPress(\'' + k + '\')">' + k + '</button>'; }).join('')
-      + '<button type="button" class="wide" onclick="OSPersonalWorkspace.calcPress(\'0\')">0</button><button type="button" onclick="OSPersonalWorkspace.calcPress(\'.\')">.</button><button type="button" class="eq" onclick="OSPersonalWorkspace.calcPress(\'=\')">=</button>';
-    dialog('<div class="pw-tool-panel pw-calc-tool"><h2>계산기</h2><div class="pw-calc-display" id="pw-calc-display">0</div><div class="pw-calc-grid">' + keys + '</div></div>');
+  function calcKeyFromEvent(event) {
+    var code = event.code || '', key = event.key;
+    if (/^Numpad[0-9]$/.test(code)) return code.slice(6);
+    if (code === 'NumpadDecimal') return '.'; if (code === 'NumpadAdd') return '+'; if (code === 'NumpadSubtract') return '-'; if (code === 'NumpadMultiply') return '*'; if (code === 'NumpadDivide') return '/'; if (code === 'NumpadEnter') return '=';
+    if (key >= '0' && key <= '9') return key; if (key === '.') return '.'; if (['+', '-', '*', '/'].indexOf(key) >= 0) return key; if (key === 'Enter' || key === '=') return '='; if (key === 'Backspace') return 'back'; if (key === 'Escape') return 'C'; if (key === '%') return '%'; return null;
   }
-  function openBmiTool() {
-    dialog('<div class="pw-tool-panel pw-bmi-tool"><h2>BMI 계산기</h2>'
-      + '<label>키 (cm)<input id="pw-bmi-height" type="number" inputmode="decimal" placeholder="170" oninput="OSPersonalWorkspace.calcBmi()"></label>'
-      + '<label>몸무게 (kg)<input id="pw-bmi-weight" type="number" inputmode="decimal" placeholder="65" oninput="OSPersonalWorkspace.calcBmi()"></label>'
-      + '<div class="pw-bmi-result" id="pw-bmi-result"><strong id="pw-bmi-value">-</strong><span id="pw-bmi-category">키와 몸무게를 입력하세요</span></div></div>');
+  function hydrateCalculator() {
+    var shell = document.getElementById('pw-calc-shell'); if (!shell) return;
+    resetCalc(); calcRenderDisplay(); shell.focus({ preventScroll: true });
+    shell.addEventListener('keydown', function (event) { var key = calcKeyFromEvent(event); if (!key) return; event.preventDefault(); calcPress(key); var btn = shell.querySelector('[data-calc-key="' + key + '"]'); if (btn) { btn.classList.add('kbd'); window.setTimeout(function () { btn.classList.remove('kbd'); }, 120); } });
+  }
+  function toolsBmiHtml() {
+    return '<section class="pw-tool-workspace pw-tool-bmi-page"><div class="pw-tool-pane"><h3>입력</h3><label class="pw-tool-field">키 (cm)<input id="pw-bmi-height" type="number" inputmode="decimal" placeholder="170" oninput="OSPersonalWorkspace.calcBmi()"></label><label class="pw-tool-field">몸무게 (kg)<input id="pw-bmi-weight" type="number" inputmode="decimal" placeholder="65" oninput="OSPersonalWorkspace.calcBmi()"></label></div><div class="pw-tool-pane"><h3>결과</h3><div class="pw-bmi-result" id="pw-bmi-result"><strong id="pw-bmi-value">-</strong><span id="pw-bmi-category">키와 몸무게를 입력하세요</span></div></div></section>';
   }
   function calcBmi() {
     var h = parseFloat(value('pw-bmi-height')), w = parseFloat(value('pw-bmi-weight'));
@@ -2289,35 +2300,78 @@
     el.textContent = info.age + '세';
     if (caption) caption.textContent = '다음 상령일 ' + info.upperDate + ' · ' + info.nextAge + '세';
   }
-  function openImageConvertTool() {
-    dialog('<div class="pw-tool-panel pw-imgconv-tool"><h2>이미지 변환</h2><p class="pw-tool-desc">사진을 JPG 또는 PNG로 변환해서 저장합니다.</p>'
-      + '<label class="pw-imgconv-drop"><input id="pw-imgconv-file" type="file" accept="image/*" onchange="OSPersonalWorkspace.imgConvertLoad(this)"><span>이미지 선택</span></label>'
-      + '<div class="pw-imgconv-preview" id="pw-imgconv-preview" hidden><img id="pw-imgconv-img" alt="미리보기"><div class="pw-imgconv-options"><select id="pw-imgconv-format"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.imgConvertDownload()">변환 · 다운로드</button></div></div></div>');
+  function toolsImageHtml() {
+    return '<section class="pw-tool-workspace pw-tool-image-page"><div class="pw-tool-pane"><h3>입력</h3><label class="pw-imgconv-drop" id="pw-imgconv-drop"><input id="pw-imgconv-file" type="file" accept="image/png,image/jpeg,application/pdf,.pdf" onchange="OSPersonalWorkspace.imgConvertLoad(this)"><span class="pw-imgconv-icon">▧</span><strong>PNG · JPG · PDF 파일 선택</strong><em>클릭 또는 드래그앤드롭 · PDF는 페이지별 JPG</em></label><div id="pw-imgconv-file-info"></div><button type="button" class="pw-btn primary pw-tool-fire" onclick="OSPersonalWorkspace.imgConvertRun()">변환</button></div><div class="pw-tool-pane"><h3>결과</h3><div id="pw-imgconv-result" class="pw-imgconv-result"><div class="pw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
+  }
+  function hydrateToolsPage() { if (state.toolMode === 'calculator') hydrateCalculator(); if (state.toolMode === 'bmi') calcBmi(); if (state.toolMode === 'image') hydrateImageConvert(); }
+  function hydrateImageConvert() {
+    var drop = document.getElementById('pw-imgconv-drop'); if (!drop || drop.dataset.bound === '1') return; drop.dataset.bound = '1';
+    drop.addEventListener('dragover', function (event) { event.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', function () { drop.classList.remove('drag'); });
+    drop.addEventListener('drop', function (event) { event.preventDefault(); drop.classList.remove('drag'); var file = event.dataTransfer.files && event.dataTransfer.files[0]; if (file) setImageConvertFile(file); });
+    renderImageConvertFile();
+  }
+  function setImageConvertFile(file) {
+    if (!file) return;
+    if (!/image\/(png|jpeg)|application\/pdf/i.test(file.type || '') && !/\.(png|jpe?g|pdf)$/i.test(file.name || '')) { alert('PNG · JPG · PDF 파일만 변환할 수 있습니다.'); return; }
+    state.toolFile = file; state.toolResult = null; state.toolPages = null; renderImageConvertFile(); renderImageConvertEmpty();
   }
   function imgConvertLoad(input) {
-    var file = input.files && input.files[0]; if (!file) return;
+    setImageConvertFile(input && input.files && input.files[0]);
+  }
+  function renderImageConvertFile() {
+    var info = document.getElementById('pw-imgconv-file-info'); if (!info) return;
+    if (!state.toolFile) { info.innerHTML = ''; return; }
+    info.innerHTML = '<div class="pw-imgconv-file-info"><span>' + esc(state.toolFile.name) + ' · ' + fmtBytes(state.toolFile.size) + '</span><button type="button" onclick="OSPersonalWorkspace.imgConvertClear()" aria-label="파일 제거">×</button></div>';
+  }
+  function imgConvertClear() { state.toolFile = null; state.toolResult = null; state.toolPages = null; var input = document.getElementById('pw-imgconv-file'); if (input) input.value = ''; renderImageConvertFile(); renderImageConvertEmpty(); }
+  function renderImageConvertEmpty(text) { var result = document.getElementById('pw-imgconv-result'); if (result) result.innerHTML = '<div class="pw-tool-empty">' + esc(text || '파일 선택 후 변환을 누르세요.') + '</div>'; }
+  function imgConvertRun() {
+    var file = state.toolFile; if (!file) { alert('파일을 먼저 선택해 주세요.'); return; }
+    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) return imgConvertPdf(file);
+    var result = document.getElementById('pw-imgconv-result'); if (result) result.innerHTML = '<div class="pw-tool-empty">변환 중입니다.</div>';
     var reader = new FileReader();
-    reader.onload = function () {
-      var img = document.getElementById('pw-imgconv-img'), preview = document.getElementById('pw-imgconv-preview');
-      if (!img || !preview) return;
-      img.src = reader.result; img.dataset.name = file.name.replace(/\.[^.]+$/, ''); preview.hidden = false;
+    reader.onload = function (event) {
+      var img = new Image();
+      img.onload = function () {
+        var canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+        var ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0);
+        canvas.toBlob(function (blob) {
+          if (!blob) { renderImageConvertEmpty('변환 실패. 다시 시도해 주세요.'); return; }
+          var url = URL.createObjectURL(blob), newName = file.name.replace(/\.(png|jpe?g)$/i, '') + '.jpg';
+          state.toolResult = { blob: blob, url: url, newName: newName, origName: file.name, origSize: file.size, newSize: blob.size, width: canvas.width, height: canvas.height, origFormat: /jpe?g/i.test(file.type) || /\.jpe?g$/i.test(file.name) ? 'JPG' : 'PNG' };
+          renderImageConvertResult();
+        }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { renderImageConvertEmpty('이미지 파일을 불러오지 못했습니다.'); };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   }
-  function imgConvertDownload() {
-    var img = document.getElementById('pw-imgconv-img'), format = value('pw-imgconv-format');
-    if (!img || !img.src) return;
-    var canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-    var ctx = canvas.getContext('2d');
-    if (format === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-    ctx.drawImage(img, 0, 0);
-    canvas.toBlob(function (blob) {
-      if (!blob) return;
-      var ext = format === 'image/jpeg' ? 'jpg' : 'png', url = URL.createObjectURL(blob);
-      var a = document.createElement('a'); a.href = url; a.download = (img.dataset.name || 'image') + '.' + ext; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, format, 0.92);
+  function renderImageConvertResult() {
+    var r = state.toolResult, result = document.getElementById('pw-imgconv-result'); if (!r || !result) return;
+    var saved = r.origSize - r.newSize, reduction = r.origSize ? Math.round((1 - r.newSize / r.origSize) * 100) : 0;
+    result.innerHTML = '<div class="pw-imgconv-compare"><div><small>원본</small><strong>' + esc(r.origFormat) + '</strong><span>' + fmtBytes(r.origSize) + '</span></div><b>→</b><div><small>결과</small><strong>JPG</strong><span>' + fmtBytes(r.newSize) + '</span></div></div><div class="pw-imgconv-summary"><span>용량 ' + (reduction > 0 ? reduction + '% 감소' : '변환 완료') + '</span><span>' + r.width + ' × ' + r.height + '</span><span>' + (saved > 0 ? fmtBytes(saved) + ' 절약' : esc(r.newName)) + '</span></div><div class="pw-imgconv-preview"><img src="' + r.url + '" alt="변환 결과"></div><div class="pw-imgconv-actions"><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.imgConvertDownload()">다운로드</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.imgConvertCopy()">복사</button></div>';
   }
+  function imgConvertPdf(file) {
+    var result = document.getElementById('pw-imgconv-result'); if (result) result.innerHTML = '<div class="pw-tool-empty">PDF 변환 중입니다.</div>';
+    state.toolPages = [];
+    loadPdfJs().then(function (pdfjs) { return file.arrayBuffer().then(function (buf) { return pdfjs.getDocument({ data: buf }).promise; }); }).then(function (pdf) {
+      var total = pdf.numPages, count = Math.min(total, 20), base = file.name.replace(/\.pdf$/i, ''), chain = Promise.resolve();
+      for (var i = 1; i <= count; i += 1) (function (pageNo) { chain = chain.then(function () { return pdf.getPage(pageNo).then(function (page) { var vp = page.getViewport({ scale: 2 }), canvas = document.createElement('canvas'); canvas.width = vp.width; canvas.height = vp.height; var ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () { return new Promise(function (resolve) { canvas.toBlob(function (blob) { if (blob) state.toolPages.push({ page: pageNo, blob: blob, url: URL.createObjectURL(blob), name: base + '_p' + pageNo + '.jpg', size: blob.size }); resolve(); }, 'image/jpeg', 0.85); }); }); }); }); })(i);
+      return chain.then(function () { renderImageConvertPdfResult(total); });
+    }).catch(function () { renderImageConvertEmpty('PDF 변환 실패. 다시 시도해 주세요.'); });
+  }
+  function renderImageConvertPdfResult(total) {
+    var pages = state.toolPages || [], result = document.getElementById('pw-imgconv-result'); if (!result) return;
+    if (!pages.length) { renderImageConvertEmpty('변환된 페이지가 없습니다.'); return; }
+    result.innerHTML = '<div class="pw-imgconv-pdf-grid">' + pages.map(function (p, i) { return '<article><img src="' + p.url + '" alt="' + p.page + '쪽"><strong>' + p.page + '쪽</strong><span>' + fmtBytes(p.size) + '</span><div><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.imgConvertPdfDownload(' + i + ')">저장</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.imgConvertPdfCopy(' + i + ')">복사</button></div></article>'; }).join('') + '</div>' + (total > pages.length ? '<p class="pw-imgconv-pdf-note">총 ' + total + '쪽 중 앞 ' + pages.length + '쪽만 변환했습니다.</p>' : '');
+  }
+  function downloadBlob(url, name) { var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+  function imgConvertDownload() { var r = state.toolResult; if (r) downloadBlob(r.url, r.newName); }
+  function imgConvertCopy() { var r = state.toolResult; if (!r || !navigator.clipboard || !window.ClipboardItem) return imgConvertDownload(); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': r.blob })]).then(function () { if (typeof window.toast === 'function') window.toast('변환 이미지를 복사했습니다.'); }).catch(imgConvertDownload); }
+  function imgConvertPdfDownload(index) { var p = (state.toolPages || [])[index]; if (p) downloadBlob(p.url, p.name); }
+  function imgConvertPdfCopy(index) { var p = (state.toolPages || [])[index]; if (!p || !navigator.clipboard || !window.ClipboardItem) return imgConvertPdfDownload(index); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': p.blob })]).then(function () { if (typeof window.toast === 'function') window.toast(p.page + '쪽을 복사했습니다.'); }).catch(function () { imgConvertPdfDownload(index); }); }
   function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSPersonalWorkspace.saveEvent()')); }
   function deleteEvent(id) {
     if (!id || !window.confirm('이 일정을 삭제할까요?')) return;
@@ -2472,7 +2526,7 @@
     renderContent(); setUrl(false);
   }
   function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
-  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
+  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
   function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } openWorkspace(state.section, false); }
 
   restoreFromUrl();
@@ -2495,7 +2549,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
+    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
