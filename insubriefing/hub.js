@@ -612,13 +612,11 @@
       cursor: pointer;
     }
 @media (max-width: 560px) {
-      .ib-mobile-nav { grid-template-columns: repeat(4, 1fr); }
       .ib-hero {
         min-height: 0;
         padding-top: 20px;
         padding-bottom: 40px;
       }
-      .ib-mobile-nav a { font-size: 11px; }
       #leaflet-calendar { padding: 16px; }
       .ib-hero-panel .ib-hero-dashboard { grid-template-columns: 1fr; }
       .ib-three article { min-height: 280px; }
@@ -819,15 +817,6 @@
     window.AppState.userId = _acctUser.id;
     window.AppState.name = _acctUser.name || (_acctUser.user_metadata && _acctUser.user_metadata.name) || "";
     window.AppState.email = _acctUser.email || "";
-  }
-
-  var mobileNav = document.querySelector(".ib-mobile-nav");
-  if (mobileNav && !mobileNav.querySelector(".ib-workstation-mobile")) {
-    var mobileWorkstation = document.createElement("a");
-    mobileWorkstation.className = "ib-workstation-mobile";
-    mobileWorkstation.href = "/insubriefing/workstation/";
-    mobileWorkstation.textContent = "워크스테이션";
-    mobileNav.appendChild(mobileWorkstation);
   }
 
   if (menu && nav) {
