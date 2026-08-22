@@ -154,7 +154,11 @@
     (summary.insuranceAge || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
 
     var view = root(); if (!view) return;
-    view.innerHTML = '<header class="wsm-header"><strong>오늘</strong><a class="wsm-pc-link" href="/insubriefing/workstation/">PC 버전으로 보기</a></header>'
+    view.innerHTML = '<header class="wsm-header"><strong>오늘</strong>'
+      + '<div class="wsm-header-actions">'
+      + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
+      + '<a class="wsm-pc-link" href="/insubriefing/workstation/">PC 버전으로 보기</a>'
+      + '</div></header>'
       + '<main class="wsm-main">'
       + eventsSectionHtml(summary.events, excludeIds)
       + careSectionHtml(summary.care)
