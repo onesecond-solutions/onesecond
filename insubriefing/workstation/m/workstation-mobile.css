@@ -136,6 +136,49 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   gap: 8px;
 }
 
+/* feat/workstation-mobile-agenda-scroll (2026-08-22) — "오늘 일정" 섹션을 양방향 무한스크롤 아젠다로
+   전환(대표 직접 요청). 고정 높이의 내부 스크롤 박스로 만들어 아래 케어/상령일/상담준비 섹션이 항상
+   이어서 보이게 한다(아젠다가 페이지 전체를 삼키지 않음). 톤은 기존과 동일 — 얇은 테두리 + 텍스트만,
+   blur/그림자 금지. */
+.wsm-agenda-scroll {
+  max-height: 58vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  padding: 2px 12px;
+}
+.wsm-agenda-sentinel {
+  height: 1px;
+}
+.wsm-agenda-days {
+  display: flex;
+  flex-direction: column;
+}
+.wsm-agenda-day {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bd);
+}
+.wsm-agenda-day:last-child {
+  border-bottom: none;
+}
+.wsm-agenda-date {
+  margin: 0 0 8px 2px;
+  font-size: var(--fs-meta, 13px);
+  font-weight: 600;
+  color: var(--ts);
+}
+.wsm-agenda-date.is-today {
+  color: var(--ac);
+}
+.wsm-agenda-limit {
+  padding: 10px 0;
+  text-align: center;
+  font-size: var(--fs-caption, 12px);
+  color: var(--tf);
+}
+
 .wsm-card {
   min-height: 44px;
   padding: 12px 14px;
