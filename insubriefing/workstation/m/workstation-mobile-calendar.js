@@ -187,11 +187,10 @@
     lastRenderedJson = json;
 
     var view = root(); if (!view) return;
+    /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/고객/자료)은 하단 고정 탭바로 옮겼다.
+       상단 헤더에는 화면 제목 + PC로 보기 + 로그아웃만 남긴다(중복 제거, 훨씬 가볍게). */
     view.innerHTML = '<header class="wsm-header"><strong>캘린더</strong>'
       + '<div class="wsm-header-actions">'
-      + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
-      + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
-      + '<a class="wsm-tab-link" href="./library.html">자료</a>'
       + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">PC로 보기</a>'
       + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>'
@@ -199,7 +198,8 @@
       + todaySectionHtml(todayDate)
       + weekSectionHtml(todayDate)
       + upcomingSectionHtml(todayDate)
-      + '</main>';
+      + '</main>'
+      + (window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('calendar') : '');
 
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });

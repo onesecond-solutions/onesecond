@@ -122,12 +122,11 @@
     view.innerHTML = '<div class="wsm-gate"><strong>자료를 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
   }
 
+  /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/캘린더/고객)은 하단 고정 탭바로 옮겼다.
+     상단 헤더에는 화면 제목 + PC로 보기 + 로그아웃만 남긴다(중복 제거, 훨씬 가볍게). */
   function headerHtml() {
     return '<header class="wsm-header"><strong>자료</strong>'
       + '<div class="wsm-header-actions">'
-      + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
-      + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
-      + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
       + '<a class="wsm-pc-link" href="' + esc(PC_LINKS.assets) + '">PC로 보기</a>'
       + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>';
@@ -298,7 +297,8 @@
       + '<main class="wsm-main">'
       + '<div class="wsm-lib-search-wrap"><input type="search" id="wsm-lib-search" class="wsm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
       + '<div id="wsm-lib-body"></div>'
-      + '</main>';
+      + '</main>'
+      + (window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('library') : '');
     bindHeaderEvents();
     var input = document.getElementById('wsm-lib-search');
     if (input) {
