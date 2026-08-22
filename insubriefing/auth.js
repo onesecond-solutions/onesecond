@@ -398,10 +398,10 @@
       + '</svg><span>Google로 시작하기</span></button><p>구글 계정으로 한 번에 로그인</p></div>';
     if (state.step === 'otp') {
       title.textContent = '이메일 인증';
-      desc.innerHTML = '<strong>' + esc(state.email) + '</strong> 주소로 보낸 6자리 인증번호를 입력하세요.';
+      desc.innerHTML = '<strong>' + esc(state.email) + '</strong> 주소로 보낸 이메일 6자리 인증번호를 입력하세요.';
       fields.innerHTML = '<label class="ib-auth-field">인증번호<input class="ib-auth-otp" id="ib-auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"></label>';
-      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-verify>인증하고 시작하기</button>'
-        + '<button class="ib-auth-secondary" type="button" data-ib-auth-resend>인증번호 재전송</button>'
+      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-verify>이메일 인증번호 확인</button>'
+        + '<button class="ib-auth-secondary" type="button" data-ib-auth-resend>이메일 인증번호 재전송</button>'
         + '<button class="ib-auth-secondary" type="button" data-ib-auth-back>이메일 다시 입력</button>';
       setStatus('', '');
       setTimeout(function () {
@@ -417,14 +417,14 @@
         + '<label class="ib-auth-field">전화번호<input id="ib-auth-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="010-0000-0000" required></label>'
         + '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>'
         + '<label class="ib-auth-field ib-auth-company-wrap">소속회사명<input id="ib-auth-company" type="text" autocomplete="organization" maxlength="50" placeholder="회사명을 입력하세요" required><input id="ib-auth-company-id" type="hidden"><span class="ib-auth-company-list" id="ib-auth-company-list" hidden></span></label>';
-      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
+      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>이메일 인증번호 받기</button>';
     } else {
       title.textContent = '보험브리핑 로그인';
       desc.textContent = '기존 원세컨드 가입자는 같은 이메일로 로그인할 수 있습니다.';
       fields.innerHTML = '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
       actions.innerHTML = googleButton
         + '<div class="ib-auth-divider"><span>또는</span></div>'
-        + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
+        + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>이메일 인증번호 받기</button>';
     }
     setStatus('', '');
     setTimeout(function () {
@@ -522,7 +522,7 @@
     }
     state.email = form.email;
     setBusy(true);
-    setStatus('인증번호를 발송하고 있습니다.', '');
+    setStatus('이메일 인증번호를 발송하고 있습니다.', '');
     try {
       var res = await fetch(dbUrl('/auth/v1/otp'), {
         method: 'POST',
@@ -555,14 +555,14 @@
   async function resendOtp() {
     if (state.busy || !state.email) return;
     setBusy(true);
-    setStatus('인증번호를 다시 발송하고 있습니다.', '');
+    setStatus('이메일 인증번호를 다시 발송하고 있습니다.', '');
     try {
       var res = await fetch(dbUrl('/auth/v1/otp'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': dbKey() },
         body: JSON.stringify(otpBody())
       });
-      setStatus(res.ok ? '인증번호를 다시 보냈습니다.' : '재전송하지 못했습니다. 잠시 후 다시 시도해 주세요.', res.ok ? 'success' : 'error');
+      setStatus(res.ok ? '이메일 인증번호를 다시 보냈습니다.' : '재전송하지 못했습니다. 잠시 후 다시 시도해 주세요.', res.ok ? 'success' : 'error');
     } catch (_e) {
       setStatus('네트워크 오류가 발생했습니다.', 'error');
     } finally {
@@ -614,12 +614,12 @@
     var codeEl = document.getElementById('ib-auth-code');
     var code = codeEl ? codeEl.value.trim() : '';
     if (!/^\d{6}$/.test(code)) {
-      setStatus('6자리 인증번호를 입력해 주세요.', 'error');
+      setStatus('이메일로 받은 6자리 인증번호를 입력해 주세요.', 'error');
       if (codeEl) codeEl.focus();
       return;
     }
     setBusy(true);
-    setStatus('인증번호를 확인하고 있습니다.', '');
+    setStatus('이메일 인증번호를 확인하고 있습니다.', '');
     try {
       var res = await fetch(dbUrl('/auth/v1/verify'), {
         method: 'POST',
