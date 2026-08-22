@@ -10,6 +10,9 @@
     busy: false
   };
 
+  var PKCE_KEY = 'ib_pkce_verifier';
+  var OAUTH_REDIRECT_KEY = 'ib_oauth_redirect';
+
   function dbUrl(path) {
     if (window.db && typeof window.db.url === 'function') return window.db.url(path);
     return (window.SUPABASE_URL || '') + path;
@@ -42,6 +45,113 @@
     } catch (_e) {
       return '/insubriefing/workstation/';
     }
+  }
+
+  function pkceVerifier() {
+    var bytes = new Uint8Array(64);
+    (window.crypto || window.msCrypto).getRandomValues(bytes);
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    var value = '';
+    for (var i = 0; i < bytes.length; i += 1) value += chars[bytes[i] % chars.length];
+    return value;
+  }
+
+  async function pkceChallenge(verifier) {
+    var data = new TextEncoder().encode(verifier);
+    var digest = await window.crypto.subtle.digest('SHA-256', data);
+    var bytes = new Uint8Array(digest);
+    var binary = '';
+    for (var i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function signInWithGoogle() {
+    if (state.busy) return;
+    setBusy(true);
+    setStatus('Google 로그인으로 이동합니다.', '');
+    try {
+      var verifier = pkceVerifier();
+      try {
+        localStorage.setItem(PKCE_KEY, verifier);
+        sessionStorage.setItem(PKCE_KEY, verifier);
+        localStorage.setItem(OAUTH_REDIRECT_KEY, state.redirect || '/insubriefing/workstation/');
+      } catch (_e) {}
+      var challenge = await pkceChallenge(verifier);
+      var redirectTo = window.location.origin + window.location.pathname;
+      var url = dbUrl('/auth/v1/authorize')
+        + '?provider=google'
+        + '&code_challenge=' + encodeURIComponent(challenge)
+        + '&code_challenge_method=S256'
+        + '&redirect_to=' + encodeURIComponent(redirectTo);
+      window.location.href = url;
+    } catch (_err) {
+      setStatus('Google 로그인 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.', 'error');
+      setBusy(false);
+    }
+  }
+
+  async function handleOAuthCallback() {
+    var hash = window.location.hash || '';
+    try {
+      var query = new URLSearchParams(window.location.search || '');
+      var hashParams = new URLSearchParams(hash.substring(1));
+      var error = query.get('error') || hashParams.get('error');
+      if (error) {
+        try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
+        if (error !== 'access_denied') {
+          alert('Google 로그인에 실패했습니다.\n\n같은 이메일이 이메일 코드 로그인으로 이미 가입돼 있으면 이메일 인증번호 로그인을 이용해 주세요.');
+        }
+        return;
+      }
+    } catch (_e) {}
+
+    var code = '';
+    try { code = new URLSearchParams(window.location.search || '').get('code') || ''; } catch (_e) {}
+    if (code && hash.indexOf('access_token=') === -1) {
+      var verifier = '';
+      try { verifier = localStorage.getItem(PKCE_KEY) || sessionStorage.getItem(PKCE_KEY) || ''; } catch (_e) {}
+      if (!verifier) return;
+      try {
+        var res = await fetch(dbUrl('/auth/v1/token?grant_type=pkce'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': dbKey() },
+          body: JSON.stringify({ auth_code: code, code_verifier: verifier })
+        });
+        if (!res.ok) return;
+        var data = await res.json();
+        await storeSession(data);
+        try {
+          localStorage.removeItem(PKCE_KEY);
+          sessionStorage.removeItem(PKCE_KEY);
+        } catch (_e) {}
+        var next = '/insubriefing/workstation/';
+        try { next = safeRedirect(localStorage.getItem(OAUTH_REDIRECT_KEY) || next); localStorage.removeItem(OAUTH_REDIRECT_KEY); } catch (_e) {}
+        try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
+        window.location.href = next;
+      } catch (_err) {}
+      return;
+    }
+
+    if (hash.indexOf('access_token=') === -1) return;
+    try {
+      var params = new URLSearchParams(hash.substring(1));
+      var accessToken = params.get('access_token');
+      if (!accessToken) return;
+      var payload = JSON.parse(atob(accessToken.split('.')[1]));
+      await storeSession({
+        access_token: accessToken,
+        refresh_token: params.get('refresh_token') || '',
+        user: {
+          id: payload.sub,
+          email: payload.email || '',
+          user_metadata: payload.user_metadata || {}
+        }
+      });
+      var fallback = '/insubriefing/workstation/';
+      try { fallback = safeRedirect(localStorage.getItem(OAUTH_REDIRECT_KEY) || fallback); localStorage.removeItem(OAUTH_REDIRECT_KEY); } catch (_e) {}
+      try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
+      window.location.href = fallback;
+    } catch (_err) {}
   }
 
   function ensureDialog() {
@@ -82,6 +192,7 @@
       if (event.target.closest('[data-ib-auth-send]')) sendOtp();
       if (event.target.closest('[data-ib-auth-verify]')) verifyOtp();
       if (event.target.closest('[data-ib-auth-resend]')) resendOtp();
+      if (event.target.closest('[data-ib-auth-google]')) signInWithGoogle();
       if (event.target.closest('[data-ib-auth-back]')) {
         state.step = 'form';
         state.busy = false;
@@ -148,12 +259,16 @@
       fields.innerHTML = '<label class="ib-auth-field">이름<input id="ib-auth-name" type="text" autocomplete="name" maxlength="30" required></label>'
         + '<label class="ib-auth-field">전화번호<input id="ib-auth-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="010-0000-0000" required></label>'
         + '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
-      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
+      actions.innerHTML = '<button class="ib-auth-google" type="button" data-ib-auth-google><span aria-hidden="true">G</span> Google로 시작하기</button>'
+        + '<div class="ib-auth-divider"><span>또는</span></div>'
+        + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
     } else {
       title.textContent = '보험브리핑 로그인';
       desc.textContent = '기존 원세컨드 가입자는 같은 이메일로 로그인할 수 있습니다.';
       fields.innerHTML = '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
-      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
+      actions.innerHTML = '<button class="ib-auth-google" type="button" data-ib-auth-google><span aria-hidden="true">G</span> Google로 시작하기</button>'
+        + '<div class="ib-auth-divider"><span>또는</span></div>'
+        + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
     }
     setStatus('', '');
     setTimeout(function () {
@@ -363,7 +478,10 @@
   window.InsuranceBriefingAuth = {
     open: open,
     close: close,
+    signInWithGoogle: signInWithGoogle,
     sendOtp: sendOtp,
     verifyOtp: verifyOtp
   };
+
+  handleOAuthCallback();
 })();
