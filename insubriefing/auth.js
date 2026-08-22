@@ -239,6 +239,13 @@
     var fields = document.getElementById('ib-auth-fields');
     var actions = document.getElementById('ib-auth-actions');
     var title = document.getElementById('ib-auth-title');
+    var googleButton = '<div class="ib-auth-google-wrap"><button class="ib-auth-google" type="button" data-ib-auth-google>'
+      + '<svg class="ib-auth-google-icon" viewBox="0 0 18 18" aria-hidden="true" focusable="false">'
+      + '<path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.24-.16-1.82H9v3.44h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.6Z"/>'
+      + '<path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18Z"/>'
+      + '<path fill="#FBBC05" d="M3.95 10.68A5.41 5.41 0 0 1 3.67 9c0-.58.1-1.15.28-1.68V4.99H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.01l2.99-2.33Z"/>'
+      + '<path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.43 1.34L15 2.35A8.96 8.96 0 0 0 9 0 9 9 0 0 0 .96 4.99l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58Z"/>'
+      + '</svg><span>Google로 시작하기</span></button><p>구글 계정으로 한 번에 로그인</p></div>';
     if (state.step === 'otp') {
       title.textContent = '이메일 인증';
       desc.innerHTML = '<strong>' + esc(state.email) + '</strong> 주소로 보낸 6자리 인증번호를 입력하세요.';
@@ -259,14 +266,14 @@
       fields.innerHTML = '<label class="ib-auth-field">이름<input id="ib-auth-name" type="text" autocomplete="name" maxlength="30" required></label>'
         + '<label class="ib-auth-field">전화번호<input id="ib-auth-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="010-0000-0000" required></label>'
         + '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
-      actions.innerHTML = '<button class="ib-auth-google" type="button" data-ib-auth-google><span aria-hidden="true">G</span> Google로 시작하기</button>'
+      actions.innerHTML = googleButton
         + '<div class="ib-auth-divider"><span>또는</span></div>'
         + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
     } else {
       title.textContent = '보험브리핑 로그인';
       desc.textContent = '기존 원세컨드 가입자는 같은 이메일로 로그인할 수 있습니다.';
       fields.innerHTML = '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
-      actions.innerHTML = '<button class="ib-auth-google" type="button" data-ib-auth-google><span aria-hidden="true">G</span> Google로 시작하기</button>'
+      actions.innerHTML = googleButton
         + '<div class="ib-auth-divider"><span>또는</span></div>'
         + '<button class="ib-auth-primary" type="submit" data-ib-auth-send>인증번호 받기</button>';
     }

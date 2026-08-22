@@ -22,7 +22,7 @@
 
 .ib-auth-card {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   padding: 24px;
 }
 
@@ -142,7 +142,7 @@
 
 .ib-auth-actions {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin-top: 2px;
 }
 
@@ -161,37 +161,53 @@
 
 .ib-auth-google {
   gap: 10px;
+  width: 100%;
   border: 1px solid var(--bd, #d7deea);
   background: var(--s1, #fff);
   color: var(--tp, #152033);
+  box-shadow: none;
+}
+
+.ib-auth-google-wrap {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.ib-auth-google-wrap p {
+  margin: 0;
+  color: var(--ts, #687386);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.ib-auth-google-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
 }
 
 .ib-auth-google span {
-  display: inline-grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border-radius: 999px;
-  background: #fff;
-  color: #4285f4;
-  font-size: 18px;
-  font-weight: 900;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bd, #d7deea) 82%, transparent);
+  display: inline-block;
 }
 
 .ib-auth-google:hover {
   border-color: var(--ac, #3867f6);
-  box-shadow: 0 8px 22px color-mix(in srgb, #10233f 8%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, #10233f 7%, transparent);
 }
 
 .ib-auth-divider {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 14px;
   align-items: center;
+  margin: 4px 0 2px;
   color: var(--ts, #687386);
   font-size: 12px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .ib-auth-divider::before,
@@ -221,11 +237,19 @@
 }
 
 .ib-auth-status {
-  min-height: 20px;
   margin: 0;
   color: var(--ts, #687386);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.ib-auth-status:empty {
+  display: none;
+}
+
+.ib-auth-status:not(:empty) {
+  display: block;
+  min-height: 20px;
 }
 
 .ib-auth-status.is-error {
