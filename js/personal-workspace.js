@@ -1728,6 +1728,7 @@
   }
   function showEvent(id) {
     var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return;
+    if (event.event_type === 'insurance-age' && event.customer_id) { openCustomerFromEvent(event.customer_id); return; }
     var care = isCareTask(event);
     var kind = care ? '고객관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
     var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
@@ -1737,7 +1738,7 @@
     var badge = care && event.customer_id ? '<button type="button" class="pw-badge pw-badge-link" onclick="OSPersonalWorkspace.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')">' + kind + (done ? ' · 완료' : '') + '</button>' : '<span class="pw-badge">' + kind + (done ? ' · 완료' : '') + '</span>';
     dialog('<div class="pw-detail">' + badge + '<h2 class="pw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div>' + actions + '</div>');
   }
-  function openCustomerFromEvent(customerId) { closeDialog(); state.customerStatusFilter = 'all'; state.customerNameQuery = ''; go('customers'); selectCustomerDetail(customerId); }
+  function openCustomerFromEvent(customerId) { closeDialog(); state.customerStatusFilter = 'all'; state.customerNameQuery = ''; state.selectedCustomerDetail = null; go('customers'); selectCustomerDetail(customerId); }
 
   function formField(label, input) { return '<label class="pw-field"><span>' + label + '</span>' + input + '</label>'; }
   /* 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()는 다른 화면(자료실 등)에서도 쓰여서 그대로 두고, 여기서만 별도 헬퍼로 분리 */
