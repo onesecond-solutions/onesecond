@@ -2777,6 +2777,21 @@
       return { customerId: consultation.customer_id, customerName: customer.name || '고객', consultationId: consultation.id, files: fileNames.slice() };
     });
   }
+  /* 모바일 "캘린더" 화면 전용 읽기 전용 조회 함수 1종 (2026-08-22, Phase 2 — feat/workstation-mobile-calendar).
+     eventsFor(date)와 같은 원칙(순수 함수, state.data 읽기만, 얕은 복사 반환) — 날짜 범위로 확장한 버전. */
+  function eventsInRange(startDate, endDate) {
+    return allEvents().filter(function (event) {
+      var start = String((event && event.event_date) || '').slice(0, 10);
+      if (!start) return false;
+      var end = String((event && (event.event_end_date || event.event_date)) || '').slice(0, 10);
+      return start <= endDate && end >= startDate;
+    }).map(function (event) { return Object.assign({}, event); }).sort(function (a, b) {
+      return String(a.event_date || '').localeCompare(String(b.event_date || ''))
+        || eventPriority(a) - eventPriority(b)
+        || String(a.event_time || '').localeCompare(String(b.event_time || ''))
+        || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
+    });
+  }
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
@@ -2796,7 +2811,7 @@
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
-    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep,
+    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
 })();
