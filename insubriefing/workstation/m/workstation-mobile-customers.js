@@ -134,12 +134,11 @@
      tel: 링크에 반드시 필요한 "숫자만 추출"만 자체 구현한다(표시는 원본 그대로, 새 포맷팅 로직 추가 안 함). */
   function phoneDigits(value) { return String(value || '').replace(/\D/g, ''); }
 
+  /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/캘린더/자료)은 하단 고정 탭바로 옮겼다.
+     상단 헤더에는 화면 제목 + PC로 보기 + 로그아웃만 남긴다(중복 제거, 훨씬 가볍게). */
   function headerHtml() {
     return '<header class="wsm-header"><strong>고객</strong>'
       + '<div class="wsm-header-actions">'
-      + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
-      + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
-      + '<a class="wsm-tab-link" href="./library.html">자료</a>'
       + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC로 보기</a>'
       + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>';
@@ -148,6 +147,13 @@
   function bindHeaderEvents() {
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
+  }
+
+  /* 목록 화면과 상세 화면 둘 다에서 하단 탭바를 유지한다(대표 지시 — 판단은 빌더에 위임). 상세 화면에는
+     이미 "← 고객 목록" 뒤로가기 버튼이 본문 상단에 있어 하단 탭바(다른 화면으로 이동)와 역할이 겹치지
+     않는다 — 뒤로가기는 "목록으로", 하단 탭바는 "다른 화면으로"라 혼란 없다. */
+  function bottomNavHtml() {
+    return window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('customers') : '';
   }
 
   function snapshotJson() {
@@ -209,7 +215,8 @@
       + '<input type="search" id="wsm-cust-search" class="wsm-cust-search" placeholder="이름으로 검색" autocomplete="off" inputmode="search">'
       + '</div>'
       + '<div class="wsm-list wsm-cust-list" id="wsm-cust-list"></div>'
-      + '</main>';
+      + '</main>'
+      + bottomNavHtml();
     bindHeaderEvents();
     var input = document.getElementById('wsm-cust-search');
     if (input) {
@@ -265,7 +272,8 @@
       + '</div>'
       + careHtml
       + sectionHtml('최근 상담', consultHtml)
-      + '</main>';
+      + '</main>'
+      + bottomNavHtml();
     bindHeaderEvents();
 
     var back = document.getElementById('wsm-cust-back');
