@@ -19,6 +19,14 @@
     return '';
   }
 
+  function isLoggedIn() {
+    try {
+      return !!((window.db && typeof window.db.getToken === 'function' && window.db.getToken()) || localStorage.getItem('os_token') || sessionStorage.getItem('os_token'));
+    } catch (_e) {
+      return false;
+    }
+  }
+
   function ensureOverlay() {
     if (document.getElementById('leaflet-preview')) return;
     var div = document.createElement('div');
@@ -34,7 +42,8 @@
       + '<button type="button" class="lfp-preview-pdf-only" onclick="LeafletPreview.page(-1)" title="이전 페이지">‹</button>'
       + '<span id="lfp-preview-page"></span>'
       + '<button type="button" class="lfp-preview-pdf-only" onclick="LeafletPreview.page(1)" title="다음 페이지">›</button>'
-      + '<a id="lfp-preview-download" href="#" target="_blank" rel="noopener" download title="다운로드">⬇</a>'
+      + '<a id="lfp-preview-download" class="lfp-preview-public-download" href="#" target="_blank" rel="noopener" download title="다운로드">⬇</a>'
+      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
       + '</div></div>';
     document.body.appendChild(div.firstChild);
   }
@@ -54,10 +63,12 @@
 
   function previewUi(type, name, url) {
     ensureOverlay();
-    var overlay = document.getElementById('leaflet-preview'), page = document.getElementById('lfp-preview-page'), download = document.getElementById('lfp-preview-download');
-    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image');
+    var overlay = document.getElementById('leaflet-preview'), page = document.getElementById('lfp-preview-page'), download = document.getElementById('lfp-preview-download'), ddakDownload = document.getElementById('lfp-preview-ddak-download');
+    var loggedIn = isLoggedIn();
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('is-authenticated', loggedIn);
     if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
     if (download) { download.href = url; download.download = name || ''; }
+    if (ddakDownload) { ddakDownload.href = url; ddakDownload.download = name || ''; }
     document.body.classList.add('lfp-preview-open');
   }
 
@@ -188,13 +199,48 @@
     var overlay = document.getElementById('leaflet-preview'), thumbs = document.getElementById('lfp-preview-thumbs');
     if (overlay) { overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
+    closeDdakMenu();
     state.preview = null; document.body.classList.remove('lfp-preview-open');
   }
   function zoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdf(); else renderImageTransform(); }
   function rotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdf(); else renderImageTransform(); }
   function page(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) scrollToPage(next); }
 
+  function canvasBlob(canvas) { return new Promise(function (resolve) { if (!canvas) resolve(null); else canvas.toBlob(resolve, 'image/png'); }); }
+  function closeDdakMenu() {
+    var menu = document.getElementById('lfp-preview-ddak-menu'), trigger = document.querySelector('.lfp-ddak-wrap .lfp-preview-ddak');
+    if (menu) menu.hidden = true;
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  }
+  function toggleDdakMenu(event) {
+    if (event) event.stopPropagation();
+    var menu = document.getElementById('lfp-preview-ddak-menu'), trigger = event && event.currentTarget;
+    if (!menu) return;
+    var open = menu.hidden;
+    menu.hidden = !open;
+    if (trigger) trigger.setAttribute('aria-expanded', String(open));
+  }
+  function copy() {
+    var p = state.preview;
+    if (!p) return;
+    closeDdakMenu();
+    var makeBlob = p.type === 'pdf'
+      ? canvasBlob(document.querySelector('.lfp-preview-page-wrap[data-page="' + p.page + '"] canvas'))
+      : fetch(p.url).then(function (response) { return response.blob(); }).then(function (blob) { return createImageBitmap(blob); }).then(function (bitmap) { var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap, 0, 0); return canvasBlob(canvas); });
+    makeBlob.then(function (blob) {
+      if (!blob) throw new Error('이미지를 만들지 못했습니다.');
+      if (!navigator.clipboard || !window.ClipboardItem) throw new Error('clipboard');
+      return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    }).then(function () {
+      if (typeof window.toast === 'function') window.toast('복사했습니다. 카카오톡에 붙여넣으세요.');
+      else alert('복사했습니다. 카카오톡에 붙여넣으세요.');
+    }).catch(function () {
+      if (typeof window.toast === 'function') window.toast('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.');
+      else alert('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.');
+    });
+  }
+
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.preview) close(); });
 
-  window.LeafletPreview = { open: open, close: close, zoom: zoom, rotate: rotate, page: page };
+  window.LeafletPreview = { open: open, close: close, zoom: zoom, rotate: rotate, page: page, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, copy: copy };
 })();
