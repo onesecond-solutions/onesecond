@@ -261,7 +261,7 @@
     return state.loadPromise;
   }
 
-  var CALC_TOOLS = [['calculator', '계산기'], ['bmi', 'BMI 계산기'], ['insurance-age', '보험연령 계산기'], ['image-convert', '이미지 변환']];
+  var CALC_TOOLS = [['calculator', '계산기'], ['bmi', 'BMI 계산기'], ['image-convert', '이미지 변환']];
   function navPlannedEntryHtml(entry) {
     var extra = entry[2];
     if (Array.isArray(extra)) {
