@@ -571,6 +571,37 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-qlink-card.disabled:hover{transform:none;border-color:var(--bd);background:var(--s1)}
 #v-personal-workspace .pw-qlink-card.disabled small{color:var(--ts)}
 @media(max-width:680px){#v-personal-workspace .pw-quick-tool-body{grid-template-columns:1fr}}
+/* 보험연령표 — 워크스테이션 본문형 도구 */
+#v-personal-workspace .pw-insage-page{display:grid;gap:14px;max-width:1180px}
+#v-personal-workspace .pw-insage-toolbar{align-items:flex-end;padding-bottom:12px;border-bottom:1px solid #e8eaed}
+#v-personal-workspace #pw-insage-year{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid #dadce0;border-radius:15px;background:#f8fafd;color:#5f6368;font-size:12px;font-weight:600;white-space:nowrap}
+#v-personal-workspace .pw-insage-calc{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px;align-items:stretch;padding:16px;border:1px solid #e0e3e7;border-radius:12px;background:#fff}
+#v-personal-workspace .pw-insage-fields{display:grid;grid-template-columns:repeat(2,minmax(160px,220px));gap:12px;align-content:center}
+#v-personal-workspace .pw-insage-fields label{display:grid;gap:6px;color:#5f6368;font-size:12px;font-weight:600}
+#v-personal-workspace .pw-insage-fields input{width:100%;box-sizing:border-box;min-height:38px;padding:0 11px;border:1px solid #c4c7c5;border-radius:8px;background:#fff;color:#1f1f1f;font:inherit;font-size:14px}
+#v-personal-workspace .pw-insage-fields input:focus{outline:0;border-color:#0b57d0;box-shadow:0 0 0 3px rgba(11,87,208,.12)}
+#v-personal-workspace .pw-insage-result{display:grid;place-items:center;align-content:center;gap:3px;min-height:82px;border-radius:12px;background:#eaf2ff;text-align:center}
+#v-personal-workspace .pw-insage-result strong{color:#0b57d0;font-size:28px;font-weight:700;line-height:1.15;letter-spacing:0}
+#v-personal-workspace .pw-insage-result span{max-width:130px;color:#174ea6;font-size:11px;font-weight:600;line-height:1.35}
+#v-personal-workspace .pw-insage-note{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e8eaed;border-radius:10px;background:#f8fafd;color:#5f6368;font-size:12px;line-height:1.5}
+#v-personal-workspace .pw-insage-note b{flex:0 0 auto;color:#3c4043;font-size:12px}
+#v-personal-workspace .pw-insage-legend{display:flex;gap:8px;flex-wrap:wrap}
+#v-personal-workspace .pw-insage-legend span{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border-radius:14px;font-size:12px;font-weight:600}
+#v-personal-workspace .pw-insage-legend .major{background:#d3e3fd;color:#041e49}
+#v-personal-workspace .pw-insage-legend .minor{background:#fef7e0;color:#7d4e00}
+#v-personal-workspace .pw-insage-legend .youth{background:#e6f4ea;color:#137333}
+#v-personal-workspace .pw-insage-table-wrap{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;align-items:start}
+#v-personal-workspace .pw-insage-table{overflow:hidden;border:1px solid #e0e3e7;border-radius:12px;background:#fff}
+#v-personal-workspace .pw-insage-table h3{margin:0;padding:11px 12px;border-bottom:1px solid #e8eaed;background:#f8fafd;color:#3c4043;font-size:13px;font-weight:700;text-align:center}
+#v-personal-workspace .pw-insage-table table{width:100%;border-collapse:collapse;table-layout:fixed}
+#v-personal-workspace .pw-insage-table th{height:32px;border-bottom:1px solid #e8eaed;background:#fff;color:#5f6368;font-size:11px;font-weight:600}
+#v-personal-workspace .pw-insage-table td{height:30px;border-bottom:1px solid #f0f2f5;color:#3c4043;font-size:12px;text-align:center}
+#v-personal-workspace .pw-insage-table tr:last-child td{border-bottom:0}
+#v-personal-workspace .pw-insage-table tr.major td{background:#d3e3fd;color:#041e49;font-weight:700}
+#v-personal-workspace .pw-insage-table tr.minor td{background:#fef7e0;color:#7d4e00;font-weight:700}
+#v-personal-workspace .pw-insage-table tr.youth td{background:#e6f4ea;color:#137333;font-weight:700}
+@media(max-width:1020px){#v-personal-workspace .pw-insage-table-wrap{grid-template-columns:repeat(2,minmax(180px,1fr))}}
+@media(max-width:680px){#v-personal-workspace .pw-insage-toolbar{align-items:flex-start}#v-personal-workspace .pw-insage-calc{grid-template-columns:1fr}#v-personal-workspace .pw-insage-fields{grid-template-columns:1fr}#v-personal-workspace .pw-insage-table-wrap{grid-template-columns:1fr}}
 /* 원전산 바로가기 — 워크스테이션 공통 콘텐츠 영역 */
 #v-personal-workspace .pw-carrier-toolbar{align-items:flex-end;border-bottom:1px solid var(--bd);padding-bottom:14px}
 #v-personal-workspace .pw-carrier-tabs{display:flex;gap:4px}

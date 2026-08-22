@@ -20,7 +20,7 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -31,7 +31,7 @@
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
     strategyData: null, strategyLoading: false, strategyPool: 'all', strategyScope: 'all', strategyCoSel: null, strategyOpenMonths: {},
     strategyCoNameQuery: '', strategyCoNameComposing: false, strategyCoNameTimer: 0,
-    assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
+    assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
@@ -282,7 +282,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향', 'section:sales-strategy']];
-    var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
+    var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
     }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
@@ -1223,6 +1223,7 @@
     if (state.section === 'scripts') return scriptsHtml();
     if (state.section === 'newsletters') return newslettersHtml();
     if (state.section === 'sales-strategy') return strategyHtml();
+    if (state.section === 'insurance-age') return insuranceAgePageHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     return homeHtml();
@@ -1240,7 +1241,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -2057,7 +2058,7 @@
   function openTool(key) {
     if (key === 'calculator') return openCalculatorTool();
     if (key === 'bmi') return openBmiTool();
-    if (key === 'insurance-age') return openInsuranceAgeTool();
+    if (key === 'insurance-age') return go('insurance-age');
     if (key === 'image-convert') return openImageConvertTool();
     if (key === 'system-links') { go('carriers'); return; }
     if (key === 'payment-info') { go('payments'); return; }
@@ -2222,15 +2223,71 @@
     resultEl.className = 'pw-bmi-result ' + tone;
   }
   function openInsuranceAgeTool() {
-    dialog('<div class="pw-tool-panel pw-insage-tool"><h2>보험연령 계산기</h2>'
+    go('insurance-age');
+  }
+  function insuranceAgePageHtml() {
+    var today = new Date(), basis = ymd(today), year = today.getFullYear();
+    return statusHtml() + '<div class="pw-insage-page"><div class="pw-toolbar pw-insage-toolbar"><div><h2>보험연령표</h2><p class="pw-subtitle">출생연도 빠른 확인표와 생년월일 기준 보험나이 계산을 함께 봅니다.</p></div><span id="pw-insage-year">' + year + '년 기준</span></div>'
+      + '<section class="pw-insage-calc"><div class="pw-insage-fields">'
       + '<label>생년월일<input id="pw-insage-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'tool\')"></label>'
-      + '<label>기준일<input id="pw-insage-date" type="date" value="' + ymd(new Date()) + '" onchange="OSPersonalWorkspace.calcToolInsuranceAge()"></label>'
-      + '<div class="pw-insage-result"><strong id="pw-insage-value">-</strong><span>보험나이</span></div></div>');
+      + '<label>기준일<input id="pw-insage-date" type="date" value="' + basis + '" data-auto-date="1" onchange="this.dataset.autoDate=\'0\';OSPersonalWorkspace.calcToolInsuranceAge()"></label>'
+      + '</div><div class="pw-insage-result"><strong id="pw-insage-value">-</strong><span id="pw-insage-caption">생년월일을 입력하세요</span></div></section>'
+      + '<div class="pw-insage-note"><b>빠른 확인</b><span>표는 현재 연도에서 출생연도를 뺀 간편 기준입니다. 생일 전후 6개월을 반영한 실제 보험나이는 위 계산값을 사용하세요.</span></div>'
+      + '<div class="pw-insage-legend"><span class="major">10세 단위</span><span class="minor">5세 단위</span><span class="youth">15~19세</span></div>'
+      + '<div class="pw-insage-table-wrap">' + insuranceAgeTableHtml(year) + '</div></div>';
+  }
+  function insuranceAgeTableHtml(year) {
+    var ranges = [[0, 20], [21, 40], [41, 60], [61, 80]];
+    return ranges.map(function (range) {
+      var rows = [];
+      for (var age = range[0]; age <= range[1]; age += 1) {
+        var cls = age >= 15 && age <= 19 ? ' youth' : age > 0 && age % 10 === 0 ? ' major' : age > 0 && age % 5 === 0 ? ' minor' : '';
+        rows.push('<tr class="' + cls + '"><td>' + (year - age) + '</td><td>' + age + '세</td></tr>');
+      }
+      return '<section class="pw-insage-table"><h3>' + range[0] + ' ~ ' + range[1] + '세</h3><table><thead><tr><th>출생연도</th><th>보험나이</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></section>';
+    }).join('');
+  }
+  function addMonths(date, months) {
+    var result = new Date(date.getTime()), day = result.getDate();
+    result.setMonth(result.getMonth() + months);
+    if (result.getDate() !== day) result.setDate(0);
+    return result;
+  }
+  function insuranceAgeInfo(birth, basis) {
+    var text = String(birth || ''), parts = text.split('-').map(Number), born = parseDate(text), at = parseDate(basis || ymd(new Date()));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || parts.length !== 3 || born.getFullYear() !== parts[0] || born.getMonth() !== parts[1] - 1 || born.getDate() !== parts[2] || isNaN(at.getTime()) || born > at) return null;
+    var age = at.getFullYear() - born.getFullYear();
+    var birthday = new Date(at.getFullYear(), born.getMonth(), born.getDate());
+    if (at < birthday) { age -= 1; birthday.setFullYear(at.getFullYear() - 1); }
+    var nextBirthday = new Date(birthday); nextBirthday.setFullYear(birthday.getFullYear() + 1);
+    var upperDate = addMonths(nextBirthday, -6);
+    if (at >= upperDate) {
+      age += 1;
+      nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+      upperDate = addMonths(nextBirthday, -6);
+    }
+    return { age: Math.max(0, age), upperDate: ymd(upperDate), nextAge: Math.max(0, age + 1) };
+  }
+  function scheduleInsuranceAgeAutoRefresh() {
+    window.clearTimeout(state.insageRefreshTimer);
+    var now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 1, 0);
+    state.insageRefreshTimer = window.setTimeout(function () {
+      var date = document.getElementById('pw-insage-date');
+      if (date && date.dataset.autoDate !== '0') { date.value = ymd(new Date()); date.defaultValue = date.value; }
+      calcToolInsuranceAge();
+      var wrap = document.querySelector('.pw-insage-table-wrap'), year = document.getElementById('pw-insage-year'), currentYear = new Date().getFullYear();
+      if (wrap) wrap.innerHTML = insuranceAgeTableHtml(currentYear);
+      if (year) year.textContent = currentYear + '년 기준';
+      scheduleInsuranceAgeAutoRefresh();
+    }, Math.max(1000, next.getTime() - now.getTime()));
   }
   function calcToolInsuranceAge() {
     var el = document.getElementById('pw-insage-value'); if (!el) return;
-    var age = insuranceAge(value('pw-insage-birth'), value('pw-insage-date'));
-    el.textContent = age === '' ? '-' : age + '세';
+    var caption = document.getElementById('pw-insage-caption');
+    var info = insuranceAgeInfo(value('pw-insage-birth'), value('pw-insage-date'));
+    if (!info) { el.textContent = '-'; if (caption) caption.textContent = '생년월일을 입력하세요'; return; }
+    el.textContent = info.age + '세';
+    if (caption) caption.textContent = '다음 상령일 ' + info.upperDate + ' · ' + info.nextAge + '세';
   }
   function openImageConvertTool() {
     dialog('<div class="pw-tool-panel pw-imgconv-tool"><h2>이미지 변환</h2><p class="pw-tool-desc">사진을 JPG 또는 PNG로 변환해서 저장합니다.</p>'
