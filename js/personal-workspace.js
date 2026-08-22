@@ -872,13 +872,24 @@
     var action = event && event.event_type === 'insurance-age' && event.customer_id ? ' onclick="event.stopPropagation(); OSPersonalWorkspace.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
     return '<i class="' + calendarEventKind(event) + '"' + action + '>' + esc(event.title) + '</i>';
   }
-  function insuranceAgeSummaryChip(count, date) {
-    if (!count) return '';
-    return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기" onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + count + '명</i>';
+  function calendarSummaryPreview(events) {
+    var titles = events.map(function (event) { return String(event.title || '일정').trim(); }).filter(Boolean);
+    var shown = titles.slice(0, 8).map(function (title) { return '- ' + title; }).join('\n');
+    return shown + (titles.length > 8 ? '\n외 ' + (titles.length - 8) + '건' : '');
   }
-  function careSummaryChip(count, date) {
-    if (!count) return '';
-    return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기" onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + count + '명</i>';
+  function calendarSummaryAttrs(events) {
+    return ' data-hover-text="' + esc(calendarSummaryPreview(events)) + '" onmouseenter="OSPersonalWorkspace.showRowHover(event)" onmouseleave="OSPersonalWorkspace.hideRowHover()"';
+  }
+  function insuranceAgeSummaryChip(events, date) {
+    if (!events.length) return '';
+    return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + events.length + '명</i>';
+  }
+  function careCalendarChip(event) {
+    return '<i class="customer" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')">' + esc(event.title || '케어 일정') + '</i>';
+  }
+  function careSummaryChip(events, date) {
+    if (!events.length) return '';
+    return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + events.length + '명</i>';
   }
   function monthCalendarChips(events, date) {
     var builtIns = events.filter(function (event) { return event.builtin; });
@@ -887,10 +898,11 @@
     var careEvents = events.filter(isCareTask);
     var chips = [];
     if (otherBuiltIns.length) chips.push(builtinCalendarChip(otherBuiltIns[0]));
-    if (careEvents.length) chips.push(careSummaryChip(careEvents.length, date));
+    if (careEvents.length === 1) chips.push(careCalendarChip(careEvents[0]));
+    else if (careEvents.length > 1) chips.push(careSummaryChip(careEvents, date));
     if (insuranceAgeEvents.length && chips.length < 2) {
-      if (!otherBuiltIns.length && !careEvents.length && insuranceAgeEvents.length <= 2) chips = chips.concat(insuranceAgeEvents.map(builtinCalendarChip));
-      else chips.push(insuranceAgeSummaryChip(insuranceAgeEvents.length, date));
+      if (insuranceAgeEvents.length === 1) chips.push(builtinCalendarChip(insuranceAgeEvents[0]));
+      else chips.push(insuranceAgeSummaryChip(insuranceAgeEvents, date));
     }
     return chips.slice(0, 2).join('');
   }
