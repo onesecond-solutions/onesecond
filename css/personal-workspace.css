@@ -319,6 +319,24 @@ body.pw-preview-open{overflow:hidden}
 #v-personal-workspace .pw-event-bar:hover{background:#c7d4f0}
 #v-personal-workspace .pw-event-bar.customer{background:#dff1ed;color:#245e56}
 #v-personal-workspace .pw-event-bar.customer:hover{background:#c5e6de}
+#v-personal-workspace .pw-calendar-shell{--pw-cal-schedule-bg:#e7ebfa;--pw-cal-schedule-fg:#3f5185;--pw-cal-customer-bg:#dff1ed;--pw-cal-customer-fg:#245e56;--pw-cal-memorial-bg:#ebe6fb;--pw-cal-memorial-fg:#5b4ab0;--pw-cal-holiday-bg:#fde8e8;--pw-cal-holiday-fg:#b3261e;--pw-cal-term-bg:#e1f2ef;--pw-cal-term-fg:#2e6f66}
+#v-personal-workspace .pw-event-bar,#v-personal-workspace .pw-time-bar,#v-personal-workspace .pw-time-events button{border:1px solid color-mix(in srgb,var(--pw-event-fg,var(--pw-cal-schedule-fg)) 10%,transparent);background:var(--pw-event-bg,var(--pw-cal-schedule-bg));color:var(--pw-event-fg,var(--pw-cal-schedule-fg))}
+#v-personal-workspace .pw-event-bar.customer,#v-personal-workspace .pw-time-bar.customer,#v-personal-workspace .pw-time-events button.customer{--pw-event-bg:var(--pw-cal-customer-bg);--pw-event-fg:var(--pw-cal-customer-fg)}
+#v-personal-workspace .pw-event-bar.memorial,#v-personal-workspace .pw-time-bar.memorial,#v-personal-workspace .pw-time-events button.memorial{--pw-event-bg:var(--pw-cal-memorial-bg);--pw-event-fg:var(--pw-cal-memorial-fg)}
+#v-personal-workspace .pw-event-bar.holiday,#v-personal-workspace .pw-time-bar.holiday,#v-personal-workspace .pw-time-events button.holiday{--pw-event-bg:var(--pw-cal-holiday-bg);--pw-event-fg:var(--pw-cal-holiday-fg)}
+#v-personal-workspace .pw-event-bar.term,#v-personal-workspace .pw-time-bar.term,#v-personal-workspace .pw-time-events button.term{--pw-event-bg:var(--pw-cal-term-bg);--pw-event-fg:var(--pw-cal-term-fg)}
+#v-personal-workspace .pw-event-bar:hover,#v-personal-workspace .pw-time-bar:hover,#v-personal-workspace .pw-time-events button:hover{background:color-mix(in srgb,var(--pw-event-bg,var(--pw-cal-schedule-bg)) 72%,var(--pw-event-fg,var(--pw-cal-schedule-fg)))}
+#v-personal-workspace .pw-time-all-day{display:grid;grid-template-columns:64px minmax(calc(var(--pw-days,7) * 120px),1fr);min-width:760px;border-top:1px solid #dfe1ec;border-bottom:1px solid #dfe1ec;background:rgba(255,255,255,.72)}
+#v-personal-workspace .pw-time-all-day>span{display:flex;align-items:flex-start;justify-content:flex-end;padding:12px 8px 0 0;color:#6f7785;font-size:10px;font-weight:700}
+#v-personal-workspace .pw-time-all-grid{position:relative;display:grid;grid-template-columns:repeat(var(--pw-days,7),minmax(120px,1fr));min-height:100%}
+#v-personal-workspace .pw-time-all-grid>i{border-left:1px solid #dfe1ec}
+#v-personal-workspace .pw-time-bars{position:absolute;inset:5px 0 0 0;pointer-events:none}
+#v-personal-workspace .pw-time-bar{position:absolute;box-sizing:border-box;display:flex;height:24px;align-items:center;gap:6px;padding:3px 9px;overflow:hidden;border-radius:6px;font-size:12px;font-weight:700;text-align:left;white-space:nowrap;cursor:pointer;pointer-events:auto}
+#v-personal-workspace .pw-time-bar small{flex:0 0 auto;font-size:10px;font-weight:800;opacity:.72}
+#v-personal-workspace .pw-time-bar b{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#v-personal-workspace .pw-time-events button{border-radius:6px;font-size:12px;font-weight:700}
+#v-personal-workspace .pw-time-events button small{font-size:10px;font-weight:800;opacity:.72}
+#v-personal-workspace .pw-time-events button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #v-personal-workspace .pw-today{min-height:32px}
 #v-personal-workspace .pw-month-switcher button{width:30px;height:30px;font-size:19px}
 #v-personal-workspace .pw-calendar-left h2{font-size:17px;min-width:auto}
