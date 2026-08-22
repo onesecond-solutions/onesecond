@@ -1,0 +1,64 @@
+name: Auth Email Template Update
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auth-email-template-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'onesecond-solutions/onesecond'
+    runs-on: ubuntu-latest
+    environment: production-functions
+    steps:
+      - name: Update Supabase Auth email templates
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJECT_REF: pdnwgzneooyygfejrvbg
+        run: |
+          set -euo pipefail
+
+          payload="$(mktemp)"
+          response="$(mktemp)"
+
+          cat > "$payload" <<'JSON'
+          {
+            "mailer_subjects_magic_link": "[보험브리핑] 인증 코드",
+            "mailer_templates_magic_link_content": "<h2>보험브리핑 인증 코드</h2>\n<p>아래 6자리 인증 코드를 보험브리핑 로그인/회원가입 화면에 입력해 주세요.</p>\n<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#0B2740;padding:20px;background:#F5F8FC;border-radius:8px;text-align:center;margin:24px 0;\">{{ .Token }}</p>\n<p>코드는 발급 후 5분간 유효합니다.</p>\n<p style=\"font-size:12px;color:#667085;margin-top:32px;\">요청하지 않으셨다면 본 메일을 무시하셔도 됩니다.<br>— 보험브리핑 (onesecond.solutions)</p>",
+            "mailer_subjects_recovery": "[보험브리핑] 인증 코드",
+            "mailer_templates_recovery_content": "<h2>보험브리핑 인증 코드</h2>\n<p>아래 6자리 인증 코드를 보험브리핑 로그인/회원가입 화면에 입력해 주세요.</p>\n<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#0B2740;padding:20px;background:#F5F8FC;border-radius:8px;text-align:center;margin:24px 0;\">{{ .Token }}</p>\n<p>코드는 발급 후 5분간 유효합니다.</p>\n<p style=\"font-size:12px;color:#667085;margin-top:32px;\">요청하지 않으셨다면 본 메일을 무시하셔도 됩니다.<br>— 보험브리핑 (onesecond.solutions)</p>",
+            "mailer_subjects_reauthentication": "[보험브리핑] 재인증 코드",
+            "mailer_templates_reauthentication_content": "<h2>보험브리핑 재인증 코드</h2>\n<p>아래 6자리 코드를 보험브리핑 재인증 화면에 입력해 주세요.</p>\n<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#0B2740;padding:20px;background:#F5F8FC;border-radius:8px;text-align:center;margin:24px 0;\">{{ .Token }}</p>\n<p>요청하지 않으셨다면 본 메일을 무시하셔도 됩니다.</p>"
+          }
+          JSON
+
+          curl -fsS \
+            -X PATCH "https://api.supabase.com/v1/projects/${PROJECT_REF}/config/auth" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @"$payload" \
+            -o "$response"
+
+          node - "$response" <<'NODE'
+          const fs = require('fs');
+          const config = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const checks = [
+            ['magic subject', config.mailer_subjects_magic_link === '[보험브리핑] 인증 코드'],
+            ['magic content', String(config.mailer_templates_magic_link_content || '').includes('보험브리핑 인증 코드')],
+            ['recovery subject', config.mailer_subjects_recovery === '[보험브리핑] 인증 코드'],
+            ['recovery content', String(config.mailer_templates_recovery_content || '').includes('보험브리핑 인증 코드')],
+            ['reauth subject', config.mailer_subjects_reauthentication === '[보험브리핑] 재인증 코드'],
+            ['reauth content', String(config.mailer_templates_reauthentication_content || '').includes('보험브리핑 재인증 코드')],
+          ];
+          const failed = checks.filter(([, ok]) => !ok);
+          if (failed.length) {
+            console.error('Auth template verification failed:', failed.map(([name]) => name).join(', '));
+            process.exit(1);
+          }
+          console.log('Auth email templates updated: magic-link, recovery, reauthentication.');
+          NODE
