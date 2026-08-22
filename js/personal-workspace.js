@@ -281,7 +281,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
-    var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향', 'section:sales-strategy']];
+    var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
