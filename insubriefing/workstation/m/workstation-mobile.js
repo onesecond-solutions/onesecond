@@ -112,14 +112,176 @@
       + '</section>';
   }
 
-  function eventsSectionHtml(events, excludeIds) {
-    var visible = (events || []).filter(function (event) { return !excludeIds[String(event && event.id)]; });
-    if (!visible.length) return sectionHtml('오늘 일정', emptyHtml('오늘 일정이 없습니다.'));
-    var body = '<div class="wsm-list">' + visible.map(function (event) {
-      var time = event.builtin ? '' : eventTimeLabel(event.event_time);
-      return cardHtml(event.title || '(제목 없음)', time, event.description || '');
-    }).join('') + '</div>';
+  /* feat/workstation-mobile-agenda-scroll (2026-08-22) — "오늘 일정" 섹션을 양방향 무한스크롤 아젠다로 전환
+     (대표 직접 요청). 데이터는 기존 js/personal-workspace.js의 eventsInRange(start,end)만 재사용(읽기 전용,
+     새 export 없음). 이 블록만 새로 추가하고 케어/상령일/상담준비 섹션·게이트 로직은 전혀 건드리지 않는다. */
+  var AGENDA_INITIAL_SPAN_DAYS = 7;
+  var AGENDA_PAGE_DAYS = 7;
+  var AGENDA_MAX_PAST_DAYS = 90;
+  var AGENDA_MAX_FUTURE_DAYS = 90;
+  var WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  /* 로드된 범위 + 진행 플래그를 모듈 상태로 유지한다(렌더마다 새로 만들지 않음) — 폴링 재렌더가
+     사용자가 이미 스크롤해 넓힌 범위를 초기화하지 않게 하기 위한 핵심 상태. */
+  var agendaState = { minLoadedDate: null, maxLoadedDate: null, reachedPastLimit: false, reachedFutureLimit: false, loadingTop: false, loadingBottom: false };
+  var agendaObserver = null;
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  function ymdLocal(date) { return date.getFullYear() + '-' + pad2(date.getMonth() + 1) + '-' + pad2(date.getDate()); }
+  function parseYmdLocal(str) {
+    var parts = String(str || '').split('-');
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+  function addDaysStr(str, delta) {
+    var d = parseYmdLocal(str);
+    d.setDate(d.getDate() + delta);
+    return ymdLocal(d);
+  }
+  function todayStr() { return ymdLocal(new Date()); }
+  function dateHeadingLabel(dateStr, isToday) {
+    var d = parseYmdLocal(dateStr);
+    var label = (d.getMonth() + 1) + '/' + d.getDate() + ' (' + WEEKDAY_KO[d.getDay()] + ')';
+    return isToday ? label + ' · 오늘' : label;
+  }
+  function limitNoteHtml(message) {
+    return '<div class="wsm-agenda-limit">' + esc(message) + '</div>';
+  }
+  function computeExcludeIds() {
+    var summary = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.todaySummary === 'function')
+      ? window.OSPersonalWorkspace.todaySummary() : { care: [], insuranceAge: [] };
+    var excludeIds = {};
+    (summary.care || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
+    (summary.insuranceAge || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
+    return excludeIds;
+  }
+  /* startDate~endDate(포함) 구간의 일정을 eventsInRange()로 한 번에 불러와 날짜별로 그룹핑한다.
+     여러 날에 걸친 일정(event_end_date)은 구간과 겹치는 모든 날짜에 표시(클리핑). */
+  function buildAgendaRangeHtml(startDate, endDate, excludeIds) {
+    if (!window.OSPersonalWorkspace || typeof window.OSPersonalWorkspace.eventsInRange !== 'function' || startDate > endDate) return '';
+    var events = window.OSPersonalWorkspace.eventsInRange(startDate, endDate) || [];
+    var byDate = {};
+    events.forEach(function (event) {
+      if (excludeIds[String(event && event.id)]) return;
+      var evStart = String((event && event.event_date) || '').slice(0, 10);
+      var evEnd = String((event && (event.event_end_date || event.event_date)) || '').slice(0, 10);
+      var d = evStart < startDate ? startDate : evStart;
+      var clipEnd = evEnd > endDate ? endDate : evEnd;
+      var guard = 0;
+      while (d <= clipEnd && guard < 400) {
+        if (!byDate[d]) byDate[d] = [];
+        byDate[d].push(event);
+        d = addDaysStr(d, 1);
+        guard += 1;
+      }
+    });
+    var today = todayStr();
+    var html = '';
+    var cursor = startDate;
+    var guardDays = 0;
+    while (cursor <= endDate && guardDays < 400) {
+      var dayEvents = byDate[cursor] || [];
+      var isToday = cursor === today;
+      var heading = '<h3 class="wsm-agenda-date' + (isToday ? ' is-today' : '') + '">' + esc(dateHeadingLabel(cursor, isToday)) + '</h3>';
+      var body = dayEvents.length
+        ? '<div class="wsm-list">' + dayEvents.map(function (event) {
+            var time = event.builtin ? '' : eventTimeLabel(event.event_time);
+            return cardHtml(event.title || '(제목 없음)', time, event.description || '');
+          }).join('') + '</div>'
+        : emptyHtml('일정 없음');
+      html += '<div class="wsm-agenda-day" data-date="' + esc(cursor) + '">' + heading + body + '</div>';
+      cursor = addDaysStr(cursor, 1);
+      guardDays += 1;
+    }
+    return html;
+  }
+  function ensureAgendaRangeInitialized() {
+    if (agendaState.minLoadedDate && agendaState.maxLoadedDate) return;
+    var t = todayStr();
+    agendaState.minLoadedDate = addDaysStr(t, -AGENDA_INITIAL_SPAN_DAYS);
+    agendaState.maxLoadedDate = addDaysStr(t, AGENDA_INITIAL_SPAN_DAYS);
+  }
+  function agendaSectionHtml(excludeIds) {
+    ensureAgendaRangeInitialized();
+    var body = '<div class="wsm-agenda-scroll" id="wsm-agenda-scroll">'
+      + '<div class="wsm-agenda-sentinel" id="wsm-agenda-top-sentinel"></div>'
+      + '<div class="wsm-agenda-days" id="wsm-agenda-days">' + buildAgendaRangeHtml(agendaState.minLoadedDate, agendaState.maxLoadedDate, excludeIds) + '</div>'
+      + '<div class="wsm-agenda-sentinel" id="wsm-agenda-bottom-sentinel"></div>'
+      + '</div>';
     return sectionHtml('오늘 일정', body);
+  }
+  /* 위쪽(과거)에 이어붙이기 — 브라우저가 스크롤 컨테이너 맨 위에 콘텐츠를 추가하면 화면상 보이던 위치가
+     아래로 밀리는 것을 막기 위해, 삽입 직후 늘어난 높이만큼 scrollTop을 그대로 더해 보정한다(핵심 UX 포인트). */
+  function loadAgendaPast() {
+    if (agendaState.loadingTop || agendaState.reachedPastLimit) return;
+    agendaState.loadingTop = true;
+    var pastLimit = addDaysStr(todayStr(), -AGENDA_MAX_PAST_DAYS);
+    var addEnd = addDaysStr(agendaState.minLoadedDate, -1);
+    var newMin = addDaysStr(agendaState.minLoadedDate, -AGENDA_PAGE_DAYS);
+    var hitLimit = false;
+    if (newMin <= pastLimit) { newMin = pastLimit; hitLimit = true; }
+    if (newMin > addEnd) { agendaState.reachedPastLimit = true; agendaState.loadingTop = false; return; }
+    var excludeIds = computeExcludeIds();
+    var daysHtml = buildAgendaRangeHtml(newMin, addEnd, excludeIds);
+    agendaState.minLoadedDate = newMin;
+    if (hitLimit) agendaState.reachedPastLimit = true;
+    var daysContainer = document.getElementById('wsm-agenda-days');
+    var scrollBox = document.getElementById('wsm-agenda-scroll');
+    if (daysContainer && scrollBox) {
+      var combined = (hitLimit ? limitNoteHtml('이전 일정을 더 이상 불러오지 않습니다.') : '') + daysHtml;
+      var beforeHeight = daysContainer.scrollHeight;
+      daysContainer.insertAdjacentHTML('afterbegin', combined);
+      var afterHeight = daysContainer.scrollHeight;
+      scrollBox.scrollTop += (afterHeight - beforeHeight);
+    }
+    agendaState.loadingTop = false;
+  }
+  /* 아래쪽(미래)에 이어붙이기 — 일반적인 무한스크롤이라 스크롤 위치 보정이 필요 없다. */
+  function loadAgendaFuture() {
+    if (agendaState.loadingBottom || agendaState.reachedFutureLimit) return;
+    agendaState.loadingBottom = true;
+    var futureLimit = addDaysStr(todayStr(), AGENDA_MAX_FUTURE_DAYS);
+    var addStart = addDaysStr(agendaState.maxLoadedDate, 1);
+    var newMax = addDaysStr(agendaState.maxLoadedDate, AGENDA_PAGE_DAYS);
+    var hitLimit = false;
+    if (newMax >= futureLimit) { newMax = futureLimit; hitLimit = true; }
+    if (addStart > newMax) { agendaState.reachedFutureLimit = true; agendaState.loadingBottom = false; return; }
+    var excludeIds = computeExcludeIds();
+    var daysHtml = buildAgendaRangeHtml(addStart, newMax, excludeIds);
+    agendaState.maxLoadedDate = newMax;
+    if (hitLimit) agendaState.reachedFutureLimit = true;
+    var daysContainer = document.getElementById('wsm-agenda-days');
+    if (daysContainer) {
+      daysContainer.insertAdjacentHTML('beforeend', daysHtml + (hitLimit ? limitNoteHtml('이후 일정을 더 이상 불러오지 않습니다.') : ''));
+    }
+    agendaState.loadingBottom = false;
+  }
+  function teardownAgendaObserver() {
+    if (agendaObserver) { agendaObserver.disconnect(); agendaObserver = null; }
+  }
+  /* IntersectionObserver root = 아젠다 내부 스크롤 박스(페이지 전체가 아님) — 위/아래 sentinel이
+     이 박스 안에서 보이기 직전(rootMargin)에 각각 과거/미래 로드를 트리거한다. */
+  function setupAgendaObserver() {
+    teardownAgendaObserver();
+    if (typeof IntersectionObserver !== 'function') return;
+    var scrollBox = document.getElementById('wsm-agenda-scroll');
+    var topSentinel = document.getElementById('wsm-agenda-top-sentinel');
+    var bottomSentinel = document.getElementById('wsm-agenda-bottom-sentinel');
+    if (!scrollBox || !topSentinel || !bottomSentinel) return;
+    agendaObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        if (entry.target === topSentinel) loadAgendaPast();
+        else if (entry.target === bottomSentinel) loadAgendaFuture();
+      });
+    }, { root: scrollBox, rootMargin: '160px 0px', threshold: 0 });
+    agendaObserver.observe(topSentinel);
+    agendaObserver.observe(bottomSentinel);
+  }
+  /* 최초 진입 시 "오늘" 블록이 스크롤 박스 상단 쪽에 오도록 자동 스크롤한다. */
+  function scrollAgendaToToday(scrollBox) {
+    var todayEl = scrollBox.querySelector('.wsm-agenda-day[data-date="' + todayStr() + '"]');
+    if (!todayEl) return;
+    var offset = todayEl.getBoundingClientRect().top - scrollBox.getBoundingClientRect().top + scrollBox.scrollTop;
+    scrollBox.scrollTop = offset;
   }
 
   function careSectionHtml(care) {
@@ -163,6 +325,13 @@
     (summary.care || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
     (summary.insuranceAge || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
 
+    /* feat/workstation-mobile-agenda-scroll — 폴링 재렌더가 view.innerHTML을 통째로 다시 그리면 아젠다
+       스크롤 박스 DOM도 새로 생겨 scrollTop이 0으로 초기화된다. 사용자가 이미 스크롤한 위치를 잃지 않도록
+       교체 직전 값을 저장해뒀다가, 새 DOM이 만들어진 뒤 그대로 복원한다(로드된 범위 자체는 agendaState가
+       DOM과 무관하게 계속 들고 있으므로 범위는 항상 유지됨 — 여기서는 "화면상 스크롤 위치"만 별도로 복원). */
+    var prevAgendaScrollBox = document.getElementById('wsm-agenda-scroll');
+    var savedAgendaScrollTop = prevAgendaScrollBox ? prevAgendaScrollBox.scrollTop : null;
+
     var view = root(); if (!view) return;
     /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(캘린더/고객/자료)은 하단 고정 탭바로 옮겼다.
        상단 헤더에는 화면 제목 + PC로 보기 + 로그아웃만 남긴다(중복 제거, 훨씬 가볍게). */
@@ -172,7 +341,7 @@
       + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>'
       + '<main class="wsm-main">'
-      + eventsSectionHtml(summary.events, excludeIds)
+      + agendaSectionHtml(excludeIds)
       + careSectionHtml(summary.care)
       + insuranceAgeSectionHtml(summary.insuranceAge)
       + consultPrepSectionHtml(prep)
@@ -181,6 +350,13 @@
 
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
+
+    setupAgendaObserver();
+    var nextAgendaScrollBox = document.getElementById('wsm-agenda-scroll');
+    if (nextAgendaScrollBox) {
+      if (savedAgendaScrollTop != null) nextAgendaScrollBox.scrollTop = savedAgendaScrollTop;
+      else scrollAgendaToToday(nextAgendaScrollBox);
+    }
   }
 
   function pollAndRender(index) {
