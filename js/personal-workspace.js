@@ -333,13 +333,15 @@
   function searchHtml() {
     var q = state.query.trim(); if (!q) return '';
     var results = [];
+    loadPaymentInfo();
     state.data.scripts.forEach(function (item) { if (matches((item.title || '') + ' ' + stripHtml(item.script_text))) results.push({ icon: '📝', kind: '업무노트', title: item.title, sub: formatDate(item.created_at), action: "OSPersonalWorkspace.showAsset('scripts','" + esc(item.id) + "')" }); });
     state.data.library.forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || '') + ' ' + (item.memo_text || ''))) results.push({ icon: '📄', kind: item.memo_text ? '메모' : '자료', title: item.title, sub: formatDate(item.created_at), action: "OSPersonalWorkspace.showAsset('library','" + esc(item.id) + "')" }); });
     state.data.customers.forEach(function (item) { if (matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || ''))) results.push({ icon: '👤', kind: '고객', title: item.name, sub: item.phone || item.phone_raw || '', action: "OSPersonalWorkspace.showCustomer('" + esc(item.id) + "')" }); });
     state.data.consultations.forEach(function (item) { var customer = state.data.customers.find(function (c) { return String(c.id) === String(item.customer_id); }) || {}; if (matches((customer.name || '') + ' ' + (item.memo || '') + ' ' + (item.channel || ''))) results.push({ icon: '✎', kind: '상담', title: customer.name || '고객 상담', sub: item.memo || '', action: "OSPersonalWorkspace.showCustomer('" + esc(item.customer_id) + "')" }); });
     allEvents().forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || ''))) results.push({ icon: '▦', kind: '일정', title: item.title, sub: String(item.event_date || '').slice(0, 10), action: "OSPersonalWorkspace.showEvent('" + esc(item.id) + "')" }); });
     carrierDirectory().forEach(function (item) { if (matches(item.name)) results.push({ icon: '↗', kind: '보험사 원전산', title: item.name, sub: item.systemUrl ? '원전산 열기' : '연결 정보 확인 중', action: "OSPersonalWorkspace.openCarrierSystem('" + esc(jsString(item.name)) + "')" }); });
-    return '<div class="pw-toolbar"><div><h2>‘' + esc(q) + '’ 검색 결과</h2><p class="pw-subtitle">자료, 고객, 상담, 일정과 보험사를 한 번에 검색했습니다.</p></div><span class="pw-result-count">' + results.length + '건</span></div><div class="pw-search-results">' + (results.length ? results.map(function (item) { return '<button type="button" onclick="' + item.action + '"><span class="pw-result-icon">' + item.icon + '</span><span><small>' + item.kind + '</small><b>' + esc(item.title || '(제목 없음)') + '</b><em>' + esc(item.sub) + '</em></span><span>›</span></button>'; }).join('') : '<div class="pw-empty"><strong>검색 결과가 없습니다.</strong><span>띄어쓰기나 검색어를 바꿔 보세요.</span></div>') + '</div>';
+    paymentSearchResults().forEach(function (item) { results.push(item); });
+    return '<div class="pw-toolbar"><div><h2>‘' + esc(q) + '’ 검색 결과</h2><p class="pw-subtitle">자료, 고객, 상담, 일정, 원전산과 결제정보를 한 번에 검색했습니다.</p></div><span class="pw-result-count">' + results.length + '건</span></div><div class="pw-search-results">' + (results.length ? results.map(function (item) { return '<button type="button" onclick="' + item.action + '"><span class="pw-result-icon">' + item.icon + '</span><span><small>' + item.kind + '</small><b>' + esc(item.title || '(제목 없음)') + '</b><em>' + esc(item.sub) + '</em></span><span>›</span></button>'; }).join('') : '<div class="pw-empty"><strong>검색 결과가 없습니다.</strong><span>띄어쓰기나 검색어를 바꿔 보세요.</span></div>') + '</div>';
   }
 
   function carrierDirectory() { return Array.isArray(window.OS_WORKSTATION_CARRIERS) ? window.OS_WORKSTATION_CARRIERS : []; }
@@ -2098,6 +2100,24 @@
       card.style.display = (!q || (card.getAttribute('data-name') || '').indexOf(q) >= 0) ? '' : 'none';
     });
   }
+  function paymentSearchResults() {
+    var parsed = state.paymentData; if (!parsed || !parsed.groups) return [];
+    var out = [];
+    parsed.groups.forEach(function (group, groupIndex) {
+      var type = groupIndex === 1 || /생명/.test(group.label || '') ? 'life' : 'nonlife';
+      (group.cards || []).forEach(function (card) {
+        var name = stripHtml(card.name || '').trim();
+        var detail = stripHtml(card.detail || '').replace(/\s+/g, ' ').trim();
+        if (!matches(name + ' ' + detail + ' ' + (group.label || ''))) return;
+        out.push({ icon: '₩', kind: '보험회사 결제정보', title: name || '결제정보', sub: (group.label || '') + (detail ? ' · ' + detail : ''), action: "OSPersonalWorkspace.openPaymentSearchResult('" + type + "')" });
+      });
+    });
+    return out;
+  }
+  function openPaymentSearchResult(type) {
+    state.paymentType = type === 'life' ? 'life' : 'nonlife';
+    go('payments');
+  }
   function parsePaymentInfo(html) {
     var wrapper = document.createElement('div'); wrapper.innerHTML = html;
     var outer = wrapper.children[0];
@@ -2134,7 +2154,7 @@
       var html = rows && rows[0] && rows[0].content_html;
       state.paymentData = html ? parsePaymentInfo(html) : null;
       if (!state.paymentData) state.paymentError = '등록된 결제정보가 없습니다.';
-    }).catch(function () { state.paymentError = '결제정보를 불러오지 못했습니다. 다시 시도해 주세요.'; }).finally(function () { state.paymentLoading = false; if (state.section === 'payments') renderContent(); });
+    }).catch(function () { state.paymentError = '결제정보를 불러오지 못했습니다. 다시 시도해 주세요.'; }).finally(function () { state.paymentLoading = false; if (state.section === 'payments' || state.query.trim()) renderContent(); });
   }
   function paymentSectionHtml() {
     loadPaymentInfo();
@@ -2549,7 +2569,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, filterQuickLinks: filterQuickLinks,
+    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
