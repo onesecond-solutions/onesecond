@@ -23,11 +23,6 @@
   border-color: var(--ac);
 }
 
-.wsm-lib-item {
-  display: flex;
-  flex-direction: column;
-}
-
 .wsm-lib-card {
   width: 100%;
   text-align: left;
@@ -35,11 +30,6 @@
   cursor: pointer;
 }
 .wsm-lib-card:active { border-color: var(--ac); }
-.wsm-lib-item.is-open .wsm-lib-card {
-  border-color: var(--ac);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
 
 .wsm-lib-kind {
   display: inline-block;
@@ -49,14 +39,35 @@
   color: var(--ac);
 }
 
-/* 카드를 탭하면 별도 페이지 이동 없이 같은 화면 안에서 펼쳐지는 상세 영역(코상무 확정 방향). */
-.wsm-lib-detail {
+/* feat/workstation-mobile-header-consistency (2026-08-22) — 카드 안 인라인 펼침(아코디언)을 customers.js와
+   동일한 "리스트→풀스크린 상세" 구조로 바꿨다. 아래는 상세 화면 전용 스타일(customers.css의
+   .wsm-cust-back/.wsm-cust-detail-head와 동일한 톤 — 얇은 테두리 + 텍스트만). */
+.wsm-lib-back {
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
+.wsm-lib-detail-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 2px 6px;
+}
+.wsm-lib-detail-title {
+  font-size: var(--fs-title, 18px);
+  font-weight: 700;
+  color: var(--tp);
+}
+.wsm-lib-detail-date {
+  font-size: var(--fs-meta, 13px);
+  color: var(--ts);
+}
+
+.wsm-lib-detail-full {
   padding: 14px;
-  border: 1px solid var(--ac);
-  border-top: none;
-  border-bottom-left-radius: var(--radius-sm);
-  border-bottom-right-radius: var(--radius-sm);
-  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s1);
 }
 
 .wsm-lib-open-link,
