@@ -293,7 +293,58 @@
     if (state.status === 'refreshing') return '<div class="pw-sync-note">최신 자료를 동기화하고 있습니다.</div>';
     return state.error ? '<div class="pw-error" role="alert"><span>' + esc(state.error) + '</span><button class="pw-btn" onclick="OSPersonalWorkspace.reload()">다시 불러오기</button></div>' : '';
   }
-  function matches(value) { var q = state.query.trim().toLocaleLowerCase('ko-KR'); return !q || String(value || '').toLocaleLowerCase('ko-KR').indexOf(q) >= 0; }
+  var COMPANY_SEARCH_TERMS = [
+    ['DB손해보험', 'DB손보', 'DB화재', '디비손해보험', '디비손보', '디비손해', '디비화재', '동부화재', '동부손보', '동부손해보험'],
+    ['DB생명', '디비생명', '동부생명'],
+    ['KB손해보험', 'KB손보', '케이비손해보험', '케이비손보', '케비손해보험', '케비손보', '케비손해', '케비손'],
+    ['KB라이프', 'KB라이프생명', 'KB생명', '케이비라이프', '케이비라이프생명', '케이비생명', '케비라이프', '케비생명'],
+    ['메리츠화재', '메리츠', '메리츠손보', '메리츠손해보험'],
+    ['현대해상', '현대', '현대손보', '현대손해보험', '하이카'],
+    ['삼성화재', '삼성손보', '삼성손해보험', '삼성화재해상'],
+    ['삼성생명', '삼성생명보험'],
+    ['흥국화재', '흥국손보', '흥국손해보험', '흥국화재해상'],
+    ['흥국생명', '흥국생명보험', '티라이프', '이라이프'],
+    ['롯데손해보험', '롯데손보', '롯데손해', '롯데화재'],
+    ['한화손해보험', '한화손보', '한화손해', '한화화재'],
+    ['한화생명', '한화생명보험', '대한생명'],
+    ['라이나손해보험', '라이나손보', '라이나손해'],
+    ['라이나생명', '라이나생명보험'],
+    ['하나손해보험', '하나손보', '하나손해', '더케이손해보험', '더케이손보'],
+    ['하나생명', '하나생명보험'],
+    ['NH농협손해보험', 'NH손해보험', 'NH손보', '농협손해보험', '농협손보', '농협손해', '엔에이치손보', '엔에이치농협손보'],
+    ['NH농협생명', 'NH생명', '농협생명', '엔에이치생명', '엔에이치농협생명'],
+    ['AIG손해보험', 'AIG손보', 'AIG손해', '에이아이지손해보험', '에이아이지손보'],
+    ['ABL생명', 'ABL', '에이비엘', '에이비엘생명'],
+    ['AIA생명', 'AIA', '에이아이에이', '에이아이에이생명'],
+    ['교보생명', '교보', '교보생명보험'],
+    ['동양생명', '동양', '동양생명보험'],
+    ['미래에셋생명', '미래에셋', '미래에셋생명보험'],
+    ['신한라이프', '신한생명', '신한', '신한라이프생명'],
+    ['메트라이프', '메트라이프생명', '메트'],
+    ['KDB생명', '케이디비생명', '케디비생명', '산업은행생명'],
+    ['IBK연금보험', 'IBK연금', '기업은행연금보험', '아이비케이연금보험'],
+    ['iM라이프', 'IM라이프', '아이엠라이프', 'DGB생명', '디지비생명'],
+    ['처브라이프', '처브', 'CHUBB라이프', '라이나원']
+  ];
+  function searchNorm(value) {
+    return String(value || '').toLocaleLowerCase('ko-KR').replace(/[\s·ㆍ\.\-_/(){}\[\],:;'"`~!@#$%^&*+=?<>|\\]/g, '');
+  }
+  function searchNeedles() {
+    var q = searchNorm(state.query); if (!q) return [];
+    var out = [q];
+    COMPANY_SEARCH_TERMS.forEach(function (group) {
+      var normalized = group.map(searchNorm).filter(Boolean);
+      var hit = normalized.some(function (term) { return term === q || term.indexOf(q) >= 0 || q.indexOf(term) >= 0; });
+      if (hit) normalized.forEach(function (term) { if (out.indexOf(term) < 0) out.push(term); });
+    });
+    return out;
+  }
+  function matches(value) {
+    var q = searchNorm(state.query), target = searchNorm(value);
+    if (!q) return true;
+    if (target.indexOf(q) >= 0) return true;
+    return searchNeedles().some(function (needle) { return target.indexOf(needle) >= 0; });
+  }
   function statFilterBarHtml(opts) {
     var chips = opts.stages.map(function (stage) {
       var on = opts.activeStatus === stage.key;
