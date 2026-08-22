@@ -77,3 +77,32 @@
     window.Auth.init().catch(renderAccount);
   }
 })();
+
+/* 모바일 유도 배너 (2026-08-22, Phase 1 — feat/workstation-mobile-today, 애디티브).
+   폭 768px 미만에서 최초 진입 시 1회만 노출, 자동/강제 이동 없음(클릭해야 /m/로 이동).
+   닫으면 localStorage 플래그로 다시 뜨지 않는다. 기존 렌더 로직·CSS는 건드리지 않는 별도 IIFE. */
+(function () {
+  'use strict';
+  var FLAG_KEY = 'ws_mobile_banner_dismissed';
+  function dismissed() {
+    try { return localStorage.getItem(FLAG_KEY) === '1'; } catch (_e) { return false; }
+  }
+  function dismiss() {
+    var banner = document.getElementById('ws-mobile-banner');
+    if (banner) banner.remove();
+    try { localStorage.setItem(FLAG_KEY, '1'); } catch (_e) {}
+  }
+  function showIfNeeded() {
+    if (window.innerWidth >= 768 || dismissed() || document.getElementById('ws-mobile-banner')) return;
+    var banner = document.createElement('div');
+    banner.id = 'ws-mobile-banner';
+    banner.className = 'ws-mobile-banner';
+    banner.setAttribute('role', 'status');
+    banner.innerHTML = '<span>모바일 화면으로 보시겠어요?</span><a href="/insubriefing/workstation/m/">모바일로 이동</a><button type="button" aria-label="닫기">×</button>';
+    document.body.appendChild(banner);
+    var closeBtn = banner.querySelector('button');
+    if (closeBtn) closeBtn.addEventListener('click', dismiss);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showIfNeeded);
+  else showIfNeeded();
+})();
