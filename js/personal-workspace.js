@@ -2822,6 +2822,30 @@
       };
     });
   }
+  /* 모바일 "고객관리" 상세 화면 전용 쓰기 wrapper 1종 (2026-08-22, Phase 4 — feat/workstation-mobile-quicknote).
+     새 REST 저장 로직을 만들지 않는다. 기존 상담 등록 함수 saveConsultation()(위 2641행)이 신규 상담을 저장할 때
+     쓰는 workspace_consultations 필드 조합(customer_id/owner_id/consulted_at/channel/content, 2651행)과
+     writeOne() 저장 경로(1876행)를 그대로 재사용한다. saveConsultation()은 이름/생년월일/전화 등 DOM 폼 입력에
+     묶여 있고 고객 프로필까지 함께 갱신(customerPromise, 2646~2648행)하므로, 이미 존재하는 고객에게 짧은 메모
+     한 건만 남기는 이 화면에서 그대로 호출하면 이름/연락처가 빈 값으로 덮어써질 위험이 있어 고객 upsert 단계는
+     생략하고 상담 저장 부분(writeOne + upsertConsultation + rebuildWorkspaceDerived)만 동일하게 가져온다.
+     owner_id는 saveConsultation()과 동일하게 항상 currentUserId()로 고정하며, channel(상담 단계)은 임의로
+     바꾸지 않고 고객의 현재 status를 그대로 보존한다(빠른 메모가 파이프라인 단계를 바꾸지 않도록). */
+  function quickSaveConsultationNote(customerId, text) {
+    var trimmed = String(text == null ? '' : text).trim();
+    if (!customerId) return Promise.reject(new Error('고객 정보를 확인하지 못했습니다.'));
+    if (!trimmed) return Promise.reject(new Error('메모 내용을 입력해 주세요.'));
+    var allowedChannels = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
+    var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId); });
+    var channel = customer && allowedChannels.indexOf(customer.status) >= 0 ? customer.status : '예약';
+    var content = '<p><strong>[' + esc(writtenAt()) + ']</strong></p><p>' + esc(trimmed).replace(/\n/g, '<br>') + '</p>';
+    var consultationBody = { customer_id: customerId, owner_id: currentUserId(), consulted_at: new Date().toISOString(), channel: channel, content: content };
+    return writeOne('workspace_consultations', consultationBody).then(function (saved) {
+      upsertConsultation(saved);
+      rebuildWorkspaceDerived();
+      return saved;
+    });
+  }
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
@@ -2841,7 +2865,7 @@
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
-    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory,
+    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
 })();
