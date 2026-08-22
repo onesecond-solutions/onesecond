@@ -55,7 +55,7 @@
   function previewUi(type, name, url) {
     ensureOverlay();
     var overlay = document.getElementById('leaflet-preview'), page = document.getElementById('lfp-preview-page'), download = document.getElementById('lfp-preview-download');
-    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf');
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image');
     if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
     if (download) { download.href = url; download.download = name || ''; }
     document.body.classList.add('lfp-preview-open');
@@ -66,11 +66,17 @@
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
     previewUi(type, name, url);
     var stage = document.getElementById('lfp-preview-stage'), overlay = document.getElementById('leaflet-preview'), thumbs = document.getElementById('lfp-preview-thumbs');
-    if (stage) stage.onscroll = handleScroll;
+    if (stage) { stage.onscroll = handleScroll; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
     state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null };
-    if (type === 'image') { stage.innerHTML = '<img id="lfp-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '">'; renderImageTransform(); return; }
+    if (type === 'image') {
+      stage.innerHTML = '<div class="lfp-preview-page-wrap lfp-preview-image-wrap"><img id="lfp-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';
+      var previewImage = document.getElementById('lfp-preview-image');
+      if (previewImage) previewImage.onload = renderImageTransform;
+      renderImageTransform();
+      return;
+    }
     stage.innerHTML = '<div class="lfp-preview-loading">PDF를 불러오는 중입니다.</div>';
     Promise.all([loadPdfJs(), fetch(url).then(function (response) { if (!response.ok) throw new Error('PDF를 불러오지 못했습니다.'); return response.arrayBuffer(); })])
       .then(function (values) { return values[0].getDocument({ data: values[1] }).promise; })
@@ -78,7 +84,21 @@
       .catch(function (error) { if (stage) stage.innerHTML = '<div class="lfp-preview-loading">' + esc(error.message || 'PDF 미리보기를 불러오지 못했습니다.') + '</div>'; });
   }
 
-  function renderImageTransform() { var p = state.preview, image = document.getElementById('lfp-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
+  function renderImageTransform() {
+    var p = state.preview, image = document.getElementById('lfp-preview-image'), stage = document.getElementById('lfp-preview-stage');
+    if (!p || !image || !stage) return;
+    var naturalW = image.naturalWidth || image.width || 1, naturalH = image.naturalHeight || image.height || 1;
+    var rotated = p.rotate % 180 !== 0;
+    var availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 48);
+    var fitW = rotated ? naturalH : naturalW, fitH = rotated ? naturalW : naturalH;
+    var fitScale = Math.min(availW / fitW, availH / fitH, 1);
+    var displayW = Math.max(1, Math.round(naturalW * fitScale * p.zoom));
+    var displayH = Math.max(1, Math.round(naturalH * fitScale * p.zoom));
+    image.style.width = displayW + 'px';
+    image.style.height = displayH + 'px';
+    image.style.transform = 'rotate(' + p.rotate + 'deg)';
+    if (stage.scrollTop < 4) stage.scrollTop = 0;
+  }
 
   function renderPdf() {
     var p = state.preview, stage = document.getElementById('lfp-preview-stage'); if (!p || !p.doc || !stage) return;

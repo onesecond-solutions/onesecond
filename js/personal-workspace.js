@@ -1555,7 +1555,7 @@
     var overlay = document.getElementById('pw-preview'), page = document.getElementById('pw-preview-page'), download = document.getElementById('pw-preview-download');
     if (!overlay) return false;
     closeDialog();
-    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('has-asset', !!assetRef);
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('has-asset', !!assetRef);
     if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
     if (download) { download.href = url; download.download = name || ''; }
     document.body.classList.add('pw-preview-open');
@@ -1566,11 +1566,17 @@
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
     if (!previewUi(type, name, url, assetRef)) return;
     var stage = document.getElementById('pw-preview-stage'), overlay = document.getElementById('pw-preview'), thumbs = document.getElementById('pw-preview-thumbs');
-    if (stage) { stage.onscroll = handlePreviewScroll; stage.onwheel = handlePreviewWheel; }
+    if (stage) { stage.onscroll = handlePreviewScroll; stage.onwheel = handlePreviewWheel; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
     state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null };
-    if (type === 'image') { stage.innerHTML = '<img id="pw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '">'; renderPreviewTransform(); return; }
+    if (type === 'image') {
+      stage.innerHTML = '<div class="pw-preview-page-wrap pw-preview-image-wrap"><img id="pw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';
+      var previewImage = document.getElementById('pw-preview-image');
+      if (previewImage) previewImage.onload = renderPreviewTransform;
+      renderPreviewTransform();
+      return;
+    }
     stage.innerHTML = '<div class="pw-preview-loading">PDF를 불러오는 중입니다.</div>';
     Promise.all([loadPdfJs(), fetch(url).then(function (response) { if (!response.ok) throw new Error('PDF를 불러오지 못했습니다.'); return response.arrayBuffer(); })])
       .then(function (values) { return values[0].getDocument({ data: values[1] }).promise; })
@@ -1589,7 +1595,21 @@
     var url = item.image_url || item.file_url || item.link_url;
     if (url) openPreviewUrl(url, item.title || '파일', item.mime_type || (item.image_url ? 'image/*' : ''), assetRef);
   }
-  function renderPreviewTransform() { var p = state.preview, image = document.getElementById('pw-preview-image'); if (p && image) image.style.transform = 'scale(' + p.zoom + ') rotate(' + p.rotate + 'deg)'; }
+  function renderPreviewTransform() {
+    var p = state.preview, image = document.getElementById('pw-preview-image'), stage = document.getElementById('pw-preview-stage');
+    if (!p || !image || !stage) return;
+    var naturalW = image.naturalWidth || image.width || 1, naturalH = image.naturalHeight || image.height || 1;
+    var rotated = p.rotate % 180 !== 0;
+    var availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 48);
+    var fitW = rotated ? naturalH : naturalW, fitH = rotated ? naturalW : naturalH;
+    var fitScale = Math.min(availW / fitW, availH / fitH, 1);
+    var displayW = Math.max(1, Math.round(naturalW * fitScale * p.zoom));
+    var displayH = Math.max(1, Math.round(naturalH * fitScale * p.zoom));
+    image.style.width = displayW + 'px';
+    image.style.height = displayH + 'px';
+    image.style.transform = 'rotate(' + p.rotate + 'deg)';
+    if (stage.scrollTop < 4) stage.scrollTop = 0;
+  }
   function renderPdfPreview() {
     var p = state.preview, stage = document.getElementById('pw-preview-stage'); if (!p || !p.doc || !stage) return;
     var doc = p.doc, availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 48);
