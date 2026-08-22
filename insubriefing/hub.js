@@ -659,6 +659,14 @@
     return !!((window.localStorage.getItem("os_token") || window.sessionStorage.getItem("os_token")) && currentAccount().id);
   }
 
+  function showWorkstationLoginNotice() {
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === "function") {
+      window.InsuranceBriefingNotice.alert("로그인 후 사용가능합니다.", { title: "보험브리핑" });
+      return;
+    }
+    window.alert("로그인 후 사용가능합니다.");
+  }
+
   function esc(value) { return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function logoutAdvisor() {
     ["os_token", "os_refresh_token", "os_user", "selected_menu"].forEach(function (key) {
@@ -696,6 +704,11 @@
       workstationLink.setAttribute("aria-label", "워크스테이션 열기");
       nav.appendChild(workstationLink);
     }
+    workstationLink.onclick = function (event) {
+      if (hasAccountSession()) return;
+      event.preventDefault();
+      showWorkstationLoginNotice();
+    };
 
     var loginButton = nav.querySelector(".ib-login-button");
     var accountBox = nav.querySelector(".ib-account");
@@ -749,6 +762,13 @@
   if (nav) {
     renderAdvisorNav();
     nav.addEventListener("click", function (event) {
+      var workstationLink = event.target.closest(".ib-workstation-link");
+      if (workstationLink && !hasAccountSession()) {
+        event.preventDefault();
+        event.stopPropagation();
+        showWorkstationLoginNotice();
+        return;
+      }
       var loginButton = event.target.closest(".ib-login-button");
       if (!loginButton) return;
       if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === "function") {
@@ -820,6 +840,14 @@
       menu.setAttribute("aria-expanded", "false");
     });
   }
+
+  document.addEventListener("click", function (event) {
+    if (event.defaultPrevented) return;
+    var link = event.target.closest('a[href="/insubriefing/workstation/"]');
+    if (!link || hasAccountSession()) return;
+    event.preventDefault();
+    showWorkstationLoginNotice();
+  });
 
   if (toggle && all) {
     toggle.addEventListener("click", function () {
