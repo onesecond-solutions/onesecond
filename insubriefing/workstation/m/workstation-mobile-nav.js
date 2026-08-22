@@ -9,11 +9,15 @@
   'use strict';
 
   /* 아이콘 = 이모지(새 아이콘 폰트/외부 리소스 로드 금지). 화면마다 한눈에 구분되도록 단순한 것으로 선택.
-     오늘=집(하루의 홈 베이스) · 캘린더=달력 · 고객=사람 · 자료=폴더. */
+     오늘=집(하루의 홈 베이스) · 캘린더=달력 · 고객=사람 · 상담=메모(전체 고객을 가로지르는 상담 목록,
+     feat/workstation-mobile-consultations-list, 2026-08-22 대표 직접 요청 — PC 데스크탑에는 있던
+     "상담관리" 화면이 모바일에 없던 격차) · 자료=폴더.
+     순서는 고객 다음이 자연스러워 고객→상담→자료로 배치(청약 전 상담 흐름이 고객 바로 옆). */
   var ITEMS = [
     { key: 'today', href: './index.html', label: '오늘', icon: '🏠' },
     { key: 'calendar', href: './calendar.html', label: '캘린더', icon: '📅' },
     { key: 'customers', href: './customers.html', label: '고객', icon: '👤' },
+    { key: 'consultations', href: './consultations.html', label: '상담', icon: '📝' },
     { key: 'library', href: './library.html', label: '자료', icon: '📁' }
   ];
 
