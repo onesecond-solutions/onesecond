@@ -708,8 +708,8 @@
         loginButton.type = "button";
         nav.appendChild(loginButton);
       }
-      loginButton.textContent = "원세컨드 로그인";
-      loginButton.setAttribute("aria-label", "설계사 로그인");
+      loginButton.textContent = "로그인 / 회원가입";
+      loginButton.setAttribute("aria-label", "보험브리핑 로그인 및 회원가입");
       return;
     }
 
@@ -751,6 +751,10 @@
     nav.addEventListener("click", function (event) {
       var loginButton = event.target.closest(".ib-login-button");
       if (!loginButton) return;
+      if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === "function") {
+        window.InsuranceBriefingAuth.open("login", { redirect: "/insubriefing/workstation/" });
+        return;
+      }
       window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Fworkstation%2F";
     });
   }

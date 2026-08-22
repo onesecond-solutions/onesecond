@@ -204,7 +204,18 @@
       view.innerHTML = '<div class="pw-access"><strong>워크스테이션 준비 중</strong><p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
       return;
     }
-    view.innerHTML = '<div class="pw-access"><strong>워크스테이션 로그인</strong><p>기존 원세컨드 계정으로 로그인하면 자료, 고객, 상담과 일정을 불러옵니다.</p><a class="pw-btn primary" href="/pages/landing.html?auth=login&amp;redirect=%2Finsubriefing%2Fworkstation%2F">원세컨드 로그인</a><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+    view.innerHTML = '<div class="pw-access"><strong>워크스테이션 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="pw-access-actions"><button class="pw-btn primary" type="button" data-ib-login>로그인</button><button class="pw-btn" type="button" data-ib-signup>회원가입</button></div><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+    var loginBtn = view.querySelector('[data-ib-login]');
+    var signupBtn = view.querySelector('[data-ib-signup]');
+    function openBriefingAuth(mode) {
+      if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
+        window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/' });
+        return;
+      }
+      window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2F';
+    }
+    if (loginBtn) loginBtn.addEventListener('click', function () { openBriefingAuth('login'); });
+    if (signupBtn) signupBtn.addEventListener('click', function () { openBriefingAuth('signup'); });
   }
 
   function loadData(force) {
