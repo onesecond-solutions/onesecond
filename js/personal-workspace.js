@@ -2822,6 +2822,26 @@
       };
     });
   }
+  /* 모바일 "상담관리" 화면 전용 읽기 전용 조회 함수 1종 (2026-08-22, feat/workstation-mobile-consultations-list).
+     customersDirectory()는 고객별로 묶어 반환하지만, 이번 화면은 전체 고객을 가로지르는 상담 단위 평탄화 목록이
+     필요하다(PC 데스크탑의 "상담관리" 화면과 같은 성격, 모바일엔 아직 없었음 — 대표 지적). state.data.consultations를
+     그대로 순회해 고객명만 붙여 최신순으로 정렬한 새 배열을 반환하는 순수 함수만 추가한다(기존 함수·로직 변경
+     없음, state 쓰기 없음, 새 API 호출 없음). memo는 customersDirectory()와 동일하게 stripHtml()로 평문화한다. */
+  function consultationsDirectory() {
+    var customersById = {};
+    state.data.customers.forEach(function (customer) { customersById[String(customer.id)] = customer; });
+    return state.data.consultations.map(function (item) {
+      var customer = customersById[String(item.customer_id)] || {};
+      return {
+        id: item.id,
+        customerId: item.customer_id,
+        customerName: customer.name || '(이름 없음)',
+        date: String(item.consulted_at || item.created_at || '').slice(0, 10),
+        channel: item.channel || '',
+        memo: stripHtml(item.memo || item.content || '')
+      };
+    }).sort(function (a, b) { return b.date.localeCompare(a.date); });
+  }
   /* 모바일 "고객관리" 상세 화면 전용 쓰기 wrapper 1종 (2026-08-22, Phase 4 — feat/workstation-mobile-quicknote).
      새 REST 저장 로직을 만들지 않는다. 기존 상담 등록 함수 saveConsultation()(위 2641행)이 신규 상담을 저장할 때
      쓰는 workspace_consultations 필드 조합(customer_id/owner_id/consulted_at/channel/content, 2651행)과
@@ -2927,7 +2947,7 @@
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
-    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
+    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, consultationsDirectory: consultationsDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
     libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
