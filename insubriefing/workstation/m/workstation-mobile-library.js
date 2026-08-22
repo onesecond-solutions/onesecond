@@ -68,6 +68,23 @@
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
+  /* fix/workstation-mobile-bugs 버그1 대응 — js/personal-workspace.js의 isDataReady() 읽기 전용 조회를 그대로
+     노출한다. loadData(true)가 완료되기 전(fullLoaded=false)에는 directory가 빈 배열이라 "지정된 자료가
+     없습니다"류 문구가 먼저 그려지고 이후 폴링에서 실제 데이터로 뒤늦게 바뀌는 문제 — 로드 완료 여부로
+     문구를 분기한다. */
+  function isDataReady() {
+    return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
+  }
+  /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/workstation/workstation.js의
+     logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
+     동일 로직만 로컬 복제, 새 판단 없음). */
+  function logout() {
+    ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) {
+      localStorage.removeItem(key); sessionStorage.removeItem(key);
+    });
+    window.location.replace('/insubriefing/');
+  }
 
   function root() { return document.querySelector(ROOT_SELECTOR); }
 
@@ -111,8 +128,14 @@
       + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
       + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
       + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
-      + '<a class="wsm-pc-link" href="' + esc(PC_LINKS.assets) + '">PC 버전으로 보기</a>'
+      + '<a class="wsm-pc-link" href="' + esc(PC_LINKS.assets) + '">PC로 보기</a>'
+      + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>';
+  }
+
+  function bindHeaderEvents() {
+    var logoutLink = document.getElementById('wsm-logout-link');
+    if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
   }
 
   function emptyHtml(message) {
@@ -168,7 +191,7 @@
   function searchResultsHtml(query) {
     var q = query.toLowerCase();
     var matches = state.directory.filter(function (entry) { return entry.searchText.indexOf(q) >= 0; }).sort(byCreatedDesc);
-    if (!matches.length) return sectionHtml('검색 결과', emptyHtml('일치하는 자료·업무노트가 없습니다.'));
+    if (!matches.length) return sectionHtml('검색 결과', emptyHtml(isDataReady() ? '일치하는 자료·업무노트가 없습니다.' : '자료를 불러오는 중입니다…'));
     return sectionHtml('검색 결과 ' + matches.length + '건', '<div class="wsm-list">' + matches.map(entryCardHtml).join('') + '</div>');
   }
 
@@ -176,9 +199,12 @@
     return '<button type="button" class="wsm-btn wsm-loadmore" id="' + id + '">더 보기 (' + remaining + ')</button>';
   }
 
-  function recentSectionHtml(title, allRows, limit, moreId, emptyMessage) {
+  /* fix/workstation-mobile-bugs 버그1 — ready=false(loadData(true) 완료 전)면 "저장된 자료가 없습니다" 같은
+     빈 상태 문구 대신 로딩 문구를 보여준다. allRows 자체가 아직 채워지기 전이라 항상 length 0인 시점이라
+     empty-state 판정에 로드 완료 여부를 추가한 것뿐, 목록 조립 로직은 그대로다. */
+  function recentSectionHtml(title, allRows, limit, moreId, emptyMessage, ready) {
     var sorted = allRows.slice().sort(byCreatedDesc);
-    if (!sorted.length) return sectionHtml(title, emptyHtml(emptyMessage));
+    if (!sorted.length) return sectionHtml(title, emptyHtml(ready ? emptyMessage : '불러오는 중입니다…'));
     var visible = sorted.slice(0, limit);
     var body = '<div class="wsm-list">' + visible.map(entryCardHtml).join('')
       + (sorted.length > visible.length ? loadMoreButtonHtml(moreId, sorted.length - visible.length) : '')
@@ -220,10 +246,11 @@
   }
 
   function browseHtml() {
+    var ready = isDataReady();
     var library = state.directory.filter(function (entry) { return entry.source === 'library'; });
     var scripts = state.directory.filter(function (entry) { return entry.source === 'scripts'; });
-    return recentSectionHtml('최근 자료실', library, state.libraryLimit, 'wsm-lib-more-library', '저장된 자료가 없습니다.')
-      + recentSectionHtml('최근 업무노트', scripts, state.scriptsLimit, 'wsm-lib-more-scripts', '작성된 업무노트가 없습니다.')
+    return recentSectionHtml('최근 자료실', library, state.libraryLimit, 'wsm-lib-more-library', '저장된 자료가 없습니다.', ready)
+      + recentSectionHtml('최근 업무노트', scripts, state.scriptsLimit, 'wsm-lib-more-scripts', '작성된 업무노트가 없습니다.', ready)
       + feedSectionHtml('소식지', state.feed.newsletters || [], state.feed.newsletterLoading, state.newsLimit, 'wsm-lib-more-news', PC_LINKS.newsletters, '소식지가 없습니다.')
       + feedSectionHtml('영업방향', state.feed.strategies || [], state.feed.strategyLoading, state.strategyLimit, 'wsm-lib-more-strategy', PC_LINKS.strategy, '영업방향 자료가 없습니다.')
       + productLineupSectionHtml();
@@ -272,6 +299,7 @@
       + '<div class="wsm-lib-search-wrap"><input type="search" id="wsm-lib-search" class="wsm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
       + '<div id="wsm-lib-body"></div>'
       + '</main>';
+    bindHeaderEvents();
     var input = document.getElementById('wsm-lib-search');
     if (input) {
       input.value = state.query;
