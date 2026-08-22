@@ -876,14 +876,23 @@
     if (!count) return '';
     return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기" onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + count + '명</i>';
   }
-  function builtinCalendarChips(events, date) {
-    var insuranceAgeEvents = events.filter(function (event) { return event.event_type === 'insurance-age'; });
-    var otherBuiltIns = events.filter(function (event) { return event.event_type !== 'insurance-age'; });
-    if (!insuranceAgeEvents.length) return otherBuiltIns.slice(0, 2).map(builtinCalendarChip).join('');
-    if (!otherBuiltIns.length && insuranceAgeEvents.length <= 2) return insuranceAgeEvents.map(builtinCalendarChip).join('');
-    var chips = otherBuiltIns.slice(0, 1).map(builtinCalendarChip);
-    chips.push(insuranceAgeSummaryChip(insuranceAgeEvents.length, date));
-    return chips.join('');
+  function careSummaryChip(count, date) {
+    if (!count) return '';
+    return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기" onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + count + '명</i>';
+  }
+  function monthCalendarChips(events, date) {
+    var builtIns = events.filter(function (event) { return event.builtin; });
+    var insuranceAgeEvents = builtIns.filter(function (event) { return event.event_type === 'insurance-age'; });
+    var otherBuiltIns = builtIns.filter(function (event) { return event.event_type !== 'insurance-age'; });
+    var careEvents = events.filter(isCareTask);
+    var chips = [];
+    if (otherBuiltIns.length) chips.push(builtinCalendarChip(otherBuiltIns[0]));
+    if (careEvents.length) chips.push(careSummaryChip(careEvents.length, date));
+    if (insuranceAgeEvents.length && chips.length < 2) {
+      if (!otherBuiltIns.length && !careEvents.length && insuranceAgeEvents.length <= 2) chips = chips.concat(insuranceAgeEvents.map(builtinCalendarChip));
+      else chips.push(insuranceAgeSummaryChip(insuranceAgeEvents.length, date));
+    }
+    return chips.slice(0, 2).join('');
   }
   function calendarSpanBars(days, events, maxLanes) {
     var rangeStart = days[0], rangeEnd = days[days.length - 1], seen = {}, spans = [];
@@ -906,13 +915,13 @@
     var seen = {}, spans = [];
     days.forEach(function (key) {
       eventsFor(key).forEach(function (event) {
-        if (event.builtin || seen[event.id]) return;
+        if (event.builtin || isCareTask(event) || seen[event.id]) return;
         seen[event.id] = true;
         var s = String(event.event_date || '').slice(0, 10), e = String(event.event_end_date || event.event_date || '').slice(0, 10);
         spans.push({ event: event, start: s < gridStart ? gridStart : s, end: e > gridEnd ? gridEnd : e });
       });
     });
-    spans.sort(function (a, b) { return a.start.localeCompare(b.start) || b.end.localeCompare(a.end); });
+    spans.sort(function (a, b) { return a.start.localeCompare(b.start) || eventPriority(a.event) - eventPriority(b.event) || b.end.localeCompare(a.end) || String(a.event.title || '').localeCompare(String(b.event.title || ''), 'ko'); });
     var laneLastEnd = [];
     spans.forEach(function (sp) { var lane = 0; while (lane < laneLastEnd.length && laneLastEnd[lane] >= sp.start) lane++; sp.lane = lane; laneLastEnd[lane] = sp.end; });
     var MAX_LANES = 3, weeks = [];
@@ -923,8 +932,8 @@
       spans.forEach(function (sp) { if (sp.lane >= MAX_LANES && sp.end >= weekStart && sp.start <= weekEnd) weekDays.forEach(function (d) { if (d >= sp.start && d <= sp.end) overflow[d]++; }); });
       var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
       var cells = weekDays.map(function (key) {
-        var d = parseDate(key), events = eventsFor(key), builtIns = events.filter(function (event) { return event.builtin; }), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
-        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + builtinCalendarChips(builtIns, key) + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
+        var d = parseDate(key), events = eventsFor(key), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
+        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
       }).join('');
       var bars = weekSpans.map(function (sp) {
         var barStart = sp.start < weekStart ? weekStart : sp.start, barEnd = sp.end > weekEnd ? weekEnd : sp.end;
