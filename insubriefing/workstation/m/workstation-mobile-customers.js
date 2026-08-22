@@ -1,10 +1,14 @@
 /* insubriefing/workstation/m/workstation-mobile-customers.js
-   워크스테이션 모바일 "고객" 화면 전용 렌더러 (Phase 3, 2026-08-22, feat/workstation-mobile-customers).
+   워크스테이션 모바일 "고객" 화면 전용 렌더러 (Phase 3, 2026-08-22, feat/workstation-mobile-customers /
+   Phase 4, 2026-08-22, feat/workstation-mobile-quicknote).
    데이터/로직은 100% /js/personal-workspace.js 재사용(customersDirectory() 읽기 전용 조회 + reload()로
-   기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의 렌더 함수는 호출하지 않는다.
+   기존 loadData() 실행, quickSaveConsultationNote()로 쓰기). 이 파일은 화면(뷰 셸)만 새로 그린다 —
+   personal-workspace.js의 렌더/저장 함수 본문은 호출하지 않는다(쓰기는 export된 wrapper 1개만 호출).
    네임스페이스 = OSWorkstationMobileCustomers (OSWorkstationMobile/OSWorkstationMobileCalendar와 충돌 없음).
    코상무 확정 방향: 모바일 고객관리는 표가 아니라 "고객 카드 리스트 → 고객 상세 → 전화/메모/일정추가 버튼" 구조.
-   이번 Phase는 조회 전용이다 — 고객 등록/수정, 모바일 전용 메모·일정 작성 폼은 범위 밖(PC 안내 링크만 제공). */
+   Phase 3은 조회 전용이었다. Phase 4에서 "메모" 버튼에 화면 이동 없는 인라인 빠른 메모 입력을 추가했다 —
+   저장은 js/personal-workspace.js의 quickSaveConsultationNote(customerId, text)만 호출한다(새 REST 로직 없음).
+   사진 첨부·일정추가는 여전히 범위 밖(PC 안내 링크만 제공). */
 (function () {
   'use strict';
 
@@ -17,6 +21,11 @@
 
   var state = { view: 'list', query: '', selectedId: null, directory: [] };
   var lastRenderedJson = '';
+  /* 빠른 메모 입력창의 UI 상태(펼침/저장중/에러/입력중 텍스트/저장 직후 배지). 폴링 diff 대상인 state에는 넣지
+     않는다 — snapshotJson()에 포함되면 저장 성공 전까지는 directory가 그대로라 재렌더가 스킵돼 문제없지만,
+     혼선을 피하려 완전히 분리된 로컬 변수로 둔다. 고객 상세를 벗어나거나 다른 고객으로 이동하면 초기화한다. */
+  var noteUi = { open: false, saving: false, error: '', draft: '', justSaved: false };
+  function resetNoteUi() { noteUi = { open: false, saving: false, error: '', draft: '', justSaved: false }; }
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -195,7 +204,7 @@
   function renderDetailShell() {
     var view = root(); if (!view) return;
     var customer = findCustomer(state.selectedId);
-    if (!customer) { state.view = 'list'; state.selectedId = null; renderListShell(); return; }
+    if (!customer) { resetNoteUi(); state.view = 'list'; state.selectedId = null; renderListShell(); return; }
 
     var phoneDisplay = customer.phone || '';
     var tel = phoneDigits(phoneDisplay);
@@ -224,10 +233,7 @@
       + '</section>'
       + '<div class="wsm-cust-actions">'
       + telAction
-      + '<div class="wsm-cust-action">'
-      + '<a class="wsm-cust-action-btn" href="/insubriefing/workstation/?view=personal-workspace&section=customers">메모</a>'
-      + '<p class="wsm-cust-action-note">PC 버전에서 상담메모를 작성해 주세요.</p>'
-      + '</div>'
+      + noteSectionHtml(customer)
       + '<div class="wsm-cust-action">'
       + '<a class="wsm-cust-action-btn" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">일정추가</a>'
       + '<p class="wsm-cust-action-note">PC 버전에서 일정을 등록해 주세요.</p>'
@@ -239,13 +245,100 @@
 
     var back = document.getElementById('wsm-cust-back');
     if (back) back.addEventListener('click', function () {
+      resetNoteUi();
       state.view = 'list'; state.selectedId = null; lastRenderedJson = '';
       renderCurrent();
+    });
+    bindNoteEvents(customer);
+  }
+
+  /* 빠른 메모 액션 영역 HTML. 세 가지 상태를 그린다: (1) 평소 — "메모" 버튼 + PC 안내,
+     (2) 펼침 — textarea + 저장/취소, (3) 저장 직후 — 짧게 "저장됐습니다" 배지만 보여주고 자동으로 (1)로 복귀.
+     사진 첨부는 이번 Phase 범위 밖이라 PC 링크 안내 문구만 둔다(별도 업로드 UI 없음). */
+  function noteSectionHtml(customer) {
+    var pcLink = '<a class="wsm-cust-note-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC 버전 열기</a>';
+    if (noteUi.open) {
+      var errorHtml = noteUi.error ? '<p class="wsm-cust-note-error">' + esc(noteUi.error) + '</p>' : '';
+      return '<div class="wsm-cust-action wsm-cust-note-open">'
+        + '<textarea id="wsm-cust-note-input" class="wsm-cust-note-textarea" rows="4" placeholder="상담 내용을 입력하세요. 링크는 그대로 붙여넣으면 됩니다."' + (noteUi.saving ? ' disabled' : '') + '>' + esc(noteUi.draft) + '</textarea>'
+        + '<p class="wsm-cust-action-note">사진 첨부는 PC 버전에서 해주세요. ' + pcLink + '</p>'
+        + errorHtml
+        + '<div class="wsm-cust-note-actions">'
+        + '<button type="button" class="wsm-btn" id="wsm-cust-note-cancel"' + (noteUi.saving ? ' disabled' : '') + '>취소</button>'
+        + '<button type="button" class="wsm-btn primary" id="wsm-cust-note-save"' + (noteUi.saving ? ' disabled' : '') + '>' + (noteUi.saving ? '저장 중…' : '저장') + '</button>'
+        + '</div>'
+        + '</div>';
+    }
+    if (noteUi.justSaved) {
+      return '<div class="wsm-cust-action">'
+        + '<span class="wsm-cust-action-btn is-disabled wsm-cust-note-saved">저장됐습니다</span>'
+        + '</div>';
+    }
+    return '<div class="wsm-cust-action">'
+      + '<button type="button" class="wsm-cust-action-btn" id="wsm-cust-note-toggle">메모</button>'
+      + '<p class="wsm-cust-action-note">사진 첨부는 PC 버전에서 해주세요. ' + pcLink + '</p>'
+      + '</div>';
+  }
+
+  function bindNoteEvents(customer) {
+    var toggle = document.getElementById('wsm-cust-note-toggle');
+    if (toggle) toggle.addEventListener('click', function () {
+      noteUi = { open: true, saving: false, error: '', draft: '', justSaved: false };
+      renderDetailShell();
+      var input = document.getElementById('wsm-cust-note-input');
+      if (input) input.focus();
+    });
+    var cancel = document.getElementById('wsm-cust-note-cancel');
+    if (cancel) cancel.addEventListener('click', function () {
+      resetNoteUi();
+      renderDetailShell();
+    });
+    var input = document.getElementById('wsm-cust-note-input');
+    if (input) input.addEventListener('input', function () { noteUi.draft = input.value; });
+    var save = document.getElementById('wsm-cust-note-save');
+    if (save) save.addEventListener('click', function () { submitQuickNote(customer); });
+  }
+
+  /* 저장은 js/personal-workspace.js의 quickSaveConsultationNote(customerId, text) 하나만 호출한다.
+     이 화면은 REST 필드 조합·owner_id 처리를 새로 만들지 않는다 — 그 함수가 이미 처리한다.
+     실패 시 입력한 텍스트(noteUi.draft)를 유지해 다시 시도할 수 있게 한다. */
+  function submitQuickNote(customer) {
+    var input = document.getElementById('wsm-cust-note-input');
+    var text = input ? input.value : noteUi.draft;
+    var trimmed = String(text || '').trim();
+    if (!trimmed) {
+      noteUi.draft = text; noteUi.error = '메모 내용을 입력해 주세요.';
+      renderDetailShell();
+      var focusEmpty = document.getElementById('wsm-cust-note-input'); if (focusEmpty) focusEmpty.focus();
+      return;
+    }
+    if (!window.OSPersonalWorkspace || typeof window.OSPersonalWorkspace.quickSaveConsultationNote !== 'function') {
+      noteUi.draft = text; noteUi.error = '저장 기능을 사용할 수 없습니다. 페이지를 새로고침해 주세요.';
+      renderDetailShell();
+      return;
+    }
+    noteUi.draft = text; noteUi.saving = true; noteUi.error = '';
+    renderDetailShell();
+    window.OSPersonalWorkspace.quickSaveConsultationNote(customer.id, text).then(function () {
+      noteUi = { open: false, saving: false, error: '', draft: '', justSaved: true };
+      lastRenderedJson = '';
+      renderCurrent();
+      window.setTimeout(function () {
+        if (!noteUi.justSaved) return;
+        noteUi.justSaved = false;
+        if (state.view === 'detail' && String(state.selectedId) === String(customer.id)) renderDetailShell();
+      }, 2600);
+    }).catch(function (err) {
+      noteUi.saving = false;
+      noteUi.error = (err && err.message) ? err.message : '저장하지 못했습니다. 다시 시도해 주세요.';
+      renderDetailShell();
+      var retry = document.getElementById('wsm-cust-note-input'); if (retry) retry.focus();
     });
   }
 
   function openDetail(id) {
     if (!id) return;
+    resetNoteUi();
     state.view = 'detail'; state.selectedId = id; lastRenderedJson = '';
     renderCurrent();
   }

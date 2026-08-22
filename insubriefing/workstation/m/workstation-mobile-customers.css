@@ -97,3 +97,58 @@
   color: var(--tf);
   line-height: var(--lh-base, 1.5);
 }
+
+/* Phase 4 (2026-08-22, feat/workstation-mobile-quicknote) — "메모" 버튼을 누르면 화면 이동 없이 펼쳐지는
+   빠른 상담 메모 입력창. .wsm-cust-actions는 3열 grid라 펼쳤을 때는 전체 폭으로 늘린다.
+   같은 wsm- 톤 유지(얇은 테두리 + 텍스트만, blur/무거운 그림자 금지). */
+.wsm-cust-note-open {
+  grid-column: 1 / -1;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.wsm-cust-note-textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s1);
+  color: var(--tp);
+  font: inherit;
+  font-size: var(--fs-body, 14px);
+  line-height: var(--lh-base, 1.5);
+  resize: vertical;
+}
+.wsm-cust-note-textarea:focus {
+  outline: none;
+  border-color: var(--ac);
+}
+.wsm-cust-note-textarea:disabled {
+  color: var(--tf);
+}
+
+.wsm-cust-note-pc-link {
+  color: var(--ac);
+  text-decoration: underline;
+}
+
+.wsm-cust-note-error {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-caption, 12px);
+  color: var(--err, #DC2626);
+}
+
+.wsm-cust-note-actions {
+  display: flex;
+  gap: 8px;
+}
+.wsm-cust-note-actions .wsm-btn {
+  flex: 1;
+}
+
+.wsm-cust-action-btn.wsm-cust-note-saved {
+  color: var(--ac);
+  border-color: var(--ac);
+}
