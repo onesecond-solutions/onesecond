@@ -15,6 +15,13 @@ body.ws-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linea
 .ws-global-search{position:absolute;left:50%;display:flex;width:min(560px,42vw);height:42px;align-items:center;gap:8px;padding:0 16px;border:1px solid color-mix(in srgb,var(--bd) 72%,transparent);border-radius:var(--radius-full);background:color-mix(in srgb,var(--s1) 62%,transparent);color:var(--ts);transform:translateX(-50%)}
 .ws-global-search input{width:100%;border:0;outline:0;background:transparent;color:var(--tp);font:inherit}
 body:not(.is-personal-workspace) .ws-global-search{visibility:hidden}
+/* fix/workstation-mobile-bugs 버그7 — 모바일 유도 배너(아래 .ws-mobile-banner)를 한 번 닫으면 다시는 모바일
+   화면으로 갈 방법이 없던 문제. 배너 닫힘 여부와 무관하게 헤더에 상시 노출되는 작은 링크를 추가한다.
+   기존 .ws-account를 감싸는 래퍼만 새로 추가 — .ws-account 자체 렌더 로직(workstation.js renderAccount)은
+   건드리지 않는다. 톤 = 얇은 테두리 + 텍스트만(대표 확정 톤), blur/무거운 그림자 없음. */
+.ws-header-actions{display:flex;align-items:center;gap:10px}
+.ws-mobile-link{display:inline-flex;align-items:center;height:34px;padding:0 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);font-size:var(--fs-meta);text-decoration:none;white-space:nowrap}
+.ws-mobile-link:hover{color:var(--ac);border-color:var(--ac)}
 .ws-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
 .ws-profile-dialog::backdrop{background:color-mix(in srgb,var(--tp) 42%,transparent);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .ws-profile-dialog form{display:grid;gap:18px;padding:24px}
@@ -226,7 +233,7 @@ body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-event.custo
 body.ws-page.ws-bg-dark #v-personal-workspace .pw-calendar-month .pw-more{color:var(--ts)}
 @media(max-width:860px){.ws-main{padding:8px 8px 0}#v-personal-workspace{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-personal-workspace .pw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-personal-workspace .pw-main{grid-row:1;min-width:0}#v-personal-workspace .pw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-personal-workspace .pw-assets-controls{align-items:flex-start;flex-direction:column}#v-personal-workspace .pw-assets-controls .pw-tabs{width:100%;overflow:visible}#v-personal-workspace .pw-assets-actions{align-self:flex-end}}
 @media(max-width:860px){.ws-global-search{width:min(400px,38vw)}}
-@media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand span{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-account{grid-column:2;grid-row:1}.ws-account-trigger{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-personal-workspace{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
+@media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand span{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-header-actions{grid-column:2;grid-row:1;gap:6px}.ws-mobile-link{height:30px;padding:0 8px;font-size:11px}.ws-account-trigger{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-personal-workspace{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
 
 /* 모바일 유도 배너 (2026-08-22, Phase 1 — feat/workstation-mobile-today, 애디티브).
    톤 = 얇은 테두리 + 텍스트만(대표 확정 톤). backdrop-filter/블러·무거운 box-shadow 금지. */

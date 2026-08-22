@@ -43,6 +43,16 @@
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
+  /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/workstation/workstation.js의
+     logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
+     동일 로직만 로컬 복제, 새 판단 없음). */
+  function logout() {
+    ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) {
+      localStorage.removeItem(key); sessionStorage.removeItem(key);
+    });
+    window.location.replace('/insubriefing/');
+  }
 
   function root() { return document.querySelector(ROOT_SELECTOR); }
 
@@ -182,13 +192,17 @@
       + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
       + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
       + '<a class="wsm-tab-link" href="./library.html">자료</a>'
-      + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">PC 버전에서 월간 캘린더 보기</a>'
+      + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">PC로 보기</a>'
+      + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>'
       + '<main class="wsm-main">'
       + todaySectionHtml(todayDate)
       + weekSectionHtml(todayDate)
       + upcomingSectionHtml(todayDate)
       + '</main>';
+
+    var logoutLink = document.getElementById('wsm-logout-link');
+    if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
 
     var moreBtn = document.getElementById('wsm-cal-more');
     if (moreBtn) moreBtn.addEventListener('click', function () {

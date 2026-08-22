@@ -51,6 +51,22 @@
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
+  /* fix/workstation-mobile-bugs 버그1 대응 — js/personal-workspace.js의 isDataReady() 읽기 전용 조회를 그대로
+     노출한다. loadData(true)가 완료되기 전(fullLoaded=false)에는 directory가 빈 배열이라 "등록된 고객이
+     없습니다"가 먼저 그려지고 이후 폴링에서 실제 데이터로 뒤늦게 바뀌는 문제 — 로드 완료 여부로 문구를 분기한다. */
+  function isDataReady() {
+    return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
+  }
+  /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/workstation/workstation.js의
+     logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
+     동일 로직만 로컬 복제, 새 판단 없음). */
+  function logout() {
+    ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) {
+      localStorage.removeItem(key); sessionStorage.removeItem(key);
+    });
+    window.location.replace('/insubriefing/');
+  }
 
   function root() { return document.querySelector(ROOT_SELECTOR); }
 
@@ -124,8 +140,14 @@
       + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
       + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
       + '<a class="wsm-tab-link" href="./library.html">자료</a>'
-      + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC 버전으로 보기</a>'
+      + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC로 보기</a>'
+      + '<a class="wsm-tab-link" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div></header>';
+  }
+
+  function bindHeaderEvents() {
+    var logoutLink = document.getElementById('wsm-logout-link');
+    if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
   }
 
   function snapshotJson() {
@@ -175,7 +197,7 @@
     var list = filteredDirectory();
     container.innerHTML = list.length
       ? list.map(customerCardHtml).join('')
-      : emptyHtml(state.query ? '검색 결과가 없습니다.' : '등록된 고객이 없습니다.');
+      : (!isDataReady() ? emptyHtml('고객 목록을 불러오는 중입니다.') : emptyHtml(state.query ? '검색 결과가 없습니다.' : '등록된 고객이 없습니다.'));
     bindCardClicks(container);
   }
 
@@ -188,6 +210,7 @@
       + '</div>'
       + '<div class="wsm-list wsm-cust-list" id="wsm-cust-list"></div>'
       + '</main>';
+    bindHeaderEvents();
     var input = document.getElementById('wsm-cust-search');
     if (input) {
       input.value = state.query;
@@ -243,6 +266,7 @@
       + careHtml
       + sectionHtml('최근 상담', consultHtml)
       + '</main>';
+    bindHeaderEvents();
 
     var back = document.getElementById('wsm-cust-back');
     if (back) back.addEventListener('click', function () {
