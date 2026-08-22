@@ -2747,6 +2747,36 @@
   document.addEventListener('click', function (event) { var menu = document.getElementById('pw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.pw-preview-ddak')) closeDdakMenu(); });
   document.addEventListener('click', function (event) { var open = document.querySelectorAll('.pw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
+  /* 모바일 "오늘" 화면 전용 읽기 전용 조회 함수 2종 (2026-08-22, Phase 1 — feat/workstation-mobile-today).
+     기존 렌더 함수·로직은 그대로 두고 애디티브로만 추가. state.data는 읽기만 하고(변형 금지), 반환값은 얕은 복사만 넘긴다.
+     새로운 API 호출 없음 — 이미 loadData()가 채워둔 state.data만 조회한다. */
+  function todaySummary() {
+    var today = ymd(new Date());
+    var isToday = function (event) { return String((event && event.event_date) || '').slice(0, 10) === today; };
+    var todaysEvents = allEvents().filter(isToday);
+    var events = todaysEvents.map(function (event) { return Object.assign({}, event); });
+    var care = todaysEvents.filter(isCareTask).map(function (event) { return Object.assign({}, event); });
+    var insuranceAge = insuranceAgeCalendarEventsForYear(new Date().getFullYear()).filter(isToday).map(function (event) { return Object.assign({}, event); });
+    return { events: events, care: care, insuranceAge: insuranceAge };
+  }
+  function upcomingConsultPrep() {
+    var tomorrow = addDays(ymd(new Date()), 1);
+    var customersById = {};
+    (state.data.customers || []).forEach(function (customer) { customersById[customer.id] = customer; });
+    var tomorrowConsults = (state.data.consultations || []).filter(function (entry) {
+      return String((entry && entry.consulted_at) || '').slice(0, 10) === tomorrow;
+    });
+    return tomorrowConsults.map(function (consultation) {
+      var customer = customersById[consultation.customer_id] || {};
+      var customerRoot = customerAttachmentRoot(consultation.customer_id);
+      var consultRoot = consultationAttachmentRoot(consultation.id);
+      var files = [];
+      if (customerRoot) files = files.concat((state.data.items || []).filter(function (entry) { return entry.parent_id === customerRoot.id; }));
+      if (consultRoot) files = files.concat((state.data.items || []).filter(function (entry) { return entry.parent_id === consultRoot.id; }));
+      var fileNames = files.map(function (entry) { return (entry && (entry.title || entry.storage_path)) || '(이름 없음)'; });
+      return { customerId: consultation.customer_id, customerName: customer.name || '고객', consultationId: consultation.id, files: fileNames.slice() };
+    });
+  }
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
@@ -2766,6 +2796,7 @@
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
+    todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
 })();
