@@ -1,0 +1,344 @@
+/* insubriefing/workstation/m/workstation-mobile-library.js
+   워크스테이션 모바일 "자료" 화면 전용 렌더러 (Phase 5, 2026-08-22, feat/workstation-mobile-library — 5단계 로드맵 마지막 단계).
+   데이터/로직은 100% /js/personal-workspace.js 재사용 — libraryDirectory()/libraryFeedDirectory() 읽기 전용
+   조회 + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의
+   렌더/저장 함수 본문은 호출하지 않는다. 이번 Phase 5도 조회 전용이다(쓰기 기능 없음).
+   네임스페이스 = OSWorkstationMobileLibrary (다른 OSWorkstationMobile* 네임스페이스와 충돌 없음).
+
+   코상무 확정 방향: 모바일 자료실은 "정리"보다 "찾아서 보여주기"가 핵심 — 소식지·상품라인업·업무노트(구 "스크립트"
+   표시명)·영업방향을 빠르게 검색·미리보기.
+
+   실제 조사 결과(코드 확인, 2026-08-22) — 4개 자료가 데이터 구조상 완전히 다르다:
+   1) 자료실(state.data.library, item_type=memo/file/link, 폴더 제외) · 업무노트(state.data.scripts,
+      item_type='note') — loadData(true)가 한 번에 불러오는 workspace_items 안 텍스트 콘텐츠. 본문이
+      있어 통합 검색(제목+본문) + 화면 안 펼쳐보기가 가능하다. 이 화면의 핵심 기능.
+   2) 소식지(newsletters 테이블) · 영업방향(sales_strategy 테이블) — PDF 원문 메타데이터만 있고 본문 텍스트가
+      없다(회사/제목/발행월만). loadNewsletterData()/loadStrategyData()로 별도 지연 로드되며, 서명 URL이
+      필요한 signStoragePath()는 비공개 클로저라 이 화면에서 재구현하지 않는다. 그래서 통합 검색 대상에서는
+      제외하고 "최근 목록 + 원문 바로 URL(source_pdf_url/source_file_url)이 있을 때만 새 창 열기, 없으면
+      PC 버전 링크"로만 노출한다.
+   3) 상품라인업 — js/personal-workspace.js 소관이 아니라 완전히 별도 시스템(/insu/index.html,
+      _svLoadProducts 계열이 /data/insurer_products_2608.json을 따로 fetch)이라 이번 Phase 범위에서
+      제외하고 PC 버전 안내 카드만 둔다. */
+(function () {
+  'use strict';
+
+  var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  var ROOT_SELECTOR = '#wsm-root';
+  var RECENT_PAGE_SIZE = 6;
+  /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
+     대신 짧은 간격으로 재조회 → 직전 렌더와 동일하면 스킵하는 폴링으로 최종 일관성을 맞춘다(추가 API 호출 아님, 순수 재조회). */
+  var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
+
+  var PC_LINKS = {
+    assets: '/insubriefing/workstation/?view=personal-workspace&section=assets',
+    newsletters: '/insubriefing/workstation/?view=personal-workspace&section=newsletters',
+    strategy: '/insubriefing/workstation/?view=personal-workspace&section=sales-strategy',
+    productLineup: '/insu/?view=product-lineup'
+  };
+
+  var state = {
+    query: '', expandedKey: null,
+    libraryLimit: RECENT_PAGE_SIZE, scriptsLimit: RECENT_PAGE_SIZE, newsLimit: RECENT_PAGE_SIZE, strategyLimit: RECENT_PAGE_SIZE,
+    directory: [], feed: { newsletters: [], strategies: [], newsletterLoading: false, strategyLoading: false }
+  };
+  var lastRenderedJson = '';
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  function storedUser() {
+    try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); }
+    catch (_e) { return {}; }
+  }
+  function currentUserId() {
+    return String((window.AppState && window.AppState.userId) || storedUser().id || '');
+  }
+  function isLocalHost() {
+    return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+  }
+  /* 게이트 = workstation-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
+     임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
+  function allowed() {
+    return isLocalHost() || currentUserId() === PILOT_ID;
+  }
+  function authenticated() {
+    return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
+  }
+
+  function root() { return document.querySelector(ROOT_SELECTOR); }
+
+  function openBriefingAuth(mode) {
+    if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/m/library.html' });
+      return;
+    }
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2Fm%2Flibrary.html';
+  }
+
+  function renderLoginGate() {
+    var view = root(); if (!view) return;
+    view.innerHTML = '<div class="wsm-gate">'
+      + '<strong>워크스테이션 로그인이 필요합니다.</strong>'
+      + '<p>보험브리핑 계정으로 로그인하면 자료를 확인할 수 있습니다.</p>'
+      + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
+      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '</div>';
+    var btn = document.getElementById('wsm-login-btn');
+    if (btn) btn.addEventListener('click', function () { openBriefingAuth('login'); });
+  }
+
+  function renderDeniedGate() {
+    var view = root(); if (!view) return;
+    view.innerHTML = '<div class="wsm-gate">'
+      + '<strong>워크스테이션 준비 중</strong>'
+      + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
+      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '</div>';
+  }
+
+  function renderLoading() {
+    var view = root(); if (!view) return;
+    view.innerHTML = '<div class="wsm-gate"><strong>자료를 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
+  }
+
+  function headerHtml() {
+    return '<header class="wsm-header"><strong>자료</strong>'
+      + '<div class="wsm-header-actions">'
+      + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
+      + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
+      + '<a class="wsm-tab-link" href="./customers.html">고객</a>'
+      + '<a class="wsm-pc-link" href="' + esc(PC_LINKS.assets) + '">PC 버전으로 보기</a>'
+      + '</div></header>';
+  }
+
+  function emptyHtml(message) {
+    return '<div class="wsm-empty">' + esc(message) + '</div>';
+  }
+
+  function sectionHtml(title, bodyHtmlStr) {
+    return '<section class="wsm-section">'
+      + '<h2 class="wsm-section-title">' + esc(title) + '</h2>'
+      + bodyHtmlStr
+      + '</section>';
+  }
+
+  function shortDate(dateStr) {
+    var parts = String(dateStr || '').slice(0, 10).split('-');
+    if (parts.length !== 3) return '';
+    return Number(parts[1]) + '/' + Number(parts[2]);
+  }
+
+  function byCreatedDesc(a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); }
+
+  /* 검색·미리보기 대상 통합 목록(자료실+업무노트) 카드. entry.bodyHtml은
+     js/personal-workspace.js의 libraryDirectory()가 데스크탑 showAsset()과 동일하게
+     linkifyRich()(내부적으로 sanitizeRich() 재실행)를 거쳐 돌려준 안전한 HTML 문자열이다 —
+     여기서 다시 이스케이프하지 않고 그대로 innerHTML에 꽂는다(데스크탑과 동일 처리, 새 판단 없음).
+     제목·미리보기 스니펫은 평문이라 esc()로 이스케이프한다. */
+  function entryCardHtml(entry) {
+    var key = entry.source + ':' + entry.id;
+    var expanded = state.expandedKey === key;
+    var snippet = entry.previewText ? esc(entry.previewText) + (entry.previewText.length >= 100 ? '…' : '') : '';
+    var html = '<div class="wsm-lib-item' + (expanded ? ' is-open' : '') + '">'
+      + '<button type="button" class="wsm-card wsm-lib-card" data-key="' + esc(key) + '" aria-expanded="' + (expanded ? 'true' : 'false') + '">'
+      + '<span class="wsm-lib-kind">' + esc(entry.kind) + '</span>'
+      + '<div class="wsm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
+      + (snippet ? '<div class="wsm-card-sub">' + snippet + '</div>' : '')
+      + (entry.createdAt ? '<div class="wsm-card-meta">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
+      + '</button>';
+    if (expanded) html += '<div class="wsm-lib-detail">' + expandBodyHtml(entry) + '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function expandBodyHtml(entry) {
+    if (entry.bodyHtml && String(entry.bodyHtml).trim()) {
+      return '<div class="wsm-lib-body-rich">' + entry.bodyHtml + '</div>';
+    }
+    if (entry.linkUrl) {
+      return '<a class="wsm-lib-open-link" href="' + esc(entry.linkUrl) + '" target="_blank" rel="noopener noreferrer">원본 링크 열기 ↗</a>';
+    }
+    return '<p class="wsm-lib-empty-note">미리보기할 내용이 없습니다. PC 버전에서 확인해 주세요.</p>';
+  }
+
+  function searchResultsHtml(query) {
+    var q = query.toLowerCase();
+    var matches = state.directory.filter(function (entry) { return entry.searchText.indexOf(q) >= 0; }).sort(byCreatedDesc);
+    if (!matches.length) return sectionHtml('검색 결과', emptyHtml('일치하는 자료·업무노트가 없습니다.'));
+    return sectionHtml('검색 결과 ' + matches.length + '건', '<div class="wsm-list">' + matches.map(entryCardHtml).join('') + '</div>');
+  }
+
+  function loadMoreButtonHtml(id, remaining) {
+    return '<button type="button" class="wsm-btn wsm-loadmore" id="' + id + '">더 보기 (' + remaining + ')</button>';
+  }
+
+  function recentSectionHtml(title, allRows, limit, moreId, emptyMessage) {
+    var sorted = allRows.slice().sort(byCreatedDesc);
+    if (!sorted.length) return sectionHtml(title, emptyHtml(emptyMessage));
+    var visible = sorted.slice(0, limit);
+    var body = '<div class="wsm-list">' + visible.map(entryCardHtml).join('')
+      + (sorted.length > visible.length ? loadMoreButtonHtml(moreId, sorted.length - visible.length) : '')
+      + '</div>';
+    return sectionHtml(title, body);
+  }
+
+  /* 소식지·영업방향 카드 — 본문 텍스트가 없어(PDF 메타데이터만) 미리보기 펼치기 대신 원문 열기 링크만 제공.
+     source_pdf_url/source_file_url(직접 URL)이 있으면 새 창으로 바로 열고, 없으면(서명 URL이 필요한 경우)
+     서명 로직을 이 화면에서 새로 구현하지 않고 PC 버전 링크로 안내한다. */
+  function feedCardHtml(entry, pcHref) {
+    var href = entry.openUrl || pcHref;
+    var subLabel = entry.openUrl ? (entry.kind + ' · 새 창에서 열기 ↗') : (entry.kind + ' · PC 버전에서 열기');
+    var target = entry.openUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return '<a class="wsm-card wsm-lib-feed-card" href="' + esc(href) + '"' + target + '>'
+      + '<div class="wsm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
+      + '<div class="wsm-card-sub">' + esc(subLabel) + '</div>'
+      + '</a>';
+  }
+
+  function feedSectionHtml(title, rows, loading, limit, moreId, pcHref, emptyMessage) {
+    if (loading && !rows.length) return sectionHtml(title, emptyHtml('불러오는 중입니다…'));
+    var sorted = rows.slice().sort(function (a, b) { return (b.sortKey || 0) - (a.sortKey || 0); });
+    if (!sorted.length) return sectionHtml(title, emptyHtml(emptyMessage));
+    var visible = sorted.slice(0, limit);
+    var body = '<div class="wsm-list">' + visible.map(function (entry) { return feedCardHtml(entry, pcHref); }).join('')
+      + (sorted.length > visible.length ? loadMoreButtonHtml(moreId, sorted.length - visible.length) : '')
+      + '</div>';
+    return sectionHtml(title, body);
+  }
+
+  /* 상품라인업 = js/personal-workspace.js 소관이 아닌 완전히 별도 시스템(/insu/index.html)이라
+     이번 Phase 범위에서 제외하고 PC 버전 안내 카드만 둔다(억지로 통합하지 않음). */
+  function productLineupSectionHtml() {
+    return sectionHtml('상품 라인업', '<a class="wsm-card wsm-lib-feed-card" href="' + esc(PC_LINKS.productLineup) + '">'
+      + '<div class="wsm-card-title">상품 라인업은 PC 버전에서 확인해 주세요</div>'
+      + '<div class="wsm-card-sub">원수사 상품 자료는 별도 화면에서 관리됩니다.</div>'
+      + '</a>');
+  }
+
+  function browseHtml() {
+    var library = state.directory.filter(function (entry) { return entry.source === 'library'; });
+    var scripts = state.directory.filter(function (entry) { return entry.source === 'scripts'; });
+    return recentSectionHtml('최근 자료실', library, state.libraryLimit, 'wsm-lib-more-library', '저장된 자료가 없습니다.')
+      + recentSectionHtml('최근 업무노트', scripts, state.scriptsLimit, 'wsm-lib-more-scripts', '작성된 업무노트가 없습니다.')
+      + feedSectionHtml('소식지', state.feed.newsletters || [], state.feed.newsletterLoading, state.newsLimit, 'wsm-lib-more-news', PC_LINKS.newsletters, '소식지가 없습니다.')
+      + feedSectionHtml('영업방향', state.feed.strategies || [], state.feed.strategyLoading, state.strategyLimit, 'wsm-lib-more-strategy', PC_LINKS.strategy, '영업방향 자료가 없습니다.')
+      + productLineupSectionHtml();
+  }
+
+  function bodyHtml() {
+    var q = state.query.trim();
+    return q ? searchResultsHtml(q) : browseHtml();
+  }
+
+  function bindBodyEvents(container) {
+    var cards = container.querySelectorAll('.wsm-lib-card');
+    Array.prototype.forEach.call(cards, function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.getAttribute('data-key');
+        state.expandedKey = state.expandedKey === key ? null : key;
+        renderBody();
+        lastRenderedJson = snapshotJson();
+      });
+    });
+    bindMoreButton(container, 'wsm-lib-more-library', function () { state.libraryLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'wsm-lib-more-scripts', function () { state.scriptsLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'wsm-lib-more-news', function () { state.newsLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'wsm-lib-more-strategy', function () { state.strategyLimit += RECENT_PAGE_SIZE; });
+  }
+
+  function bindMoreButton(container, id, apply) {
+    var btn = container.querySelector('#' + id); if (!btn) return;
+    btn.addEventListener('click', function () {
+      apply();
+      renderBody();
+      lastRenderedJson = snapshotJson();
+    });
+  }
+
+  function renderBody() {
+    var container = document.getElementById('wsm-lib-body'); if (!container) return;
+    container.innerHTML = bodyHtml();
+    bindBodyEvents(container);
+  }
+
+  function renderShell() {
+    var view = root(); if (!view) return;
+    view.innerHTML = headerHtml()
+      + '<main class="wsm-main">'
+      + '<div class="wsm-lib-search-wrap"><input type="search" id="wsm-lib-search" class="wsm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
+      + '<div id="wsm-lib-body"></div>'
+      + '</main>';
+    var input = document.getElementById('wsm-lib-search');
+    if (input) {
+      input.value = state.query;
+      input.addEventListener('input', function () {
+        state.query = input.value;
+        state.expandedKey = null;
+        renderBody();
+        /* 검색어 갱신은 검색창 자체를 다시 그리지 않는 부분 업데이트(renderBody)로 처리해 포커스를 보존한다.
+           이후 폴링이 같은 스냅샷을 보고 전체 재렌더(포커스 소실)하지 않도록 스냅샷 캐시도 함께 갱신한다. */
+        lastRenderedJson = snapshotJson();
+      });
+    }
+    renderBody();
+  }
+
+  function snapshotJson() {
+    return JSON.stringify({
+      q: state.query, exp: state.expandedKey,
+      ll: state.libraryLimit, sl: state.scriptsLimit, nl: state.newsLimit, stl: state.strategyLimit,
+      dir: state.directory, feed: state.feed
+    });
+  }
+
+  function refreshData() {
+    state.directory = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.libraryDirectory === 'function')
+      ? window.OSPersonalWorkspace.libraryDirectory() : [];
+    state.feed = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.libraryFeedDirectory === 'function')
+      ? window.OSPersonalWorkspace.libraryFeedDirectory() : { newsletters: [], strategies: [], newsletterLoading: false, strategyLoading: false };
+  }
+
+  function renderCurrent() {
+    refreshData();
+    var json = snapshotJson();
+    if (json === lastRenderedJson) return;
+    lastRenderedJson = json;
+    renderShell();
+  }
+
+  function pollAndRender(index) {
+    renderCurrent();
+    if (index >= POLL_DELAYS_MS.length) return;
+    window.setTimeout(function () { pollAndRender(index + 1); }, POLL_DELAYS_MS[index]);
+  }
+
+  function startDataFlow() {
+    renderLoading();
+    if (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.reload === 'function') {
+      window.OSPersonalWorkspace.reload();
+    }
+    pollAndRender(0);
+  }
+
+  function boot() {
+    var view = root(); if (!view) return;
+    if (!authenticated()) { renderLoginGate(); return; }
+    document.addEventListener('appstate:ready', function onReady() {
+      document.removeEventListener('appstate:ready', onReady);
+      if (!allowed()) { renderDeniedGate(); return; }
+      startDataFlow();
+    });
+    if (window.Auth && typeof window.Auth.init === 'function') {
+      window.Auth.init().catch(function () { renderLoginGate(); });
+    } else {
+      renderLoginGate();
+    }
+  }
+
+  window.OSWorkstationMobileLibrary = { boot: boot };
+  window.addEventListener('load', function () { window.setTimeout(boot, 50); });
+})();

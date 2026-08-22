@@ -2846,6 +2846,64 @@
       return saved;
     });
   }
+  /* 모바일 "자료" 통합 검색·미리보기 화면 전용 읽기전용 조회 2종 (2026-08-22, Phase 5 — feat/workstation-mobile-library).
+     새 REST 로직을 만들지 않는다. libraryDirectory()는 이미 loadData(true)/rebuildWorkspaceDerived()가 채워둔
+     state.data.scripts(업무노트, item_type='note')·state.data.library(자료실 — 메모/파일/링크, 폴더 제외)를
+     그대로 읽어 평문 검색 텍스트와 화면 표시용 안전한 본문 HTML을 만든다. 본문 HTML은 데스크탑 showAsset()
+     (위 1794행 부근)이 상세 화면을 그릴 때와 똑같이 linkifyRich(body)를 거친다 — linkifyRich 내부에서
+     sanitizeRich를 다시 실행하므로, 저장 시점에 이미 sanitizeRich를 거친 값이라도 표시 시점에 한 번 더
+     정화한다(데스크탑과 동일한 이중 방어를 그대로 재사용, 새로 판단하지 않음). 여기서 다루는 "업무노트"는
+     사용자가 직접 쓰는 workspace_items 메모이며, 원세컨드가 제공하는 별도 "스크립트 카드"(state.scriptsData,
+     scriptsHtml())와는 다른 데이터라 포함하지 않는다.
+     libraryFeedDirectory()는 소식지·영업방향 화면에서 이미 쓰는 loadNewsletterData()/loadStrategyData()
+     (각각 위 1070·1220행 부근)를 그대로 호출해 캐시된 state.newsData/state.strategyData를 돌려준다 — 이 두
+     로더는 자체적으로 중복 호출을 막아(state.newsLoading/state.strategyLoading) 여러 번 불러도 안전하다.
+     두 데이터셋은 PDF 원문이라 본문 텍스트가 없어(회사·제목·발행월만 있음) 통합 검색 대상에서는 제외하고,
+     최근 목록 열람 + 원문 열기(직접 URL이 있을 때만)로만 모바일에 노출한다. */
+  function libraryDirectory() {
+    var scripts = state.data.scripts.map(function (item) {
+      var body = item.script_text || '';
+      return {
+        id: item.id, source: 'scripts', kind: '업무노트', title: item.title || '', createdAt: item.created_at,
+        searchText: ((item.title || '') + ' ' + stripHtml(body)).toLowerCase(),
+        previewText: stripHtml(body).slice(0, 100),
+        bodyHtml: linkifyRich(body), linkUrl: ''
+      };
+    });
+    var library = state.data.library.filter(function (item) { return item.item_type !== 'folder'; }).map(function (item) {
+      var body = item.body || '';
+      var kind = item.item_type === 'memo' ? '메모' : item.item_type === 'link' ? '링크' : '자료';
+      return {
+        id: item.id, source: 'library', kind: kind, title: item.title || '', createdAt: item.created_at,
+        searchText: ((item.title || '') + ' ' + stripHtml(body) + ' ' + (item.url || '')).toLowerCase(),
+        previewText: stripHtml(body).slice(0, 100),
+        bodyHtml: body ? linkifyRich(body) : '', linkUrl: item.url || ''
+      };
+    });
+    return scripts.concat(library);
+  }
+  function libraryFeedDirectory() {
+    loadNewsletterData();
+    loadStrategyData();
+    return {
+      newsletters: (state.newsData || []).map(function (row) {
+        return {
+          id: row.id, kind: '소식지', title: (row.company ? row.company + ' · ' : '') + newsMonthLabel(row),
+          sortKey: (Number(row.publish_year) || 0) * 12 + (Number(row.publish_month) || 0),
+          openUrl: String(row.source_pdf_url || '').trim()
+        };
+      }),
+      strategies: (state.strategyData || []).map(function (row) {
+        return {
+          id: row.id, kind: '영업방향', title: (row.company ? row.company + ' · ' : '') + strategyLabel(row),
+          sortKey: (Number(row.publish_year) || 0) * 12 + (Number(row.publish_month) || 0),
+          openUrl: String(row.source_file_url || '').trim()
+        };
+      }),
+      newsletterLoading: !!state.newsLoading,
+      strategyLoading: !!state.strategyLoading
+    };
+  }
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
@@ -2866,6 +2924,7 @@
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
     todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
+    libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
 })();
