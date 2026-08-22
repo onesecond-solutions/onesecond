@@ -21,6 +21,27 @@
 (function () {
   'use strict';
 
+  function appAlert(message, title) {
+    if (location.pathname.indexOf('/insubriefing') !== 0) {
+      alert(message);
+      return;
+    }
+    window.setTimeout(function () {
+      if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') {
+        window.InsuranceBriefingNotice.alert(message, { title: title || '보험브리핑' });
+        return;
+      }
+      var dialog = document.createElement('dialog');
+      dialog.className = 'ib-notice-dialog';
+      dialog.innerHTML = '<form class="ib-notice-card" method="dialog"><span class="ib-notice-brand">보험브리핑</span><h2></h2><p></p><div class="ib-notice-actions"><button type="submit" value="confirm" class="ib-notice-primary">확인</button></div></form>';
+      dialog.querySelector('h2').textContent = title || '보험브리핑';
+      dialog.querySelector('p').textContent = message;
+      document.body.appendChild(dialog);
+      dialog.addEventListener('close', function () { dialog.remove(); }, { once: true });
+      dialog.showModal();
+    }, 0);
+  }
+
   // ── 1. AppState 초기값 ────────────────────────────────────────────────────
   window.AppState = {
     userId:  null,   // Supabase auth.uid
@@ -261,7 +282,7 @@
         try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
         /* access_denied = 사용자가 Google 동의 취소 → 안내 없이 조용히 로그인 페이지로. 그 외(충돌 등)만 안내. */
         if (_err !== 'access_denied') {
-          alert('Google 로그인에 실패했습니다.\n\n이 이메일이 \'이메일 코드 로그인\'으로 이미 가입돼 있으면 Google 연결이 막힐 수 있어요.\n로그인 화면에서 이메일 코드 로그인을 이용해 주세요.');
+          appAlert('Google 로그인에 실패했습니다.\n\n이 이메일이 \'이메일 코드 로그인\'으로 이미 가입돼 있으면 Google 연결이 막힐 수 있어요.\n로그인 화면에서 이메일 코드 로그인을 이용해 주세요.', 'Google 로그인 실패');
         }
         return;  /* 토큰 없음 → init()이 로그인 페이지로 처리 */
       }

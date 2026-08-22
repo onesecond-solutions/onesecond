@@ -14,6 +14,22 @@
 (function () {
   'use strict';
 
+  function appAlert(message) {
+    if (location.pathname.indexOf('/insubriefing') !== 0) {
+      alert(message);
+      return;
+    }
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') {
+      window.InsuranceBriefingNotice.alert(message);
+      return;
+    }
+    window.setTimeout(function () {
+      if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') {
+        window.InsuranceBriefingNotice.alert(message);
+      }
+    }, 0);
+  }
+
   // ── 1. Supabase 설정 ──────────────────────────────────────────────────────
   var SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
@@ -115,7 +131,7 @@
 
   // ── 4. 토큰 만료 처리 ────────────────────────────────────────────────────
   function handleTokenExpired() {
-    alert('로그인 세션이 만료됐습니다.\n다시 로그인해 주세요.');
+    appAlert('로그인 세션이 만료됐습니다.\n다시 로그인해 주세요.');
     localStorage.removeItem('os_token');
     localStorage.removeItem('os_refresh_token');
     localStorage.removeItem('os_user');

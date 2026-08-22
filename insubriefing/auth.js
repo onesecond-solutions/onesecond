@@ -39,6 +39,79 @@
     });
   }
 
+  var noticeQueue = Promise.resolve();
+
+  function noticeTask(task) {
+    noticeQueue = noticeQueue.then(task, task);
+    return noticeQueue;
+  }
+
+  function noticeDialog(options) {
+    options = options || {};
+    return noticeTask(function () {
+      return new Promise(function (resolve) {
+        var dialog = document.createElement('dialog');
+        var type = options.type || 'alert';
+        var title = options.title || '보험브리핑';
+        var message = options.message || '';
+        var confirmLabel = options.confirmLabel || '확인';
+        var cancelLabel = options.cancelLabel || '취소';
+        dialog.className = 'ib-notice-dialog' + (options.dangerous ? ' is-danger' : '') + (options.compact ? ' is-compact' : '');
+        dialog.setAttribute('aria-label', title);
+        dialog.innerHTML = ''
+          + '<form class="ib-notice-card" method="dialog">'
+          + '<span class="ib-notice-brand">보험브리핑</span>'
+          + '<h2></h2>'
+          + '<p></p>'
+          + (type === 'prompt' ? '<input class="ib-notice-input" autocomplete="off" maxlength="60">' : '')
+          + '<div class="ib-notice-actions">'
+          + (type === 'alert' ? '' : '<button type="submit" value="cancel" class="ib-notice-secondary"></button>')
+          + '<button type="submit" value="confirm" class="ib-notice-primary"></button>'
+          + '</div></form>';
+        dialog.querySelector('h2').textContent = title;
+        dialog.querySelector('p').textContent = message;
+        var secondary = dialog.querySelector('.ib-notice-secondary');
+        var primary = dialog.querySelector('.ib-notice-primary');
+        if (secondary) secondary.textContent = cancelLabel;
+        primary.textContent = confirmLabel;
+        document.body.appendChild(dialog);
+        dialog.addEventListener('cancel', function (event) { event.preventDefault(); dialog.close('cancel'); });
+        dialog.addEventListener('click', function (event) { if (event.target === dialog) dialog.close(type === 'alert' ? 'confirm' : 'cancel'); });
+        dialog.addEventListener('close', function () {
+          var input = dialog.querySelector('.ib-notice-input');
+          var value = dialog.returnValue === 'confirm' ? (type === 'prompt' ? input.value : true) : false;
+          dialog.remove();
+          resolve(value);
+        }, { once: true });
+        dialog.showModal();
+        var input = dialog.querySelector('.ib-notice-input');
+        if (input) {
+          input.value = options.defaultValue || '';
+          window.setTimeout(function () { input.focus(); input.select(); }, 0);
+        } else {
+          window.setTimeout(function () { primary.focus(); }, 0);
+        }
+      });
+    });
+  }
+
+  function noticeAlert(message, options) {
+    options = options || {};
+    return noticeDialog(Object.assign({}, options, { type: 'alert', title: options.title || '보험브리핑', message: message }));
+  }
+
+  function noticeConfirm(options) {
+    return noticeDialog(Object.assign({ type: 'confirm', title: '보험브리핑', message: '', confirmLabel: '확인' }, options || {}));
+  }
+
+  function noticePrompt(options) {
+    return noticeDialog(Object.assign({ type: 'prompt', title: '보험브리핑', message: '', confirmLabel: '확인' }, options || {}));
+  }
+
+  function noticeToast(message) {
+    return noticeAlert(message, { compact: true });
+  }
+
   function redirectFromUrl() {
     try {
       return safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
@@ -99,7 +172,7 @@
       if (error) {
         try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
         if (error !== 'access_denied') {
-          alert('Google 로그인에 실패했습니다.\n\n같은 이메일이 이메일 코드 로그인으로 이미 가입돼 있으면 이메일 인증번호 로그인을 이용해 주세요.');
+          noticeAlert('Google 로그인에 실패했습니다.\n\n같은 이메일이 이메일 코드 로그인으로 이미 가입돼 있으면 이메일 인증번호 로그인을 이용해 주세요.', { title: 'Google 로그인 실패' });
         }
         return;
       }
@@ -489,6 +562,13 @@
     sendOtp: sendOtp,
     verifyOtp: verifyOtp
   };
+  window.InsuranceBriefingNotice = {
+    alert: noticeAlert,
+    confirm: noticeConfirm,
+    prompt: noticePrompt,
+    toast: noticeToast
+  };
+  window.toast = noticeToast;
 
   handleOAuthCallback();
 })();

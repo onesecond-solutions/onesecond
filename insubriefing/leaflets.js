@@ -64,6 +64,7 @@
     return '';
   }
   function showNotice(message) {
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') { window.InsuranceBriefingNotice.alert(message); return; }
     if (typeof window.toast === 'function') { window.toast(message); return; }
     var notice = document.createElement('div');
     notice.className = 'ib-leaflet-notice'; notice.setAttribute('role', 'status'); notice.textContent = message;
@@ -71,6 +72,9 @@
     window.setTimeout(function () { notice.remove(); }, 3200);
   }
   function confirmAction(title, message, confirmLabel, dangerous) {
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') {
+      return window.InsuranceBriefingNotice.confirm({ title: title, message: message, confirmLabel: confirmLabel || '확인', dangerous: !!dangerous });
+    }
     return new Promise(function (resolve) {
       var dialog = document.createElement('dialog');
       dialog.className = 'ib-confirm-dialog';

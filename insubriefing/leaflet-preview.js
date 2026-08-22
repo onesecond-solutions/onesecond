@@ -27,6 +27,14 @@
     }
   }
 
+  function showNotice(message) {
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') {
+      window.InsuranceBriefingNotice.alert(message);
+      return;
+    }
+    if (typeof window.toast === 'function') window.toast(message);
+  }
+
   function ensureOverlay() {
     if (document.getElementById('leaflet-preview')) return;
     var div = document.createElement('div');
@@ -232,11 +240,9 @@
       if (!navigator.clipboard || !window.ClipboardItem) throw new Error('clipboard');
       return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
     }).then(function () {
-      if (typeof window.toast === 'function') window.toast('복사했습니다. 카카오톡에 붙여넣으세요.');
-      else alert('복사했습니다. 카카오톡에 붙여넣으세요.');
+      showNotice('복사했습니다. 카카오톡에 붙여넣으세요.');
     }).catch(function () {
-      if (typeof window.toast === 'function') window.toast('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.');
-      else alert('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.');
+      showNotice('이 브라우저에서는 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.');
     });
   }
 
