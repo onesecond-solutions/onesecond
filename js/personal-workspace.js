@@ -872,6 +872,19 @@
     var action = event && event.event_type === 'insurance-age' && event.customer_id ? ' onclick="event.stopPropagation(); OSPersonalWorkspace.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
     return '<i class="' + calendarEventKind(event) + '"' + action + '>' + esc(event.title) + '</i>';
   }
+  function insuranceAgeSummaryChip(count, date) {
+    if (!count) return '';
+    return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기" onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + count + '명</i>';
+  }
+  function builtinCalendarChips(events, date) {
+    var insuranceAgeEvents = events.filter(function (event) { return event.event_type === 'insurance-age'; });
+    var otherBuiltIns = events.filter(function (event) { return event.event_type !== 'insurance-age'; });
+    if (!insuranceAgeEvents.length) return otherBuiltIns.slice(0, 2).map(builtinCalendarChip).join('');
+    if (!otherBuiltIns.length && insuranceAgeEvents.length <= 2) return insuranceAgeEvents.map(builtinCalendarChip).join('');
+    var chips = otherBuiltIns.slice(0, 1).map(builtinCalendarChip);
+    chips.push(insuranceAgeSummaryChip(insuranceAgeEvents.length, date));
+    return chips.join('');
+  }
   function calendarSpanBars(days, events, maxLanes) {
     var rangeStart = days[0], rangeEnd = days[days.length - 1], seen = {}, spans = [];
     events.forEach(function (event) {
@@ -911,7 +924,7 @@
       var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
       var cells = weekDays.map(function (key) {
         var d = parseDate(key), events = eventsFor(key), builtIns = events.filter(function (event) { return event.builtin; }), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
-        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + builtIns.slice(0, 2).map(builtinCalendarChip).join('') + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
+        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + builtinCalendarChips(builtIns, key) + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
       }).join('');
       var bars = weekSpans.map(function (sp) {
         var barStart = sp.start < weekStart ? weekStart : sp.start, barEnd = sp.end > weekEnd ? weekEnd : sp.end;
@@ -2702,6 +2715,7 @@
     renderContent(); setUrl(false);
   }
   function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
+  function openCalendarDay(date) { state.selectedDate = date; state.cursor = parseDate(date); state.calendarMode = 'day'; renderContent(); setUrl(false); }
   function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
   function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } openWorkspace(state.section, false); }
 
@@ -2730,7 +2744,7 @@
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
-    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
-    __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
+    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
+    __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
 })();
