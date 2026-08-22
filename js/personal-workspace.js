@@ -20,7 +20,7 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -29,6 +29,8 @@
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
+    strategyData: null, strategyLoading: false, strategyPool: 'all', strategyScope: 'all', strategyCoSel: null, strategyOpenMonths: {},
+    strategyCoNameQuery: '', strategyCoNameComposing: false, strategyCoNameTimer: 0,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {},
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -279,7 +281,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['assets', '▤', '자료'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['calendar', '▦', '캘린더']];
-    var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향']];
+    var refGroup = [['◫', '소식지', 'section:newsletters'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts'], ['↗', '영업방향', 'section:sales-strategy']];
     var toolGroup = [['◷', '보험연령표'], ['⌗', '계산기·변환기', CALC_TOOLS], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
@@ -1054,6 +1056,153 @@
     var ready = pdfUrl ? Promise.resolve(pdfUrl) : (row.source_path ? signStoragePath(row.source_path, 'newsletters') : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
     ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'newsletter', id: id }); }).catch(saveError);
   }
+  function loadStrategyData() {
+    if (state.strategyData || state.strategyLoading) return;
+    state.strategyLoading = true;
+    api('sales_strategy?status=eq.published&select=id,company,insurance_type,publish_year,publish_month,category,title,source_file_url,source_path,preview_pdf_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function (rows) {
+      state.strategyData = rows || []; state.strategyLoading = false;
+      if (state.section === 'sales-strategy') renderContent();
+    }).catch(function () { state.strategyLoading = false; state.strategyData = []; if (state.section === 'sales-strategy') renderContent(); });
+  }
+  function strategyCompanyStats() {
+    var map = {};
+    (state.strategyData || []).forEach(function (r) {
+      var name = String(r.company || '').trim() || '(회사 미상)';
+      if (!map[name]) map[name] = { name: name, sec: newsSecOf(r.insurance_type || name), count: 0 };
+      map[name].count++;
+    });
+    return Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return a.name.localeCompare(b.name, 'ko-KR'); });
+  }
+  function strategyQueryHit(name) {
+    var q = (state.strategyCoNameQuery || '').trim().toLowerCase();
+    return !q || String(name).toLowerCase().indexOf(q) >= 0;
+  }
+  function strategyPoolCompanies() {
+    var list = strategyCompanyStats().filter(function (c) { return strategyQueryHit(c.name); });
+    if (state.strategyPool !== 'all') list = list.filter(function (c) { return c.sec === state.strategyPool; });
+    return list;
+  }
+  function strategyRowsForPool() {
+    var wanted = {};
+    strategyPoolCompanies().forEach(function (c) { wanted[c.name] = true; });
+    return (state.strategyData || []).filter(function (r) { return wanted[String(r.company || '').trim() || '(회사 미상)']; });
+  }
+  function strategyLabel(row) {
+    return row.title || row.source_filename || '영업방향';
+  }
+  function strategyCardHtml(row) {
+    var label = newsMonthLabel(row), company = row.company || '회사 미상', title = strategyLabel(row);
+    return '<button type="button" class="pw-news-card" onclick="OSPersonalWorkspace.openStrategy(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-strategy-thumb="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label + ' ' + title) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
+  }
+  function strategyPoolTabsHtml() {
+    return '<div class="pw-nl-pool">' + [['all', '전체'], ['nonlife', '손해'], ['life', '생명']].map(function (p) {
+      return '<button type="button" class="' + (state.strategyPool === p[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterStrategyPool(\'' + p[0] + '\')">' + p[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  function strategySidebarHtml() {
+    var groups = state.strategyPool === 'all' ? [['손해보험', 'nonlife'], ['생명보험', 'life']] : state.strategyPool === 'nonlife' ? [['손해보험', 'nonlife']] : [['생명보험', 'life']];
+    var stats = strategyCompanyStats().filter(function (c) { return strategyQueryHit(c.name); });
+    var html = '';
+    groups.forEach(function (g) {
+      var arr = stats.filter(function (c) { return c.sec === g[1]; });
+      if (!arr.length) return;
+      html += '<div class="pw-nl-grouplabel">' + esc(g[0]) + '</div>';
+      html += arr.map(function (c) {
+        var on = state.strategyScope === 'co' && state.strategyCoSel === c.name;
+        return '<button type="button" class="pw-nl-co' + (on ? ' on' : '') + '" style="--cl:' + (c.sec === 'life' ? 'var(--t-uw)' : 'var(--warn)') + '" onclick="OSPersonalWorkspace.selectStrategyCompany(\'' + esc(jsString(c.name)) + '\')"><span class="dot"></span><span class="nm">' + esc(c.name) + '</span><span class="cnt">' + c.count + '</span></button>';
+      }).join('');
+    });
+    return html || '<div class="pw-empty">검색 결과 없음</div>';
+  }
+  function strategyScopeTabsHtml() {
+    return '<div class="pw-nl-scope">' + [['all', '전체 조망'], ['co', '회사별']].map(function (s) {
+      return '<button type="button" class="' + (state.strategyScope === s[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setStrategyScope(\'' + s[0] + '\')">' + s[1] + '</button>';
+    }).join('') + '</div><span class="pw-nl-hint">' + (state.strategyScope === 'all' ? '회사를 클릭하면 발행월별 영업자료로' : '좌측에서 다른 회사를 고를 수 있어요') + '</span>';
+  }
+  function strategyCountHtml() {
+    var cos = strategyPoolCompanies();
+    var total = cos.reduce(function (a, c) { return a + c.count; }, 0);
+    return '<div class="pw-nl-cnt">회사 <b>' + cos.length + '곳</b> · 영업자료 <b>' + total + '건</b></div>';
+  }
+  function strategyAllViewHtml() {
+    var rows = strategyRowsForPool();
+    if (!rows.length) return '<div class="pw-empty">영업방향 자료가 없습니다.</div>';
+    var monthMap = {}, order = [];
+    rows.forEach(function (r) {
+      var y = Number(r.publish_year), m = Number(r.publish_month);
+      var key = (y && m) ? (y + '|' + m) : 'unknown';
+      if (!monthMap[key]) { monthMap[key] = { y: y, m: m, items: [] }; order.push(key); }
+      monthMap[key].items.push(r);
+    });
+    order.sort(function (a, b) { if (a === 'unknown') return 1; if (b === 'unknown') return -1; return (monthMap[b].y * 12 + monthMap[b].m) - (monthMap[a].y * 12 + monthMap[a].m); });
+    var now = new Date(), curKey = now.getFullYear() + '|' + (now.getMonth() + 1);
+    var first = order[0], g0 = monthMap[first];
+    var t0 = first === 'unknown' ? '발행월 미상' : (g0.y + '년 ' + g0.m + '월');
+    var hk = first === curKey ? ('이번 달 · 새 영업자료 ' + g0.items.length + '건') : ('최신 발행 · ' + g0.items.length + '건');
+    var html = '<div class="pw-nl-hero"><div class="pw-nl-hero-hd"><h3>' + esc(t0) + '</h3><span class="k">' + esc(hk) + '</span></div><div class="pw-news-grid">' + g0.items.map(strategyCardHtml).join('') + '</div></div>';
+    if (order.length > 1) {
+      html += '<div class="pw-nl-past"><div class="pw-nl-past-hd">이전 발행월 · 클릭하면 펼쳐집니다</div>';
+      for (var i = 1; i < order.length; i++) {
+        var key = order[i], g = monthMap[key];
+        var title = key === 'unknown' ? '발행월 미상' : (g.y + '년 ' + g.m + '월');
+        var open = !!state.strategyOpenMonths[key];
+        html += '<button type="button" class="pw-nl-mrow' + (open ? ' open' : '') + '" onclick="OSPersonalWorkspace.toggleStrategyMonth(\'' + esc(key) + '\')"><span class="t">' + esc(title) + '</span><span class="badge">' + g.items.length + '건</span><span class="chev">›</span></button>';
+        if (open) html += '<div class="pw-nl-mbody open"><div class="pw-news-grid">' + g.items.map(strategyCardHtml).join('') + '</div></div>';
+      }
+      html += '</div>';
+    }
+    return html;
+  }
+  function strategyCoViewHtml() {
+    var companies = strategyPoolCompanies();
+    var sel = (state.strategyCoSel && companies.some(function (c) { return c.name === state.strategyCoSel; })) ? state.strategyCoSel : (companies[0] && companies[0].name);
+    if (!sel) return '<div class="pw-empty">회사가 없습니다.</div>';
+    state.strategyCoSel = sel;
+    var rows = (state.strategyData || []).filter(function (r) { return (String(r.company || '').trim() || '(회사 미상)') === sel; })
+      .slice().sort(function (a, b) { return (Number(b.publish_year) * 12 + Number(b.publish_month || 0)) - (Number(a.publish_year) * 12 + Number(a.publish_month || 0)); });
+    var sec = newsSecOf(rows[0] && rows[0].insurance_type || sel), secLb = sec === 'life' ? '생명보험' : '손해보험';
+    var latest = rows[0] ? (rows[0].publish_year + '.' + ('0' + rows[0].publish_month).slice(-2)) : '-';
+    var avatar = esc(sel.replace(/\s+/g, '').slice(0, 2));
+    var head = '<div class="pw-nl-cohead"><span class="pw-nl-avatar ' + (sec === 'life' ? 'l' : 's') + '">' + avatar + '</span><div class="info"><h3>' + esc(sel) + '</h3><div class="sub">' + secLb + ' · 최근 발행 ' + esc(latest) + '</div></div><span class="tot">총 <b>' + rows.length + '</b>건</span></div>';
+    var grid = rows.length ? '<div class="pw-news-grid">' + rows.map(strategyCardHtml).join('') + '</div>' : '<div class="pw-empty">영업방향 자료가 없습니다.</div>';
+    return head + grid;
+  }
+  function strategyHtml() {
+    if (!state.strategyData && !state.strategyLoading) loadStrategyData();
+    if (state.strategyLoading || !state.strategyData) {
+      return '<div class="pw-toolbar"><h2>영업방향</h2></div><div class="pw-empty">불러오는 중입니다…</div>';
+    }
+    var sidebar = '<aside class="pw-nl-side">' + strategyPoolTabsHtml() + '<div class="pw-nl-search"><input id="pw-strategyCo-name-input" type="text" placeholder="회사 검색" autocomplete="off" value="' + esc(state.strategyCoNameQuery || '') + '"></div><div class="pw-nl-colist">' + strategySidebarHtml() + '</div></aside>';
+    var main = '<div class="pw-nl-main"><div class="pw-nl-ctrl">' + strategyScopeTabsHtml() + '</div>' + strategyCountHtml() + (state.strategyScope === 'all' ? strategyAllViewHtml() : strategyCoViewHtml()) + '</div>';
+    return '<div class="pw-toolbar"><h2>영업방향</h2></div><div class="pw-nl-layout">' + sidebar + main + '</div>';
+  }
+  function filterStrategyPool(pool) {
+    state.strategyPool = pool;
+    if (state.strategyCoSel && pool !== 'all' && newsSecOf(state.strategyCoSel) !== pool) state.strategyCoSel = null;
+    renderContent();
+  }
+  function setStrategyScope(scope) { state.strategyScope = scope; renderContent(); }
+  function selectStrategyCompany(name) {
+    state.strategyCoSel = name; state.strategyScope = 'co';
+    var sec = newsSecOf(name);
+    if (state.strategyPool !== 'all' && state.strategyPool !== sec) state.strategyPool = sec;
+    renderContent();
+  }
+  function toggleStrategyMonth(key) { state.strategyOpenMonths[key] = !state.strategyOpenMonths[key]; renderContent(); }
+  function hydrateStrategyThumbs() {
+    document.querySelectorAll('#v-personal-workspace .pw-news-thumb img[data-strategy-thumb]').forEach(function (img) {
+      var path = img.getAttribute('data-strategy-thumb'); if (!path) return;
+      signStoragePath(path, 'newsletters').then(function (url) { img.src = url; }).catch(function () {});
+    });
+  }
+  function openStrategy(id) {
+    var row = (state.strategyData || []).find(function (r) { return String(r.id) === String(id); }); if (!row) return;
+    var name = row.source_filename || strategyLabel(row) || ((row.company || '영업방향') + '_' + newsMonthLabel(row) + '.pdf');
+    var directUrl = String(row.source_file_url || '').trim();
+    var previewPath = String(row.preview_pdf_path || row.source_path || '').trim();
+    var ready = directUrl ? Promise.resolve(directUrl) : (previewPath ? signStoragePath(previewPath, 'newsletters') : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
+    ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'sales-strategy', id: id }); }).catch(saveError);
+  }
   function archiveHtml() {
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
     return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
@@ -1073,6 +1222,7 @@
     if (state.section === 'payments') return paymentSectionHtml();
     if (state.section === 'scripts') return scriptsHtml();
     if (state.section === 'newsletters') return newslettersHtml();
+    if (state.section === 'sales-strategy') return strategyHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     return homeHtml();
@@ -1090,7 +1240,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -2291,6 +2441,7 @@
     openTool: openTool, openCarrierSystem: openCarrierSystem, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertDownload: imgConvertDownload, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
+    filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; renderShell(); }
