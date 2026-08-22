@@ -1,0 +1,113 @@
+/* insubriefing/workstation/m/workstation-mobile-library.css
+   워크스테이션 모바일 "자료" 화면 전용 (Phase 5, 2026-08-22, feat/workstation-mobile-library).
+   workstation-mobile.css(Phase 1) 톤을 그대로 확장 — 얇은 테두리 + 텍스트만, blur/무거운 box-shadow 금지.
+   색·크기는 css/tokens-v2.css·css/app-core.css의 커스텀 프로퍼티만 사용(하드코딩 금지).
+   코상무 확정 방향: "정리"보다 "찾아서 보여주기" — 검색창 + 카드를 탭하면 같은 화면 안에서 펼쳐지는 미리보기. */
+
+.wsm-lib-search-wrap {
+  margin-bottom: 4px;
+}
+
+.wsm-lib-search {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s1);
+  color: var(--tp);
+  font-size: var(--fs-body, 14px);
+}
+.wsm-lib-search:focus {
+  outline: none;
+  border-color: var(--ac);
+}
+
+.wsm-lib-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.wsm-lib-card {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.wsm-lib-card:active { border-color: var(--ac); }
+.wsm-lib-item.is-open .wsm-lib-card {
+  border-color: var(--ac);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.wsm-lib-kind {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: var(--fs-caption, 12px);
+  font-weight: 600;
+  color: var(--ac);
+}
+
+/* 카드를 탭하면 별도 페이지 이동 없이 같은 화면 안에서 펼쳐지는 상세 영역(코상무 확정 방향). */
+.wsm-lib-detail {
+  padding: 14px;
+  border: 1px solid var(--ac);
+  border-top: none;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.wsm-lib-open-link,
+.wsm-lib-empty-note {
+  display: block;
+  font-size: var(--fs-body, 14px);
+}
+.wsm-lib-open-link {
+  color: var(--ac);
+  text-decoration: underline;
+}
+.wsm-lib-empty-note {
+  margin: 0;
+  color: var(--tf);
+}
+
+/* 리치 텍스트 본문 — js/personal-workspace.js의 libraryDirectory()가 데스크탑 showAsset()과 동일하게
+   linkifyRich()/sanitizeRich()로 정화해 돌려준 안전한 HTML만 여기 들어온다(이 파일에서 별도 sanitize 안 함).
+   저장 시점에 이미지가 포함돼도 서명 URL을 이 화면에서 새로 발급하지 않아 src가 비어 있으므로,
+   깨진 이미지 아이콘 대신 통째로 숨겨 화면을 정리한다(대신 "PC 버전에서 확인" 문구 없이도 텍스트 본문은
+   그대로 보인다 — 사진 없는 본문이 대부분이라 여기서 별도 안내문 없이 이미지만 숨김). */
+.wsm-lib-body-rich {
+  font-size: var(--fs-body, 14px);
+  line-height: var(--lh-base, 1.6);
+  color: var(--tp);
+  overflow-wrap: anywhere;
+}
+.wsm-lib-body-rich img { display: none; }
+.wsm-lib-body-rich h2 { margin: .8em 0 .35em; font-size: 1.25em; }
+.wsm-lib-body-rich h3 { margin: .7em 0 .3em; font-size: 1.1em; }
+.wsm-lib-body-rich p { margin: .55em 0; }
+.wsm-lib-body-rich p:first-child { margin-top: 0; }
+.wsm-lib-body-rich p:last-child { margin-bottom: 0; }
+.wsm-lib-body-rich blockquote {
+  margin: .8em 0;
+  padding: 8px 14px;
+  border-left: 3px solid var(--ac);
+  background: var(--s2);
+  color: var(--ts);
+}
+.wsm-lib-body-rich ul,
+.wsm-lib-body-rich ol { padding-left: 1.4em; }
+.wsm-lib-body-rich a { color: var(--ac); overflow-wrap: anywhere; }
+
+.wsm-lib-feed-card {
+  display: block;
+  text-decoration: none;
+}
+.wsm-lib-feed-card:active { border-color: var(--ac); }
+
+.wsm-loadmore {
+  width: 100%;
+  justify-content: center;
+}

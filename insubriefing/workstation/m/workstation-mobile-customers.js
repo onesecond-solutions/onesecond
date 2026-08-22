@@ -123,6 +123,7 @@
       + '<div class="wsm-header-actions">'
       + '<a class="wsm-tab-link" href="./index.html">오늘</a>'
       + '<a class="wsm-tab-link" href="./calendar.html">캘린더</a>'
+      + '<a class="wsm-tab-link" href="./library.html">자료</a>'
       + '<a class="wsm-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC 버전으로 보기</a>'
       + '</div></header>';
   }
