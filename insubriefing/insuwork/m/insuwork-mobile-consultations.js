@@ -13,18 +13,8 @@
 (function () {
   'use strict';
 
-  // 2026-08-23 대표 승인 — js/insuwork.js의 ALLOWED_IDS와 동일 목록(실제 자료가 있는 사용자만)
-  var ALLOWED_IDS = [
-    '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd', 'ce381ed4-05e3-41cf-8546-9115abe89ec9',
-    'fee71d85-adc4-4db6-81b0-152f07add62a', '583cbad5-f248-4fd9-8693-5c3a79ba9487',
-    '6f5aaa10-be20-4274-a190-53ce38ed3850', '12c8551b-4622-4fe4-9dba-d77fef8504bf',
-    'efe26e96-de4e-4613-9625-7c8193d39a49', 'd19dcb63-3e28-4559-b498-56b19f9c94f2',
-    'e10f9713-a199-47ac-9040-eb8007824cda', '8028a0e9-ec19-408b-8a82-007732fbed2b',
-    'bb49f5b9-e620-41d2-bee5-89329cbc5d7d', '10a859ec-8dc6-43bd-bc7b-09e3f16c8248',
-    '49343788-b3e1-4666-b95f-211ac6b3f878', 'de7ba389-901a-426a-9828-6afb33a16ecc',
-    '64d0e07f-ec84-430b-b2ea-b7213e857ace', '6f7fbad3-fe3f-416c-a077-9e36be425d5c',
-    'ba679086-dc1e-4a99-9245-9f4cf8222455'
-  ];
+  // 2026-08-23 대표 승인 — 고정 17인 파일럿 허용목록 게이트 폐지, 인증된 사용자 전체로 오픈
+  // (이관 동의 여부는 checkMigrationChoiceThenStart()가 별도로 확인한다).
   var ROOT_SELECTOR = '#iwm-root';
   var PAGE_SIZE = 20;
   var PREVIEW_LEN = 60;
@@ -56,9 +46,9 @@
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
   /* 게이트 = insuwork-mobile.js(Phase 1)/customers.js의 allowed()/authenticated() 패턴을 그대로 복제.
-     게이트(ALLOWED_IDS, 실제 자료가 있는 사용자만)를 그대로 상속한다. */
+     게이트를 그대로 상속하되 고정 허용목록은 2026-08-23 폐지됐다(인증된 사용자 전체 허용). */
   function allowed() {
-    return isLocalHost() || ALLOWED_IDS.indexOf(currentUserId()) >= 0;
+    return isLocalHost() || (authenticated() && !!currentUserId());
   }
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
@@ -108,6 +98,36 @@
       + '<p>이 계정은 아직 이용 대상이 아닙니다.</p>'
       + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
+  }
+
+  /* 2026-08-23 대표 승인 — 데스크톱(js/insuwork.js STANDALONE 경로)에만 이관 동의 팝업(migrate-choice)이
+     뜬다. 모바일 페이지도 data-insuwork="true"라 STANDALONE 자체는 true지만, 팝업 로직이 붙어 있는
+     #v-insuwork 컨테이너가 모바일 HTML에는 없어(#iwm-root만 있음) 그 경로는 조용히 no-op된다. 그래서
+     모바일 5개 파일에 각각 팝업/RPC 흐름을 통째로 복제하는 대신, 가벼운 안내만 둔다: allowed() 통과 후
+     insuwork_migration_choices에 본인 row가 있는지만 확인하고, 없으면(=아직 PC에서 결정 안 함) 데스크톱
+     안내 화면만 보여준다(가져오기/새로 시작하기 버튼은 만들지 않음 — PC에서 한 번 결정하면 그 다음부터는
+     모바일에서도 row가 조회되어 정상 진행). 조회 자체가 실패(DB PR 미반영 등)하면 fail-open으로 진행한다. */
+  function renderMigrationPendingGate() {
+    var view = root(); if (!view) return;
+    view.innerHTML = '<div class="iwm-gate">'
+      + '<strong>PC에서 먼저 설정해 주세요</strong>'
+      + '<p>PC(보험워크)에서 먼저 한 번 설정을 완료해 주세요.</p>'
+      + '<a class="iwm-link" href="/insubriefing/insuwork/">PC(보험워크) 열기</a>'
+      + '</div>';
+  }
+  function checkMigrationChoiceThenStart() {
+    var id = currentUserId();
+    if (!id || !window.db || !window.db.fetch) { startDataFlow(); return; }
+    window.db.fetch('/rest/v1/insuwork_migration_choices?user_id=eq.' + encodeURIComponent(id) + '&select=choice&limit=1').then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    }).then(function (rows) {
+      if (Array.isArray(rows) && rows.length) { startDataFlow(); return; }
+      renderMigrationPendingGate();
+    }).catch(function (error) {
+      console.warn('Migration choice check failed (계속 진행)', error);
+      startDataFlow();
+    });
   }
 
   function renderLoading() {
@@ -353,7 +373,7 @@
     document.addEventListener('appstate:ready', function onReady() {
       document.removeEventListener('appstate:ready', onReady);
       if (!allowed()) { renderDeniedGate(); return; }
-      startDataFlow();
+      checkMigrationChoiceThenStart();
     });
     if (window.Auth && typeof window.Auth.init === 'function') {
       window.Auth.init().catch(function () { renderLoginGate(); });
