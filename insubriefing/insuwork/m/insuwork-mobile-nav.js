@@ -1,10 +1,10 @@
-/* insubriefing/workstation/m/workstation-mobile-nav.js
-   워크스테이션 모바일 공통 하단 탭바 (feat/workstation-mobile-bottom-nav, 2026-08-22).
+/* insubriefing/insuwork/m/insuwork-mobile-nav.js
+   보험워크 모바일 공통 하단 탭바 (feat/workstation-mobile-bottom-nav, 2026-08-22).
    대표 요청 — 상단 텍스트 탭 링크를 다른 모바일 앱들처럼 하단 고정 아이콘 탭바로 전환.
    상태 없는 순수 렌더 함수 하나만 제공한다. 4개 화면(오늘/캘린더/고객/자료)이 각자 독립 정적 페이지로
    운영되는 기존 방식(게이트 로직도 4개 파일에 거의 동일하게 복제)과 같은 맥락으로, 이 파일은 게이트·데이터
    로직은 전혀 건드리지 않고 "하단 탭바 HTML을 그려주는 것"만 공통화한다.
-   네임스페이스 = OSWorkstationMobileNav (다른 OSWorkstationMobile* 네임스페이스와 충돌 없음). */
+   네임스페이스 = OSInsuworkMobileNav (다른 OSInsuworkMobile* 네임스페이스와 충돌 없음). */
 (function () {
   'use strict';
 
@@ -32,8 +32,8 @@
         + '<span class="wsm-bottom-nav-label">' + item.label + '</span>'
         + '</a>';
     }).join('');
-    return '<nav class="wsm-bottom-nav" aria-label="워크스테이션 하단 메뉴">' + itemsHtml + '</nav>';
+    return '<nav class="wsm-bottom-nav" aria-label="보험워크 하단 메뉴">' + itemsHtml + '</nav>';
   }
 
-  window.OSWorkstationMobileNav = { render: render };
+  window.OSInsuworkMobileNav = { render: render };
 })();

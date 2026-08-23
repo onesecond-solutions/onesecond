@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko" data-insuwork="true">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#f8fafd">
+  <title>보험워크 | 보험브리핑</title>
+  <link rel="icon" type="image/png" sizes="512x512" href="/insubriefing/assets/brand/insurance-briefing-favicon.png?v=20260822kimfavicon">
+  <link rel="shortcut icon" type="image/png" href="/insubriefing/assets/brand/insurance-briefing-favicon.png?v=20260822kimfavicon">
+  <link rel="apple-touch-icon" href="/insubriefing/assets/brand/insurance-briefing-favicon.png?v=20260822kimfavicon">
+  <link rel="stylesheet" href="/css/app-core.css?v=20260708">
+  <link rel="stylesheet" href="/css/tokens-v2.css?v=20260817darkmode">
+  <link rel="stylesheet" href="/css/personal-workspace.css?v=20260822monthhover">
+  <link rel="stylesheet" href="./insuwork.css?v=20260822monthhover">
+  <link rel="stylesheet" href="../account-menu.css?v=20260821wide">
+  <link rel="stylesheet" href="../auth.css?v=20260822ibsignupco">
+  <script src="/js/db.js?v=20260822ibnotice"></script>
+  <script src="/js/auth.js?v=20260822ibnotice"></script>
+  <script defer src="/js/insuwork-carriers.js?v=20260821carrierhome"></script>
+  <script defer src="../auth.js?v=20260822ibemailotp"></script>
+  <script defer src="/js/personal-workspace.js?v=20260822monthhover"></script>
+  <script defer src="./insuwork.js?v=20260821namsan"></script>
+  <script defer src="../weather-widget.js?v=20260821weather"></script>
+</head>
+<body class="ws-page">
+  <header class="ws-header">
+    <div class="ws-identity">
+      <a class="ws-brand ws-brand-logo-only" href="/insubriefing/" aria-label="보험브리핑 홈"><img class="ws-brand-logo" src="/insubriefing/assets/brand/insurance-briefing-logo-original.png?v=20260822kimlogo2" alt="보험브리핑"></a>
+      <span class="ws-divider" aria-hidden="true"></span>
+      <strong class="ws-product">보험워크</strong>
+    </div>
+    <label class="ws-global-search">⌕<input id="pw-search-input" type="search" placeholder="내 자료와 고객 검색" autocomplete="off" aria-label="내 자료와 고객 검색"></label>
+    <div class="ws-header-actions">
+      <a class="ws-mobile-link" href="/insubriefing/insuwork/m/">모바일 화면</a>
+      <div class="ws-account" id="ws-account"></div>
+    </div>
+  </header>
+  <main class="ws-main body">
+    <section id="v-personal-workspace" class="view on" aria-label="임태성 보험워크">
+      <div class="pw-access"><strong>보험워크를 준비하고 있습니다.</strong><p>로그인 상태를 확인하는 중입니다.</p></div>
+    </section>
+  </main>
+  <dialog class="ws-profile-dialog" id="ws-profile-dialog" aria-labelledby="ws-profile-title">
+    <form method="dialog" id="ws-profile-form">
+      <div class="ws-profile-head">
+        <div><strong id="ws-profile-title">개인정보 수정</strong><p>보험워크에서 사용할 기본 정보를 관리합니다.</p></div>
+        <button type="button" class="ws-profile-close" aria-label="닫기">×</button>
+      </div>
+      <label>이름<input type="text" id="ws-profile-name" autocomplete="name" maxlength="30" required></label>
+      <label>연락처<input type="tel" id="ws-profile-phone" autocomplete="tel" maxlength="20"></label>
+      <p class="ws-profile-message" id="ws-profile-message" role="status"></p>
+      <div class="ws-profile-actions"><button type="button" class="ws-profile-cancel">취소</button><button type="submit" class="ws-profile-save">저장</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

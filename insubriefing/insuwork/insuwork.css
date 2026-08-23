@@ -20,7 +20,7 @@ body.ws-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linea
 body:not(.is-personal-workspace) .ws-global-search{visibility:hidden}
 /* fix/workstation-mobile-bugs 버그7 — 모바일 유도 배너(아래 .ws-mobile-banner)를 한 번 닫으면 다시는 모바일
    화면으로 갈 방법이 없던 문제. 배너 닫힘 여부와 무관하게 헤더에 상시 노출되는 작은 링크를 추가한다.
-   기존 .ws-account를 감싸는 래퍼만 새로 추가 — .ws-account 자체 렌더 로직(workstation.js renderAccount)은
+   기존 .ws-account를 감싸는 래퍼만 새로 추가 — .ws-account 자체 렌더 로직(insuwork.js renderAccount)은
    건드리지 않는다. 톤 = 얇은 테두리 + 텍스트만(대표 확정 톤), blur/무거운 그림자 없음. */
 .ws-header-actions{display:flex;flex-shrink:0;align-items:center;gap:10px}
 .ws-mobile-link{display:inline-flex;align-items:center;height:34px;padding:0 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);font-size:var(--fs-meta);text-decoration:none;white-space:nowrap}

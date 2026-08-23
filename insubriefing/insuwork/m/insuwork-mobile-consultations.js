@@ -1,11 +1,11 @@
-/* insubriefing/workstation/m/workstation-mobile-consultations.js
-   워크스테이션 모바일 "상담" 화면 전용 렌더러 (feat/workstation-mobile-consultations-list, 2026-08-22, 대표 직접 요청).
+/* insubriefing/insuwork/m/insuwork-mobile-consultations.js
+   보험워크 모바일 "상담" 화면 전용 렌더러 (feat/workstation-mobile-consultations-list, 2026-08-22, 대표 직접 요청).
    지금까지 상담 이력은 고객 상세 화면 안에서 그 고객 것만 볼 수 있었다(customers.js). PC 데스크탑에는 전체
    고객을 가로지르는 "상담관리" 화면이 있는데 모바일엔 없어서 그 격차를 메우는 화면이다.
    데이터/로직은 100% /js/personal-workspace.js 재사용 — consultationsDirectory() 읽기 전용 조회(이번 작업에서
    새로 추가) + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의
    렌더/저장 함수 본문은 호출하지 않는다. 조회 전용이다(쓰기 기능 없음 — 상담 등록/수정/삭제는 범위 밖).
-   네임스페이스 = OSWorkstationMobileConsultations (다른 OSWorkstationMobile* 네임스페이스와 충돌 없음).
+   네임스페이스 = OSInsuworkMobileConsultations (다른 OSInsuworkMobile* 네임스페이스와 충돌 없음).
 
    화면 구조: 전체 상담을 최신순으로 카드 나열 + 상태(channel) 필터 칩 + 카드 탭하면 같은 화면 안에서
    펼쳐 전체 메모를 보여주고(별도 페이지 이동 없음) "이 고객 상세로 이동" 링크로 customers.html 이동.
@@ -44,7 +44,7 @@
   function isLocalHost() {
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
-  /* 게이트 = workstation-mobile.js(Phase 1)/customers.js의 allowed()/authenticated() 패턴을 그대로 복제.
+  /* 게이트 = insuwork-mobile.js(Phase 1)/customers.js의 allowed()/authenticated() 패턴을 그대로 복제.
      임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
   function allowed() {
     return isLocalHost() || currentUserId() === PILOT_ID;
@@ -59,7 +59,7 @@
     return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
   }
   /* customers.js/library.js와 동일 로직 복제(모바일 화면 로그아웃 진입 경로). insubriefing/hub.js의
-     logoutAdvisor()·insubriefing/workstation/workstation.js의 logout()이 지우는 storage key 4개를 그대로
+     logoutAdvisor()·insubriefing/insuwork/insuwork.js의 logout()이 지우는 storage key 4개를 그대로
      지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어 동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
     ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) {
@@ -72,16 +72,16 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/m/consultations.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/consultations.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2Fm%2Fconsultations.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Fconsultations.html';
   }
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 로그인이 필요합니다.</strong>'
+      + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 상담 목록을 확인할 수 있습니다.</p>'
       + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
@@ -93,7 +93,7 @@
   function renderDeniedGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 준비 중</strong>'
+      + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
@@ -114,7 +114,7 @@
       + '</div>'
       + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
       + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/workstation/?view=personal-workspace&section=consultations">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=personal-workspace&section=consultations">PC 버전으로 보기</a>'
       + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
@@ -149,7 +149,7 @@
   }
 
   function bottomNavHtml() {
-    return window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('consultations') : '';
+    return window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('consultations') : '';
   }
 
   function emptyHtml(message) {
@@ -351,6 +351,6 @@
     }
   }
 
-  window.OSWorkstationMobileConsultations = { boot: boot };
+  window.OSInsuworkMobileConsultations = { boot: boot };
   window.addEventListener('load', function () { window.setTimeout(boot, 50); });
 })();
