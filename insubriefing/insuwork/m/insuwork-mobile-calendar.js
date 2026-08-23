@@ -1,7 +1,7 @@
 /* insubriefing/insuwork/m/insuwork-mobile-calendar.js
    보험워크 모바일 "캘린더" 화면 전용 렌더러 (Phase 2, 2026-08-22, feat/workstation-mobile-calendar).
-   데이터/로직은 100% /js/personal-workspace.js 재사용(eventsFor/eventsInRange 읽기 전용 조회 + reload()로
-   기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의 렌더 함수는 호출하지 않는다.
+   데이터/로직은 100% /js/insuwork.js 재사용(eventsFor/eventsInRange 읽기 전용 조회 + reload()로
+   기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — insuwork.js의 렌더 함수는 호출하지 않는다.
    네임스페이스 = OSInsuworkMobileCalendar (OSInsuworkMobile과 충돌 없음).
    코상무 확정 방향: 모바일 월간 그리드는 만들지 않는다. 오늘 / 이번 주 / 일정 목록(리스트형)이 주력이다. */
 (function () {
@@ -140,7 +140,7 @@
   }
 
   function todaySectionHtml(todayDate) {
-    var events = typeof window.OSPersonalWorkspace.eventsFor === 'function' ? window.OSPersonalWorkspace.eventsFor(todayDate) : [];
+    var events = typeof window.OSInsuwork.eventsFor === 'function' ? window.OSInsuwork.eventsFor(todayDate) : [];
     if (!events.length) return sectionHtml('오늘', emptyHtml('오늘 일정이 없습니다.'));
     var body = '<div class="wsm-list">' + events.map(dayEventCardHtml).join('') + '</div>';
     return sectionHtml('오늘', body);
@@ -150,7 +150,7 @@
     var days = [];
     for (var i = 0; i < WEEK_DAYS; i++) days.push(addDays(todayDate, i));
     var body = '<div class="wsm-week">' + days.map(function (dateStr) {
-      var events = typeof window.OSPersonalWorkspace.eventsFor === 'function' ? window.OSPersonalWorkspace.eventsFor(dateStr) : [];
+      var events = typeof window.OSInsuwork.eventsFor === 'function' ? window.OSInsuwork.eventsFor(dateStr) : [];
       var inner = events.length
         ? '<div class="wsm-list">' + events.map(dayEventCardHtml).join('') + '</div>'
         : '<div class="wsm-empty wsm-empty-compact">일정 없음</div>';
@@ -165,8 +165,8 @@
   function upcomingSectionHtml(todayDate) {
     var listStart = addDays(todayDate, WEEK_DAYS);
     var listEnd = addDays(listStart, LIST_RANGE_DAYS - 1);
-    var all = typeof window.OSPersonalWorkspace.eventsInRange === 'function'
-      ? window.OSPersonalWorkspace.eventsInRange(listStart, listEnd) : [];
+    var all = typeof window.OSInsuwork.eventsInRange === 'function'
+      ? window.OSInsuwork.eventsInRange(listStart, listEnd) : [];
     if (!all.length) return sectionHtml('일정 목록', emptyHtml('이번 주 이후 예정된 일정이 없습니다.'));
     var visible = all.slice(0, state.listRenderLimit);
     var body = '<div class="wsm-list">' + visible.map(listEventCardHtml).join('')
@@ -205,11 +205,11 @@
 
   var lastRenderedJson = '';
   function renderCalendar() {
-    if (!window.OSPersonalWorkspace) return;
+    if (!window.OSInsuwork) return;
     var todayDate = ymd(new Date());
     /* 렌더 스킵 판정용 스냅샷: 오늘~+37일 범위 이벤트를 통째 직렬화(페이지네이션 상태는 별도 비교) */
-    var snapshotEvents = typeof window.OSPersonalWorkspace.eventsInRange === 'function'
-      ? window.OSPersonalWorkspace.eventsInRange(todayDate, addDays(todayDate, WEEK_DAYS + LIST_RANGE_DAYS)) : [];
+    var snapshotEvents = typeof window.OSInsuwork.eventsInRange === 'function'
+      ? window.OSInsuwork.eventsInRange(todayDate, addDays(todayDate, WEEK_DAYS + LIST_RANGE_DAYS)) : [];
     var json = JSON.stringify({ today: todayDate, limit: state.listRenderLimit, events: snapshotEvents });
     if (json === lastRenderedJson) return;
     lastRenderedJson = json;
@@ -224,7 +224,7 @@
       + '</div>'
       + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
       + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=personal-workspace&section=calendar&mode=month">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">PC 버전으로 보기</a>'
       + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>'
@@ -255,8 +255,8 @@
 
   function startDataFlow() {
     renderLoading();
-    if (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.reload === 'function') {
-      window.OSPersonalWorkspace.reload();
+    if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
+      window.OSInsuwork.reload();
     }
     pollAndRender(0);
   }
