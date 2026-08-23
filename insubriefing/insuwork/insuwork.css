@@ -1,46 +1,70 @@
-html,body.ws-page{min-height:100%;height:100%;overflow:hidden}
-body.ws-page{position:relative;display:grid;grid-template-rows:64px minmax(0,1fr);background:var(--bg)}
-body.ws-page:before{content:"";position:fixed;z-index:-2;inset:0;background-image:url("../assets/generated/briefing-toss-hero.webp");background-position:center;background-size:cover;transform:scale(1.01)}
-body.ws-page.ws-bg-namsan:before{background-image:url("../assets/generated/namsan-sunny.webp")}
-body.ws-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--s1) 12%,transparent),color-mix(in srgb,var(--s1) 4%,transparent))}
-.ws-header{position:relative;z-index:100;display:flex;overflow:visible;align-items:center;justify-content:space-between;gap:28px;padding:0 clamp(16px,3vw,32px);border-bottom:1px solid color-mix(in srgb,var(--s1) 58%,transparent);background:color-mix(in srgb,var(--s1) 62%,transparent);box-shadow:0 1px 18px color-mix(in srgb,var(--tp) 8%,transparent);backdrop-filter:blur(14px) saturate(112%);-webkit-backdrop-filter:blur(14px) saturate(112%)}
-.ws-identity{display:flex;align-items:center;gap:14px;min-width:0}
-.ws-brand{display:flex;align-items:center;gap:10px;color:var(--tp);text-decoration:none}
-.ws-brand span{display:grid;width:34px;height:34px;place-items:center;border-radius:var(--radius-sm);background:var(--ac);color:var(--s1);font-weight:800}
-.ws-brand strong{font-size:var(--fs-title-sm)}
-.ws-brand-logo-only{display:inline-flex;align-items:center;gap:0;min-width:0}
-.ws-brand-logo{display:block;width:auto;height:50px;max-width:318px;object-fit:contain}
-.ws-divider{width:1px;height:20px;background:var(--bd);flex-shrink:0}
-/* fix/workstation-mobile-autoredirect 문제A — PR #1799이 .ws-header-actions에 "모바일 화면" 링크를
-   추가하면서 auto 폭 컬럼이 넓어져, 옆 브랜드명(.ws-product)이 밀리면 기본 word-break(CJK는 글자
+/* ── 보험워크 전용 웜톤 팔레트 (2026-08-23, 대표 확정) — 사이트 공용 토큰(tokens-v2.css)은 무변경,
+   여기 insuwork 안에서만 재정의한다. 인디고 계열 --ac를 브라스골드로, 화이트는 종이(paper) 톤,
+   다크는 웜차콜 톤으로 교체 — 딥블루/딥퍼플 없이도 흔한 SaaS 인상에서 벗어나는 게 목적. */
+html[data-theme="light"] body.iw-page{
+  --bg:#FAF7F0; --s1:#FFFFFF; --s2:#F3EEE1; --sh:#EFE9DB; --bd:#E7DFCC;
+  --tp:#1E1B15; --ts:#6B6656; --tf:#98917C; --bodytx:#3A362B;
+  --ac:#A9812E; --ach:#C79A42; --info:#A9812E;
+  --sh-sm:0 1px 2px rgba(30,25,15,.05);
+  --sh-md:0 6px 18px rgba(30,25,15,.08);
+  --sh-lg:0 16px 40px rgba(30,25,15,.14);
+}
+html[data-theme="dark"] body.iw-page{
+  --bg:#1A1712; --s1:#221E17; --s2:#2A251C; --sh:#322C22; --bd:#3A3226;
+  --tp:#EDE6D8; --ts:#B3A88E; --tf:#7D7360; --bodytx:#D8CFBC;
+  --ac:#D9B568; --ach:#E8C67E; --info:#D9B568;
+  --sh-sm:0 1px 2px rgba(0,0,0,.35);
+  --sh-md:0 8px 22px rgba(0,0,0,.4);
+  --sh-lg:0 18px 44px rgba(0,0,0,.5);
+}
+
+/* ── 배경모드/테마 전환 시 부드러운 전환 (2026-08-23) — prefers-reduced-motion 존중 ── */
+body.iw-page,#v-insuwork,#v-insuwork .iw-panel,#v-insuwork .iw-main,#v-insuwork .iw-stat{transition:background-color .22s ease-out,border-color .22s ease-out,color .22s ease-out}
+@media(prefers-reduced-motion:reduce){body.iw-page,#v-insuwork,#v-insuwork .iw-panel,#v-insuwork .iw-main,#v-insuwork .iw-stat{transition:none}}
+
+html,body.iw-page{min-height:100%;height:100%;overflow:hidden}
+body.iw-page{position:relative;display:grid;grid-template-rows:64px minmax(0,1fr);background:var(--bg)}
+body.iw-page:before{content:"";position:fixed;z-index:-2;inset:0;background-image:url("../assets/generated/briefing-toss-hero.webp");background-position:center;background-size:cover;transform:scale(1.01)}
+body.iw-page.iw-bg-namsan:before{background-image:url("../assets/generated/namsan-sunny.webp")}
+body.iw-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--s1) 12%,transparent),color-mix(in srgb,var(--s1) 4%,transparent))}
+.iw-header{position:relative;z-index:100;display:flex;overflow:visible;align-items:center;justify-content:space-between;gap:28px;padding:0 clamp(16px,3vw,32px);border-bottom:1px solid color-mix(in srgb,var(--s1) 58%,transparent);background:color-mix(in srgb,var(--s1) 62%,transparent);box-shadow:0 1px 18px color-mix(in srgb,var(--tp) 8%,transparent);backdrop-filter:blur(14px) saturate(112%);-webkit-backdrop-filter:blur(14px) saturate(112%)}
+.iw-identity{display:flex;align-items:center;gap:14px;min-width:0}
+.iw-brand{display:flex;align-items:center;gap:10px;color:var(--tp);text-decoration:none}
+.iw-brand span{display:grid;width:34px;height:34px;place-items:center;border-radius:var(--radius-sm);background:var(--ac);color:var(--s1);font-weight:800}
+.iw-brand strong{font-size:var(--fs-title-sm)}
+.iw-brand-logo-only{display:inline-flex;align-items:center;gap:0;min-width:0}
+.iw-brand-logo{display:block;width:auto;height:50px;max-width:318px;object-fit:contain}
+.iw-divider{width:1px;height:20px;background:var(--bd);flex-shrink:0}
+/* fix/workstation-mobile-autoredirect 문제A — PR #1799이 .iw-header-actions에 "모바일 화면" 링크를
+   추가하면서 auto 폭 컬럼이 넓어져, 옆 브랜드명(.iw-product)이 밀리면 기본 word-break(CJK는 글자
    단위로 줄바꿈 허용)로 인해 "워크스테 / 이션"처럼 줄바꿈되던 문제. 줄바꿈 대신 말줄임으로 흡수. */
-.ws-product{overflow:hidden;min-width:0;color:var(--tp);font-size:var(--fs-body);font-weight:var(--fw-medium);white-space:nowrap;text-overflow:ellipsis}
-.ws-global-search{position:absolute;left:50%;display:flex;width:min(560px,42vw);height:42px;align-items:center;gap:8px;padding:0 16px;border:1px solid color-mix(in srgb,var(--bd) 72%,transparent);border-radius:var(--radius-full);background:color-mix(in srgb,var(--s1) 62%,transparent);color:var(--ts);transform:translateX(-50%)}
-.ws-global-search input{width:100%;border:0;outline:0;background:transparent;color:var(--tp);font:inherit}
-body:not(.is-insuwork) .ws-global-search{visibility:hidden}
-/* fix/workstation-mobile-bugs 버그7 — 모바일 유도 배너(아래 .ws-mobile-banner)를 한 번 닫으면 다시는 모바일
+.iw-product{overflow:hidden;min-width:0;color:var(--tp);font-size:var(--fs-body);font-weight:var(--fw-medium);white-space:nowrap;text-overflow:ellipsis}
+.iw-global-search{position:absolute;left:50%;display:flex;width:min(560px,42vw);height:42px;align-items:center;gap:8px;padding:0 16px;border:1px solid color-mix(in srgb,var(--bd) 72%,transparent);border-radius:var(--radius-full);background:color-mix(in srgb,var(--s1) 62%,transparent);color:var(--ts);transform:translateX(-50%)}
+.iw-global-search input{width:100%;border:0;outline:0;background:transparent;color:var(--tp);font:inherit}
+body:not(.is-insuwork) .iw-global-search{visibility:hidden}
+/* fix/workstation-mobile-bugs 버그7 — 모바일 유도 배너(아래 .iw-mobile-banner)를 한 번 닫으면 다시는 모바일
    화면으로 갈 방법이 없던 문제. 배너 닫힘 여부와 무관하게 헤더에 상시 노출되는 작은 링크를 추가한다.
-   기존 .ws-account를 감싸는 래퍼만 새로 추가 — .ws-account 자체 렌더 로직(insuwork.js renderAccount)은
+   기존 .iw-account를 감싸는 래퍼만 새로 추가 — .iw-account 자체 렌더 로직(insuwork.js renderAccount)은
    건드리지 않는다. 톤 = 얇은 테두리 + 텍스트만(대표 확정 톤), blur/무거운 그림자 없음. */
-.ws-header-actions{display:flex;flex-shrink:0;align-items:center;gap:10px}
-.ws-mobile-link{display:inline-flex;align-items:center;height:34px;padding:0 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);font-size:var(--fs-meta);text-decoration:none;white-space:nowrap}
-.ws-mobile-link:hover{color:var(--ac);border-color:var(--ac)}
-.ws-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
-.ws-profile-dialog::backdrop{background:color-mix(in srgb,var(--tp) 42%,transparent);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-.ws-profile-dialog form{display:grid;gap:18px;padding:24px}
-.ws-profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.ws-profile-head strong{font-size:var(--fs-title-sm)}
-.ws-profile-head p{margin:6px 0 0;color:var(--ts);font-size:var(--fs-meta)}
-.ws-profile-dialog label{display:grid;gap:8px;color:var(--ts);font-size:var(--fs-meta);font-weight:var(--fw-medium)}
-.ws-profile-dialog input{min-height:44px;padding:0 13px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}
-.ws-profile-close{width:34px;height:34px;border:0;border-radius:var(--radius-full);background:var(--s2);color:var(--tp);font-size:var(--fs-xl);cursor:pointer}
-.ws-profile-message{min-height:20px;margin:0;color:var(--ts);font-size:var(--fs-meta)}
-.ws-profile-actions{display:flex;justify-content:flex-end;gap:8px}
-.ws-profile-actions button{min-height:40px;padding:0 18px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-weight:var(--fw-medium);cursor:pointer}
-.ws-profile-actions .ws-profile-save{border-color:var(--ac);background:var(--ac);color:var(--s1)}
-.ws-page #v-insuwork .iw-dialog{position:fixed;inset:50% auto auto 50%;max-height:calc(100dvh - 32px);margin:0;overflow:auto;transform:translate(-50%,-50%)}
-.ws-main{position:relative;z-index:1;min-height:0;overflow:hidden;padding:14px}
-.ws-main #v-insuwork{height:100%}
+.iw-header-actions{display:flex;flex-shrink:0;align-items:center;gap:10px}
+.iw-mobile-link{display:inline-flex;align-items:center;height:34px;padding:0 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);font-size:var(--fs-meta);text-decoration:none;white-space:nowrap}
+.iw-mobile-link:hover{color:var(--ac);border-color:var(--ac)}
+.iw-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
+.iw-profile-dialog::backdrop{background:color-mix(in srgb,var(--tp) 42%,transparent);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.iw-profile-dialog form{display:grid;gap:18px;padding:24px}
+.iw-profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.iw-profile-head strong{font-size:var(--fs-title-sm)}
+.iw-profile-head p{margin:6px 0 0;color:var(--ts);font-size:var(--fs-meta)}
+.iw-profile-dialog label{display:grid;gap:8px;color:var(--ts);font-size:var(--fs-meta);font-weight:var(--fw-medium)}
+.iw-profile-dialog input{min-height:44px;padding:0 13px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}
+.iw-profile-close{width:34px;height:34px;border:0;border-radius:var(--radius-full);background:var(--s2);color:var(--tp);font-size:var(--fs-xl);cursor:pointer}
+.iw-profile-message{min-height:20px;margin:0;color:var(--ts);font-size:var(--fs-meta)}
+.iw-profile-actions{display:flex;justify-content:flex-end;gap:8px}
+.iw-profile-actions button{min-height:40px;padding:0 18px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-weight:var(--fw-medium);cursor:pointer}
+.iw-profile-actions .iw-profile-save{border-color:var(--ac);background:var(--ac);color:var(--s1)}
+.iw-page #v-insuwork .iw-dialog{position:fixed;inset:50% auto auto 50%;max-height:calc(100dvh - 32px);margin:0;overflow:auto;transform:translate(-50%,-50%)}
+.iw-main{position:relative;z-index:1;min-height:0;overflow:hidden;padding:14px}
+.iw-main #v-insuwork{height:100%}
 #v-insuwork{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--s1) 55%,transparent);border-radius:var(--radius-lg);background:transparent;box-shadow:none}
 #v-insuwork .iw-head{border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
 #v-insuwork .iw-search{border-color:color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
@@ -116,132 +140,141 @@ body:not(.is-insuwork) .ws-global-search{visibility:hidden}
 #v-insuwork .iw-access p{max-width:520px;color:var(--ts)}
 #v-insuwork .iw-access-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 #v-insuwork .iw-access .iw-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
-body.ws-page.ws-bg-flat:before{display:none}
-body.ws-page.ws-bg-white:after{background:#f6f7fb}
-body.ws-page.ws-bg-dark:after{background:#14161b}
-body.ws-page.ws-bg-flat #v-insuwork{border-color:var(--bd);background:var(--s1)}
-body.ws-page.ws-bg-flat #v-insuwork .iw-head,
-body.ws-page.ws-bg-flat #v-insuwork .iw-search,
-body.ws-page.ws-bg-flat #v-insuwork .iw-body,
-body.ws-page.ws-bg-flat #v-insuwork .iw-nav,
-body.ws-page.ws-bg-flat #v-insuwork .iw-main,
-body.ws-page.ws-bg-flat #v-insuwork .iw-stat,
-body.ws-page.ws-bg-flat #v-insuwork .iw-panel,
-body.ws-page.ws-bg-flat #v-insuwork .iw-explorer,
-body.ws-page.ws-bg-flat #v-insuwork .iw-cal,
-body.ws-page.ws-bg-flat #v-insuwork .iw-time,
-body.ws-page.ws-bg-flat #v-insuwork .iw-agenda,
-body.ws-page.ws-bg-flat #v-insuwork .iw-search-results,
-body.ws-page.ws-bg-flat #v-insuwork .iw-cal-head,
-body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-cal,
-body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-cal-grid,
-body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-day,
-body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-day.out,
-body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-shell .iw-mode,
-body.ws-page.ws-bg-flat #v-insuwork .iw-consult-layout,
-body.ws-page.ws-bg-flat #v-insuwork .iw-consult-columns,
-body.ws-page.ws-bg-flat #v-insuwork .iw-day,
-body.ws-page.ws-bg-flat #v-insuwork .iw-day.out,
-body.ws-page.ws-bg-flat #v-insuwork .iw-table th,
-body.ws-page.ws-bg-flat #v-insuwork .iw-time-head button,
-body.ws-page.ws-bg-flat #v-insuwork .iw-table tbody tr,
-body.ws-page.ws-bg-flat #v-insuwork .iw-agenda>button,
-body.ws-page.ws-bg-flat #v-insuwork .iw-search-results>button{background:var(--s1)}
-body.ws-page.ws-bg-flat #v-insuwork .iw-table tbody tr:nth-child(even){background:var(--s2)}
+body.iw-page.iw-bg-flat:before{display:none}
+/* 2026-08-23 1차 검수 수정 — 예전 하드코딩(#f6f7fb/#14161b)이 새 웜톤(--bg)과 안 맞아 var(--bg)로 교체 */
+body.iw-page.iw-bg-flat:after{background:var(--bg)}
+body.iw-page.iw-bg-flat #v-insuwork{border-color:var(--bd);background:var(--s1)}
+body.iw-page.iw-bg-flat #v-insuwork .iw-head,
+body.iw-page.iw-bg-flat #v-insuwork .iw-search,
+body.iw-page.iw-bg-flat #v-insuwork .iw-body,
+body.iw-page.iw-bg-flat #v-insuwork .iw-nav,
+body.iw-page.iw-bg-flat #v-insuwork .iw-main,
+body.iw-page.iw-bg-flat #v-insuwork .iw-stat,
+body.iw-page.iw-bg-flat #v-insuwork .iw-panel,
+body.iw-page.iw-bg-flat #v-insuwork .iw-explorer,
+body.iw-page.iw-bg-flat #v-insuwork .iw-cal,
+body.iw-page.iw-bg-flat #v-insuwork .iw-time,
+body.iw-page.iw-bg-flat #v-insuwork .iw-agenda,
+body.iw-page.iw-bg-flat #v-insuwork .iw-search-results,
+body.iw-page.iw-bg-flat #v-insuwork .iw-cal-head,
+body.iw-page.iw-bg-flat #v-insuwork .iw-calendar-month .iw-cal,
+body.iw-page.iw-bg-flat #v-insuwork .iw-calendar-month .iw-cal-grid,
+body.iw-page.iw-bg-flat #v-insuwork .iw-calendar-month .iw-day,
+body.iw-page.iw-bg-flat #v-insuwork .iw-calendar-month .iw-day.out,
+body.iw-page.iw-bg-flat #v-insuwork .iw-calendar-shell .iw-mode,
+body.iw-page.iw-bg-flat #v-insuwork .iw-consult-layout,
+body.iw-page.iw-bg-flat #v-insuwork .iw-consult-columns,
+body.iw-page.iw-bg-flat #v-insuwork .iw-day,
+body.iw-page.iw-bg-flat #v-insuwork .iw-day.out,
+body.iw-page.iw-bg-flat #v-insuwork .iw-table th,
+body.iw-page.iw-bg-flat #v-insuwork .iw-time-head button,
+body.iw-page.iw-bg-flat #v-insuwork .iw-table tbody tr,
+body.iw-page.iw-bg-flat #v-insuwork .iw-agenda>button,
+body.iw-page.iw-bg-flat #v-insuwork .iw-search-results>button{background:var(--s1)}
+body.iw-page.iw-bg-flat #v-insuwork .iw-table tbody tr:nth-child(even){background:var(--s2)}
+/* ── flat/white/dark 모드 전용 그림자 재도입(2026-08-23) — css/insuwork.css의 #v-insuwork .iw-panel 등
+   기본 규칙은 이미지/남산 배경 위에서 유리질감을 유지하려고 box-shadow:none을 유지한다. 여기 iw-bg-flat
+   스코프 안에서만 카드에 깊이감을 되살린다(대표 지적 "평평하다, 깊이가 없다"의 핵심 수정). ── */
+body.iw-page.iw-bg-flat #v-insuwork .iw-panel,
+body.iw-page.iw-bg-flat #v-insuwork .iw-explorer,
+body.iw-page.iw-bg-flat #v-insuwork .iw-search-results,
+body.iw-page.iw-bg-flat #v-insuwork .iw-agenda,
+body.iw-page.iw-bg-flat #v-insuwork .iw-cal,
+body.iw-page.iw-bg-flat #v-insuwork .iw-time{box-shadow:var(--sh-sm)}
 /* ── 다크 배경 모드: Google 스타일 블록의 하드코딩 색상을 토큰으로 재정의 ── */
-body.ws-page.ws-bg-dark #v-insuwork{background:var(--bg);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-head{background:var(--bg)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-title p{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-search{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-search:focus-within{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav{background:var(--bg)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav button{color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav button:hover{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav button.on{background:color-mix(in srgb,var(--ac) 22%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav-subgroup button{color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav-subgroup>summary{color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav .archive{border-top-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-nav-planned button:disabled:hover{color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search:focus-within{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search input{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-clear{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-clear:hover{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-stat{background:var(--s1);color:var(--bodytx);border-top-color:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 45%,var(--bd))}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-stat span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-consult-stat.on{background:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 18%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .iw-main{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-subtitle{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-btn{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-btn:hover{border-color:var(--tf);background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-btn.primary{border-color:var(--ac);background:var(--ac);color:#fff}
-body.ws-page.ws-bg-dark #v-insuwork .iw-stat{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-stat span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-stat strong{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-panel,body.ws-page.ws-bg-dark #v-insuwork .iw-explorer,body.ws-page.ws-bg-dark #v-insuwork .iw-search-results,body.ws-page.ws-bg-dark #v-insuwork .iw-agenda,body.ws-page.ws-bg-dark #v-insuwork .iw-cal,body.ws-page.ws-bg-dark #v-insuwork .iw-time{border-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-panel-head{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-panel-head button{color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-panel .iw-row{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-row small{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-row:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-table tbody tr:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-search-results>button:hover{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-fav{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-fav:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-fav:focus-visible{border-color:var(--bd);background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-asset-card>.iw-fav{background:color-mix(in srgb,var(--s1) 92%,transparent)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-tabs button{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-tabs button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-table th{background:var(--s1);color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-table td{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-badge{background:var(--s2);color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-badge.public{background:color-mix(in srgb,var(--ok) 18%,var(--s1));color:var(--ok)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-system-note{background:color-mix(in srgb,var(--ac) 16%,var(--s1));color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-system-note small{color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-dialog{border-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-field input,body.ws-page.ws-bg-dark #v-insuwork .iw-field select,body.ws-page.ws-bg-dark #v-insuwork .iw-field textarea{border-color:var(--bd);background:var(--s1);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-file-card{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-cal-head{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-cal-head span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-day{border-color:var(--bd);color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-day.today>strong{background:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-event{background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell{--iw-cal-main:var(--ac);--iw-cal-deep:color-mix(in srgb,var(--ac) 65%,black);--iw-cal-soft:color-mix(in srgb,var(--ac) 20%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-left h2{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-today{border-color:var(--bd);background:var(--s1);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-month-switcher button{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell .iw-mode{border-color:var(--bd);background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell .iw-mode .iw-btn{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell .iw-mode .iw-btn.primary{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal{border-color:var(--bd);background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span:first-child{color:var(--err)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span:last-child{color:var(--t-uw)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-grid{background:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-day{background:var(--s1);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-day:hover{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-day.out{background:color-mix(in srgb,var(--s1) 60%,var(--bg));color:var(--tf)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-day-head strong{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-day-head em{background:var(--s2);color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i{color:var(--err)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.insurance-age{border-color:color-mix(in srgb,var(--ac) 46%,var(--bd));background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:#8ab4f8}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.insurance-age-more{border-color:color-mix(in srgb,var(--ac) 58%,var(--bd));background:color-mix(in srgb,var(--ac) 26%,var(--s1));color:#a8c7fa}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.customer{border-color:color-mix(in srgb,var(--ok) 38%,var(--bd));background:color-mix(in srgb,var(--ok) 14%,var(--s1));color:#8fd6c7}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.customer-more{border-color:color-mix(in srgb,var(--ok) 46%,var(--bd));background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:#8fd6c7}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.term{color:var(--ok)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.memorial{color:var(--t-event)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar{background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar:hover{background:color-mix(in srgb,var(--ac) 32%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event.customer,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar.customer{background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:var(--ok)}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event.customer:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar.customer:hover{background:color-mix(in srgb,var(--ok) 32%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-more{color:var(--ts)}
-@media(max-width:860px){.ws-main{padding:8px 8px 0}#v-insuwork{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-insuwork .iw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-insuwork .iw-main{grid-row:1;min-width:0}#v-insuwork .iw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-insuwork .iw-assets-controls{align-items:flex-start;flex-direction:column}#v-insuwork .iw-assets-controls .iw-tabs{width:100%;overflow:visible}#v-insuwork .iw-assets-actions{align-self:flex-end}}
-@media(max-width:860px){.ws-global-search{width:min(400px,38vw)}}
-@media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand span{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-header-actions{grid-column:2;grid-row:1;gap:6px}.ws-mobile-link{height:30px;padding:0 8px;font-size:11px}.ws-account-trigger{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-insuwork{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
+body.iw-page.iw-bg-dark #v-insuwork{background:var(--bg);color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-head{background:var(--bg)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-title p{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-search{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-search:focus-within{background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav{background:var(--bg)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav button{color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav button:hover{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav button.on{background:color-mix(in srgb,var(--ac) 22%,var(--s1));color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-subgroup button{color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-subgroup>summary{color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav .archive{border-top-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-planned button:disabled:hover{color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search:focus-within{background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search span{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search input{color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-clear{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-clear:hover{color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-stat{background:var(--s1);color:var(--bodytx);border-top-color:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 45%,var(--bd))}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-stat span{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-consult-stat.on{background:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 18%,var(--s1))}
+body.iw-page.iw-bg-dark #v-insuwork .iw-main{background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-subtitle{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-btn{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-btn:hover{border-color:var(--tf);background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-btn.primary{border-color:var(--ac);background:var(--ac);color:#fff}
+body.iw-page.iw-bg-dark #v-insuwork .iw-stat{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-stat span{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-stat strong{color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-panel,body.iw-page.iw-bg-dark #v-insuwork .iw-explorer,body.iw-page.iw-bg-dark #v-insuwork .iw-search-results,body.iw-page.iw-bg-dark #v-insuwork .iw-agenda,body.iw-page.iw-bg-dark #v-insuwork .iw-cal,body.iw-page.iw-bg-dark #v-insuwork .iw-time{border-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-panel-head{border-bottom-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-panel-head button{color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-panel .iw-row{border-bottom-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-row small{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-row:hover,body.iw-page.iw-bg-dark #v-insuwork .iw-table tbody tr:hover,body.iw-page.iw-bg-dark #v-insuwork .iw-search-results>button:hover{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-fav{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-fav:hover,body.iw-page.iw-bg-dark #v-insuwork .iw-fav:focus-visible{border-color:var(--bd);background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-asset-card>.iw-fav{background:color-mix(in srgb,var(--s1) 92%,transparent)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-tabs button{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-tabs button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-table th{background:var(--s1);color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-table td{border-bottom-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-badge{background:var(--s2);color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-badge.public{background:color-mix(in srgb,var(--ok) 18%,var(--s1));color:var(--ok)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-system-note{background:color-mix(in srgb,var(--ac) 16%,var(--s1));color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-system-note small{color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-dialog{border-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-field input,body.iw-page.iw-bg-dark #v-insuwork .iw-field select,body.iw-page.iw-bg-dark #v-insuwork .iw-field textarea{border-color:var(--bd);background:var(--s1);color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-file-card{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-cal-head{background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-cal-head span{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-day{border-color:var(--bd);color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-day.today>strong{background:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-event{background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-shell{--iw-cal-main:var(--ac);--iw-cal-deep:color-mix(in srgb,var(--ac) 65%,black);--iw-cal-soft:color-mix(in srgb,var(--ac) 20%,var(--s1))}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-left h2{color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-today{border-color:var(--bd);background:var(--s1);color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-month-switcher button{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-shell .iw-mode{border-color:var(--bd);background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-shell .iw-mode .iw-btn{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-shell .iw-mode .iw-btn.primary{background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-cal{border-color:var(--bd);background:var(--s1)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head{border-bottom-color:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span:first-child{color:var(--err)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span:last-child{color:var(--t-uw)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-cal-grid{background:var(--bd)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-day{background:var(--s1);color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-day:hover{background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-day.out{background:color-mix(in srgb,var(--s1) 60%,var(--bg));color:var(--tf)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-day-head strong{color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-day-head em{background:var(--s2);color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i{color:var(--err)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i.insurance-age{border-color:color-mix(in srgb,var(--ac) 46%,var(--bd));background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:#8ab4f8}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i.insurance-age-more{border-color:color-mix(in srgb,var(--ac) 58%,var(--bd));background:color-mix(in srgb,var(--ac) 26%,var(--s1));color:#a8c7fa}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i.customer{border-color:color-mix(in srgb,var(--ok) 38%,var(--bd));background:color-mix(in srgb,var(--ok) 14%,var(--s1));color:#8fd6c7}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i.customer-more{border-color:color-mix(in srgb,var(--ok) 46%,var(--bd));background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:#8fd6c7}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i.term{color:var(--ok)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-built-ins i.memorial{color:var(--t-event)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-event,body.iw-page.iw-bg-dark #v-insuwork .iw-event-bar{background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:var(--ac)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-event:hover,body.iw-page.iw-bg-dark #v-insuwork .iw-event-bar:hover{background:color-mix(in srgb,var(--ac) 32%,var(--s1))}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-event.customer,body.iw-page.iw-bg-dark #v-insuwork .iw-event-bar.customer{background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:var(--ok)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-event.customer:hover,body.iw-page.iw-bg-dark #v-insuwork .iw-event-bar.customer:hover{background:color-mix(in srgb,var(--ok) 32%,var(--s1))}
+body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-more{color:var(--ts)}
+@media(max-width:860px){.iw-main{padding:8px 8px 0}#v-insuwork{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-insuwork .iw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-insuwork .iw-main{grid-row:1;min-width:0}#v-insuwork .iw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-insuwork .iw-assets-controls{align-items:flex-start;flex-direction:column}#v-insuwork .iw-assets-controls .iw-tabs{width:100%;overflow:visible}#v-insuwork .iw-assets-actions{align-self:flex-end}}
+@media(max-width:860px){.iw-global-search{width:min(400px,38vw)}}
+@media(max-width:680px){body.iw-page{grid-template-rows:106px minmax(0,1fr)}body.iw-page:before{background-position:58% center}.iw-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.iw-identity{gap:9px}.iw-brand{gap:7px}.iw-brand span{width:32px;height:32px}.iw-brand strong,.iw-product{font-size:var(--fs-meta)}.iw-divider{height:16px}.iw-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.iw-header-actions{grid-column:2;grid-row:1;gap:6px}.iw-mobile-link{height:30px;padding:0 8px;font-size:11px}.iw-account-trigger{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.iw-main{padding:6px 0 0}#v-insuwork{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
 
 /* 모바일 유도 배너 (2026-08-22, Phase 1 — feat/workstation-mobile-today, 애디티브).
    톤 = 얇은 테두리 + 텍스트만(대표 확정 톤). backdrop-filter/블러·무거운 box-shadow 금지. */
-.ws-mobile-banner{position:fixed;left:12px;right:12px;bottom:12px;z-index:200;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp)}
-.ws-mobile-banner span{flex:1;font-size:var(--fs-meta)}
-.ws-mobile-banner a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);color:var(--ac);text-decoration:none;font-weight:var(--fw-medium);white-space:nowrap}
-.ws-mobile-banner button{width:32px;height:32px;flex-shrink:0;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:var(--fs-body);cursor:pointer}
-@media(max-width:680px){.ws-brand-logo{height:38px;max-width:240px}}
+.iw-mobile-banner{position:fixed;left:12px;right:12px;bottom:12px;z-index:200;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp)}
+.iw-mobile-banner span{flex:1;font-size:var(--fs-meta)}
+.iw-mobile-banner a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);color:var(--ac);text-decoration:none;font-weight:var(--fw-medium);white-space:nowrap}
+.iw-mobile-banner button{width:32px;height:32px;flex-shrink:0;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:var(--fs-body);cursor:pointer}
+@media(max-width:680px){.iw-brand-logo{height:38px;max-width:240px}}
