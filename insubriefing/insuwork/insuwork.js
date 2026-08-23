@@ -6,19 +6,22 @@
   function currentBgMode() { try { return localStorage.getItem('iw_bg_mode') || 'image'; } catch (_e) { return 'image'; } }
   function applyBgMode(mode) {
     var body = document.body;
-    body.classList.remove('iw-bg-flat', 'iw-bg-white', 'iw-bg-dark', 'iw-bg-namsan');
+    body.classList.remove('iw-bg-flat', 'iw-bg-white', 'iw-bg-dark', 'iw-bg-namsan', 'iw-bg-window');
     if (mode === 'white') body.classList.add('iw-bg-flat', 'iw-bg-white');
     else if (mode === 'dark') body.classList.add('iw-bg-flat', 'iw-bg-dark');
     else if (mode === 'namsan') body.classList.add('iw-bg-namsan');
+    else if (mode === 'window') body.classList.add('iw-bg-flat', 'iw-bg-window');
     document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
     try { localStorage.setItem('iw_bg_mode', mode); } catch (_e) {}
+    if (window.OSInsuworkWindow) window.OSInsuworkWindow.boot(mode === 'window');
   }
   function bgModeButtonsHtml(active) {
     var modes = [
       ['image', '이미지', '/insubriefing/assets/generated/briefing-toss-hero.webp'],
       ['namsan', '남산', '/insubriefing/assets/generated/namsan-sunny.webp'],
       ['white', '화이트', null],
-      ['dark', '다크', null]
+      ['dark', '다크', null],
+      ['window', '창문', null]
     ];
     return modes.map(function (m) {
       var swatchStyle = m[2] ? ' style="background-image:url(&quot;' + m[2] + '&quot;)"' : '';
