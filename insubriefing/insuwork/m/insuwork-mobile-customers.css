@@ -4,11 +4,11 @@
    색·크기는 css/tokens-v2.css·css/app-core.css의 커스텀 프로퍼티만 사용(하드코딩 금지).
    모바일 고객관리 = 표가 아닌 카드 리스트 → 상세 구조(코상무 확정). */
 
-.wsm-cust-search-wrap {
+.iwm-cust-search-wrap {
   margin-bottom: 4px;
 }
 
-.wsm-cust-search {
+.iwm-cust-search {
   width: 100%;
   min-height: 44px;
   padding: 0 14px;
@@ -18,58 +18,58 @@
   color: var(--tp);
   font-size: var(--fs-body, 14px);
 }
-.wsm-cust-search:focus {
+.iwm-cust-search:focus {
   outline: none;
   border-color: var(--ac);
 }
 
-.wsm-cust-card {
+.iwm-cust-card {
   width: 100%;
   text-align: left;
   font: inherit;
   cursor: pointer;
 }
-.wsm-cust-card:active { border-color: var(--ac); }
+.iwm-cust-card:active { border-color: var(--ac); }
 
-.wsm-cust-back {
+.iwm-cust-back {
   align-self: flex-start;
   margin-bottom: 4px;
 }
 
-.wsm-cust-detail-head {
+.iwm-cust-detail-head {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px 2px 6px;
 }
-.wsm-cust-detail-name {
+.iwm-cust-detail-name {
   font-size: var(--fs-title, 18px);
   font-weight: 700;
   color: var(--tp);
 }
-.wsm-cust-detail-phone {
+.iwm-cust-detail-phone {
   font-size: var(--fs-body, 14px);
   color: var(--ts);
 }
-.wsm-cust-detail-status {
+.iwm-cust-detail-status {
   font-size: var(--fs-meta, 13px);
   color: var(--ac);
 }
 
-.wsm-cust-actions {
+.iwm-cust-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.wsm-cust-action {
+.iwm-cust-action {
   display: flex;
   flex-direction: column;
   gap: 4px;
   align-items: center;
 }
 
-.wsm-cust-action-btn {
+.iwm-cust-action-btn {
   width: 100%;
   min-height: 44px;
   display: inline-flex;
@@ -84,13 +84,13 @@
   text-decoration: none;
   text-align: center;
 }
-.wsm-cust-action-btn:active { color: var(--ac); border-color: var(--ac); }
-.wsm-cust-action-btn.is-disabled {
+.iwm-cust-action-btn:active { color: var(--ac); border-color: var(--ac); }
+.iwm-cust-action-btn.is-disabled {
   color: var(--tf);
   cursor: default;
 }
 
-.wsm-cust-action-note {
+.iwm-cust-action-note {
   margin: 0;
   text-align: center;
   font-size: var(--fs-caption, 12px);
@@ -99,15 +99,15 @@
 }
 
 /* Phase 4 (2026-08-22, feat/workstation-mobile-quicknote) — "메모" 버튼을 누르면 화면 이동 없이 펼쳐지는
-   빠른 상담 메모 입력창. .wsm-cust-actions는 3열 grid라 펼쳤을 때는 전체 폭으로 늘린다.
-   같은 wsm- 톤 유지(얇은 테두리 + 텍스트만, blur/무거운 그림자 금지). */
-.wsm-cust-note-open {
+   빠른 상담 메모 입력창. .iwm-cust-actions는 3열 grid라 펼쳤을 때는 전체 폭으로 늘린다.
+   같은 iwm- 톤 유지(얇은 테두리 + 텍스트만, blur/무거운 그림자 금지). */
+.iwm-cust-note-open {
   grid-column: 1 / -1;
   align-items: stretch;
   gap: 6px;
 }
 
-.wsm-cust-note-textarea {
+.iwm-cust-note-textarea {
   width: 100%;
   min-height: 96px;
   padding: 10px 12px;
@@ -120,35 +120,35 @@
   line-height: var(--lh-base, 1.5);
   resize: vertical;
 }
-.wsm-cust-note-textarea:focus {
+.iwm-cust-note-textarea:focus {
   outline: none;
   border-color: var(--ac);
 }
-.wsm-cust-note-textarea:disabled {
+.iwm-cust-note-textarea:disabled {
   color: var(--tf);
 }
 
-.wsm-cust-note-pc-link {
+.iwm-cust-note-pc-link {
   color: var(--ac);
   text-decoration: underline;
 }
 
-.wsm-cust-note-error {
+.iwm-cust-note-error {
   margin: 0;
   text-align: center;
   font-size: var(--fs-caption, 12px);
   color: var(--err, #DC2626);
 }
 
-.wsm-cust-note-actions {
+.iwm-cust-note-actions {
   display: flex;
   gap: 8px;
 }
-.wsm-cust-note-actions .wsm-btn {
+.iwm-cust-note-actions .iwm-btn {
   flex: 1;
 }
 
-.wsm-cust-action-btn.wsm-cust-note-saved {
+.iwm-cust-action-btn.iwm-cust-note-saved {
   color: var(--ac);
   border-color: var(--ac);
 }

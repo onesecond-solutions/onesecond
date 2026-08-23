@@ -24,7 +24,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var ROOT_SELECTOR = '#wsm-root';
+  var ROOT_SELECTOR = '#iwm-root';
   var RECENT_PAGE_SIZE = 6;
   /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
      대신 짧은 간격으로 재조회 → 직전 렌더와 동일하면 스킵하는 폴링으로 최종 일관성을 맞춘다(추가 API 호출 아님, 순수 재조회). */
@@ -103,42 +103,42 @@
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 자료를 확인할 수 있습니다.</p>'
-      + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<div class="iwm-gate-actions"><button type="button" class="iwm-btn primary" id="iwm-login-btn">로그인</button></div>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
-    var btn = document.getElementById('wsm-login-btn');
+    var btn = document.getElementById('iwm-login-btn');
     if (btn) btn.addEventListener('click', function () { openBriefingAuth('login'); });
   }
 
   function renderDeniedGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
   }
 
   function renderLoading() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate"><strong>자료를 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
+    view.innerHTML = '<div class="iwm-gate"><strong>자료를 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
   }
 
   /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/캘린더/고객)은 하단 고정 탭바로 옮겼다.
      feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은
      "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는 링크를 추가했다. */
   function headerHtml() {
-    return '<header class="wsm-header"><strong>자료</strong>'
-      + '<div class="wsm-header-actions">'
-      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+    return '<header class="iwm-header"><strong>자료</strong>'
+      + '<div class="iwm-header-actions">'
+      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
       + '</div>'
-      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
-      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="' + esc(PC_LINKS.assets) + '">PC 버전으로 보기</a>'
-      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
+      + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="iwm-menu-item" href="' + esc(PC_LINKS.assets) + '">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
   }
@@ -147,10 +147,10 @@
      클릭 시점에 getElementById로 최신 DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
   var menuOutsideBound = false;
   function bindHeaderEvents() {
-    var logoutLink = document.getElementById('wsm-logout-link');
+    var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
-    var menuBtn = document.getElementById('wsm-menu-btn');
-    var menuPanel = document.getElementById('wsm-menu-panel');
+    var menuBtn = document.getElementById('iwm-menu-btn');
+    var menuPanel = document.getElementById('iwm-menu-panel');
     if (menuBtn && menuPanel) {
       menuBtn.addEventListener('click', function () {
         var willOpen = menuPanel.hidden;
@@ -161,8 +161,8 @@
     if (!menuOutsideBound) {
       menuOutsideBound = true;
       document.addEventListener('click', function (event) {
-        var panel = document.getElementById('wsm-menu-panel');
-        var btn = document.getElementById('wsm-menu-btn');
+        var panel = document.getElementById('iwm-menu-panel');
+        var btn = document.getElementById('iwm-menu-btn');
         if (!panel || panel.hidden) return;
         if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
         panel.hidden = true;
@@ -172,12 +172,12 @@
   }
 
   function emptyHtml(message) {
-    return '<div class="wsm-empty">' + esc(message) + '</div>';
+    return '<div class="iwm-empty">' + esc(message) + '</div>';
   }
 
   function sectionHtml(title, bodyHtmlStr) {
-    return '<section class="wsm-section">'
-      + '<h2 class="wsm-section-title">' + esc(title) + '</h2>'
+    return '<section class="iwm-section">'
+      + '<h2 class="iwm-section-title">' + esc(title) + '</h2>'
       + bodyHtmlStr
       + '</section>';
   }
@@ -200,33 +200,33 @@
   function entryCardHtml(entry) {
     var key = entry.source + ':' + entry.id;
     var snippet = entry.previewText ? esc(entry.previewText) + (entry.previewText.length >= 100 ? '…' : '') : '';
-    return '<button type="button" class="wsm-card wsm-lib-card" data-key="' + esc(key) + '">'
-      + '<span class="wsm-lib-kind">' + esc(entry.kind) + '</span>'
-      + '<div class="wsm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
-      + (snippet ? '<div class="wsm-card-sub">' + snippet + '</div>' : '')
-      + (entry.createdAt ? '<div class="wsm-card-meta">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
+    return '<button type="button" class="iwm-card iwm-lib-card" data-key="' + esc(key) + '">'
+      + '<span class="iwm-lib-kind">' + esc(entry.kind) + '</span>'
+      + '<div class="iwm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
+      + (snippet ? '<div class="iwm-card-sub">' + snippet + '</div>' : '')
+      + (entry.createdAt ? '<div class="iwm-card-meta">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
       + '</button>';
   }
 
   function expandBodyHtml(entry) {
     if (entry.bodyHtml && String(entry.bodyHtml).trim()) {
-      return '<div class="wsm-lib-body-rich">' + entry.bodyHtml + '</div>';
+      return '<div class="iwm-lib-body-rich">' + entry.bodyHtml + '</div>';
     }
     if (entry.linkUrl) {
-      return '<a class="wsm-lib-open-link" href="' + esc(entry.linkUrl) + '" target="_blank" rel="noopener noreferrer">원본 링크 열기 ↗</a>';
+      return '<a class="iwm-lib-open-link" href="' + esc(entry.linkUrl) + '" target="_blank" rel="noopener noreferrer">원본 링크 열기 ↗</a>';
     }
-    return '<p class="wsm-lib-empty-note">미리보기할 내용이 없습니다. PC 버전에서 확인해 주세요.</p>';
+    return '<p class="iwm-lib-empty-note">미리보기할 내용이 없습니다. PC 버전에서 확인해 주세요.</p>';
   }
 
   function searchResultsHtml(query) {
     var q = query.toLowerCase();
     var matches = state.directory.filter(function (entry) { return entry.searchText.indexOf(q) >= 0; }).sort(byCreatedDesc);
     if (!matches.length) return sectionHtml('검색 결과', emptyHtml(isDataReady() ? '일치하는 자료·업무노트가 없습니다.' : '자료를 불러오는 중입니다…'));
-    return sectionHtml('검색 결과 ' + matches.length + '건', '<div class="wsm-list">' + matches.map(entryCardHtml).join('') + '</div>');
+    return sectionHtml('검색 결과 ' + matches.length + '건', '<div class="iwm-list">' + matches.map(entryCardHtml).join('') + '</div>');
   }
 
   function loadMoreButtonHtml(id, remaining) {
-    return '<button type="button" class="wsm-btn wsm-loadmore" id="' + id + '">더 보기 (' + remaining + ')</button>';
+    return '<button type="button" class="iwm-btn iwm-loadmore" id="' + id + '">더 보기 (' + remaining + ')</button>';
   }
 
   /* fix/workstation-mobile-bugs 버그1 — ready=false(loadData(true) 완료 전)면 "저장된 자료가 없습니다" 같은
@@ -236,7 +236,7 @@
     var sorted = allRows.slice().sort(byCreatedDesc);
     if (!sorted.length) return sectionHtml(title, emptyHtml(ready ? emptyMessage : '불러오는 중입니다…'));
     var visible = sorted.slice(0, limit);
-    var body = '<div class="wsm-list">' + visible.map(entryCardHtml).join('')
+    var body = '<div class="iwm-list">' + visible.map(entryCardHtml).join('')
       + (sorted.length > visible.length ? loadMoreButtonHtml(moreId, sorted.length - visible.length) : '')
       + '</div>';
     return sectionHtml(title, body);
@@ -249,9 +249,9 @@
     var href = entry.openUrl || pcHref;
     var subLabel = entry.openUrl ? (entry.kind + ' · 새 창에서 열기 ↗') : (entry.kind + ' · PC 버전에서 열기');
     var target = entry.openUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return '<a class="wsm-card wsm-lib-feed-card" href="' + esc(href) + '"' + target + '>'
-      + '<div class="wsm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
-      + '<div class="wsm-card-sub">' + esc(subLabel) + '</div>'
+    return '<a class="iwm-card iwm-lib-feed-card" href="' + esc(href) + '"' + target + '>'
+      + '<div class="iwm-card-title">' + esc(entry.title || '(제목 없음)') + '</div>'
+      + '<div class="iwm-card-sub">' + esc(subLabel) + '</div>'
       + '</a>';
   }
 
@@ -260,7 +260,7 @@
     var sorted = rows.slice().sort(function (a, b) { return (b.sortKey || 0) - (a.sortKey || 0); });
     if (!sorted.length) return sectionHtml(title, emptyHtml(emptyMessage));
     var visible = sorted.slice(0, limit);
-    var body = '<div class="wsm-list">' + visible.map(function (entry) { return feedCardHtml(entry, pcHref); }).join('')
+    var body = '<div class="iwm-list">' + visible.map(function (entry) { return feedCardHtml(entry, pcHref); }).join('')
       + (sorted.length > visible.length ? loadMoreButtonHtml(moreId, sorted.length - visible.length) : '')
       + '</div>';
     return sectionHtml(title, body);
@@ -269,9 +269,9 @@
   /* 상품라인업 = js/insuwork.js 소관이 아닌 완전히 별도 시스템(/insu/index.html)이라
      이번 Phase 범위에서 제외하고 PC 버전 안내 카드만 둔다(억지로 통합하지 않음). */
   function productLineupSectionHtml() {
-    return sectionHtml('상품 라인업', '<a class="wsm-card wsm-lib-feed-card" href="' + esc(PC_LINKS.productLineup) + '">'
-      + '<div class="wsm-card-title">상품 라인업은 PC 버전에서 확인해 주세요</div>'
-      + '<div class="wsm-card-sub">원수사 상품 자료는 별도 화면에서 관리됩니다.</div>'
+    return sectionHtml('상품 라인업', '<a class="iwm-card iwm-lib-feed-card" href="' + esc(PC_LINKS.productLineup) + '">'
+      + '<div class="iwm-card-title">상품 라인업은 PC 버전에서 확인해 주세요</div>'
+      + '<div class="iwm-card-sub">원수사 상품 자료는 별도 화면에서 관리됩니다.</div>'
       + '</a>');
   }
 
@@ -279,10 +279,10 @@
     var ready = isDataReady();
     var library = state.directory.filter(function (entry) { return entry.source === 'library'; });
     var scripts = state.directory.filter(function (entry) { return entry.source === 'scripts'; });
-    return recentSectionHtml('최근 자료실', library, state.libraryLimit, 'wsm-lib-more-library', '저장된 자료가 없습니다.', ready)
-      + recentSectionHtml('최근 업무노트', scripts, state.scriptsLimit, 'wsm-lib-more-scripts', '작성된 업무노트가 없습니다.', ready)
-      + feedSectionHtml('소식지', state.feed.newsletters || [], state.feed.newsletterLoading, state.newsLimit, 'wsm-lib-more-news', PC_LINKS.newsletters, '소식지가 없습니다.')
-      + feedSectionHtml('영업방향', state.feed.strategies || [], state.feed.strategyLoading, state.strategyLimit, 'wsm-lib-more-strategy', PC_LINKS.strategy, '영업방향 자료가 없습니다.')
+    return recentSectionHtml('최근 자료실', library, state.libraryLimit, 'iwm-lib-more-library', '저장된 자료가 없습니다.', ready)
+      + recentSectionHtml('최근 업무노트', scripts, state.scriptsLimit, 'iwm-lib-more-scripts', '작성된 업무노트가 없습니다.', ready)
+      + feedSectionHtml('소식지', state.feed.newsletters || [], state.feed.newsletterLoading, state.newsLimit, 'iwm-lib-more-news', PC_LINKS.newsletters, '소식지가 없습니다.')
+      + feedSectionHtml('영업방향', state.feed.strategies || [], state.feed.strategyLoading, state.strategyLimit, 'iwm-lib-more-strategy', PC_LINKS.strategy, '영업방향 자료가 없습니다.')
       + productLineupSectionHtml();
   }
 
@@ -302,14 +302,14 @@
   }
 
   function bindListBodyEvents(container) {
-    var cards = container.querySelectorAll('.wsm-lib-card');
+    var cards = container.querySelectorAll('.iwm-lib-card');
     Array.prototype.forEach.call(cards, function (btn) {
       btn.addEventListener('click', function () { openDetail(btn.getAttribute('data-key')); });
     });
-    bindMoreButton(container, 'wsm-lib-more-library', function () { state.libraryLimit += RECENT_PAGE_SIZE; });
-    bindMoreButton(container, 'wsm-lib-more-scripts', function () { state.scriptsLimit += RECENT_PAGE_SIZE; });
-    bindMoreButton(container, 'wsm-lib-more-news', function () { state.newsLimit += RECENT_PAGE_SIZE; });
-    bindMoreButton(container, 'wsm-lib-more-strategy', function () { state.strategyLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'iwm-lib-more-library', function () { state.libraryLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'iwm-lib-more-scripts', function () { state.scriptsLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'iwm-lib-more-news', function () { state.newsLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'iwm-lib-more-strategy', function () { state.strategyLimit += RECENT_PAGE_SIZE; });
   }
 
   function bindMoreButton(container, id, apply) {
@@ -322,7 +322,7 @@
   }
 
   function renderListBody() {
-    var container = document.getElementById('wsm-lib-body'); if (!container) return;
+    var container = document.getElementById('iwm-lib-body'); if (!container) return;
     container.innerHTML = bodyHtml();
     bindListBodyEvents(container);
   }
@@ -330,13 +330,13 @@
   function renderListShell() {
     var view = root(); if (!view) return;
     view.innerHTML = headerHtml()
-      + '<main class="wsm-main">'
-      + '<div class="wsm-lib-search-wrap"><input type="search" id="wsm-lib-search" class="wsm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
-      + '<div id="wsm-lib-body"></div>'
+      + '<main class="iwm-main">'
+      + '<div class="iwm-lib-search-wrap"><input type="search" id="iwm-lib-search" class="iwm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
+      + '<div id="iwm-lib-body"></div>'
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
     bindHeaderEvents();
-    var input = document.getElementById('wsm-lib-search');
+    var input = document.getElementById('iwm-lib-search');
     if (input) {
       input.value = state.query;
       input.addEventListener('input', function () {
@@ -360,19 +360,19 @@
     if (!entry) { state.view = 'list'; state.selectedKey = null; renderListShell(); return; }
 
     view.innerHTML = headerHtml()
-      + '<main class="wsm-main">'
-      + '<button type="button" class="wsm-btn wsm-lib-back" id="wsm-lib-back">← 목록</button>'
-      + '<section class="wsm-lib-detail-head">'
-      + '<span class="wsm-lib-kind">' + esc(entry.kind) + '</span>'
-      + '<div class="wsm-lib-detail-title">' + esc(entry.title || '(제목 없음)') + '</div>'
-      + (entry.createdAt ? '<div class="wsm-lib-detail-date">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
+      + '<main class="iwm-main">'
+      + '<button type="button" class="iwm-btn iwm-lib-back" id="iwm-lib-back">← 목록</button>'
+      + '<section class="iwm-lib-detail-head">'
+      + '<span class="iwm-lib-kind">' + esc(entry.kind) + '</span>'
+      + '<div class="iwm-lib-detail-title">' + esc(entry.title || '(제목 없음)') + '</div>'
+      + (entry.createdAt ? '<div class="iwm-lib-detail-date">' + esc(shortDate(entry.createdAt)) + '</div>' : '')
       + '</section>'
-      + '<div class="wsm-lib-detail-full">' + expandBodyHtml(entry) + '</div>'
+      + '<div class="iwm-lib-detail-full">' + expandBodyHtml(entry) + '</div>'
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
     bindHeaderEvents();
 
-    var back = document.getElementById('wsm-lib-back');
+    var back = document.getElementById('iwm-lib-back');
     if (back) back.addEventListener('click', function () {
       state.view = 'list'; state.selectedKey = null; lastRenderedJson = '';
       renderCurrent();

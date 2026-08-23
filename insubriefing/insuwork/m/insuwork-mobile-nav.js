@@ -26,13 +26,13 @@
   function render(activeKey) {
     var itemsHtml = ITEMS.map(function (item) {
       var active = item.key === activeKey;
-      return '<a class="wsm-bottom-nav-item' + (active ? ' is-active' : '') + '" href="' + item.href + '"'
+      return '<a class="iwm-bottom-nav-item' + (active ? ' is-active' : '') + '" href="' + item.href + '"'
         + (active ? ' aria-current="page"' : '') + '>'
-        + '<span class="wsm-bottom-nav-icon" aria-hidden="true">' + item.icon + '</span>'
-        + '<span class="wsm-bottom-nav-label">' + item.label + '</span>'
+        + '<span class="iwm-bottom-nav-icon" aria-hidden="true">' + item.icon + '</span>'
+        + '<span class="iwm-bottom-nav-label">' + item.label + '</span>'
         + '</a>';
     }).join('');
-    return '<nav class="wsm-bottom-nav" aria-label="보험워크 하단 메뉴">' + itemsHtml + '</nav>';
+    return '<nav class="iwm-bottom-nav" aria-label="보험워크 하단 메뉴">' + itemsHtml + '</nav>';
   }
 
   window.OSInsuworkMobileNav = { render: render };

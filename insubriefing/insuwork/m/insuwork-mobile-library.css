@@ -4,11 +4,11 @@
    색·크기는 css/tokens-v2.css·css/app-core.css의 커스텀 프로퍼티만 사용(하드코딩 금지).
    코상무 확정 방향: "정리"보다 "찾아서 보여주기" — 검색창 + 카드를 탭하면 같은 화면 안에서 펼쳐지는 미리보기. */
 
-.wsm-lib-search-wrap {
+.iwm-lib-search-wrap {
   margin-bottom: 4px;
 }
 
-.wsm-lib-search {
+.iwm-lib-search {
   width: 100%;
   min-height: 44px;
   padding: 0 14px;
@@ -18,20 +18,20 @@
   color: var(--tp);
   font-size: var(--fs-body, 14px);
 }
-.wsm-lib-search:focus {
+.iwm-lib-search:focus {
   outline: none;
   border-color: var(--ac);
 }
 
-.wsm-lib-card {
+.iwm-lib-card {
   width: 100%;
   text-align: left;
   font: inherit;
   cursor: pointer;
 }
-.wsm-lib-card:active { border-color: var(--ac); }
+.iwm-lib-card:active { border-color: var(--ac); }
 
-.wsm-lib-kind {
+.iwm-lib-kind {
   display: inline-block;
   margin-bottom: 4px;
   font-size: var(--fs-caption, 12px);
@@ -41,45 +41,45 @@
 
 /* feat/workstation-mobile-header-consistency (2026-08-22) — 카드 안 인라인 펼침(아코디언)을 customers.js와
    동일한 "리스트→풀스크린 상세" 구조로 바꿨다. 아래는 상세 화면 전용 스타일(customers.css의
-   .wsm-cust-back/.wsm-cust-detail-head와 동일한 톤 — 얇은 테두리 + 텍스트만). */
-.wsm-lib-back {
+   .iwm-cust-back/.iwm-cust-detail-head와 동일한 톤 — 얇은 테두리 + 텍스트만). */
+.iwm-lib-back {
   align-self: flex-start;
   margin-bottom: 4px;
 }
 
-.wsm-lib-detail-head {
+.iwm-lib-detail-head {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px 2px 6px;
 }
-.wsm-lib-detail-title {
+.iwm-lib-detail-title {
   font-size: var(--fs-title, 18px);
   font-weight: 700;
   color: var(--tp);
 }
-.wsm-lib-detail-date {
+.iwm-lib-detail-date {
   font-size: var(--fs-meta, 13px);
   color: var(--ts);
 }
 
-.wsm-lib-detail-full {
+.iwm-lib-detail-full {
   padding: 14px;
   border: 1px solid var(--bd);
   border-radius: var(--radius-sm);
   background: var(--s1);
 }
 
-.wsm-lib-open-link,
-.wsm-lib-empty-note {
+.iwm-lib-open-link,
+.iwm-lib-empty-note {
   display: block;
   font-size: var(--fs-body, 14px);
 }
-.wsm-lib-open-link {
+.iwm-lib-open-link {
   color: var(--ac);
   text-decoration: underline;
 }
-.wsm-lib-empty-note {
+.iwm-lib-empty-note {
   margin: 0;
   color: var(--tf);
 }
@@ -89,36 +89,36 @@
    저장 시점에 이미지가 포함돼도 서명 URL을 이 화면에서 새로 발급하지 않아 src가 비어 있으므로,
    깨진 이미지 아이콘 대신 통째로 숨겨 화면을 정리한다(대신 "PC 버전에서 확인" 문구 없이도 텍스트 본문은
    그대로 보인다 — 사진 없는 본문이 대부분이라 여기서 별도 안내문 없이 이미지만 숨김). */
-.wsm-lib-body-rich {
+.iwm-lib-body-rich {
   font-size: var(--fs-body, 14px);
   line-height: var(--lh-base, 1.6);
   color: var(--tp);
   overflow-wrap: anywhere;
 }
-.wsm-lib-body-rich img { display: none; }
-.wsm-lib-body-rich h2 { margin: .8em 0 .35em; font-size: 1.25em; }
-.wsm-lib-body-rich h3 { margin: .7em 0 .3em; font-size: 1.1em; }
-.wsm-lib-body-rich p { margin: .55em 0; }
-.wsm-lib-body-rich p:first-child { margin-top: 0; }
-.wsm-lib-body-rich p:last-child { margin-bottom: 0; }
-.wsm-lib-body-rich blockquote {
+.iwm-lib-body-rich img { display: none; }
+.iwm-lib-body-rich h2 { margin: .8em 0 .35em; font-size: 1.25em; }
+.iwm-lib-body-rich h3 { margin: .7em 0 .3em; font-size: 1.1em; }
+.iwm-lib-body-rich p { margin: .55em 0; }
+.iwm-lib-body-rich p:first-child { margin-top: 0; }
+.iwm-lib-body-rich p:last-child { margin-bottom: 0; }
+.iwm-lib-body-rich blockquote {
   margin: .8em 0;
   padding: 8px 14px;
   border-left: 3px solid var(--ac);
   background: var(--s2);
   color: var(--ts);
 }
-.wsm-lib-body-rich ul,
-.wsm-lib-body-rich ol { padding-left: 1.4em; }
-.wsm-lib-body-rich a { color: var(--ac); overflow-wrap: anywhere; }
+.iwm-lib-body-rich ul,
+.iwm-lib-body-rich ol { padding-left: 1.4em; }
+.iwm-lib-body-rich a { color: var(--ac); overflow-wrap: anywhere; }
 
-.wsm-lib-feed-card {
+.iwm-lib-feed-card {
   display: block;
   text-decoration: none;
 }
-.wsm-lib-feed-card:active { border-color: var(--ac); }
+.iwm-lib-feed-card:active { border-color: var(--ac); }
 
-.wsm-loadmore {
+.iwm-loadmore {
   width: 100%;
   justify-content: center;
 }
