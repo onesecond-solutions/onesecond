@@ -145,6 +145,9 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 body.iw-page.iw-bg-flat:before{display:none}
 /* 2026-08-23 1차 검수 수정 — 예전 하드코딩(#f6f7fb/#14161b)이 새 웜톤(--bg)과 안 맞아 var(--bg)로 교체 */
 body.iw-page.iw-bg-flat:after{background:var(--bg)}
+/* 창문(window) 배경모드 — 히어로 사진이 없는 모드라 :before를 명시적으로 숨김(iw-bg-flat과 함께
+   적용되므로 위 규칙과 중복이지만, iw-bg-window 단독 사용 시에도 안전하도록 명시) */
+body.iw-page.iw-bg-window:before{display:none}
 body.iw-page.iw-bg-flat #v-insuwork{border-color:var(--bd);background:var(--s1)}
 body.iw-page.iw-bg-flat #v-insuwork .iw-head,
 body.iw-page.iw-bg-flat #v-insuwork .iw-search,

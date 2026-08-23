@@ -1,0 +1,41 @@
+/* ── 창문(window) 배경모드 — 실시간 날씨/시간대를 반영하는 소형 장식 창문 (2026-08-23)
+   OSWeather(../weather-widget.js)가 수집한 실제 날씨를 재사용, 신규 API 호출 없음.
+   위치: 뷰포트 우하단 고정, 실제 UI를 절대 가리지 않도록 pointer-events:none.
+   680px 미만(기존 insuwork.css 모바일 브레이크포인트 관례)에서는 완전히 숨김 — 데스크톱 전용. ── */
+.win-wrap{position:fixed;right:24px;bottom:24px;z-index:2;pointer-events:none}
+.win{width:180px;height:216px;position:relative;filter:drop-shadow(0 12px 22px rgba(0,0,0,.22))}
+.win-frame{position:absolute;inset:0;border-radius:10px;padding:10px;background:var(--s2);transition:background .5s ease}
+.win-glass{position:relative;width:100%;height:100%;border-radius:4px;overflow:hidden;
+  background:linear-gradient(var(--sky-a),var(--sky-b) 55%,var(--sky-c) 100%);transition:background 1s ease}
+.win-celestial{position:absolute;width:34px;height:34px;border-radius:50%;top:20px;right:22px;
+  opacity:var(--sol-op,0);transition:opacity .8s ease,background 1s ease,box-shadow 1s ease;
+  background:var(--sol-bg);box-shadow:0 0 26px 7px var(--sol-glow)}
+.win-stars{position:absolute;inset:0;opacity:var(--star-op,0);transition:opacity .8s ease}
+.win-stars span{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.8}
+.win-cloud{position:absolute;background:var(--cloud-c,#fff);border-radius:30px;opacity:var(--cloud-op,0);
+  filter:blur(1px);transition:opacity 1s ease,background 1s ease}
+.win-cloud::before,.win-cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.win-c1{width:64px;height:18px;top:32px;left:-12px}
+.win-c1::before{width:30px;height:30px;top:-15px;left:6px}
+.win-c1::after{width:22px;height:22px;top:-9px;left:30px}
+.win-c2{width:48px;height:14px;top:66px;right:-6px}
+.win-c2::before{width:22px;height:22px;top:-11px;left:6px}
+.win-rays{position:absolute;inset:0;opacity:var(--ray-op,0);transition:opacity 1s ease;
+  background:linear-gradient(115deg,rgba(255,244,210,.5) 0%,rgba(255,244,210,0) 34%);mix-blend-mode:screen}
+.win-frost{position:absolute;inset:0;opacity:var(--frost-op,0);transition:opacity 1s ease;
+  background:radial-gradient(ellipse at 50% 100%,rgba(190,220,240,0) 55%,rgba(200,225,245,.5) 100%)}
+.win-rain{position:absolute;inset:-14px 0 0 0;opacity:var(--rain-op,0);transition:opacity .6s ease;
+  background:repeating-linear-gradient(115deg,rgba(210,225,235,.5) 0 1.5px,transparent 1.5px 14px);
+  animation:winrainfall .45s linear infinite}
+@keyframes winrainfall{to{background-position:-28px 30px}}
+.win-snowlayer{position:absolute;inset:0;opacity:var(--snow-op,0);transition:opacity .8s ease}
+.win-flake{position:absolute;top:-6px;background:#fff;border-radius:50%;opacity:.9;
+  animation-name:winsnowfall;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes winsnowfall{0%{transform:translate(0,-8px)}50%{transform:translate(7px,110px)}100%{transform:translate(-3px,230px)}}
+.win-snowcap{position:absolute;left:0;right:0;bottom:0;height:var(--cap-h,0);background:#f4f7fa;
+  border-radius:60% 60% 0 0/100% 100% 0 0;transition:height .8s ease;box-shadow:0 -1px 5px rgba(0,0,0,.06)}
+.win-mullion-v{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:var(--ac);filter:drop-shadow(0 0 1px rgba(0,0,0,.4))}
+.win-mullion-h{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:var(--ac);filter:drop-shadow(0 0 1px rgba(0,0,0,.4))}
+.win-sill{position:absolute;left:4px;right:4px;bottom:-7px;height:16px;border-radius:3px;background:var(--s2);transition:background .5s ease}
+@media(prefers-reduced-motion:reduce){.win-rain,.win-flake{animation:none!important}}
+@media(max-width:680px){.win-wrap{display:none}}

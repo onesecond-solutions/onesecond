@@ -6,6 +6,7 @@
   var weather = null;
   var weatherAt = 0;
   var loading = false;
+  var changeListeners = [];
 
   function enabled() { try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch (_e) { return false; } }
   function setEnabled(value) { try { localStorage.setItem(STORAGE_KEY, value ? '1' : '0'); } catch (_e) {} }
@@ -50,6 +51,11 @@
     return node;
   }
   function renderWidget() {
+    // OSWeather.onChange 알림 — os_weather_enabled 토글이 꺼져 있어도(예: 창문 배경모드 단독
+    // 사용) 신선한 weather 데이터가 들어올 때마다 구독자에게 통지한다. 아래 이후 코드는 기존
+    // 그대로이며(early return 다수), 함수 끝에 두면 토글 꺼짐 분기에서 도달하지 못해 알림이
+    // 누락되므로 최상단에 배치 — DOM/기존 동작은 전혀 바꾸지 않는 순수 추가.
+    if (weather) changeListeners.forEach(function (cb) { try { cb(weather); } catch (_e) {} });
     var node = ensureWidget();
     if (!node) return;
     var isEnabled = enabled();
@@ -115,8 +121,8 @@
       setStatus('날씨 정보를 불러오지 못했습니다.', true);
     });
   }
-  function refreshWeather(force) {
-    if (!enabled() || loading) return;
+  function refreshWeather(force, ignoreToggle) {
+    if ((!enabled() && !ignoreToggle) || loading) return;
     if (!force && weather && Date.now() - weatherAt < REFRESH_MS) { renderWidget(); return; }
     if (!navigator.geolocation) { handleLocationError(); return; }
     loading = true;
@@ -138,6 +144,12 @@
     document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshWeather(false); });
     window.addEventListener('storage', function (event) { if (event.key === STORAGE_KEY) { sync(); if (enabled()) refreshWeather(true); } });
   }
+
+  window.OSWeather = {
+    current: function () { return weather; },
+    refresh: function (force) { refreshWeather(force !== false, true); },
+    onChange: function (cb) { changeListeners.push(cb); }
+  };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
