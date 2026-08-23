@@ -128,7 +128,7 @@
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
-      + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
+      + '<p>이 계정은 아직 이용 대상이 아닙니다.</p>'
       + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
   }
