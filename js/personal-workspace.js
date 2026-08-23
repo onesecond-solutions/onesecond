@@ -53,7 +53,7 @@
   function isFavoriteSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.setting_key === 'favorites'; }
   function isWorkspaceSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.workspace_category === 'settings'; }
   function isConsultAttachmentItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'consultation'; }
-  function saveConsultColumns(columns) { var serialized = JSON.stringify(columns); localStorage.setItem(consultColumnStorageKey(), serialized); if (!authenticated()) return; var existing = state.data.items.find(isConsultColumnSetting), body = { owner_id: currentUserId(), item_type: 'memo', title: 'consultation_columns', body: serialized, visibility: 'private', legacy_payload: { workspace_category: 'settings', setting_key: 'consultation_columns' } }; var request = existing ? updateOne('workspace_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('workspace_items', body); request.then(function (saved) { if (!existing && saved) state.data.items.push(saved); }).catch(function (error) { console.warn('Consultation column preference save failed', error); if (typeof window.toast === 'function') window.toast('컬럼 설정은 이 브라우저에 저장했습니다. 서버 동기화는 잠시 후 다시 시도해 주세요.'); }); }
+  function saveConsultColumns(columns) { var serialized = JSON.stringify(columns); localStorage.setItem(consultColumnStorageKey(), serialized); if (!authenticated()) return; var existing = state.data.items.find(isConsultColumnSetting), body = { owner_id: currentUserId(), item_type: 'memo', title: 'consultation_columns', body: serialized, visibility: 'private', legacy_payload: { workspace_category: 'settings', setting_key: 'consultation_columns' } }; var request = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', body); request.then(function (saved) { if (!existing && saved) state.data.items.push(saved); }).catch(function (error) { console.warn('Consultation column preference save failed', error); if (typeof window.toast === 'function') window.toast('컬럼 설정은 이 브라우저에 저장했습니다. 서버 동기화는 잠시 후 다시 시도해 주세요.'); }); }
   function normalizeFavorites(value) {
     var rows = Array.isArray(value) ? value : [];
     return rows.filter(function (entry) { return entry && entry.target_type && entry.target_id; }).map(function (entry, index) {
@@ -76,14 +76,14 @@
     if (!authenticated()) return;
     var existing = state.data.items.find(isFavoriteSetting);
     var body = { owner_id: currentUserId(), item_type: 'memo', title: 'favorites', body: serialized, visibility: 'private', legacy_payload: { workspace_category: 'settings', setting_key: 'favorites' } };
-    var request = existing ? updateOne('workspace_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('workspace_items', body);
+    var request = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', body);
     request.then(function (saved) { if (!existing && saved) state.data.items.push(saved); }).catch(function (error) { console.warn('Favorite save failed', error); if (typeof window.toast === 'function') window.toast('즐겨찾기는 이 브라우저에 저장했습니다. 서버 동기화는 잠시 후 다시 시도해 주세요.'); });
   }
   function consultGridTemplate(columns) { return columns.map(function (column) { return column.flex ? 'minmax(150px,1fr)' : 'minmax(0,' + Math.max(64, Number(column.width) || 96) + 'px)'; }).join(' '); }
   function consultCustomValue(profile, key) { return String((profile.custom_fields && profile.custom_fields[key]) || ''); }
   function consultCell(column, item, customer, profile, date, age, status) { var values = { date: date, name: customer.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(customer.phone || customer.phone_raw || ''), summary: stripHtml(item.memo || ''), status: status }; var value = Object.prototype.hasOwnProperty.call(values, column.key) ? values[column.key] : consultCustomValue(profile, column.key); if (column.key === 'name') return '<strong>' + esc(value) + '</strong>'; return '<span class="pw-consult-cell pw-consult-' + esc(column.key) + '">' + esc(value) + '</span>'; }
   function personalItemScope() {
-    // workspace_items.owner_id is the canonical account boundary (already applied
+    // insuwork_items.owner_id is the canonical account boundary (already applied
     // by the caller's owner_id=eq.<계정> filter). On top of that, every legacy
     // source (library/scripts/myspace_folders/myspace_files) must also be
     // personal-scope — team/branch/global bulk server material (including
@@ -250,17 +250,17 @@
     var today = ymd(new Date());
     var itemSelect = 'id,owner_id,parent_id,item_type,title,body,url,storage_path,mime_type,extension,file_size,visibility,legacy_payload,created_at,updated_at,deleted_at';
     var requests = full ? [
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=' + itemSelect),
-      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
-      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at'),
-      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
-      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
+      api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=' + itemSelect),
+      api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
+      api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at'),
+      api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
+      api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ] : [
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=5&select=' + itemSelect),
-      api('workspace_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=20&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
-      api('workspace_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
-      api('workspace_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,workspace_customers(id,name,phone,status)'),
-      api('workspace_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=30&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
+      api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=5&select=' + itemSelect),
+      api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=20&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
+      api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
+      api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,insuwork_customers(id,name,phone,status)'),
+      api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=30&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ];
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
       if (requestId !== state.requestId) return false;
@@ -569,15 +569,15 @@
     var bases = contractDatesOf(customer).filter(function (base) { return /^\d{4}-\d{2}-\d{2}$/.test(base); });
     if (!bases.length || !customer || !customer.id) return Promise.resolve();
     var targets = bases.reduce(function (all, base) { return all.concat(careTaskTargets(customer, base)); }, []);
-    return api('workspace_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,task_date,description').then(function (existing) {
+    return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,task_date,description').then(function (existing) {
       var have = {}; (existing || []).forEach(function (row) { have[row.legacy_id] = row; });
       var toCreate = targets.filter(function (t) { return !have[t.legacyId]; });
       var toUpdate = targets.filter(function (t) { var row = have[t.legacyId]; return row && (row.task_date !== t.date || row.description !== t.description); });
       var creates = toCreate.map(function (t) {
-        return writeOne('workspace_tasks', { owner_id: currentUserId(), customer_id: customer.id, title: t.title, description: t.description, task_date: t.date, legacy_source: 'care_auto', legacy_id: t.legacyId }).then(upsertTask).catch(function () {});
+        return writeOne('insuwork_tasks', { owner_id: currentUserId(), customer_id: customer.id, title: t.title, description: t.description, task_date: t.date, legacy_source: 'care_auto', legacy_id: t.legacyId }).then(upsertTask).catch(function () {});
       });
       var updates = toUpdate.map(function (t) {
-        return updateOne('workspace_tasks?id=eq.' + encodeURIComponent(have[t.legacyId].id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { task_date: t.date, description: t.description }).then(upsertTask).catch(function () {});
+        return updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(have[t.legacyId].id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { task_date: t.date, description: t.description }).then(upsertTask).catch(function () {});
       });
       return Promise.all(creates.concat(updates));
     }).catch(function () {});
@@ -671,7 +671,7 @@
     var favoritesPanel = '<section class="pw-panel pw-favorites-panel"><div class="pw-panel-head"><strong>즐겨찾기</strong></div><div class="pw-list">' + favoriteRows() + '</div></section>';
     var todayPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>오늘 일정</strong><button onclick="OSPersonalWorkspace.go(\'calendar\')">전체 보기</button></div><div class="pw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="pw-empty">오늘 일정이 없습니다.</div>') + '</div></section>';
     var assetsPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSPersonalWorkspace.go(\'assets\')">전체 보기</button></div><div class="pw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSPersonalWorkspace.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="pw-empty">저장된 자료가 없습니다.</div>') + '</div></section>';
-    var consultPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 상담</strong><button onclick="OSPersonalWorkspace.go(\'consultations\')">전체 보기</button></div><div class="pw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.workspace_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSPersonalWorkspace.go('consultations');OSPersonalWorkspace.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></section>';
+    var consultPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 상담</strong><button onclick="OSPersonalWorkspace.go(\'consultations\')">전체 보기</button></div><div class="pw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSPersonalWorkspace.go('consultations');OSPersonalWorkspace.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></section>';
     return statusHtml() + '<div class="pw-home-grid"><div class="pw-home-row pw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="pw-home-row pw-home-row-bottom">' + assetsPanel + consultPanel + '</div></div>';
   }
 
@@ -1877,7 +1877,7 @@
   function update(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
   function updateOne(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); }).then(function (rows) { if (!Array.isArray(rows) || rows.length !== 1) throw new Error('수정 권한을 확인하지 못했습니다. 다시 로그인한 뒤 시도해 주세요.'); return rows[0]; }); }
   function softDelete(path) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); }).then(function (rows) { if (!Array.isArray(rows) || rows.length !== 1) throw new Error('삭제 권한을 확인하지 못했습니다. 다시 로그인한 뒤 시도해 주세요.'); return true; }); }
-  function softDeleteChildren(parentId) { return window.db.fetch('/rest/v1/workspace_items?parent_id=eq.' + encodeURIComponent(parentId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
+  function softDeleteChildren(parentId) { return window.db.fetch('/rest/v1/insuwork_items?parent_id=eq.' + encodeURIComponent(parentId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
   function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; rebuildWorkspaceDerived(); renderContent(); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { briefingAlert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error), '저장 실패'); }
   function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
@@ -1903,12 +1903,12 @@
       var category = assetCategory(item);
       prepareRichUploads(id, body, category).then(function (prepared) {
         changes.body = prepared.body; changes.url = value('pwf-edit-link') || null; changes.visibility = value('pwf-edit-visibility') === 'public' ? 'public' : 'private';
-        return updateOne('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
+        return updateOne('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
           .then(function (updated) { return saveRichChildren(prepared.rows).then(function () { return updated; }); });
       }).then(function (updated) { upsertWorkspaceItem(updated); resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
       return;
     }
-    updateOne('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
+    updateOne('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
       .then(function (updated) { upsertWorkspaceItem(updated); finishSave('자료를 수정했습니다.'); }).catch(saveError);
   }
   function deleteAsset(id) {
@@ -1916,17 +1916,17 @@
     briefingConfirm('“' + String(item.title || '제목 없음') + '” 자료를 삭제할까요?', '자료 삭제', '삭제', true).then(function (ok) {
       if (!ok) return;
       var childIds = state.data.items.filter(function (entry) { return String(entry.parent_id || '') === String(id); }).map(function (entry) { return entry.id; });
-      softDeleteChildren(id).then(function () { return softDelete('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null'); })
+      softDeleteChildren(id).then(function () { return softDelete('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null'); })
         .then(function () { closeDialog(); closePreview(); removeWorkspaceItemsLocal(childIds.concat([id])); renderContent(); if (typeof window.toast === 'function') window.toast('자료를 삭제했습니다.'); }).catch(saveError);
     });
   }
   function openVault() {
     dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
-    api('workspace_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null' + personalItemScope() + '&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
+    api('insuwork_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null' + personalItemScope() + '&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
   }
   function renderVault() { var content = document.getElementById('pw-vault-content'); if (!content) return; var folders = state.vaultFolders || [], files = state.vaultFiles || []; content.innerHTML = '<div class="pw-vault-grid">' + folders.map(function (folder) { return '<div class="pw-file-card folder"><span>📁</span><b>' + esc(folder.title) + '</b><small>폴더</small></div>'; }).concat(files.map(function (file) { return '<div class="pw-file-card"><span>📄</span><b>' + esc(file.title) + '</b><small>' + esc((file.extension || '파일').toUpperCase()) + ' · ' + formatDate(file.created_at) + '</small></div>'; })).join('') + '</div>' + ((!folders.length && !files.length) ? '<div class="pw-empty">저장된 파일이 없습니다.</div>' : ''); }
-  function newFolder() { briefingPrompt('새 폴더 이름을 입력하세요.', '새 폴더').then(function (name) { if (name == null || !String(name).trim()) return; writeOne('workspace_items', { owner_id: currentUserId(), parent_id: null, item_type: 'folder', title: String(name).trim(), visibility: 'private' }).then(function (created) { upsertWorkspaceItem(created); openVault(); }).catch(saveError); }); }
-  function uploadFiles(files) { var list = Array.prototype.slice.call(files || []); if (!list.length) return; var token = window.db.getToken(), owner = currentUserId(); Promise.all(list.map(function (file) { var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : ''); var row = { id: id, owner_id: owner, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', created_at: new Date().toISOString() }; return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('workspace_items', row).then(function () { return row; }); }); })).then(function (rows) { rows.forEach(upsertWorkspaceItem); openVault(); }).catch(saveError); }
+  function newFolder() { briefingPrompt('새 폴더 이름을 입력하세요.', '새 폴더').then(function (name) { if (name == null || !String(name).trim()) return; writeOne('insuwork_items', { owner_id: currentUserId(), parent_id: null, item_type: 'folder', title: String(name).trim(), visibility: 'private' }).then(function (created) { upsertWorkspaceItem(created); openVault(); }).catch(saveError); }); }
+  function uploadFiles(files) { var list = Array.prototype.slice.call(files || []); if (!list.length) return; var token = window.db.getToken(), owner = currentUserId(); Promise.all(list.map(function (file) { var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : ''); var row = { id: id, owner_id: owner, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', created_at: new Date().toISOString() }; return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('insuwork_items', row).then(function () { return row; }); }); })).then(function (rows) { rows.forEach(upsertWorkspaceItem); openVault(); }).catch(saveError); }
   function closeAssetMenu() { var menu = document.querySelector('#v-personal-workspace .pw-add-menu'); if (menu) menu.open = false; }
   function newAssetFolder() {
     closeAssetMenu();
@@ -1941,7 +1941,7 @@
     var name = value('pwf-folder-name'), category = value('pwf-folder-category');
     if (!name || ['note', 'file', 'memo'].indexOf(category) < 0) return;
     var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null;
-    writeOne('workspace_items', { owner_id: currentUserId(), parent_id: parent, item_type: 'folder', title: name, visibility: 'private', legacy_payload: { workspace_category: category } })
+    writeOne('insuwork_items', { owner_id: currentUserId(), parent_id: parent, item_type: 'folder', title: name, visibility: 'private', legacy_payload: { workspace_category: category } })
       .then(function (created) { upsertWorkspaceItem(created); closeDialog(); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 폴더를 만들었습니다.'); }).catch(saveError);
   }
   function deleteAssetFolder(id) {
@@ -1952,7 +1952,7 @@
     briefingConfirm('“' + String(folder.title || '폴더') + '” 폴더를 삭제할까요?', '폴더 삭제', '삭제', true).then(function (ok) {
       if (!ok) return;
       var category = assetCategory(folder);
-      softDelete('workspace_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()))
+      softDelete('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()))
         .then(function () { removeWorkspaceItemsLocal([id]); state.assetFolder = null; state.assetFilter = category; renderContent(); if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
     });
   }
@@ -2005,7 +2005,7 @@
     var token = window.db.getToken(), owner = currentUserId(), folderPath = parent || category;
     var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/' + folderPath + '/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : '');
     var row = { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category }, created_at: new Date().toISOString() };
-    return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('workspace_items', row).then(function () { return row; }); });
+    return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('insuwork_items', row).then(function () { return row; }); });
   }
   function importExternalAssetDrop(dataTransfer, categoryOverride, parentOverride) {
     if (state.externalImporting) return;
@@ -2018,7 +2018,7 @@
       return ordered.reduce(function (promise, parts) {
         return promise.then(function () {
           var key = parts.join('/'), parentKey = parts.slice(0, -1).join('/'), parent = parentKey ? folderIds[parentKey] : baseParent;
-          return writeOne('workspace_items', { owner_id: currentUserId(), parent_id: parent || null, item_type: 'folder', title: parts[parts.length - 1], visibility: 'private', legacy_payload: { workspace_category: category } }).then(function (created) { folderIds[key] = created.id; upsertWorkspaceItem(created); });
+          return writeOne('insuwork_items', { owner_id: currentUserId(), parent_id: parent || null, item_type: 'folder', title: parts[parts.length - 1], visibility: 'private', legacy_payload: { workspace_category: category } }).then(function (created) { folderIds[key] = created.id; upsertWorkspaceItem(created); });
         });
       }, Promise.resolve()).then(function () {
         setAssetDropOverlay(true, '파일 ' + tree.files.length + '개를 복사하는 중입니다…');
@@ -2063,7 +2063,7 @@
     state.draggingAsset = null;
     if (!dragging || dragging.id === String(folderId)) return;
     if (dragging.category !== String(folderCategory)) { if (typeof window.toast === 'function') window.toast('같은 분류의 폴더로만 이동할 수 있습니다.'); return; }
-    window.db.fetch('/rest/v1/workspace_items?id=eq.' + encodeURIComponent(dragging.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify({ parent_id: String(folderId) }) })
+    window.db.fetch('/rest/v1/insuwork_items?id=eq.' + encodeURIComponent(dragging.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify({ parent_id: String(folderId) }) })
       .then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows) || rows.length !== 1) throw new Error('이동할 자료를 확인하지 못했습니다.');
@@ -2094,7 +2094,7 @@
       var row = { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category }, created_at: new Date().toISOString() };
       return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
         if (!response.ok) throw new Error(file.name + ' 업로드 실패');
-        return write('workspace_items', row).then(function () { return row; });
+        return write('insuwork_items', row).then(function () { return row; });
       });
     })).then(function (rows) { rows.forEach(upsertWorkspaceItem); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + list.length + '개를 추가했습니다.'); }).catch(saveError);
   }
@@ -2198,8 +2198,8 @@
   function consultationAttachmentRoot(consultationId) { return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'consultation' && payload.attachment_root === true && String(payload.consultation_id || '') === String(consultationId || ''); }); }
   function customerAttachmentRoot(customerId) { return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'customer' && payload.attachment_root === true && String(payload.customer_id || '') === String(customerId || ''); }); }
   /* 첨부파일 목록 항목(2026-08-20, 대표 확정) — 이름수정·삭제 버튼 추가. 기존 자료실의
-     editAsset/deleteAsset(workspace_items 공용 함수)를 그대로 재사용 — 첨부파일도 같은
-     workspace_items 테이블 행이라 새 함수 없이 그대로 동작. */
+     editAsset/deleteAsset(insuwork_items 공용 함수)를 그대로 재사용 — 첨부파일도 같은
+     insuwork_items 테이블 행이라 새 함수 없이 그대로 동작. */
   function attachmentItemHtml(file) {
     return '<span class="pw-att-item"><a href="#" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title || '첨부파일') + '" data-file-mime="' + esc(file.mime_type || '') + '">' + esc(file.title || '첨부파일') + '<small>' + formatBytes(file.file_size) + '</small></a>'
       + '<button type="button" class="pw-att-edit" title="이름 수정" onclick="OSPersonalWorkspace.editAsset(\'' + esc(file.id) + '\')">✎</button>'
@@ -2581,7 +2581,7 @@
     if (!id) return;
     briefingConfirm('이 일정을 삭제할까요?', '일정 삭제', '삭제', true).then(function (ok) {
       if (!ok) return;
-      softDelete('workspace_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
+      softDelete('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
         state.data.events = state.data.events.filter(function (entry) { return String(entry.id) !== String(id); });
         closeDialog(); renderContent();
         if (typeof window.toast === 'function') window.toast('일정을 삭제했습니다.');
@@ -2592,7 +2592,7 @@
   function toggleEventComplete(id) {
     var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return;
     var completedAt = event.completed_at ? null : new Date().toISOString();
-    updateOne('workspace_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { completed_at: completedAt })
+    updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { completed_at: completedAt })
       .then(function (saved) { upsertTask(saved); rebuildWorkspaceDerived(); renderContent(); showEvent(id); if (typeof window.toast === 'function') window.toast(completedAt ? '완료 처리했습니다.' : '완료를 취소했습니다.'); }).catch(saveError);
   }
   function consultationStatusChanged(select, source) {
@@ -2608,7 +2608,7 @@
     if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', '');
   }
   function closeReservationPopup() { var box = document.getElementById('pw-reservation-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
-  function saveReservationEvent() { var date = value('pwr-event-date'), title = value('pwr-event-title'); if (!date || !title) return; writeOne('workspace_tasks', { task_date: date, task_time: value('pwr-event-time') || null, title: title, description: value('pwr-event-desc') || null, owner_id: currentUserId() }).then(function (created) { upsertTask(created); state.selectedDate = date; state.cursor = parseDate(date); closeReservationPopup(); rebuildWorkspaceDerived(); renderContent(); if (typeof window.toast === 'function') window.toast('캘린더에 상담 예약을 추가했습니다.'); }).catch(saveError); }
+  function saveReservationEvent() { var date = value('pwr-event-date'), title = value('pwr-event-title'); if (!date || !title) return; writeOne('insuwork_tasks', { task_date: date, task_time: value('pwr-event-time') || null, title: title, description: value('pwr-event-desc') || null, owner_id: currentUserId() }).then(function (created) { upsertTask(created); state.selectedDate = date; state.cursor = parseDate(date); closeReservationPopup(); rebuildWorkspaceDerived(); renderContent(); if (typeof window.toast === 'function') window.toast('캘린더에 상담 예약을 추가했습니다.'); }).catch(saveError); }
   function value(id) { var element = document.getElementById(id); return element ? String(element.value || '').trim() : ''; }
   function prepareRichUploads(itemId, body, category) {
     var owner = currentUserId(), token = window.db.getToken(), images = state.pendingRichImages || [], files = state.pendingRichFiles || [], all = images.map(function (entry) { return { entry: entry, role: 'inline-image' }; }).concat(files.map(function (entry) { return { entry: entry, role: 'attachment' }; }));
@@ -2625,7 +2625,7 @@
       return { body: sanitizeRich(doc.body.innerHTML), rows: uploaded.map(function (entry) { return entry.row; }) };
     });
   }
-  function saveRichChildren(rows) { return Promise.all((rows || []).map(function (rowBody) { var stamped = Object.assign({ created_at: new Date().toISOString() }, rowBody); return write('workspace_items', stamped).then(function () { upsertWorkspaceItem(stamped); return stamped; }); })); }
+  function saveRichChildren(rows) { return Promise.all((rows || []).map(function (rowBody) { var stamped = Object.assign({ created_at: new Date().toISOString() }, rowBody); return write('insuwork_items', stamped).then(function () { upsertWorkspaceItem(stamped); return stamped; }); })); }
   function saveAsset() {
     var type = value('pwf-asset-type'), title = value('pwf-title'), body = richValue('pwf-body'), link = value('pwf-link'), category = type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'file';
     if (!title) { briefingAlert('제목을 입력해 주세요.'); return; }
@@ -2633,26 +2633,26 @@
     var parent = state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null, itemId = crypto.randomUUID();
     prepareRichUploads(itemId, body, category).then(function (prepared) {
       var row = { id: itemId, owner_id: currentUserId(), parent_id: parent, item_type: type === 'note' ? 'note' : type === 'memo' ? 'memo' : 'link', title: title, body: prepared.body, url: link || null, visibility: value('pwf-visibility') === 'public' ? 'public' : 'private', legacy_payload: { workspace_category: category }, created_at: new Date().toISOString() };
-      return write('workspace_items', row).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return row; });
+      return write('insuwork_items', row).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return row; });
     }).then(function (row) { state.assetFilter = category; state.assetFolder = parent; upsertWorkspaceItem(row); resetRichPending(); finishSave('자료를 저장했습니다.'); }).catch(saveError);
   }
-  function saveCustomer() { var name = value('pwf-customer-name'), phone = phoneText(value('pwf-customer-phone')), note = richValue('pwf-customer-note'), contractDates = gatherContractDates('pwf-customer'), birth = value('pwf-customer-birth'), genderInput = document.querySelector('input[name="pwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('pwf-customer-zip') || null, address: value('pwf-customer-address') || null, address_detail: value('pwf-customer-address-detail') || null, job: value('pwf-customer-job') || null, driving_status: value('pwf-customer-driving') || null, medication: value('pwf-customer-medication') || null, medical_history: value('pwf-customer-history') || null, diagnosis_date: value('pwf-customer-diagnosis') || null, current_condition: value('pwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('workspace_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
-  function saveCustomerRich(customer, profile, body) { var root = customerAttachmentRoot(customer.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(customer); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '고객 첨부 · ' + customer.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customer.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('workspace_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'customer'); }).then(function (prepared) { return updateOne('workspace_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { var updatedProfile = Object.assign({}, profile, { note: prepared.body }); return updateOne('workspace_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { profile: updatedProfile }); }); }); }
+  function saveCustomer() { var name = value('pwf-customer-name'), phone = phoneText(value('pwf-customer-phone')), note = richValue('pwf-customer-note'), contractDates = gatherContractDates('pwf-customer'), birth = value('pwf-customer-birth'), genderInput = document.querySelector('input[name="pwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('pwf-customer-zip') || null, address: value('pwf-customer-address') || null, address_detail: value('pwf-customer-address-detail') || null, job: value('pwf-customer-job') || null, driving_status: value('pwf-customer-driving') || null, medication: value('pwf-customer-medication') || null, medical_history: value('pwf-customer-history') || null, diagnosis_date: value('pwf-customer-diagnosis') || null, current_condition: value('pwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('pwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
+  function saveCustomerRich(customer, profile, body) { var root = customerAttachmentRoot(customer.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(customer); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '고객 첨부 · ' + customer.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customer.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('insuwork_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'customer'); }).then(function (prepared) { return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { var updatedProfile = Object.assign({}, profile, { note: prepared.body }); return updateOne('insuwork_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { profile: updatedProfile }); }); }); }
   function saveConsultation() {
     var customerId = value('pwf-consult-customer-id'), consultationId = value('pwf-consult-id'), name = value('pwf-consult-name'), birth = value('pwf-consult-birth'), date = value('pwf-consult-date'), phone = phoneText(value('pwf-consult-phone')), status = value('pwf-consult-status'), memo = richValue('pwf-consult-memo');
     var genderInput = document.querySelector('input[name="pwf-consult-gender"]:checked'), gender = genderInput ? genderInput.value : '';
     if (!name || !date || !richHasText(memo)) return;
     var existing = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId); }) || {}, profile = Object.assign({}, customerProfile(existing), { birth_date: birth || null, gender: gender || null });
     var customerBody = { owner_id: currentUserId(), name: name, phone: phone || null, status: status || '예약', profile: profile };
-    var customerPromise = customerId ? updateOne('workspace_customers?id=eq.' + encodeURIComponent(customerId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), customerBody) : writeOne('workspace_customers', customerBody);
+    var customerPromise = customerId ? updateOne('insuwork_customers?id=eq.' + encodeURIComponent(customerId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), customerBody) : writeOne('insuwork_customers', customerBody);
     customerPromise.then(function (customer) {
       upsertCustomer(customer);
       var content = consultationId ? memo : '<p><strong>[' + esc(writtenAt()) + ']</strong></p>' + memo;
       var consultationBody = { customer_id: customer.id, owner_id: currentUserId(), consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content };
-      return consultationId ? updateOne('workspace_consultations?id=eq.' + encodeURIComponent(consultationId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), consultationBody) : writeOne('workspace_consultations', consultationBody);
-    }).then(function (saved) { return saveConsultationRich(saved, saved.content || memo).then(function (content) { if (content === saved.content) return saved; return updateOne('workspace_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: content }); }); }).then(function (saved) { upsertConsultation(saved); state.selectedConsultation = saved.id; resetRichPending(); finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
+      return consultationId ? updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(consultationId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), consultationBody) : writeOne('insuwork_consultations', consultationBody);
+    }).then(function (saved) { return saveConsultationRich(saved, saved.content || memo).then(function (content) { if (content === saved.content) return saved; return updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: content }); }); }).then(function (saved) { upsertConsultation(saved); state.selectedConsultation = saved.id; resetRichPending(); finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
   }
-  function saveConsultationRich(consultation, body) { var root = consultationAttachmentRoot(consultation.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(body); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '상담 첨부 · ' + consultation.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'consultation', consultation_id: consultation.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('workspace_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'consultation'); }).then(function (prepared) { return updateOne('workspace_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { return prepared.body; }); }); }
+  function saveConsultationRich(consultation, body) { var root = consultationAttachmentRoot(consultation.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(body); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '상담 첨부 · ' + consultation.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'consultation', consultation_id: consultation.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('insuwork_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'consultation'); }).then(function (prepared) { return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { return prepared.body; }); }); }
   function selectConsultation(id) { resetRichPending(); state.selectedConsultation = id && String(state.selectedConsultation) !== String(id) ? id : null; renderContent(); }
   function selectCustomerDetail(id) { resetRichPending(); state.selectedCustomerDetail = id && String(state.selectedCustomerDetail) !== String(id) ? id : null; renderContent(); }
   function showRowHover(event) {
@@ -2669,7 +2669,7 @@
     if (!id) return;
     briefingConfirm('이 고객을 휴지통으로 이동할까요? 상담기록은 보존되며 복원하면 다시 표시됩니다.', '고객 삭제', '이동', true).then(function (ok) {
       if (!ok) return;
-      softDelete('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
+      softDelete('insuwork_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
         moveCustomerToTrashLocal(id);
         state.selectedConsultation = null;
         closeDialog(); renderContent();
@@ -2679,7 +2679,7 @@
   }
   function restoreCustomer(id) {
     if (!id) return;
-    updateOne('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { deleted_at: null }).then(function (restored) {
+    updateOne('insuwork_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { deleted_at: null }).then(function (restored) {
       restoreCustomerFromTrashLocal(restored);
       renderContent();
       if (typeof window.toast === 'function') window.toast('고객을 복원했습니다.');
@@ -2699,7 +2699,7 @@
       job: value('pwd-customer-job') || null, driving_status: value('pwd-customer-driving') || null, medication: value('pwd-customer-medication') || null, medical_history: value('pwd-customer-history') || null,
       diagnosis_date: value('pwd-customer-diagnosis') || null, current_condition: value('pwd-customer-current-status') || null, note: note
     });
-    updateOne('workspace_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '청약완료', profile: profile })
+    updateOne('insuwork_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '청약완료', profile: profile })
       .then(function (saved) { return saveCustomerRich(saved, profile, note); })
       .then(function (saved) { upsertCustomer(saved); resetRichPending(); return syncCareTasksForCustomer(saved); }).then(function () { finishSave('고객을 저장했습니다.'); }).catch(saveError);
   }
@@ -2717,9 +2717,9 @@
       diagnosis_date: value('pwd-consult-care-diagnosis') || null, current_condition: value('pwd-consult-care-current-status') || null
     });
     var content = sanitizeRich(richValue('pwd-consult-new'));
-    updateOne('workspace_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '예약', profile: profile })
-      .then(function (savedCustomer) { upsertCustomer(savedCustomer); return updateOne('workspace_consultations?id=eq.' + encodeURIComponent(item.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content }); })
-      .then(function (saved) { return saveConsultationRich(saved, saved.content || content).then(function (resolvedContent) { if (resolvedContent === saved.content) return saved; return updateOne('workspace_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: resolvedContent }); }); })
+    updateOne('insuwork_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '예약', profile: profile })
+      .then(function (savedCustomer) { upsertCustomer(savedCustomer); return updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(item.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { consulted_at: date + 'T00:00:00+09:00', channel: status || '예약', content: content }); })
+      .then(function (saved) { return saveConsultationRich(saved, saved.content || content).then(function (resolvedContent) { if (resolvedContent === saved.content) return saved; return updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: resolvedContent }); }); })
       .then(function (saved) { upsertConsultation(saved); resetRichPending(); finishSave('상담을 저장했습니다.'); }).catch(saveError);
   }
   function saveEvent() {
@@ -2727,7 +2727,7 @@
     var endDate = value('pwf-event-end-date') || date; if (endDate < date) endDate = date;
     var endTime = value('pwf-event-end-time');
     var body = { task_date: date, task_time: value('pwf-event-time') || null, end_date: endDate, end_time: endTime || null, title: title, description: value('pwf-event-desc') || null };
-    var promise = id ? updateOne('workspace_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('workspace_tasks', Object.assign({}, body, { owner_id: currentUserId() }));
+    var promise = id ? updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_tasks', Object.assign({}, body, { owner_id: currentUserId() }));
     promise.then(function (saved) { upsertTask(saved); state.selectedDate = date; state.cursor = parseDate(date); finishSave(id ? '일정을 수정했습니다.' : '일정을 추가했습니다.'); }).catch(saveError);
   }
   function moveCalendar(direction) {
@@ -2844,7 +2844,7 @@
   }
   /* 모바일 "고객관리" 상세 화면 전용 쓰기 wrapper 1종 (2026-08-22, Phase 4 — feat/workstation-mobile-quicknote).
      새 REST 저장 로직을 만들지 않는다. 기존 상담 등록 함수 saveConsultation()(위 2641행)이 신규 상담을 저장할 때
-     쓰는 workspace_consultations 필드 조합(customer_id/owner_id/consulted_at/channel/content, 2651행)과
+     쓰는 insuwork_consultations 필드 조합(customer_id/owner_id/consulted_at/channel/content, 2651행)과
      writeOne() 저장 경로(1876행)를 그대로 재사용한다. saveConsultation()은 이름/생년월일/전화 등 DOM 폼 입력에
      묶여 있고 고객 프로필까지 함께 갱신(customerPromise, 2646~2648행)하므로, 이미 존재하는 고객에게 짧은 메모
      한 건만 남기는 이 화면에서 그대로 호출하면 이름/연락처가 빈 값으로 덮어써질 위험이 있어 고객 upsert 단계는
@@ -2860,7 +2860,7 @@
     var channel = customer && allowedChannels.indexOf(customer.status) >= 0 ? customer.status : '예약';
     var content = '<p><strong>[' + esc(writtenAt()) + ']</strong></p><p>' + esc(trimmed).replace(/\n/g, '<br>') + '</p>';
     var consultationBody = { customer_id: customerId, owner_id: currentUserId(), consulted_at: new Date().toISOString(), channel: channel, content: content };
-    return writeOne('workspace_consultations', consultationBody).then(function (saved) {
+    return writeOne('insuwork_consultations', consultationBody).then(function (saved) {
       upsertConsultation(saved);
       rebuildWorkspaceDerived();
       return saved;
@@ -2873,7 +2873,7 @@
      (위 1794행 부근)이 상세 화면을 그릴 때와 똑같이 linkifyRich(body)를 거친다 — linkifyRich 내부에서
      sanitizeRich를 다시 실행하므로, 저장 시점에 이미 sanitizeRich를 거친 값이라도 표시 시점에 한 번 더
      정화한다(데스크탑과 동일한 이중 방어를 그대로 재사용, 새로 판단하지 않음). 여기서 다루는 "업무노트"는
-     사용자가 직접 쓰는 workspace_items 메모이며, 원세컨드가 제공하는 별도 "스크립트 카드"(state.scriptsData,
+     사용자가 직접 쓰는 insuwork_items 메모이며, 원세컨드가 제공하는 별도 "스크립트 카드"(state.scriptsData,
      scriptsHtml())와는 다른 데이터라 포함하지 않는다.
      libraryFeedDirectory()는 소식지·영업방향 화면에서 이미 쓰는 loadNewsletterData()/loadStrategyData()
      (각각 위 1070·1220행 부근)를 그대로 호출해 캐시된 state.newsData/state.strategyData를 돌려준다 — 이 두

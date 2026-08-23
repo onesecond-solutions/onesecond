@@ -10,7 +10,7 @@
 
    실제 조사 결과(코드 확인, 2026-08-22) — 4개 자료가 데이터 구조상 완전히 다르다:
    1) 자료실(state.data.library, item_type=memo/file/link, 폴더 제외) · 업무노트(state.data.scripts,
-      item_type='note') — loadData(true)가 한 번에 불러오는 workspace_items 안 텍스트 콘텐츠. 본문이
+      item_type='note') — loadData(true)가 한 번에 불러오는 insuwork_items 안 텍스트 콘텐츠. 본문이
       있어 통합 검색(제목+본문) + 화면 안 펼쳐보기가 가능하다. 이 화면의 핵심 기능.
    2) 소식지(newsletters 테이블) · 영업방향(sales_strategy 테이블) — PDF 원문 메타데이터만 있고 본문 텍스트가
       없다(회사/제목/발행월만). loadNewsletterData()/loadStrategyData()로 별도 지연 로드되며, 서명 URL이
