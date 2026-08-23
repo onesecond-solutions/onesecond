@@ -14,8 +14,16 @@
     try { localStorage.setItem('iw_bg_mode', mode); } catch (_e) {}
   }
   function bgModeButtonsHtml(active) {
-    var modes = [['image', '기본이미지'], ['namsan', '남산'], ['white', '화이트'], ['dark', '다크']];
-    return modes.map(function (m) { return '<button type="button" class="iw-bgmode-btn' + (m[0] === active ? ' on' : '') + '" data-bg="' + m[0] + '">' + m[1] + '</button>'; }).join('');
+    var modes = [
+      ['image', '이미지', '/insubriefing/assets/generated/briefing-toss-hero.webp'],
+      ['namsan', '남산', '/insubriefing/assets/generated/namsan-sunny.webp'],
+      ['white', '화이트', null],
+      ['dark', '다크', null]
+    ];
+    return modes.map(function (m) {
+      var swatchStyle = m[2] ? ' style="background-image:url(&quot;' + m[2] + '&quot;)"' : '';
+      return '<button type="button" class="iw-bgmode-btn' + (m[0] === active ? ' on' : '') + '" data-bg="' + m[0] + '" aria-pressed="' + (m[0] === active) + '"><span class="iw-bgmode-swatch iw-bgmode-swatch-' + m[0] + '"' + swatchStyle + '></span><span class="iw-bgmode-lbl">' + m[1] + '</span></button>';
+    }).join('');
   }
   applyBgMode(currentBgMode());
   function logout() {
