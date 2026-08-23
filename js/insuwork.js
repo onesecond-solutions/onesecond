@@ -275,7 +275,7 @@
       if (!statusEl) return;
       statusEl.hidden = !message;
       statusEl.textContent = message || '';
-      statusEl.style.color = isError ? 'var(--danger)' : '';
+      statusEl.style.color = isError ? 'var(--err)' : '';
     }
     function setBusy(busy) {
       if (acceptBtn) acceptBtn.disabled = busy;
