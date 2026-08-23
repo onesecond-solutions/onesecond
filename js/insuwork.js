@@ -189,30 +189,30 @@
 
   function ensureShell() {
     if (!allowed()) { if (STANDALONE) renderStandaloneGate(authenticated() ? 'denied' : 'login'); return false; }
-    document.body.classList.add('is-personal-workspace');
-    if (STANDALONE) return !!document.getElementById('v-personal-workspace');
+    document.body.classList.add('is-insuwork');
+    if (STANDALONE) return !!document.getElementById('v-insuwork');
     var side = document.querySelector('.side');
-    if (side && !document.getElementById('nav-personal-workspace')) {
+    if (side && !document.getElementById('nav-insuwork')) {
       var nav = document.createElement('div');
-      nav.className = 'nav'; nav.id = 'nav-personal-workspace';
+      nav.className = 'nav'; nav.id = 'nav-insuwork';
       nav.innerHTML = '<span class="ic">▣</span><span class="lbl">내 업무</span>';
       nav.onclick = function () { openWorkspace('home'); };
       var home = document.getElementById('nav-home');
       side.insertBefore(nav, home ? home.nextSibling : side.firstChild);
     }
     var body = document.querySelector('.body');
-    if (body && !document.getElementById('v-personal-workspace')) {
+    if (body && !document.getElementById('v-insuwork')) {
       var view = document.createElement('div');
-      view.className = 'wrap view'; view.id = 'v-personal-workspace';
+      view.className = 'wrap view'; view.id = 'v-insuwork';
       body.appendChild(view);
     }
     return true;
   }
 
   function renderStandaloneGate(mode) {
-    var view = document.getElementById('v-personal-workspace');
+    var view = document.getElementById('v-insuwork');
     if (!view) return;
-    document.body.classList.remove('is-personal-workspace');
+    document.body.classList.remove('is-insuwork');
     if (mode === 'denied') {
       view.innerHTML = '<div class="pw-access"><strong>보험워크 준비 중</strong><p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
       return;
@@ -289,14 +289,14 @@
   function navPlannedEntryHtml(entry) {
     var extra = entry[2];
     if (Array.isArray(extra)) {
-      return '<details class="pw-nav-subgroup"><summary><span>' + entry[0] + '</span>' + entry[1] + '</summary>' + extra.map(function (sub) { return '<button type="button" onclick="OSPersonalWorkspace.openTool(\'' + sub[0] + '\')">' + sub[1] + '</button>'; }).join('') + '</details>';
+      return '<details class="pw-nav-subgroup"><summary><span>' + entry[0] + '</span>' + entry[1] + '</summary>' + extra.map(function (sub) { return '<button type="button" onclick="OSInsuwork.openTool(\'' + sub[0] + '\')">' + sub[1] + '</button>'; }).join('') + '</details>';
     }
     if (typeof extra === 'string' && extra.indexOf('section:') === 0) {
       var sectionKey = extra.slice(8);
-      return '<button type="button" class="pw-nav-link' + (state.section === sectionKey ? ' on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + sectionKey + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
+      return '<button type="button" class="pw-nav-link' + (state.section === sectionKey ? ' on' : '') + '" onclick="OSInsuwork.go(\'' + sectionKey + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
     if (typeof extra === 'string') {
-      return '<button type="button" class="pw-nav-link" onclick="OSPersonalWorkspace.openTool(\'' + extra + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
+      return '<button type="button" class="pw-nav-link" onclick="OSInsuwork.openTool(\'' + extra + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
     return '<button type="button" disabled><span>' + entry[0] + '</span>' + entry[1] + '</button>';
   }
@@ -308,14 +308,14 @@
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="pw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
-      return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
-    }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSPersonalWorkspace.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
+      return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
+    }).join('') + '<div class="pw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="pw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="pw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
     if (state.status === 'loading' || state.status === 'idle') return '<div class="pw-state"><strong>내 자료를 불러오는 중입니다.</strong><span>잠시만 기다려 주세요.</span></div>';
     if (state.status === 'refreshing') return '<div class="pw-sync-note">최신 자료를 동기화하고 있습니다.</div>';
-    return state.error ? '<div class="pw-error" role="alert"><span>' + esc(state.error) + '</span><button class="pw-btn" onclick="OSPersonalWorkspace.reload()">다시 불러오기</button></div>' : '';
+    return state.error ? '<div class="pw-error" role="alert"><span>' + esc(state.error) + '</span><button class="pw-btn" onclick="OSInsuwork.reload()">다시 불러오기</button></div>' : '';
   }
   var COMPANY_SEARCH_TERMS = [
     ['DB손해보험', 'DB손보', 'DB화재', '디비손해보험', '디비손보', '디비손해', '디비화재', '동부화재', '동부손보', '동부손해보험'],
@@ -376,7 +376,7 @@
     }).join('');
     var allOn = opts.activeStatus === 'all';
     chips += '<button type="button" class="pw-consult-stat all' + (allOn ? ' on' : '') + '" onclick="' + opts.onStage + '(\'all\')" aria-pressed="' + allOn + '"><strong>' + (opts.counts.all || 0) + '</strong><span>전체</span></button>';
-    var clearBtn = opts.nameQuery ? '<button type="button" class="pw-consult-name-clear" onclick="OSPersonalWorkspace.clearNameSearch(\'' + opts.kind + '\')" aria-label="검색어 지우기">×</button>' : '';
+    var clearBtn = opts.nameQuery ? '<button type="button" class="pw-consult-name-clear" onclick="OSInsuwork.clearNameSearch(\'' + opts.kind + '\')" aria-label="검색어 지우기">×</button>' : '';
     return '<div class="pw-consult-stats"><label class="pw-consult-name-search"><span aria-hidden="true">⌕</span><input id="' + opts.nameInputId + '" type="search" placeholder="' + esc(opts.namePlaceholder) + '" autocomplete="off" value="' + esc(opts.nameQuery) + '">' + clearBtn + '</label><div class="pw-consult-stat-chips" role="group" aria-label="진행 단계별 보기">' + chips + '</div></div>';
   }
   function scheduleNameSearch(kind, value) {
@@ -409,12 +409,12 @@
     var q = state.query.trim(); if (!q) return '';
     var results = [];
     loadPaymentInfo();
-    state.data.scripts.forEach(function (item) { if (matches((item.title || '') + ' ' + stripHtml(item.script_text))) results.push({ icon: '📝', kind: '업무노트', title: item.title, sub: formatDate(item.created_at), action: "OSPersonalWorkspace.showAsset('scripts','" + esc(item.id) + "')" }); });
-    state.data.library.forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || '') + ' ' + (item.memo_text || ''))) results.push({ icon: '📄', kind: item.memo_text ? '메모' : '자료', title: item.title, sub: formatDate(item.created_at), action: "OSPersonalWorkspace.showAsset('library','" + esc(item.id) + "')" }); });
-    state.data.customers.forEach(function (item) { if (matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || ''))) results.push({ icon: '👤', kind: '고객', title: item.name, sub: item.phone || item.phone_raw || '', action: "OSPersonalWorkspace.showCustomer('" + esc(item.id) + "')" }); });
-    state.data.consultations.forEach(function (item) { var customer = state.data.customers.find(function (c) { return String(c.id) === String(item.customer_id); }) || {}; if (matches((customer.name || '') + ' ' + (item.memo || '') + ' ' + (item.channel || ''))) results.push({ icon: '✎', kind: '상담', title: customer.name || '고객 상담', sub: item.memo || '', action: "OSPersonalWorkspace.showCustomer('" + esc(item.customer_id) + "')" }); });
-    allEvents().forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || ''))) results.push({ icon: '▦', kind: '일정', title: item.title, sub: String(item.event_date || '').slice(0, 10), action: "OSPersonalWorkspace.showEvent('" + esc(item.id) + "')" }); });
-    carrierDirectory().forEach(function (item) { if (matches(item.name)) results.push({ icon: '↗', kind: '보험사 원전산', title: item.name, sub: item.systemUrl ? '원전산 열기' : '연결 정보 확인 중', action: "OSPersonalWorkspace.openCarrierSystem('" + esc(jsString(item.name)) + "')" }); });
+    state.data.scripts.forEach(function (item) { if (matches((item.title || '') + ' ' + stripHtml(item.script_text))) results.push({ icon: '📝', kind: '업무노트', title: item.title, sub: formatDate(item.created_at), action: "OSInsuwork.showAsset('scripts','" + esc(item.id) + "')" }); });
+    state.data.library.forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || '') + ' ' + (item.memo_text || ''))) results.push({ icon: '📄', kind: item.memo_text ? '메모' : '자료', title: item.title, sub: formatDate(item.created_at), action: "OSInsuwork.showAsset('library','" + esc(item.id) + "')" }); });
+    state.data.customers.forEach(function (item) { if (matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || ''))) results.push({ icon: '👤', kind: '고객', title: item.name, sub: item.phone || item.phone_raw || '', action: "OSInsuwork.showCustomer('" + esc(item.id) + "')" }); });
+    state.data.consultations.forEach(function (item) { var customer = state.data.customers.find(function (c) { return String(c.id) === String(item.customer_id); }) || {}; if (matches((customer.name || '') + ' ' + (item.memo || '') + ' ' + (item.channel || ''))) results.push({ icon: '✎', kind: '상담', title: customer.name || '고객 상담', sub: item.memo || '', action: "OSInsuwork.showCustomer('" + esc(item.customer_id) + "')" }); });
+    allEvents().forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || ''))) results.push({ icon: '▦', kind: '일정', title: item.title, sub: String(item.event_date || '').slice(0, 10), action: "OSInsuwork.showEvent('" + esc(item.id) + "')" }); });
+    carrierDirectory().forEach(function (item) { if (matches(item.name)) results.push({ icon: '↗', kind: '보험사 원전산', title: item.name, sub: item.systemUrl ? '원전산 열기' : '연결 정보 확인 중', action: "OSInsuwork.openCarrierSystem('" + esc(jsString(item.name)) + "')" }); });
     paymentSearchResults().forEach(function (item) { results.push(item); });
     return '<div class="pw-toolbar"><div><h2>‘' + esc(q) + '’ 검색 결과</h2><p class="pw-subtitle">자료, 고객, 상담, 일정, 원전산과 결제정보를 한 번에 검색했습니다.</p></div><span class="pw-result-count">' + results.length + '건</span></div><div class="pw-search-results">' + (results.length ? results.map(function (item) { return '<button type="button" onclick="' + item.action + '"><span class="pw-result-icon">' + item.icon + '</span><span><small>' + item.kind + '</small><b>' + esc(item.title || '(제목 없음)') + '</b><em>' + esc(item.sub) + '</em></span><span>›</span></button>'; }).join('') : '<div class="pw-empty"><strong>검색 결과가 없습니다.</strong><span>띄어쓰기나 검색어를 바꿔 보세요.</span></div>') + '</div>';
   }
@@ -440,7 +440,7 @@
   function carriersHtml() {
     loadCarrierDirectory();
     var rows = carrierDirectory().filter(function (carrier) { return carrier.type === state.carrierType; });
-    return '<div class="pw-toolbar pw-carrier-toolbar"><h2>원전산 바로가기</h2><div class="pw-carrier-tabs" role="tablist"><button type="button" class="' + (state.carrierType === 'nonlife' ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCarrierType(\'nonlife\')">손해보험</button><button type="button" class="' + (state.carrierType === 'life' ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCarrierType(\'life\')">생명보험</button></div></div><div class="pw-carrier-grid">' + rows.map(carrierCardHtml).join('') + '</div>';
+    return '<div class="pw-toolbar pw-carrier-toolbar"><h2>원전산 바로가기</h2><div class="pw-carrier-tabs" role="tablist"><button type="button" class="' + (state.carrierType === 'nonlife' ? 'on' : '') + '" onclick="OSInsuwork.setCarrierType(\'nonlife\')">손해보험</button><button type="button" class="' + (state.carrierType === 'life' ? 'on' : '') + '" onclick="OSInsuwork.setCarrierType(\'life\')">생명보험</button></div></div><div class="pw-carrier-grid">' + rows.map(carrierCardHtml).join('') + '</div>';
   }
   function openCarrierSystem(name) {
     var carrier = carrierDirectory().find(function (item) { return item.name === name; });
@@ -454,7 +454,7 @@
   function isFavorited(type, id) { var key = favoriteKey(type, id); return state.favorites.some(function (entry) { return favoriteKey(entry.target_type, entry.target_id) === key; }); }
   function favoriteButton(type, id, title, subtitle) {
     var on = isFavorited(type, id), label = on ? '즐겨찾기 해제' : '즐겨찾기 추가';
-    var action = "event.stopPropagation();OSPersonalWorkspace.toggleFavorite('" + esc(jsString(type)) + "','" + esc(jsString(id)) + "','" + esc(jsString(title || '')) + "','" + esc(jsString(subtitle || '')) + "')";
+    var action = "event.stopPropagation();OSInsuwork.toggleFavorite('" + esc(jsString(type)) + "','" + esc(jsString(id)) + "','" + esc(jsString(title || '')) + "','" + esc(jsString(subtitle || '')) + "')";
     return '<span role="button" tabindex="0" class="pw-fav' + (on ? ' on' : '') + '" aria-label="' + label + '" title="' + label + '" onclick="' + action + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){' + action + ';event.preventDefault();}">' + (on ? '★' : '☆') + '</span>';
   }
   function favoriteKind(type) { return type === 'customer' ? '고객' : type === 'consultation' ? '상담' : type === 'event' ? '일정' : '자료'; }
@@ -463,7 +463,7 @@
     var rows = state.favorites.slice(0, 8);
     return rows.length ? rows.map(function (entry) {
       var key = favoriteKey(entry.target_type, entry.target_id);
-      return '<button type="button" class="pw-row pw-asset-draggable pw-folder-drop-target" draggable="true" ondragstart="OSPersonalWorkspace.favoriteDragStart(event,\'' + esc(key) + '\')" ondragover="OSPersonalWorkspace.favoriteDragOver(event,\'' + esc(key) + '\')" ondragleave="OSPersonalWorkspace.favoriteDragLeave(event)" ondrop="OSPersonalWorkspace.favoriteDrop(event,\'' + esc(key) + '\')" ondragend="OSPersonalWorkspace.favoriteDragEnd(event)" onclick="OSPersonalWorkspace.openFavorite(\'' + esc(entry.target_type) + '\',\'' + esc(entry.target_id) + '\')"><span><b>' + esc(entry.title || '(제목 없음)') + '</b><small>' + esc(favoriteSubtitle(entry)) + '</small></span><span>›</span></button>';
+      return '<button type="button" class="pw-row pw-asset-draggable pw-folder-drop-target" draggable="true" ondragstart="OSInsuwork.favoriteDragStart(event,\'' + esc(key) + '\')" ondragover="OSInsuwork.favoriteDragOver(event,\'' + esc(key) + '\')" ondragleave="OSInsuwork.favoriteDragLeave(event)" ondrop="OSInsuwork.favoriteDrop(event,\'' + esc(key) + '\')" ondragend="OSInsuwork.favoriteDragEnd(event)" onclick="OSInsuwork.openFavorite(\'' + esc(entry.target_type) + '\',\'' + esc(entry.target_id) + '\')"><span><b>' + esc(entry.title || '(제목 없음)') + '</b><small>' + esc(favoriteSubtitle(entry)) + '</small></span><span>›</span></button>';
     }).join('') : '<div class="pw-empty"><strong>즐겨찾기가 없습니다.</strong><span>자료, 고객, 상담 옆 별표를 눌러 고정하세요.</span></div>';
   }
   function favoriteDragStart(event, key) {
@@ -474,7 +474,7 @@
   function favoriteDragEnd(event) {
     state.draggingFavorite = null;
     if (event && event.currentTarget) event.currentTarget.classList.remove('is-dragging');
-    document.querySelectorAll('#v-personal-workspace .pw-favorites-panel .is-drag-over').forEach(function (el) { el.classList.remove('is-drag-over'); });
+    document.querySelectorAll('#v-insuwork .pw-favorites-panel .is-drag-over').forEach(function (el) { el.classList.remove('is-drag-over'); });
   }
   function favoriteDragOver(event, key) {
     if (!state.draggingFavorite || state.draggingFavorite === key) return;
@@ -669,9 +669,9 @@
     var recentConsultations = state.data.consultations.filter(function (item) { return !!customersById[item.customer_id]; })
       .sort(function (a, b) { return String(b.consulted_at || b.created_at).localeCompare(String(a.consulted_at || a.created_at)); }).slice(0, 5);
     var favoritesPanel = '<section class="pw-panel pw-favorites-panel"><div class="pw-panel-head"><strong>즐겨찾기</strong></div><div class="pw-list">' + favoriteRows() + '</div></section>';
-    var todayPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>오늘 일정</strong><button onclick="OSPersonalWorkspace.go(\'calendar\')">전체 보기</button></div><div class="pw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="pw-empty">오늘 일정이 없습니다.</div>') + '</div></section>';
-    var assetsPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSPersonalWorkspace.go(\'assets\')">전체 보기</button></div><div class="pw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSPersonalWorkspace.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="pw-empty">저장된 자료가 없습니다.</div>') + '</div></section>';
-    var consultPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 상담</strong><button onclick="OSPersonalWorkspace.go(\'consultations\')">전체 보기</button></div><div class="pw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSPersonalWorkspace.go('consultations');OSPersonalWorkspace.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></section>';
+    var todayPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>오늘 일정</strong><button onclick="OSInsuwork.go(\'calendar\')">전체 보기</button></div><div class="pw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="pw-empty">오늘 일정이 없습니다.</div>') + '</div></section>';
+    var assetsPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="pw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="pw-empty">저장된 자료가 없습니다.</div>') + '</div></section>';
+    var consultPanel = '<section class="pw-panel"><div class="pw-panel-head"><strong>최근 상담</strong><button onclick="OSInsuwork.go(\'consultations\')">전체 보기</button></div><div class="pw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSInsuwork.go('consultations');OSInsuwork.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div></section>';
     return statusHtml() + '<div class="pw-home-grid"><div class="pw-home-row pw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="pw-home-row pw-home-row-bottom">' + assetsPanel + consultPanel + '</div></div>';
   }
 
@@ -708,30 +708,30 @@
     var totalItemCount = items.length;
     items = items.slice(0, state.assetsRenderLimit);
     var tabs = [['all', '전체'], ['note', '업무노트'], ['file', '자료실'], ['memo', '메모']];
-    var tabsHtml = tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('');
+    var tabsHtml = tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSInsuwork.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('');
     var viewModes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
-    var viewHtml = viewModes.map(function (mode) { return '<button type="button" class="' + (state.assetView === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setAssetView(\'' + mode[0] + '\')" aria-label="' + mode[1] + ' 보기" title="' + mode[1] + '"><span aria-hidden="true">' + mode[2] + '</span>' + mode[1] + '</button>'; }).join('');
+    var viewHtml = viewModes.map(function (mode) { return '<button type="button" class="' + (state.assetView === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setAssetView(\'' + mode[0] + '\')" aria-label="' + mode[1] + ' 보기" title="' + mode[1] + '"><span aria-hidden="true">' + mode[2] + '</span>' + mode[1] + '</button>'; }).join('');
     var destination = currentAssetCategory();
     var destinationText = destination ? assetCategoryLabel(destination) + (state.assetFolder ? ' · 현재 폴더' : '') : '저장 위치를 선택합니다';
-    var addMenu = '<details class="pw-add-menu"><summary>+ 자료 추가</summary><div class="pw-add-popover"><small class="pw-add-destination">' + esc(destinationText) + '</small><button type="button" onclick="OSPersonalWorkspace.newAssetFolder()">새 폴더</button><label>파일 업로드<input type="file" multiple hidden onchange="OSPersonalWorkspace.uploadAssetFiles(this.files);this.value=\'\'"></label><button type="button" onclick="OSPersonalWorkspace.addAsset()">업무노트·메모 작성</button></div></details>';
+    var addMenu = '<details class="pw-add-menu"><summary>+ 자료 추가</summary><div class="pw-add-popover"><small class="pw-add-destination">' + esc(destinationText) + '</small><button type="button" onclick="OSInsuwork.newAssetFolder()">새 폴더</button><label>파일 업로드<input type="file" multiple hidden onchange="OSInsuwork.uploadAssetFiles(this.files);this.value=\'\'"></label><button type="button" onclick="OSInsuwork.addAsset()">업무노트·메모 작성</button></div></details>';
     var controls = STANDALONE
       ? '<div class="pw-assets-controls"><div class="pw-tabs">' + tabsHtml + addMenu + '</div><div class="pw-assets-actions"><div class="pw-view-switch" aria-label="보기 방식">' + viewHtml + '</div></div></div>'
-      : '<div class="pw-toolbar"><div><h2>자료</h2><p class="pw-subtitle">노트, 메모, 링크와 사이트 파일을 한 화면에서 관리합니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.openVault()">📁 파일함 열기</button><button class="pw-btn primary" onclick="OSPersonalWorkspace.addAsset()">+ 자료 추가</button></div></div><div class="pw-system-note"><strong>사이트 파일함</strong><span>새 폴더 만들기와 여러 파일 업로드를 지원합니다.</span><small>PC 원본과 별개인 사이트 보관 공간이며, 사이트에서 작업해도 PC 원본은 변경되지 않습니다.</small></div><div class="pw-tabs">' + tabsHtml + '</div>';
+      : '<div class="pw-toolbar"><div><h2>자료</h2><p class="pw-subtitle">노트, 메모, 링크와 사이트 파일을 한 화면에서 관리합니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSInsuwork.openVault()">📁 파일함 열기</button><button class="pw-btn primary" onclick="OSInsuwork.addAsset()">+ 자료 추가</button></div></div><div class="pw-system-note"><strong>사이트 파일함</strong><span>새 폴더 만들기와 여러 파일 업로드를 지원합니다.</span><small>PC 원본과 별개인 사이트 보관 공간이며, 사이트에서 작업해도 PC 원본은 변경되지 않습니다.</small></div><div class="pw-tabs">' + tabsHtml + '</div>';
     var breadcrumb = assetBreadcrumbHtml();
     var content = state.assetView === 'list'
       ? '<div class="pw-explorer"><table class="pw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'pw-folder-drop-target' : 'pw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="pw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
       : '<div class="pw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="pw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
-    return statusHtml() + controls + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSPersonalWorkspace.loadMoreAssets()');
+    return statusHtml() + controls + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSInsuwork.loadMoreAssets()');
   }
   function assetOpenAction(item) {
-    if (item.folder) return "OSPersonalWorkspace.openAssetFolder('" + esc(item.raw.id) + "')";
-    if (previewType(item.raw) && (item.raw.storage_path || item.raw.image_url)) return "OSPersonalWorkspace.openAssetPreview('" + item.source + "','" + esc(item.raw.id) + "')";
-    return "OSPersonalWorkspace.showAsset('" + item.source + "','" + esc(item.raw.id) + "')";
+    if (item.folder) return "OSInsuwork.openAssetFolder('" + esc(item.raw.id) + "')";
+    if (previewType(item.raw) && (item.raw.storage_path || item.raw.image_url)) return "OSInsuwork.openAssetPreview('" + item.source + "','" + esc(item.raw.id) + "')";
+    return "OSInsuwork.showAsset('" + item.source + "','" + esc(item.raw.id) + "')";
   }
   function assetDragAttributes(item) {
     var id = esc(item.raw.id), category = esc(item.type);
-    if (item.folder) return 'ondragover="OSPersonalWorkspace.assetDragOver(event,\'' + id + '\',\'' + category + '\')" ondragleave="OSPersonalWorkspace.assetDragLeave(event)" ondrop="OSPersonalWorkspace.assetDrop(event,\'' + id + '\',\'' + category + '\')"';
-    return 'draggable="true" ondragstart="OSPersonalWorkspace.assetDragStart(event,\'' + id + '\',\'' + category + '\')" ondragend="OSPersonalWorkspace.assetDragEnd(event)"';
+    if (item.folder) return 'ondragover="OSInsuwork.assetDragOver(event,\'' + id + '\',\'' + category + '\')" ondragleave="OSInsuwork.assetDragLeave(event)" ondrop="OSInsuwork.assetDrop(event,\'' + id + '\',\'' + category + '\')"';
+    return 'draggable="true" ondragstart="OSInsuwork.assetDragStart(event,\'' + id + '\',\'' + category + '\')" ondragend="OSInsuwork.assetDragEnd(event)"';
   }
   function assetBreadcrumbHtml() {
     if (!state.assetFolder) return '';
@@ -739,7 +739,7 @@
     while (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); if (!folder) break; parts.unshift(folder); id = folder.parent_id; }
     var category = currentAssetCategory();
     var current = parts.length ? parts[parts.length - 1] : null;
-    return '<nav class="pw-folder-path" aria-label="폴더 경로"><span class="pw-folder-trail"><button type="button" onclick="OSPersonalWorkspace.openAssetRoot(\'' + esc(category) + '\')">' + esc(assetCategoryLabel(category)) + '</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSPersonalWorkspace.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</span>' + (current ? '<button type="button" class="pw-folder-delete" onclick="OSPersonalWorkspace.deleteAssetFolder(\'' + esc(current.id) + '\')">현재 폴더 삭제</button>' : '') + '</nav>';
+    return '<nav class="pw-folder-path" aria-label="폴더 경로"><span class="pw-folder-trail"><button type="button" onclick="OSInsuwork.openAssetRoot(\'' + esc(category) + '\')">' + esc(assetCategoryLabel(category)) + '</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSInsuwork.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</span>' + (current ? '<button type="button" class="pw-folder-delete" onclick="OSInsuwork.deleteAssetFolder(\'' + esc(current.id) + '\')">현재 폴더 삭제</button>' : '') + '</nav>';
   }
   function assetCardHtml(item) {
     var raw = item.raw || {}, direct = raw.image_url || (/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(raw.url || '') ? raw.url : '');
@@ -760,7 +760,7 @@
   }
   function hydrateAssetThumbs() {
     if (!window.db || !window.db.url || !window.db.getToken) return;
-    document.querySelectorAll('#v-personal-workspace img[data-storage-path]').forEach(function (img) {
+    document.querySelectorAll('#v-insuwork img[data-storage-path]').forEach(function (img) {
       var path = img.getAttribute('data-storage-path'); if (!path) return;
       signStoragePath(path).then(function (url) { img.src = url; }).catch(function () {});
     });
@@ -785,26 +785,26 @@
     if (selected && rows.indexOf(selected) >= state.customersRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.customersRenderLimit - 1));
     else rows = rows.slice(0, state.customersRenderLimit);
     var header = '<div class="pw-consult-columns" style="' + gridStyle + '">' + columns.map(function (column) { return '<span>' + column.label + '</span>'; }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span></div>';
-    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || (latest[item.id] && latest[item.id].memo) || '', status = item.status || '청약완료'; var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="pw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSPersonalWorkspace.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSPersonalWorkspace.showRowHover(event)" onmouseleave="OSPersonalWorkspace.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '고객내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="pw-consult-cell pw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
+    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || (latest[item.id] && latest[item.id].memo) || '', status = item.status || '청약완료'; var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="pw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '고객내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="pw-consult-cell pw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
-    var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES, activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'pw-customer-name-input', namePlaceholder: '고객명 검색', onStage: 'OSPersonalWorkspace.filterCustomerStatus' });
-    return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>고객관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addCustomer()">+ 고객 등록</button></div>' + stats + '<div class="pw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="pw-consult-master"><div class="pw-consult-list" role="list">' + header + '<div class="pw-consult-rows">' + body + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSPersonalWorkspace.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
+    var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES, activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'pw-customer-name-input', namePlaceholder: '고객명 검색', onStage: 'OSInsuwork.filterCustomerStatus' });
+    return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>고객관리</h2><button class="pw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button></div>' + stats + '<div class="pw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="pw-consult-master"><div class="pw-consult-list" role="list">' + header + '<div class="pw-consult-rows">' + body + (rows.length ? '' : '<div class="pw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function customerDetailHtml(item) {
     var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), status = item.status || '청약완료';
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
-    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectCustomerDetail()">‹ 목록</button>'
+    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSInsuwork.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSInsuwork.selectCustomerDetail()">‹ 목록</button>'
       + '<div class="pw-inline-form-block">'
       + contractDatesField('pwd-customer', contractDatesOf(item), 'customerDetail')
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="pwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름">')
-      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customerDetail\')"><span id="pwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'customerDetail\')"><span id="pwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="pw-inline-form-row">'
-      + inlineField('전화번호', '<input id="pwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
+      + inlineField('전화번호', '<input id="pwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="pwd-customer-status">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + customerExtraFieldsHtml(profile, 'pwd-customer') + '<section><h3>고객내용</h3>' + richEditorField('pwd-customer-new', profile.note || latestConsultationMemo(item.id)) + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectCustomerDetail()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveCustomerDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + customerExtraFieldsHtml(profile, 'pwd-customer') + '<section><h3>고객내용</h3>' + richEditorField('pwd-customer-new', profile.note || latestConsultationMemo(item.id)) + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="pw-btn primary" onclick="OSInsuwork.saveCustomerDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -823,18 +823,18 @@
     var totalRowCount = rows.length;
     if (selected && rows.indexOf(selected) >= state.consultationsRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.consultationsRenderLimit - 1));
     else rows = rows.slice(0, state.consultationsRenderLimit);
-    var columns = '<div class="pw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { return '<span>' + esc(column.label) + '</span>'; }).join('') + '<button type="button" class="pw-consult-column-button" onclick="OSPersonalWorkspace.manageConsultColumns()">+ 컬럼</button></div>';
+    var columns = '<div class="pw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { return '<span>' + esc(column.label) + '</span>'; }).join('') + '<button type="button" class="pw-consult-column-button" onclick="OSInsuwork.manageConsultColumns()">+ 컬럼</button></div>';
     var list = '<div class="pw-consult-list" role="list">' + columns + '<div class="pw-consult-rows">' + rows.map(function (item) {
       var customer = customers[item.customer_id] || {}, profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
-      return '<button type="button" role="listitem" class="pw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSPersonalWorkspace.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSPersonalWorkspace.showRowHover(event)" onmouseleave="OSPersonalWorkspace.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span></button>';
-    }).join('') + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSPersonalWorkspace.loadMoreConsultations()') + '</div>';
+      return '<button type="button" role="listitem" class="pw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="pw-consult-action-spacer" aria-hidden="true"></span></button>';
+    }).join('') + (rows.length ? '' : '<div class="pw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreConsultations()') + '</div>';
     var detail = selected ? consultationDetailHtml(selected, customers[selected.customer_id] || {}) : '';
-    var stats = statFilterBarHtml({ kind: 'consult', stages: CONSULT_STAGES, activeStatus: state.consultationStatusFilter, counts: counts, nameQuery: state.consultNameQuery, nameInputId: 'pw-consult-name-input', namePlaceholder: '고객명 검색', onStage: 'OSPersonalWorkspace.filterConsultationStatus' });
-    return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>상담관리</h2><button class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultation()">+ 상담 등록</button></div>' + stats + '<div class="pw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="pw-consult-master">' + list + '</section>' + detail + '</div></div>';
+    var stats = statFilterBarHtml({ kind: 'consult', stages: CONSULT_STAGES, activeStatus: state.consultationStatusFilter, counts: counts, nameQuery: state.consultNameQuery, nameInputId: 'pw-consult-name-input', namePlaceholder: '고객명 검색', onStage: 'OSInsuwork.filterConsultationStatus' });
+    return '<div class="pw-consult-screen">' + statusHtml() + '<div class="pw-toolbar"><h2>상담관리</h2><button class="pw-btn primary" onclick="OSInsuwork.addConsultation()">+ 상담 등록</button></div>' + stats + '<div class="pw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="pw-consult-master">' + list + '</section>' + detail + '</div></div>';
   }
   function manageConsultColumns() {
-    var columns = consultColumns(), rows = columns.map(function (column, index) { return '<div class="pw-column-setting"><span>' + esc(column.label) + '</span><button type="button" onclick="OSPersonalWorkspace.moveConsultColumn(' + index + ',-1)"' + (index === 0 ? ' disabled' : '') + '>←</button><button type="button" onclick="OSPersonalWorkspace.moveConsultColumn(' + index + ',1)"' + (index === columns.length - 1 ? ' disabled' : '') + '>→</button>' + (column.custom ? '<button type="button" class="danger" onclick="OSPersonalWorkspace.deleteConsultColumn(\'' + esc(column.key) + '\')">삭제</button>' : '') + '</div>'; }).join('');
-    dialog('<div class="pw-form"><h2>상담관리 컬럼</h2><p class="pw-column-help">화살표로 컬럼 위치를 옮길 수 있습니다. 추가 항목은 고객별로 입력해 저장합니다.</p><div class="pw-column-settings">' + rows + '</div><div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.closeDialog()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.addConsultColumn()">+ 컬럼 추가</button></div></div>');
+    var columns = consultColumns(), rows = columns.map(function (column, index) { return '<div class="pw-column-setting"><span>' + esc(column.label) + '</span><button type="button" onclick="OSInsuwork.moveConsultColumn(' + index + ',-1)"' + (index === 0 ? ' disabled' : '') + '>←</button><button type="button" onclick="OSInsuwork.moveConsultColumn(' + index + ',1)"' + (index === columns.length - 1 ? ' disabled' : '') + '>→</button>' + (column.custom ? '<button type="button" class="danger" onclick="OSInsuwork.deleteConsultColumn(\'' + esc(column.key) + '\')">삭제</button>' : '') + '</div>'; }).join('');
+    dialog('<div class="pw-form"><h2>상담관리 컬럼</h2><p class="pw-column-help">화살표로 컬럼 위치를 옮길 수 있습니다. 추가 항목은 고객별로 입력해 저장합니다.</p><div class="pw-column-settings">' + rows + '</div><div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSInsuwork.closeDialog()">닫기</button><button type="button" class="pw-btn primary" onclick="OSInsuwork.addConsultColumn()">+ 컬럼 추가</button></div></div>');
   }
   function addConsultColumn() { briefingPrompt('추가할 컬럼 이름을 입력하세요.', '컬럼 추가').then(function (label) { if (!label || !String(label).trim()) return; var columns = consultColumns(); columns.push({ key: 'custom_' + Date.now().toString(36), label: String(label).trim().slice(0, 30), width: 120, custom: true }); saveConsultColumns(columns); closeDialog(); renderContent(); manageConsultColumns(); }); }
   function moveConsultColumn(index, direction) { var columns = consultColumns(), target = index + direction; if (target < 0 || target >= columns.length) return; var moved = columns.splice(index, 1)[0]; columns.splice(target, 0, moved); saveConsultColumns(columns); closeDialog(); renderContent(); manageConsultColumns(); }
@@ -842,18 +842,18 @@
   function consultationDetailHtml(item, customer) {
     var profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
-    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSPersonalWorkspace.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSPersonalWorkspace.selectConsultation()">‹ 목록</button>'
+    return '<article class="pw-consult-detail"><button type="button" class="pw-consult-detail-close" onclick="OSInsuwork.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="pw-consult-back" onclick="OSInsuwork.selectConsultation()">‹ 목록</button>'
       + '<div class="pw-inline-form-block">'
-      + '<div class="pw-inline-form-row">' + inlineField('등록일자', '<input id="pwd-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')">') + '</div>'
+      + '<div class="pw-inline-form-row">' + inlineField('등록일자', '<input id="pwd-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')">') + '</div>'
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<input id="pwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름">')
-      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'detail\')"><span id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwd-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')"><span id="pwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="pw-inline-form-row">'
-      + inlineField('전화번호', '<input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
-      + inlineField('상담상태', '<select id="pwd-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
+      + inlineField('전화번호', '<input id="pwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
+      + inlineField('상담상태', '<select id="pwd-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + '<div class="pw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="pwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'pwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('pwd-consult-new', item.memo || '') + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.trashCustomer(\'' + esc(customer.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.selectConsultation()">닫기</button><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + '<div class="pw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="pwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'pwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('pwd-consult-new', item.memo || '') + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="pw-consult-save"><button type="button" class="pw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(customer.id) + '\')">삭제</button><button type="button" class="pw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="pw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -869,7 +869,7 @@
   function calendarEventKind(event) { return isCareTask(event) ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : event && event.event_type === 'insurance-age' ? 'insurance-age' : 'schedule'; }
   function calendarAllDay(event) { return !!(event && (event.builtin || !event.event_time || String(event.event_end_date || event.event_date || '').slice(0, 10) !== String(event.event_date || '').slice(0, 10))); }
   function builtinCalendarChip(event) {
-    var action = event && event.event_type === 'insurance-age' && event.customer_id ? ' onclick="event.stopPropagation(); OSPersonalWorkspace.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
+    var action = event && event.event_type === 'insurance-age' && event.customer_id ? ' onclick="event.stopPropagation(); OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
     return '<i class="' + calendarEventKind(event) + '"' + action + '>' + esc(event.title) + '</i>';
   }
   function calendarSummaryPreview(events) {
@@ -878,18 +878,18 @@
     return shown + (titles.length > 8 ? '\n외 ' + (titles.length - 8) + '건' : '');
   }
   function calendarSummaryAttrs(events) {
-    return ' data-hover-text="' + esc(calendarSummaryPreview(events)) + '" onmouseenter="OSPersonalWorkspace.showRowHover(event)" onmouseleave="OSPersonalWorkspace.hideRowHover()"';
+    return ' data-hover-text="' + esc(calendarSummaryPreview(events)) + '" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()"';
   }
   function insuranceAgeSummaryChip(events, date) {
     if (!events.length) return '';
-    return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + events.length + '명</i>';
+    return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + events.length + '명</i>';
   }
   function careCalendarChip(event) {
-    return '<i class="customer" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')">' + esc(event.title || '케어 일정') + '</i>';
+    return '<i class="customer" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(event.id) + '\')">' + esc(event.title || '케어 일정') + '</i>';
   }
   function careSummaryChip(events, date) {
     if (!events.length) return '';
-    return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSPersonalWorkspace.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + events.length + '명</i>';
+    return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + events.length + '명</i>';
   }
   function monthCalendarChips(events, date) {
     var builtIns = events.filter(function (event) { return event.builtin; });
@@ -945,13 +945,13 @@
       var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
       var cells = weekDays.map(function (key) {
         var d = parseDate(key), events = eventsFor(key), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
-        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSPersonalWorkspace.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
+        return '<button type="button" class="pw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSInsuwork.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="pw-day-head"><strong>' + d.getDate() + '</strong><span class="pw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="pw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="pw-more">+' + more + '개 더보기</small>' : '') + '</button>';
       }).join('');
       var bars = weekSpans.map(function (sp) {
         var barStart = sp.start < weekStart ? weekStart : sp.start, barEnd = sp.end > weekEnd ? weekEnd : sp.end;
         var startIdx = weekDays.indexOf(barStart), endIdx = weekDays.indexOf(barEnd);
         var left = 'calc(' + (startIdx / 7 * 100) + '% + 3px)', width = 'calc(' + ((endIdx - startIdx + 1) / 7 * 100) + '% - 6px)';
-        return '<span class="pw-event-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
+        return '<span class="pw-event-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
       }).join('');
       weeks.push('<div class="pw-cal-week"><div class="pw-cal-week-cells">' + cells + '</div><div class="pw-cal-week-bars" style="height:' + (laneCount * 24) + 'px">' + bars + '</div></div>');
     }
@@ -965,15 +965,15 @@
     var bars = allDay.spans.map(function (sp) {
       var startIdx = days.indexOf(sp.start), endIdx = days.indexOf(sp.end);
       var left = 'calc(' + (startIdx / days.length * 100) + '% + 4px)', width = 'calc(' + ((endIdx - startIdx + 1) / days.length * 100) + '% - 8px)';
-      return '<button type="button" class="pw-time-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 28) + 'px" onclick="OSPersonalWorkspace.showEvent(\'' + esc(sp.event.id) + '\')"><small>' + esc(String(sp.event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(sp.event)) + '</b></button>';
+      return '<button type="button" class="pw-time-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 28) + 'px" onclick="OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')"><small>' + esc(String(sp.event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(sp.event)) + '</b></button>';
     }).join('');
     var allDayRow = '<div class="pw-time-all-day" style="min-height:' + Math.max(42, allDay.laneCount * 28 + 10) + 'px"><span>종일</span><div class="pw-time-all-grid">' + days.map(function () { return '<i></i>'; }).join('') + '<div class="pw-time-bars">' + bars + '</div></div></div>';
-    return '<div class="pw-time" style="--pw-days:' + days.length + '"><div class="pw-time-head"><span>GMT+09</span>' + days.map(function (date) { return '<button class="' + (date === ymd(new Date()) ? 'today' : '') + '" onclick="OSPersonalWorkspace.selectDate(\'' + date + '\')"><small>' + weekday(date) + '</small><strong>' + Number(date.slice(8)) + '</strong></button>'; }).join('') + '</div>' + allDayRow + '<div class="pw-time-body"><div class="pw-hours">' + hours.map(function (hour) { return '<span>' + (hour < 12 ? '오전 ' + hour : hour === 12 ? '오후 12' : '오후 ' + (hour - 12)) + '시</span>'; }).join('') + '</div>' + days.map(function (date) { return '<div class="pw-time-day">' + hours.map(function () { return '<i></i>'; }).join('') + '<div class="pw-time-events">' + timedByDate[date].map(function (event) { return '<button class="' + calendarEventKind(event) + '" onclick="OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>';
+    return '<div class="pw-time" style="--pw-days:' + days.length + '"><div class="pw-time-head"><span>GMT+09</span>' + days.map(function (date) { return '<button class="' + (date === ymd(new Date()) ? 'today' : '') + '" onclick="OSInsuwork.selectDate(\'' + date + '\')"><small>' + weekday(date) + '</small><strong>' + Number(date.slice(8)) + '</strong></button>'; }).join('') + '</div>' + allDayRow + '<div class="pw-time-body"><div class="pw-hours">' + hours.map(function (hour) { return '<span>' + (hour < 12 ? '오전 ' + hour : hour === 12 ? '오후 12' : '오후 ' + (hour - 12)) + '시</span>'; }).join('') + '</div>' + days.map(function (date) { return '<div class="pw-time-day">' + hours.map(function () { return '<i></i>'; }).join('') + '<div class="pw-time-events">' + timedByDate[date].map(function (event) { return '<button class="' + calendarEventKind(event) + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>';
   }
   function agendaView() {
     var start = state.selectedDate, end = addDays(start, 365);
     var rows = allEvents().filter(function (event) { var date = String(event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return String(a.event_date).localeCompare(String(b.event_date)) || String(a.event_time || '').localeCompare(String(b.event_time || '')); });
-    return '<div class="pw-agenda">' + (rows.length ? rows.map(function (event) { var date = String(event.event_date).slice(0, 10); return '<button onclick="OSPersonalWorkspace.showEvent(\'' + esc(event.id) + '\')"><time><strong>' + Number(date.slice(8)) + '</strong><span>' + Number(date.slice(5, 7)) + '월 · ' + weekday(date) + '</span></time><span><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></span></button>'; }).join('') : '<div class="pw-empty">예정된 일정이 없습니다.</div>') + '</div>';
+    return '<div class="pw-agenda">' + (rows.length ? rows.map(function (event) { var date = String(event.event_date).slice(0, 10); return '<button onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><time><strong>' + Number(date.slice(8)) + '</strong><span>' + Number(date.slice(5, 7)) + '월 · ' + weekday(date) + '</span></time><span><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></span></button>'; }).join('') : '<div class="pw-empty">예정된 일정이 없습니다.</div>') + '</div>';
   }
   function calendarHtml() {
     var modes = [['day', '일'], ['week', '주'], ['month', '월'], ['agenda', '일정']];
@@ -982,7 +982,7 @@
     else if (state.calendarMode === 'agenda') view = agendaView();
     else if (state.calendarMode === 'day') view = timeView([state.selectedDate]);
     else { var selected = parseDate(state.selectedDate); selected.setDate(selected.getDate() - selected.getDay()); var week = []; for (var i = 0; i < 7; i++) week.push(addDays(selected, i)); view = timeView(week); }
-    return statusHtml() + '<div class="pw-calendar-shell"><div class="pw-calendar-toolbar"><div class="pw-calendar-left"><button class="pw-btn pw-today" onclick="OSPersonalWorkspace.calendarToday()">오늘</button><span class="pw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSPersonalWorkspace.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSPersonalWorkspace.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + '</h2></div><div class="pw-actions pw-mode">' + modes.map(function (mode) { return '<button class="pw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="pw-btn primary" onclick="OSPersonalWorkspace.addEvent()">+ 일정</button></div></div>' + view + '</div>';
+    return statusHtml() + '<div class="pw-calendar-shell"><div class="pw-calendar-toolbar"><div class="pw-calendar-left"><button class="pw-btn pw-today" onclick="OSInsuwork.calendarToday()">오늘</button><span class="pw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSInsuwork.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSInsuwork.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + '</h2></div><div class="pw-actions pw-mode">' + modes.map(function (mode) { return '<button class="pw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="pw-btn primary" onclick="OSInsuwork.addEvent()">+ 일정</button></div></div>' + view + '</div>';
   }
   function scriptStageLabel(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].label; return stage || ''; }
   function scriptStageGroup(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].group; return 'mid'; }
@@ -1034,7 +1034,7 @@
   function scriptAccordionHtml(sections, attachments) {
     return sections.map(function (sec, i) {
       var open = i === 0 ? ' open' : '';
-      return '<div class="pw-script-acc' + open + '"><button type="button" class="pw-script-acc-head" onclick="OSPersonalWorkspace.toggleScriptSection(this)"><span class="pw-script-acc-num">' + (i + 1) + '</span><span class="pw-script-acc-ttl">' + esc(sec.title) + '</span><span class="pw-script-acc-arrow">▾</span></button><div class="pw-script-acc-body">'
+      return '<div class="pw-script-acc' + open + '"><button type="button" class="pw-script-acc-head" onclick="OSInsuwork.toggleScriptSection(this)"><span class="pw-script-acc-num">' + (i + 1) + '</span><span class="pw-script-acc-ttl">' + esc(sec.title) + '</span><span class="pw-script-acc-arrow">▾</span></button><div class="pw-script-acc-body">'
         + (sec.subtitle ? '<div class="pw-script-acc-sub">' + esc(sec.subtitle) + '</div>' : '')
         + (sec.mainHtml ? '<div class="pw-script-acc-main">' + sec.mainHtml + '</div>' : '')
         + (sec.sub ? '<div class="pw-script-acc-sub2">' + sec.sub + '</div>' : '')
@@ -1047,7 +1047,7 @@
     if (!state.scriptsData && !state.scriptsLoading) loadScriptsData();
     var chips = '<div class="pw-script-chips">' + SCRIPT_STAGES.map(function (g) {
       var on = g.stage === state.scriptsStage;
-      return '<button type="button" class="pw-script-chip' + (on ? ' on' : '') + '" style="--sc:' + SCRIPT_GROUP_COLORS[g.group] + '" onclick="OSPersonalWorkspace.filterScriptsStage(\'' + g.stage + '\')">' + esc(g.label) + '</button>';
+      return '<button type="button" class="pw-script-chip' + (on ? ' on' : '') + '" style="--sc:' + SCRIPT_GROUP_COLORS[g.group] + '" onclick="OSInsuwork.filterScriptsStage(\'' + g.stage + '\')">' + esc(g.label) + '</button>';
     }).join('') + '</div>';
     if (state.scriptsLoading || !state.scriptsData) {
       return '<div class="pw-toolbar"><h2>스크립트</h2></div>' + chips + '<div class="pw-empty">불러오는 중입니다…</div>';
@@ -1058,7 +1058,7 @@
       var sections = parseScriptSections(s.script_text);
       var isEmpty = !sections || !sections.length;
       var openCls = String(s.id) === String(state.scriptsOpenId) ? ' open' : '';
-      return '<div class="pw-script-card' + openCls + '" style="--sc:' + groupColor + '"><button type="button" class="pw-script-card-head" onclick="OSPersonalWorkspace.toggleScriptCard(\'' + esc(s.id) + '\')"><span class="pw-script-card-badge">' + esc(scriptStageLabel(s.stage)) + '</span><strong>' + esc(s.title || '제목 없음') + '</strong>'
+      return '<div class="pw-script-card' + openCls + '" style="--sc:' + groupColor + '"><button type="button" class="pw-script-card-head" onclick="OSInsuwork.toggleScriptCard(\'' + esc(s.id) + '\')"><span class="pw-script-card-badge">' + esc(scriptStageLabel(s.stage)) + '</span><strong>' + esc(s.title || '제목 없음') + '</strong>'
         + (isEmpty ? '<span class="pw-script-card-summary">본문 준비 중입니다.</span>' : '<span class="pw-script-card-summary">' + esc(scriptCardSummary(sections, s.highlight_text)) + '</span>') + '</button>'
         + (!isEmpty ? '<div class="pw-script-card-full">' + scriptAccordionHtml(sections, s.attachments) + '</div>' : '') + '</div>';
     }).join('') : '<div class="pw-empty">해당 분류의 스크립트가 아직 없습니다.</div>';
@@ -1102,11 +1102,11 @@
   }
   function newsletterCardHtml(row) {
     var label = newsMonthLabel(row), company = row.company || '회사 미상';
-    return '<button type="button" class="pw-news-card" onclick="OSPersonalWorkspace.openNewsletter(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-storage-path="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
+    return '<button type="button" class="pw-news-card" onclick="OSInsuwork.openNewsletter(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-storage-path="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
   }
   function newsPoolTabsHtml() {
     return '<div class="pw-nl-pool">' + [['all', '전체'], ['nonlife', '손해'], ['life', '생명']].map(function (p) {
-      return '<button type="button" class="' + (state.newsPool === p[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterNewsPool(\'' + p[0] + '\')">' + p[1] + '</button>';
+      return '<button type="button" class="' + (state.newsPool === p[0] ? 'on' : '') + '" onclick="OSInsuwork.filterNewsPool(\'' + p[0] + '\')">' + p[1] + '</button>';
     }).join('') + '</div>';
   }
   function newsSidebarHtml() {
@@ -1119,14 +1119,14 @@
       html += '<div class="pw-nl-grouplabel">' + esc(g[0]) + '</div>';
       html += arr.map(function (c) {
         var on = state.newsScope === 'co' && state.newsCoSel === c.name;
-        return '<button type="button" class="pw-nl-co' + (on ? ' on' : '') + '" style="--cl:' + (c.sec === 'life' ? 'var(--t-uw)' : 'var(--warn)') + '" onclick="OSPersonalWorkspace.selectNewsCompany(\'' + esc(jsString(c.name)) + '\')"><span class="dot"></span><span class="nm">' + esc(c.name) + '</span><span class="cnt">' + c.count + '</span></button>';
+        return '<button type="button" class="pw-nl-co' + (on ? ' on' : '') + '" style="--cl:' + (c.sec === 'life' ? 'var(--t-uw)' : 'var(--warn)') + '" onclick="OSInsuwork.selectNewsCompany(\'' + esc(jsString(c.name)) + '\')"><span class="dot"></span><span class="nm">' + esc(c.name) + '</span><span class="cnt">' + c.count + '</span></button>';
       }).join('');
     });
     return html || '<div class="pw-empty">검색 결과 없음</div>';
   }
   function newsScopeTabsHtml() {
     return '<div class="pw-nl-scope">' + [['all', '전체 조망'], ['co', '회사별']].map(function (s) {
-      return '<button type="button" class="' + (state.newsScope === s[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setNewsScope(\'' + s[0] + '\')">' + s[1] + '</button>';
+      return '<button type="button" class="' + (state.newsScope === s[0] ? 'on' : '') + '" onclick="OSInsuwork.setNewsScope(\'' + s[0] + '\')">' + s[1] + '</button>';
     }).join('') + '</div><span class="pw-nl-hint">' + (state.newsScope === 'all' ? '회사를 클릭하면 발행월별 소식지로' : '좌측에서 다른 회사를 고를 수 있어요') + '</span>';
   }
   function newsCountHtml() {
@@ -1161,7 +1161,7 @@
         var key = order[i], g = monthMap[key];
         var title = key === 'unknown' ? '발행월 미상' : (g.y + '년 ' + g.m + '월');
         var open = !!state.newsOpenMonths[key];
-        html += '<button type="button" class="pw-nl-mrow' + (open ? ' open' : '') + '" onclick="OSPersonalWorkspace.toggleNewsMonth(\'' + esc(key) + '\')"><span class="t">' + esc(title) + '</span><span class="badge">' + g.items.length + '건</span><span class="chev">›</span></button>';
+        html += '<button type="button" class="pw-nl-mrow' + (open ? ' open' : '') + '" onclick="OSInsuwork.toggleNewsMonth(\'' + esc(key) + '\')"><span class="t">' + esc(title) + '</span><span class="badge">' + g.items.length + '건</span><span class="chev">›</span></button>';
         if (open) html += '<div class="pw-nl-mbody open"><div class="pw-news-grid">' + g.items.map(newsletterCardHtml).join('') + '</div></div>';
       }
       html += '</div>';
@@ -1205,7 +1205,7 @@
   }
   function toggleNewsMonth(key) { state.newsOpenMonths[key] = !state.newsOpenMonths[key]; renderContent(); }
   function hydrateNewsThumbs() {
-    document.querySelectorAll('#v-personal-workspace .pw-news-thumb img[data-storage-path]').forEach(function (img) {
+    document.querySelectorAll('#v-insuwork .pw-news-thumb img[data-storage-path]').forEach(function (img) {
       var path = img.getAttribute('data-storage-path'); if (!path) return;
       signStoragePath(path, 'newsletters').then(function (url) { img.src = url; }).catch(function () {});
     });
@@ -1253,11 +1253,11 @@
   }
   function strategyCardHtml(row) {
     var label = newsMonthLabel(row), company = row.company || '회사 미상', title = strategyLabel(row);
-    return '<button type="button" class="pw-news-card" onclick="OSPersonalWorkspace.openStrategy(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-strategy-thumb="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label + ' ' + title) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
+    return '<button type="button" class="pw-news-card" onclick="OSInsuwork.openStrategy(\'' + esc(row.id) + '\')"><div class="pw-news-thumb"><img data-strategy-thumb="thumbs/' + esc(row.id) + '.jpg" alt="' + esc(company + ' ' + label + ' ' + title) + '" loading="lazy"><div class="pw-news-overlay"><strong>' + esc(label) + '</strong><span>' + esc(company) + '</span></div></div></button>';
   }
   function strategyPoolTabsHtml() {
     return '<div class="pw-nl-pool">' + [['all', '전체'], ['nonlife', '손해'], ['life', '생명']].map(function (p) {
-      return '<button type="button" class="' + (state.strategyPool === p[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.filterStrategyPool(\'' + p[0] + '\')">' + p[1] + '</button>';
+      return '<button type="button" class="' + (state.strategyPool === p[0] ? 'on' : '') + '" onclick="OSInsuwork.filterStrategyPool(\'' + p[0] + '\')">' + p[1] + '</button>';
     }).join('') + '</div>';
   }
   function strategySidebarHtml() {
@@ -1270,14 +1270,14 @@
       html += '<div class="pw-nl-grouplabel">' + esc(g[0]) + '</div>';
       html += arr.map(function (c) {
         var on = state.strategyScope === 'co' && state.strategyCoSel === c.name;
-        return '<button type="button" class="pw-nl-co' + (on ? ' on' : '') + '" style="--cl:' + (c.sec === 'life' ? 'var(--t-uw)' : 'var(--warn)') + '" onclick="OSPersonalWorkspace.selectStrategyCompany(\'' + esc(jsString(c.name)) + '\')"><span class="dot"></span><span class="nm">' + esc(c.name) + '</span><span class="cnt">' + c.count + '</span></button>';
+        return '<button type="button" class="pw-nl-co' + (on ? ' on' : '') + '" style="--cl:' + (c.sec === 'life' ? 'var(--t-uw)' : 'var(--warn)') + '" onclick="OSInsuwork.selectStrategyCompany(\'' + esc(jsString(c.name)) + '\')"><span class="dot"></span><span class="nm">' + esc(c.name) + '</span><span class="cnt">' + c.count + '</span></button>';
       }).join('');
     });
     return html || '<div class="pw-empty">검색 결과 없음</div>';
   }
   function strategyScopeTabsHtml() {
     return '<div class="pw-nl-scope">' + [['all', '전체 조망'], ['co', '회사별']].map(function (s) {
-      return '<button type="button" class="' + (state.strategyScope === s[0] ? 'on' : '') + '" onclick="OSPersonalWorkspace.setStrategyScope(\'' + s[0] + '\')">' + s[1] + '</button>';
+      return '<button type="button" class="' + (state.strategyScope === s[0] ? 'on' : '') + '" onclick="OSInsuwork.setStrategyScope(\'' + s[0] + '\')">' + s[1] + '</button>';
     }).join('') + '</div><span class="pw-nl-hint">' + (state.strategyScope === 'all' ? '회사를 클릭하면 발행월별 영업자료로' : '좌측에서 다른 회사를 고를 수 있어요') + '</span>';
   }
   function strategyCountHtml() {
@@ -1307,7 +1307,7 @@
         var key = order[i], g = monthMap[key];
         var title = key === 'unknown' ? '발행월 미상' : (g.y + '년 ' + g.m + '월');
         var open = !!state.strategyOpenMonths[key];
-        html += '<button type="button" class="pw-nl-mrow' + (open ? ' open' : '') + '" onclick="OSPersonalWorkspace.toggleStrategyMonth(\'' + esc(key) + '\')"><span class="t">' + esc(title) + '</span><span class="badge">' + g.items.length + '건</span><span class="chev">›</span></button>';
+        html += '<button type="button" class="pw-nl-mrow' + (open ? ' open' : '') + '" onclick="OSInsuwork.toggleStrategyMonth(\'' + esc(key) + '\')"><span class="t">' + esc(title) + '</span><span class="badge">' + g.items.length + '건</span><span class="chev">›</span></button>';
         if (open) html += '<div class="pw-nl-mbody open"><div class="pw-news-grid">' + g.items.map(strategyCardHtml).join('') + '</div></div>';
       }
       html += '</div>';
@@ -1351,7 +1351,7 @@
   }
   function toggleStrategyMonth(key) { state.strategyOpenMonths[key] = !state.strategyOpenMonths[key]; renderContent(); }
   function hydrateStrategyThumbs() {
-    document.querySelectorAll('#v-personal-workspace .pw-news-thumb img[data-strategy-thumb]').forEach(function (img) {
+    document.querySelectorAll('#v-insuwork .pw-news-thumb img[data-strategy-thumb]').forEach(function (img) {
       var path = img.getAttribute('data-strategy-thumb'); if (!path) return;
       signStoragePath(path, 'newsletters').then(function (url) { img.src = url; }).catch(function () {});
     });
@@ -1366,11 +1366,11 @@
   }
   function archiveHtml() {
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
-    return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSPersonalWorkspace.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
+    return '<div class="pw-toolbar"><h2>기존 아카이브</h2></div><div class="pw-archive-grid">' + cards.map(function (card) { return '<button class="pw-archive-card" onclick="OSInsuwork.legacy(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('') + '</div>';
   }
   function trashHtml() {
     var rows = (state.data.trashCustomers || []).filter(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '')); });
-    return statusHtml() + '<div class="pw-toolbar"><h2>휴지통</h2></div><div class="pw-trash-list">' + (rows.length ? rows.map(function (item) { return '<div class="pw-trash-row"><span><strong>' + esc(item.name || '(이름 없음)') + '</strong><small>' + esc(phoneText(item.phone || item.phone_raw || '')) + (item.deleted_at ? ' · ' + formatDate(item.deleted_at) + ' 삭제' : '') + '</small></span><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.restoreCustomer(\'' + esc(item.id) + '\')">복원</button></div>'; }).join('') : '<div class="pw-empty">휴지통이 비어 있습니다.</div>') + '</div>';
+    return statusHtml() + '<div class="pw-toolbar"><h2>휴지통</h2></div><div class="pw-trash-list">' + (rows.length ? rows.map(function (item) { return '<div class="pw-trash-row"><span><strong>' + esc(item.name || '(이름 없음)') + '</strong><small>' + esc(phoneText(item.phone || item.phone_raw || '')) + (item.deleted_at ? ' · ' + formatDate(item.deleted_at) + ' 삭제' : '') + '</small></span><button type="button" class="pw-btn" onclick="OSInsuwork.restoreCustomer(\'' + esc(item.id) + '\')">복원</button></div>'; }).join('') : '<div class="pw-empty">휴지통이 비어 있습니다.</div>') + '</div>';
   }
   function sectionHtml() {
     if (state.status === 'idle' || state.status === 'waiting-auth' || (state.status === 'loading' && !(state.data.items.length || state.data.events.length || state.data.customers.length || state.data.consultations.length))) return statusHtml();
@@ -1392,17 +1392,17 @@
   }
 
   function renderShell() {
-    var view = document.getElementById('v-personal-workspace'); if (!view) return;
+    var view = document.getElementById('v-insuwork'); if (!view) return;
     loadCarrierDirectory();
     var head = STANDALONE ? '' : '<header class="pw-head"><div class="pw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="pw-search">⌕<input id="pw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
-    view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
-      + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSPersonalWorkspace.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
-      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSPersonalWorkspace.closePreview()"><button type="button" class="pw-preview-close" onclick="OSPersonalWorkspace.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-thumbs" id="pw-preview-thumbs"></div><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'pw-preview-page-wrap\')))OSPersonalWorkspace.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSPersonalWorkspace.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSPersonalWorkspace.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSPersonalWorkspace.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSPersonalWorkspace.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSPersonalWorkspace.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSPersonalWorkspace.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSPersonalWorkspace.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSPersonalWorkspace.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSPersonalWorkspace.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
+    view.innerHTML = '<div class="pw-shell' + (STANDALONE ? ' pw-shell-compact' : '') + '">' + head + '<div class="pw-body">' + navHtml() + '<main class="pw-main" id="pw-main"></main></div></div><dialog class="pw-dialog" id="pw-dialog"><button class="pw-dialog-close" onclick="OSInsuwork.closeDialog()" aria-label="닫기">×</button><div id="pw-dialog-body"></div></dialog>'
+      + '<dialog class="pw-dialog pw-reservation-dialog" id="pw-reservation-dialog"><button class="pw-dialog-close" onclick="OSInsuwork.closeReservationPopup()" aria-label="닫기">×</button><div id="pw-reservation-body"></div></dialog>'
+      + '<div class="pw-preview" id="pw-preview" aria-hidden="true" onclick="if(event.target===this)OSInsuwork.closePreview()"><button type="button" class="pw-preview-close" onclick="OSInsuwork.closePreview()" aria-label="미리보기 닫기">×</button><div class="pw-preview-thumbs" id="pw-preview-thumbs"></div><div class="pw-preview-stage" id="pw-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'pw-preview-page-wrap\')))OSInsuwork.closePreview()"></div><div class="pw-preview-bar"><button type="button" onclick="OSInsuwork.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSInsuwork.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSInsuwork.previewRotate()" title="회전">↻</button><button type="button" class="pw-preview-pdf-only" onclick="OSInsuwork.previewPage(-1)" title="이전 페이지">‹</button><span id="pw-preview-page"></span><button type="button" class="pw-preview-pdf-only" onclick="OSInsuwork.previewPage(1)" title="다음 페이지">›</button><div class="pw-ddak-wrap"><button type="button" class="pw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSInsuwork.toggleDdakMenu(event)">⚡ 딸깍</button><div class="pw-ddak-menu" id="pw-preview-ddak-menu" role="menu" hidden><a id="pw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSInsuwork.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSInsuwork.previewCopy()">📋 복사</button></div></div><button type="button" class="pw-preview-asset-only" onclick="OSInsuwork.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="pw-preview-asset-only pw-preview-delete" onclick="OSInsuwork.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
       + '<div class="pw-consult-hover" id="pw-row-hover" aria-hidden="true"></div><div class="pw-asset-drop-overlay" id="pw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 복사 저장합니다.</span></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('pw-search-input'); if (globalInput) globalInput.value = state.query; }
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
-  function renderConsultCustomFields() { var detail = document.querySelector('#v-personal-workspace .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
+  function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .pw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.pw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'pw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'pw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
   function renderContent() { hideRowHover(); var main = document.getElementById('pw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); } }
   function bindSearch() {
     var input = document.getElementById('pw-search-input'); if (!input) return;
@@ -1411,13 +1411,13 @@
     input.addEventListener('input', function () { if (!state.composing) scheduleSearch(input.value); });
   }
   function scheduleSearch(value) { window.clearTimeout(state.searchTimer); state.searchTimer = window.setTimeout(function () { state.query = value; if (state.query.trim() && !state.fullLoaded) loadData(true); else renderContent(); }, 180); }
-  function setUrl(push) { var url = '?view=personal-workspace&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; if (state.section === 'tools') url += '&tool=' + encodeURIComponent(state.toolMode || 'calculator'); try { history[push ? 'pushState' : 'replaceState']({ view: 'personal-workspace', section: state.section }, '', url); } catch (_) {} }
+  function setUrl(push) { var url = '?view=insuwork&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; if (state.section === 'tools') url += '&tool=' + encodeURIComponent(state.toolMode || 'calculator'); try { history[push ? 'pushState' : 'replaceState']({ view: 'insuwork', section: state.section }, '', url); } catch (_) {} }
 
   function openWorkspace(section, push) {
     if (!ensureShell()) { if (!STANDALONE && window.showView) window.showView('home'); return; }
     state.section = SECTIONS.indexOf(section) >= 0 ? section : 'home';
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
-    document.getElementById('v-personal-workspace').classList.add('on');
+    document.getElementById('v-insuwork').classList.add('on');
     renderShell(); setUrl(push !== false); loadData(state.section !== 'home');
   }
   function go(section) { if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
@@ -1493,7 +1493,7 @@
     var filesId = id + '-files';
     var colorHtml = richColorPickerHtml(id, 'foreColor', '글자색', 'A', 'pw-rich-color-fg', ['#e03131', '#f08c00', '#2f9e44', '#1971c2', '#9c36b6'], 'inherit')
       + richColorPickerHtml(id, 'hiliteColor', '형광펜', 'A', 'pw-rich-color-hl', ['#ffec99', '#b2f2bb', '#a5d8ff', '#fcc2d7', '#ffd8a8'], 'transparent');
-    return '<div class="pw-rich"><div class="pw-rich-toolbar" role="toolbar" aria-label="본문 서식">' + buttons.map(function (button) { return '<button type="button" tabindex="-1" title="' + button[2] + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richCommand(\'' + button[0] + '\',\'' + (button[3] || '') + '\',\'' + id + '\')">' + button[1] + '</button>'; }).join('') + colorHtml + '<label class="pw-rich-upload">+ 이미지 삽입<input type="file" accept="image/*" multiple hidden onchange="OSPersonalWorkspace.addRichImages(this.files,\'' + id + '\');this.value=\'\'"></label><label class="pw-rich-upload">+ 파일 첨부<input type="file" multiple hidden onchange="OSPersonalWorkspace.addRichFiles(this.files,\'' + filesId + '\');this.value=\'\'"></label></div><div id="' + id + '" class="pw-rich-body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="내용" tabindex="0" data-placeholder="내용을 입력하세요" onmousedown="OSPersonalWorkspace.prepareRichFocus(event,this)" onfocus="OSPersonalWorkspace.focusRichBody(event,this)" onclick="OSPersonalWorkspace.focusRichBody(event,this)" onpaste="OSPersonalWorkspace.richPaste(event)">' + sanitizeRich(html) + '</div><div class="pw-rich-files" id="' + filesId + '"></div></div>';
+    return '<div class="pw-rich"><div class="pw-rich-toolbar" role="toolbar" aria-label="본문 서식">' + buttons.map(function (button) { return '<button type="button" tabindex="-1" title="' + button[2] + '" onmousedown="event.preventDefault();OSInsuwork.richCommand(\'' + button[0] + '\',\'' + (button[3] || '') + '\',\'' + id + '\')">' + button[1] + '</button>'; }).join('') + colorHtml + '<label class="pw-rich-upload">+ 이미지 삽입<input type="file" accept="image/*" multiple hidden onchange="OSInsuwork.addRichImages(this.files,\'' + id + '\');this.value=\'\'"></label><label class="pw-rich-upload">+ 파일 첨부<input type="file" multiple hidden onchange="OSInsuwork.addRichFiles(this.files,\'' + filesId + '\');this.value=\'\'"></label></div><div id="' + id + '" class="pw-rich-body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="내용" tabindex="0" data-placeholder="내용을 입력하세요" onmousedown="OSInsuwork.prepareRichFocus(event,this)" onfocus="OSInsuwork.focusRichBody(event,this)" onclick="OSInsuwork.focusRichBody(event,this)" onpaste="OSInsuwork.richPaste(event)">' + sanitizeRich(html) + '</div><div class="pw-rich-files" id="' + filesId + '"></div></div>';
   }
   function richEditorEmpty(editor) { return !!editor && !String(editor.textContent || '').trim() && !editor.querySelector('img,[data-storage-path],[data-pending-image]'); }
   function placeRichCaret(editor) {
@@ -1546,7 +1546,7 @@
   }
   function richColorPickerHtml(id, command, label, icon, modifierClass, colors, clearValue) {
     var swatches = colors.map(function (color) {
-      return '<button type="button" class="pw-rich-color-swatch" style="background:' + color + '" title="' + color + '" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + color + '\',\'' + id + '\');this.closest(\'details\').open=false"></button>';
+      return '<button type="button" class="pw-rich-color-swatch" style="background:' + color + '" title="' + color + '" onmousedown="event.preventDefault();OSInsuwork.richColorCommand(\'' + command + '\',\'' + color + '\',\'' + id + '\');this.closest(\'details\').open=false"></button>';
     }).join('');
     /* 실측 버그 3건(2026-08-20, 대표 보고) — ① summary 클릭 시 포커스가 넘어가며 에디터
        선택영역이 풀림 → mousedown preventDefault로 막음. ② mousedown의 preventDefault는
@@ -1573,8 +1573,8 @@
        닫음. 겸사겸사 버튼이 열려있는 동안 배경을 눌린 상태로 표시(CSS)해 "눌렀는데
        반응이 있는지" 육안으로 바로 확인되게 함. */
     var menuAlign = command === 'foreColor' ? 'left' : 'below';
-    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();event.stopPropagation();var d=this.parentNode,m=d.querySelector(\'.pw-rich-color-menu\'),willOpen=!d.open;var others=document.querySelectorAll(\'.pw-rich-color-pop[open]\');for(var i=0;i<others.length;i++){if(others[i]!==d)others[i].open=false;}d.open=willOpen;if(willOpen)OSPersonalWorkspace.positionRichColorMenu(this,m,\'' + menuAlign + '\')"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
-      + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSPersonalWorkspace.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
+    return '<details class="pw-rich-color-pop"><summary class="pw-rich-color ' + modifierClass + '" title="' + label + '" onmousedown="event.preventDefault()" onclick="event.preventDefault();event.stopPropagation();var d=this.parentNode,m=d.querySelector(\'.pw-rich-color-menu\'),willOpen=!d.open;var others=document.querySelectorAll(\'.pw-rich-color-pop[open]\');for(var i=0;i<others.length;i++){if(others[i]!==d)others[i].open=false;}d.open=willOpen;if(willOpen)OSInsuwork.positionRichColorMenu(this,m,\'' + menuAlign + '\')"><span>' + icon + '</span></summary><div class="pw-rich-color-menu">'
+      + '<button type="button" class="pw-rich-color-none" onmousedown="event.preventDefault();OSInsuwork.richColorCommand(\'' + command + '\',\'' + clearValue + '\',\'' + id + '\');this.closest(\'details\').open=false">없음</button>'
       + swatches + '</div></details>';
   }
   function focusRich(id) { placeRichCaret(document.getElementById(id)); }
@@ -1582,7 +1582,7 @@
   function richValue(id) { var editor = document.getElementById(id); return editor ? sanitizeRich(editor.innerHTML) : ''; }
   function richHasText(html) { var doc = new DOMParser().parseFromString(String(html || ''), 'text/html'); return !!String(doc.body.textContent || '').trim() || !!doc.body.querySelector('img'); }
   function resetRichPending() { (state.pendingRichImages || []).forEach(function (entry) { if (entry.preview) URL.revokeObjectURL(entry.preview); }); state.pendingRichFiles = []; state.pendingRichImages = []; }
-  function renderRichFiles(filesId) { var box = document.getElementById(filesId || 'pw-rich-files'); if (!box) return; var files = state.pendingRichFiles || []; box.innerHTML = files.length ? '<strong>첨부파일 ' + files.length + '개</strong>' + files.map(function (entry) { return '<span><b>' + esc(entry.file.name) + '</b><small>' + formatBytes(entry.file.size) + '</small><button type="button" onclick="OSPersonalWorkspace.removeRichFile(\'' + entry.id + '\',\'' + (filesId || 'pw-rich-files') + '\')" aria-label="' + esc(entry.file.name) + ' 제거">×</button></span>'; }).join('') : ''; }
+  function renderRichFiles(filesId) { var box = document.getElementById(filesId || 'pw-rich-files'); if (!box) return; var files = state.pendingRichFiles || []; box.innerHTML = files.length ? '<strong>첨부파일 ' + files.length + '개</strong>' + files.map(function (entry) { return '<span><b>' + esc(entry.file.name) + '</b><small>' + formatBytes(entry.file.size) + '</small><button type="button" onclick="OSInsuwork.removeRichFile(\'' + entry.id + '\',\'' + (filesId || 'pw-rich-files') + '\')" aria-label="' + esc(entry.file.name) + ' 제거">×</button></span>'; }).join('') : ''; }
   function addRichFiles(files, filesId) { Array.prototype.slice.call(files || []).forEach(function (file) { state.pendingRichFiles.push({ id: crypto.randomUUID(), file: file }); }); renderRichFiles(filesId); }
   function removeRichFile(id, filesId) { state.pendingRichFiles = state.pendingRichFiles.filter(function (entry) { return entry.id !== id; }); renderRichFiles(filesId); }
   function addRichImages(files, editorId) { var editor = editorId ? document.getElementById(editorId) : document.querySelector('#pw-dialog .pw-rich-body'); if (!editor) return; Array.prototype.slice.call(files || []).filter(function (file) { return /^image\//.test(file.type || ''); }).forEach(function (file) { var id = crypto.randomUUID(), preview = URL.createObjectURL(file); state.pendingRichImages.push({ id: id, file: file, preview: preview }); editor.insertAdjacentHTML('beforeend', '<p><img src="' + esc(preview) + '" data-pending-image="' + id + '" alt="' + esc(file.name) + '"></p>'); }); }
@@ -1596,7 +1596,7 @@
       .then(function (response) { if (!response.ok) throw new Error('첨부파일을 열지 못했습니다.'); return response.json(); })
       .then(function (data) { var url = window.db.url('/storage/v1' + data.signedURL); state.signedUrlCache[cacheKey] = { url: url, expiresAt: Date.now() + 55 * 60000 }; return url; });
   }
-  function hydrateRichStorage() { var nodes = document.querySelectorAll('#v-personal-workspace [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || ''; signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') { node.src = url; node.classList.add('pw-previewable'); node.title = '클릭하면 크게 보기'; node.onclick = function () { openPreviewUrl(url, title, mime || 'image/*'); }; } else { node.href = url; node.onclick = function (event) { if (previewType({ title: title, mime_type: mime, storage_path: path })) { event.preventDefault(); openPreviewUrl(url, title, mime); } }; } }).catch(function () {}); }); }
+  function hydrateRichStorage() { var nodes = document.querySelectorAll('#v-insuwork [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || ''; signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') { node.src = url; node.classList.add('pw-previewable'); node.title = '클릭하면 크게 보기'; node.onclick = function () { openPreviewUrl(url, title, mime || 'image/*'); }; } else { node.href = url; node.onclick = function (event) { if (previewType({ title: title, mime_type: mime, storage_path: path })) { event.preventDefault(); openPreviewUrl(url, title, mime); } }; } }).catch(function () {}); }); }
   function loadPdfJs() {
     if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
     if (state.pdfJsPromise) return state.pdfJsPromise;
@@ -1777,15 +1777,15 @@
     var body = source === 'scripts' ? item.script_text : item.memo_text || item.description || '';
     var link = item.image_url || item.link_url;
     var ownFile = item.item_type === 'file' && item.storage_path;
-    var actions = (ownFile || item.image_url ? '<button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.openAssetPreview(\'' + esc(source) + '\',\'' + esc(id) + '\')">미리보기</button>' : (link ? '<a class="pw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : ''))
-      + '<button type="button" class="pw-btn" onclick="OSPersonalWorkspace.editAsset(\'' + esc(id) + '\')">수정</button>'
-      + '<button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.deleteAsset(\'' + esc(id) + '\')">삭제</button>';
+    var actions = (ownFile || item.image_url ? '<button type="button" class="pw-btn primary" onclick="OSInsuwork.openAssetPreview(\'' + esc(source) + '\',\'' + esc(id) + '\')">미리보기</button>' : (link ? '<a class="pw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : ''))
+      + '<button type="button" class="pw-btn" onclick="OSInsuwork.editAsset(\'' + esc(id) + '\')">수정</button>'
+      + '<button type="button" class="pw-btn danger" onclick="OSInsuwork.deleteAsset(\'' + esc(id) + '\')">삭제</button>';
     var attachments = itemAttachments(id);
     var attachmentHtml = attachments.length ? '<div class="pw-detail-files"><strong>첨부파일 ' + attachments.length + '개</strong><div class="pw-detail-files-grid">' + attachments.map(function (file) {
       var type = previewType(file);
       if (type === 'image') {
         if (file.storage_path) return '<img class="pw-detail-thumb" data-storage-path="' + esc(file.storage_path) + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" alt="' + esc(file.title) + '">';
-        return '<img class="pw-detail-thumb" src="' + esc(file.url) + '" alt="' + esc(file.title) + '" onclick="OSPersonalWorkspace.openUrlPreview(\'' + esc(jsString(file.url)) + '\',\'' + esc(jsString(file.title)) + '\',\'' + esc(jsString(file.mime_type || 'image/*')) + '\')">';
+        return '<img class="pw-detail-thumb" src="' + esc(file.url) + '" alt="' + esc(file.title) + '" onclick="OSInsuwork.openUrlPreview(\'' + esc(jsString(file.url)) + '\',\'' + esc(jsString(file.title)) + '\',\'' + esc(jsString(file.mime_type || 'image/*')) + '\')">';
       }
       var href = file.storage_path ? '#' : esc(file.url || '#');
       return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" target="_blank" rel="noopener"><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
@@ -1816,8 +1816,8 @@
     var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
     var editable = !event.builtin && !care;
     var done = !!event.completed_at;
-    var actions = event.builtin ? '' : '<div class="pw-detail-actions"><button type="button" class="pw-btn danger" onclick="OSPersonalWorkspace.deleteEvent(\'' + esc(id) + '\')">삭제</button>' + (editable ? '<button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.editEvent(\'' + esc(id) + '\')">수정</button>' : '') + '<button type="button" class="pw-btn' + (done ? '' : ' primary') + '" onclick="OSPersonalWorkspace.toggleEventComplete(\'' + esc(id) + '\')">' + (done ? '완료 취소' : '완료 처리') + '</button></div>';
-    var badge = care && event.customer_id ? '<button type="button" class="pw-badge pw-badge-link" onclick="OSPersonalWorkspace.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')">' + kind + (done ? ' · 완료' : '') + '</button>' : '<span class="pw-badge">' + kind + (done ? ' · 완료' : '') + '</span>';
+    var actions = event.builtin ? '' : '<div class="pw-detail-actions"><button type="button" class="pw-btn danger" onclick="OSInsuwork.deleteEvent(\'' + esc(id) + '\')">삭제</button>' + (editable ? '<button type="button" class="pw-btn primary" onclick="OSInsuwork.editEvent(\'' + esc(id) + '\')">수정</button>' : '') + '<button type="button" class="pw-btn' + (done ? '' : ' primary') + '" onclick="OSInsuwork.toggleEventComplete(\'' + esc(id) + '\')">' + (done ? '완료 취소' : '완료 처리') + '</button></div>';
+    var badge = care && event.customer_id ? '<button type="button" class="pw-badge pw-badge-link" onclick="OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')">' + kind + (done ? ' · 완료' : '') + '</button>' : '<span class="pw-badge">' + kind + (done ? ' · 완료' : '') + '</span>';
     dialog('<div class="pw-detail">' + badge + '<h2 class="pw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="pw-detail-body">' + esc(event.description || '') + '</div>' + actions + '</div>');
   }
   function openCustomerFromEvent(customerId) { closeDialog(); state.customerStatusFilter = 'all'; state.customerNameQuery = ''; state.selectedCustomerDetail = null; go('customers'); selectCustomerDetail(customerId); }
@@ -1827,12 +1827,12 @@
   function inlineField(label, input) { return '<label class="pw-inline-field"><span>' + label + '</span>' + input + '</label>'; }
   /* 청약일자 다중 입력행(고객관리 전용, 2026-08-20) — DOM에서 직접 값을 수집/추가/삭제(별도 JS 배열 보관 없음). 좁은 폭(fit-content)으로 렌더되도록 CSS(.pw-contract-dates-*)가 잡아준다. */
   function contractDateRowHtml(date, ageContext) {
-    return '<div class="pw-contract-date-row"><input type="text" class="pw-contract-date-input" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'' + (ageContext || '') + '\')"><button type="button" class="pw-contract-date-del" aria-label="청약일자 삭제" onclick="OSPersonalWorkspace.removeContractDateRow(this)">×</button></div>';
+    return '<div class="pw-contract-date-row"><input type="text" class="pw-contract-date-input" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + (ageContext || '') + '\')"><button type="button" class="pw-contract-date-del" aria-label="청약일자 삭제" onclick="OSInsuwork.removeContractDateRow(this)">×</button></div>';
   }
   function contractDatesField(prefix, dates, ageContext) {
     var list = dates && dates.length ? dates : [ymd(new Date())];
     var rows = list.map(function (date) { return contractDateRowHtml(date, ageContext); }).join('');
-    return '<div class="pw-inline-row pw-contract-dates-field"><span class="pw-inline-row-label">청약일자</span><div class="pw-contract-dates-wrap"><div class="pw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="pw-link-btn pw-contract-date-add" onclick="OSPersonalWorkspace.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
+    return '<div class="pw-inline-row pw-contract-dates-field"><span class="pw-inline-row-label">청약일자</span><div class="pw-contract-dates-wrap"><div class="pw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="pw-link-btn pw-contract-date-add" onclick="OSInsuwork.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
   }
   function addContractDateRow(prefix) {
     var box = document.getElementById(prefix + '-appl-list'); if (!box) return;
@@ -1857,9 +1857,9 @@
     profile = profile || {};
     return '<div class="pw-customer-extra"><section><h3>주소 정보</h3>'
       + '<div class="pw-inline-row pw-customer-address-row"><span class="pw-inline-row-label">주소</span><div class="pw-customer-address">'
-      + '<input id="' + prefix + '-zip" class="pw-customer-zip-input" placeholder="우편번호" value="' + esc(profile.zip || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">'
-      + '<input id="' + prefix + '-address" class="pw-customer-address-input" placeholder="주소" value="' + esc(profile.address || '') + '" readonly onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">'
-      + '<button type="button" class="pw-link-btn" onclick="OSPersonalWorkspace.searchCustomerAddress(\'' + prefix + '\')">주소검색</button>'
+      + '<input id="' + prefix + '-zip" class="pw-customer-zip-input" placeholder="우편번호" value="' + esc(profile.zip || '') + '" readonly onclick="OSInsuwork.searchCustomerAddress(\'' + prefix + '\')">'
+      + '<input id="' + prefix + '-address" class="pw-customer-address-input" placeholder="주소" value="' + esc(profile.address || '') + '" readonly onclick="OSInsuwork.searchCustomerAddress(\'' + prefix + '\')">'
+      + '<button type="button" class="pw-link-btn" onclick="OSInsuwork.searchCustomerAddress(\'' + prefix + '\')">주소검색</button>'
       + '</div></div>'
       + inlineField('상세주소', '<input id="' + prefix + '-address-detail" placeholder="동·호수 등 상세 주소 (주소 선택 후 입력)" value="' + esc(profile.address_detail || '') + '">')
       + '</section><section><h3>인수 정보</h3><div class="pw-customer-underwriting">'
@@ -1871,7 +1871,7 @@
       + inlineField('현재상태', '<input id="' + prefix + '-current-status" value="' + esc(profile.current_condition || '') + '" placeholder="예: 추적관찰 중 / 수술 완료">')
       + '</div></section></div>';
   }
-  function formShell(title, body, saveAction) { return '<form class="pw-form" onsubmit="event.preventDefault();' + saveAction + '"><h2>' + title + '</h2>' + body + '<div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.closeDialog()">취소</button><button type="submit" class="pw-btn primary">저장</button></div></form>'; }
+  function formShell(title, body, saveAction) { return '<form class="pw-form" onsubmit="event.preventDefault();' + saveAction + '"><h2>' + title + '</h2>' + body + '<div class="pw-form-actions"><button type="button" class="pw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="pw-btn primary">저장</button></div></form>'; }
   function write(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
   function writeOne(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); }).then(function (rows) { if (!Array.isArray(rows) || !rows[0]) throw new Error('저장 결과를 확인하지 못했습니다.'); return rows[0]; }); }
   function update(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
@@ -1881,17 +1881,17 @@
   function finishSave(message) { closeDialog(); state.query = ''; var input = document.getElementById('pw-search-input'); if (input) input.value = ''; rebuildWorkspaceDerived(); renderContent(); if (typeof window.toast === 'function') window.toast(message); }
   function saveError(error) { briefingAlert('저장하지 못했습니다.\n' + (error && error.message ? error.message : error), '저장 실패'); }
   function legacy(key) { if (STANDALONE) { window.location.href = '/insu/?view=' + encodeURIComponent(key); return; } if (window.showView) window.showView(key); }
-  function addAsset() { resetRichPending(); var category = currentAssetCategory(), selected = category === 'memo' ? 'memo' : category === 'file' ? 'link' : 'note'; dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note"' + (selected === 'note' ? ' selected' : '') + '>업무노트</option><option value="memo"' + (selected === 'memo' ? ' selected' : '') + '>메모</option><option value="link"' + (selected === 'link' ? ' selected' : '') + '>링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSPersonalWorkspace.focusRich(\'pwf-body\')}">') + formField('내용', richEditorField('pwf-body', '')) + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSPersonalWorkspace.saveAsset()')); var title = document.getElementById('pwf-title'); if (title) title.focus(); }
+  function addAsset() { resetRichPending(); var category = currentAssetCategory(), selected = category === 'memo' ? 'memo' : category === 'file' ? 'link' : 'note'; dialog(formShell('자료 추가', formField('종류', '<select id="pwf-asset-type"><option value="note"' + (selected === 'note' ? ' selected' : '') + '>업무노트</option><option value="memo"' + (selected === 'memo' ? ' selected' : '') + '>메모</option><option value="link"' + (selected === 'link' ? ' selected' : '') + '>링크 자료</option></select>') + formField('제목', '<input id="pwf-title" required autocomplete="off" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSInsuwork.focusRich(\'pwf-body\')}">') + formField('내용', richEditorField('pwf-body', '')) + formField('링크 (선택)', '<input id="pwf-link" type="url" placeholder="https://">') + formField('공개 범위', '<select id="pwf-visibility"><option value="private">나만 보기</option><option value="public">로그인 사용자 전체 공개</option></select>'), 'OSInsuwork.saveAsset()')); var title = document.getElementById('pwf-title'); if (title) title.focus(); }
   function editAsset(id) {
     var item = workspaceItem(id); if (!item || item.item_type === 'folder') return;
     resetRichPending();
     var fileOnly = item.item_type === 'file';
-    var fields = formField('제목', '<input id="pwf-edit-title" required autocomplete="off" value="' + esc(item.title || '') + '" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSPersonalWorkspace.focusRich(\'pwf-edit-body\')}">');
+    var fields = formField('제목', '<input id="pwf-edit-title" required autocomplete="off" value="' + esc(item.title || '') + '" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSInsuwork.focusRich(\'pwf-edit-body\')}">');
     if (fileOnly) fields += '<p class="pw-form-note">업로드 파일은 표시 이름을 수정할 수 있습니다.</p>';
     else fields += formField('내용', richEditorField('pwf-edit-body', item.body || ''))
       + formField('링크 (선택)', '<input id="pwf-edit-link" type="url" placeholder="https://" value="' + esc(item.url || '') + '">')
       + formField('공개 범위', '<select id="pwf-edit-visibility"><option value="private"' + (item.visibility !== 'public' ? ' selected' : '') + '>나만 보기</option><option value="public"' + (item.visibility === 'public' ? ' selected' : '') + '>로그인 사용자 전체 공개</option></select>');
-    dialog(formShell('자료 수정', fields, 'OSPersonalWorkspace.saveAssetEdit(\'' + esc(id) + '\')'));
+    dialog(formShell('자료 수정', fields, 'OSInsuwork.saveAssetEdit(\'' + esc(id) + '\')'));
     var editTitle = document.getElementById('pwf-edit-title'); if (editTitle) { editTitle.focus(); editTitle.select(); }
     hydrateRichStorage();
   }
@@ -1921,20 +1921,20 @@
     });
   }
   function openVault() {
-    dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSPersonalWorkspace.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSPersonalWorkspace.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
+    dialog('<div class="pw-vault"><div class="pw-vault-head"><div><h2>내 파일함</h2><p>사이트에 저장된 파일과 폴더입니다. PC 원본은 변경하지 않습니다.</p></div><div class="pw-actions"><button class="pw-btn" onclick="OSInsuwork.newFolder()">+ 새 폴더</button><label class="pw-btn primary">+ 파일<input id="pw-vault-picker" type="file" multiple hidden onchange="OSInsuwork.uploadFiles(this.files)"></label></div></div><div id="pw-vault-content" class="pw-vault-content"><div class="pw-loading">파일함을 불러오는 중입니다.</div></div></div>');
     api('insuwork_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=in.(folder,file)&deleted_at=is.null' + personalItemScope() + '&order=created_at.desc&limit=10000&select=*').then(function (items) { state.vaultFolders = items.filter(function (item) { return item.item_type === 'folder'; }); state.vaultFiles = items.filter(function (item) { return item.item_type === 'file'; }); renderVault(); }).catch(function () { var content = document.getElementById('pw-vault-content'); if (content) content.innerHTML = '<div class="pw-error">파일함을 불러오지 못했습니다.</div>'; });
   }
   function renderVault() { var content = document.getElementById('pw-vault-content'); if (!content) return; var folders = state.vaultFolders || [], files = state.vaultFiles || []; content.innerHTML = '<div class="pw-vault-grid">' + folders.map(function (folder) { return '<div class="pw-file-card folder"><span>📁</span><b>' + esc(folder.title) + '</b><small>폴더</small></div>'; }).concat(files.map(function (file) { return '<div class="pw-file-card"><span>📄</span><b>' + esc(file.title) + '</b><small>' + esc((file.extension || '파일').toUpperCase()) + ' · ' + formatDate(file.created_at) + '</small></div>'; })).join('') + '</div>' + ((!folders.length && !files.length) ? '<div class="pw-empty">저장된 파일이 없습니다.</div>' : ''); }
   function newFolder() { briefingPrompt('새 폴더 이름을 입력하세요.', '새 폴더').then(function (name) { if (name == null || !String(name).trim()) return; writeOne('insuwork_items', { owner_id: currentUserId(), parent_id: null, item_type: 'folder', title: String(name).trim(), visibility: 'private' }).then(function (created) { upsertWorkspaceItem(created); openVault(); }).catch(saveError); }); }
   function uploadFiles(files) { var list = Array.prototype.slice.call(files || []); if (!list.length) return; var token = window.db.getToken(), owner = currentUserId(); Promise.all(list.map(function (file) { var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : ''); var row = { id: id, owner_id: owner, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', created_at: new Date().toISOString() }; return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error(file.name + ' 업로드 실패'); return write('insuwork_items', row).then(function () { return row; }); }); })).then(function (rows) { rows.forEach(upsertWorkspaceItem); openVault(); }).catch(saveError); }
-  function closeAssetMenu() { var menu = document.querySelector('#v-personal-workspace .pw-add-menu'); if (menu) menu.open = false; }
+  function closeAssetMenu() { var menu = document.querySelector('#v-insuwork .pw-add-menu'); if (menu) menu.open = false; }
   function newAssetFolder() {
     closeAssetMenu();
     var category = currentAssetCategory();
     var categoryField = category
       ? '<input id="pwf-folder-category" type="hidden" value="' + esc(category) + '"><p class="pw-folder-destination">저장 위치 · ' + esc(assetCategoryLabel(category)) + (state.assetFolder ? ' / 현재 폴더' : '') + '</p>'
       : formField('저장 위치', '<select id="pwf-folder-category" required><option value="note">업무노트</option><option value="file">자료실</option><option value="memo">메모</option></select>');
-    dialog(formShell('새 폴더', categoryField + formField('폴더 이름', '<input id="pwf-folder-name" required autocomplete="off">'), 'OSPersonalWorkspace.saveAssetFolder()'));
+    dialog(formShell('새 폴더', categoryField + formField('폴더 이름', '<input id="pwf-folder-name" required autocomplete="off">'), 'OSInsuwork.saveAssetFolder()'));
     window.setTimeout(function () { var input = document.getElementById('pwf-folder-name'); if (input) input.focus(); }, 0);
   }
   function saveAssetFolder() {
@@ -1964,7 +1964,7 @@
     var strong = overlay.querySelector('strong'); if (strong && message) strong.textContent = message;
   }
   function bindAssetWorkspaceDrop() {
-    var view = document.getElementById('v-personal-workspace'); if (!view || view._assetExternalDropBound) return;
+    var view = document.getElementById('v-insuwork'); if (!view || view._assetExternalDropBound) return;
     view._assetExternalDropBound = true;
     view.addEventListener('dragenter', function (event) {
       if (state.section !== 'assets' || !externalFileDrag(event)) return;
@@ -2037,7 +2037,7 @@
   function assetDragEnd(event) {
     state.draggingAsset = null;
     if (event && event.currentTarget) event.currentTarget.classList.remove('is-dragging');
-    document.querySelectorAll('#v-personal-workspace .is-drag-over').forEach(function (element) { element.classList.remove('is-drag-over'); });
+    document.querySelectorAll('#v-insuwork .is-drag-over').forEach(function (element) { element.classList.remove('is-drag-over'); });
   }
   function assetDragOver(event, folderId, folderCategory) {
     var hasFiles = event.dataTransfer && event.dataTransfer.types && Array.prototype.indexOf.call(event.dataTransfer.types, 'Files') >= 0;
@@ -2077,7 +2077,7 @@
     var category = currentAssetCategory();
     if (!category) {
       state.pendingAssetFiles = list;
-      dialog(formShell('파일 업로드', formField('저장 위치', '<select id="pwf-upload-category" required><option value="note">업무노트</option><option value="file">자료실</option><option value="memo">메모</option></select>') + '<p class="pw-folder-destination">선택한 파일 ' + list.length + '개</p>', 'OSPersonalWorkspace.confirmAssetFileUpload()'));
+      dialog(formShell('파일 업로드', formField('저장 위치', '<select id="pwf-upload-category" required><option value="note">업무노트</option><option value="file">자료실</option><option value="memo">메모</option></select>') + '<p class="pw-folder-destination">선택한 파일 ' + list.length + '개</p>', 'OSInsuwork.confirmAssetFileUpload()'));
       return;
     }
     performAssetFileUpload(list, category);
@@ -2106,15 +2106,15 @@
       + contractDatesField('pwf-customer', [ymd(new Date())], 'customer')
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', '<input id="pwf-customer-name" required autocomplete="name">')
-      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'customer\')"><span id="pwf-customer-insurance-age">보험나이 -</span></div>')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSInsuwork.formatBirthInput(this,\'customer\')"><span id="pwf-customer-insurance-age">보험나이 -</span></div>')
       + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwf-customer-gender" value="남">남</label><label><input type="radio" name="pwf-customer-gender" value="여">여</label></div>'
       + '</div><div class="pw-inline-form-row">'
-      + inlineField('전화번호', '<input id="pwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
+      + inlineField('전화번호', '<input id="pwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="pwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
       + customerExtraFieldsHtml({}, 'pwf-customer')
       + '<div class="pw-consult-editor">' + formField('고객내용', richEditorField('pwf-customer-note', '')) + '</div></div>';
-    resetRichPending(); dialog(formShell('고객 등록', form, 'OSPersonalWorkspace.saveCustomer()')); refreshCustomerInsuranceAge(); bindCustomerOcr();
+    resetRichPending(); dialog(formShell('고객 등록', form, 'OSInsuwork.saveCustomer()')); refreshCustomerInsuranceAge(); bindCustomerOcr();
   }
   var customerOcrPending = { base64: '', mime: '' };
   function customerOcrHtml() {
@@ -2183,14 +2183,14 @@
     item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<div class="pw-consult-registration"><div class="pw-inline-form-block">'
-      + '<div class="pw-inline-form-row">' + inlineField('등록일자', '<input id="pwf-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + esc(date) + '" oninput="OSPersonalWorkspace.formatBirthInput(this)">') + '</div>'
+      + '<div class="pw-inline-form-row">' + inlineField('등록일자', '<input id="pwf-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this)">') + '</div>'
       + '<div class="pw-inline-form-row">'
       + inlineField('이름', '<input id="pwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
-      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSPersonalWorkspace.formatBirthInput(this,\'form\')"><span id="pwf-insurance-age">보험나이 -</span></div>')
+      + inlineField('생년월일', '<div class="pw-birth-age"><input id="pwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'form\')"><span id="pwf-insurance-age">보험나이 -</span></div>')
       + '<div class="pw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="pwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="pwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="pw-inline-form-row">'
-      + inlineField('전화번호', '<input id="pwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSPersonalWorkspace.formatConsultPhone(this)">')
-      + inlineField('상담상태', '<select id="pwf-consult-status" onchange="OSPersonalWorkspace.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
+      + inlineField('전화번호', '<input id="pwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
+      + inlineField('상담상태', '<select id="pwf-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
       + '<div class="pw-consult-editor">' + formField('상담내용', richEditorField('pwf-consult-memo', item.memo || '')) + '<p class="pw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</div>'
       + '<input id="pwf-consult-customer-id" type="hidden" value="' + esc(customer.id || '') + '"><input id="pwf-consult-id" type="hidden" value="' + esc(item.id || '') + '"></div>';
@@ -2202,13 +2202,13 @@
      insuwork_items 테이블 행이라 새 함수 없이 그대로 동작. */
   function attachmentItemHtml(file) {
     return '<span class="pw-att-item"><a href="#" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title || '첨부파일') + '" data-file-mime="' + esc(file.mime_type || '') + '">' + esc(file.title || '첨부파일') + '<small>' + formatBytes(file.file_size) + '</small></a>'
-      + '<button type="button" class="pw-att-edit" title="이름 수정" onclick="OSPersonalWorkspace.editAsset(\'' + esc(file.id) + '\')">✎</button>'
-      + '<button type="button" class="pw-att-del" title="삭제" onclick="OSPersonalWorkspace.deleteAsset(\'' + esc(file.id) + '\')">×</button></span>';
+      + '<button type="button" class="pw-att-edit" title="이름 수정" onclick="OSInsuwork.editAsset(\'' + esc(file.id) + '\')">✎</button>'
+      + '<button type="button" class="pw-att-del" title="삭제" onclick="OSInsuwork.deleteAsset(\'' + esc(file.id) + '\')">×</button></span>';
   }
   function customerExistingAttachments(customerId) { var root = customerAttachmentRoot(customerId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="pw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(attachmentItemHtml).join('') + '</div>'; }
   function consultationExistingAttachments(consultationId) { var root = consultationAttachmentRoot(consultationId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="pw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(attachmentItemHtml).join('') + '</div>'; }
-  function addConsultation(customerId) { resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId || ''); }) || {}; dialog(formShell('상담 등록', consultationForm(null, customer), 'OSPersonalWorkspace.saveConsultation()')); refreshInsuranceAge(); }
-  function editConsultation(id) { var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return; resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }) || {}; dialog(formShell('상담 수정', consultationForm(item, customer), 'OSPersonalWorkspace.saveConsultation()')); refreshInsuranceAge(); hydrateRichStorage(); }
+  function addConsultation(customerId) { resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId || ''); }) || {}; dialog(formShell('상담 등록', consultationForm(null, customer), 'OSInsuwork.saveConsultation()')); refreshInsuranceAge(); }
+  function editConsultation(id) { var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return; resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }) || {}; dialog(formShell('상담 수정', consultationForm(item, customer), 'OSInsuwork.saveConsultation()')); refreshInsuranceAge(); hydrateRichStorage(); }
   function refreshInsuranceAge() { var target = document.getElementById('pwf-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-consult-birth'), value('pwf-consult-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
   function refreshCustomerInsuranceAge() { var target = document.getElementById('pwf-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('pwf-customer-birth'), earliestContractDateValue('pwf-customer')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
   function searchCustomerAddress(idPrefix) { var prefix = (idPrefix || 'pwf-customer') + '-'; function openPostcode() { try { new window.daum.Postcode({ oncomplete: function (data) { var zip = document.getElementById(prefix + 'zip'), address = document.getElementById(prefix + 'address'), detail = document.getElementById(prefix + 'address-detail'); if (zip) zip.value = data.zonecode || data.postcode || ''; if (address) address.value = data.roadAddress || data.jibunAddress || data.address || ''; if (detail) detail.focus(); } }).open(); } catch (_) { if (typeof window.toast === 'function') window.toast('주소검색을 열지 못했습니다.'); } } if (window.daum && window.daum.Postcode) return openPostcode(); var old = document.getElementById('daum-postcode-sdk'); if (old) return; var script = document.createElement('script'); script.id = 'daum-postcode-sdk'; script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'; script.onload = openPostcode; script.onerror = function () { if (typeof window.toast === 'function') window.toast('주소검색을 불러오지 못했습니다.'); }; document.head.appendChild(script); }
@@ -2235,12 +2235,12 @@
     var startDate = event ? String(event.task_date || '').slice(0, 10) : state.selectedDate;
     var endDate = event ? String(event.end_date || event.task_date || '').slice(0, 10) : state.selectedDate;
     return '<input id="pwf-event-title" class="pw-event-title-input" required autocomplete="off" placeholder="제목 추가" value="' + esc(event ? event.title || '' : '') + '">'
-      + '<div class="pw-event-datebar"><input id="pwf-event-date" type="date" required value="' + esc(startDate) + '"><span class="pw-event-sep">–</span><input id="pwf-event-end-date" type="date" required value="' + esc(endDate) + '">' + (hasTime ? '' : '<button type="button" class="pw-event-time-toggle" id="pwf-event-time-toggle" onclick="OSPersonalWorkspace.toggleEventTime()">+ 시간 추가</button>') + '</div>'
+      + '<div class="pw-event-datebar"><input id="pwf-event-date" type="date" required value="' + esc(startDate) + '"><span class="pw-event-sep">–</span><input id="pwf-event-end-date" type="date" required value="' + esc(endDate) + '">' + (hasTime ? '' : '<button type="button" class="pw-event-time-toggle" id="pwf-event-time-toggle" onclick="OSInsuwork.toggleEventTime()">+ 시간 추가</button>') + '</div>'
       + '<div class="pw-event-timerow" id="pwf-event-timerow"' + (hasTime ? '' : ' hidden') + '><select id="pwf-event-time">' + timeOptionsHtml(hasTime ? String(event.task_time).slice(0, 5) : '') + '</select><span class="pw-event-sep">–</span><select id="pwf-event-end-time">' + timeOptionsHtml(event && event.end_time ? String(event.end_time).slice(0, 5) : '') + '</select></div>'
       + '<textarea id="pwf-event-desc" rows="4" class="pw-event-desc" placeholder="설명 추가">' + esc(event ? event.description || '' : '') + '</textarea>'
       + (event ? '<input id="pwf-event-id" type="hidden" value="' + esc(event.id) + '">' : '');
   }
-  function addEvent(date) { state.selectedDate = date || state.selectedDate; dialog(formShell('일정 추가', eventFormHtml(null), 'OSPersonalWorkspace.saveEvent()')); var title = document.getElementById('pwf-event-title'); if (title) title.focus(); }
+  function addEvent(date) { state.selectedDate = date || state.selectedDate; dialog(formShell('일정 추가', eventFormHtml(null), 'OSInsuwork.saveEvent()')); var title = document.getElementById('pwf-event-title'); if (title) title.focus(); }
 
   function openTool(key) {
     if (key === 'calculator') return openCalculatorTool();
@@ -2268,7 +2268,7 @@
     }).filter(function (g) { return g.items.length; });
   }
   function quickLinksCardsHtml(groups) {
-    var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSPersonalWorkspace.filterQuickLinks(this.value)"></label>';
+    var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSInsuwork.filterQuickLinks(this.value)"></label>';
     var body = groups.map(function (g) {
       return '<section class="pw-qlink-group"><h3>' + esc(g.label) + '</h3><div class="pw-qlink-grid">' + g.items.map(function (item) {
         var name = item.name || '(이름 없음)';
@@ -2293,7 +2293,7 @@
         var name = stripHtml(card.name || '').trim();
         var detail = stripHtml(card.detail || '').replace(/\s+/g, ' ').trim();
         if (!matches(name + ' ' + detail + ' ' + (group.label || ''))) return;
-        out.push({ icon: '₩', kind: '보험회사 결제정보', title: name || '결제정보', sub: (group.label || '') + (detail ? ' · ' + detail : ''), action: "OSPersonalWorkspace.openPaymentSearchResult('" + type + "')" });
+        out.push({ icon: '₩', kind: '보험회사 결제정보', title: name || '결제정보', sub: (group.label || '') + (detail ? ' · ' + detail : ''), action: "OSInsuwork.openPaymentSearchResult('" + type + "')" });
       });
     });
     return out;
@@ -2321,7 +2321,7 @@
     return { noticeHtml: noticeBox ? noticeBox.innerHTML : '', footerHtml: footerBox ? footerBox.innerHTML : '', groups: groups };
   }
   function paymentInfoHtml(parsed) {
-    var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSPersonalWorkspace.filterQuickLinks(this.value)"></label>';
+    var search = '<label class="pw-tool-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="회사명 검색" oninput="OSInsuwork.filterQuickLinks(this.value)"></label>';
     var notice = parsed.noticeHtml ? '<div class="pw-payinfo-notice">' + parsed.noticeHtml + '</div>' : '';
     var groups = parsed.groups.map(function (g) {
       return '<section class="pw-qlink-group"><h3>' + esc(g.label) + '</h3><div class="pw-payinfo-grid">' + g.cards.map(function (c) {
@@ -2342,9 +2342,9 @@
   }
   function paymentSectionHtml() {
     loadPaymentInfo();
-    var head = '<div class="pw-toolbar pw-carrier-toolbar"><h2>보험회사 결제정보</h2><div class="pw-carrier-tabs" role="tablist"><button type="button" class="' + (state.paymentType === 'nonlife' ? 'on' : '') + '" onclick="OSPersonalWorkspace.setPaymentType(\'nonlife\')">손해보험</button><button type="button" class="' + (state.paymentType === 'life' ? 'on' : '') + '" onclick="OSPersonalWorkspace.setPaymentType(\'life\')">생명보험</button></div></div>';
+    var head = '<div class="pw-toolbar pw-carrier-toolbar"><h2>보험회사 결제정보</h2><div class="pw-carrier-tabs" role="tablist"><button type="button" class="' + (state.paymentType === 'nonlife' ? 'on' : '') + '" onclick="OSInsuwork.setPaymentType(\'nonlife\')">손해보험</button><button type="button" class="' + (state.paymentType === 'life' ? 'on' : '') + '" onclick="OSInsuwork.setPaymentType(\'life\')">생명보험</button></div></div>';
     if (state.paymentLoading && !state.paymentData) return head + '<div class="pw-state"><strong>결제정보를 불러오는 중입니다.</strong></div>';
-    if (!state.paymentData) return head + '<div class="pw-state"><strong>' + esc(state.paymentError || '결제정보가 없습니다.') + '</strong><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.reloadPaymentInfo()">다시 불러오기</button></div>';
+    if (!state.paymentData) return head + '<div class="pw-state"><strong>' + esc(state.paymentError || '결제정보가 없습니다.') + '</strong><button type="button" class="pw-btn" onclick="OSInsuwork.reloadPaymentInfo()">다시 불러오기</button></div>';
     var parsed = state.paymentData;
     var notice = parsed.noticeHtml ? '<div class="pw-payinfo-notice">' + parsed.noticeHtml + '</div>' : '';
     var activeIndex = state.paymentType === 'life' ? 1 : 0;
@@ -2383,13 +2383,13 @@
   function fmtBytes(bytes) { var n = Number(bytes) || 0, units = ['B', 'KB', 'MB', 'GB']; var i = 0; while (n >= 1024 && i < units.length - 1) { n /= 1024; i += 1; } return (i ? n.toFixed(n >= 10 ? 1 : 2) : Math.round(n)) + units[i]; }
   function toolsPageHtml() {
     var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG']];
-    var tabs = cards.map(function (card) { return '<button type="button" class="pw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSPersonalWorkspace.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
+    var tabs = cards.map(function (card) { return '<button type="button" class="pw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSInsuwork.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
     var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : toolsCalculatorHtml();
     return statusHtml() + '<div class="pw-tools-page"><div class="pw-toolbar pw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="pw-subtitle">자주 쓰는 계산과 이미지 변환을 보험워크 안에서 바로 처리합니다.</p></div></div><div class="pw-tool-cards">' + tabs + '</div>' + body + '</div>';
   }
   function toolsCalculatorHtml() {
     var keys = [['C', 'C', 'fn'], ['back', '←', 'fn'], ['%', '%', 'fn'], ['/', '÷', 'op'], ['7', '7', ''], ['8', '8', ''], ['9', '9', ''], ['*', '×', 'op'], ['4', '4', ''], ['5', '5', ''], ['6', '6', ''], ['-', '−', 'op'], ['1', '1', ''], ['2', '2', ''], ['3', '3', ''], ['+', '+', 'op'], ['+/-', '±', 'fn'], ['0', '0', ''], ['.', '.', ''], ['=', '=', 'eq']];
-    var buttons = keys.map(function (k) { return '<button type="button" class="' + k[2] + '" data-calc-key="' + k[0] + '" onclick="OSPersonalWorkspace.calcPress(\'' + k[0] + '\')">' + k[1] + '</button>'; }).join('');
+    var buttons = keys.map(function (k) { return '<button type="button" class="' + k[2] + '" data-calc-key="' + k[0] + '" onclick="OSInsuwork.calcPress(\'' + k[0] + '\')">' + k[1] + '</button>'; }).join('');
     return '<section class="pw-tool-workspace pw-tool-calc-page"><div class="pw-tool-pane"><h3>입력</h3><div class="pw-calc-shell" id="pw-calc-shell" tabindex="0" aria-label="계산기 키보드 입력"><input class="pw-calc-display" id="pw-calc-display" value="0" readonly aria-label="계산식과 결과"><div class="pw-calc-grid">' + buttons + '</div></div></div><div class="pw-tool-pane"><h3>기록</h3><div class="pw-calc-help"><strong id="pw-calc-result">0</strong><span id="pw-calc-status">숫자와 연산자를 입력하세요. 키보드 입력도 가능합니다.</span></div></div></section>';
   }
   function resetCalc() { state.calc = { cur: '0', prev: null, op: null, fresh: true, expr: '', justEq: false, eqLine: '' }; }
@@ -2423,7 +2423,7 @@
     shell.addEventListener('keydown', function (event) { var key = calcKeyFromEvent(event); if (!key) return; event.preventDefault(); calcPress(key); var btn = shell.querySelector('[data-calc-key="' + key + '"]'); if (btn) { btn.classList.add('kbd'); window.setTimeout(function () { btn.classList.remove('kbd'); }, 120); } });
   }
   function toolsBmiHtml() {
-    return '<section class="pw-tool-workspace pw-tool-bmi-page"><div class="pw-tool-pane"><h3>입력</h3><label class="pw-tool-field">키 (cm)<input id="pw-bmi-height" type="number" inputmode="decimal" placeholder="170" oninput="OSPersonalWorkspace.calcBmi()"></label><label class="pw-tool-field">몸무게 (kg)<input id="pw-bmi-weight" type="number" inputmode="decimal" placeholder="65" oninput="OSPersonalWorkspace.calcBmi()"></label></div><div class="pw-tool-pane"><h3>결과</h3><div class="pw-bmi-result" id="pw-bmi-result"><strong id="pw-bmi-value">-</strong><span id="pw-bmi-category">키와 몸무게를 입력하세요</span></div></div></section>';
+    return '<section class="pw-tool-workspace pw-tool-bmi-page"><div class="pw-tool-pane"><h3>입력</h3><label class="pw-tool-field">키 (cm)<input id="pw-bmi-height" type="number" inputmode="decimal" placeholder="170" oninput="OSInsuwork.calcBmi()"></label><label class="pw-tool-field">몸무게 (kg)<input id="pw-bmi-weight" type="number" inputmode="decimal" placeholder="65" oninput="OSInsuwork.calcBmi()"></label></div><div class="pw-tool-pane"><h3>결과</h3><div class="pw-bmi-result" id="pw-bmi-result"><strong id="pw-bmi-value">-</strong><span id="pw-bmi-category">키와 몸무게를 입력하세요</span></div></div></section>';
   }
   function calcBmi() {
     var h = parseFloat(value('pw-bmi-height')), w = parseFloat(value('pw-bmi-weight'));
@@ -2444,8 +2444,8 @@
     var today = new Date(), basis = ymd(today), year = today.getFullYear();
     return statusHtml() + '<div class="pw-insage-page"><div class="pw-toolbar pw-insage-toolbar"><div><h2>보험연령표</h2><p class="pw-subtitle">출생연도 빠른 확인표와 생년월일 기준 보험나이 계산을 함께 봅니다.</p></div><span id="pw-insage-year">' + year + '년 기준</span></div>'
       + '<section class="pw-insage-calc"><div class="pw-insage-fields">'
-      + '<label>생년월일<input id="pw-insage-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSPersonalWorkspace.formatBirthInput(this,\'tool\')"></label>'
-      + '<label>기준일<input id="pw-insage-date" type="date" value="' + basis + '" data-auto-date="1" onchange="this.dataset.autoDate=\'0\';OSPersonalWorkspace.calcToolInsuranceAge()"></label>'
+      + '<label>생년월일<input id="pw-insage-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSInsuwork.formatBirthInput(this,\'tool\')"></label>'
+      + '<label>기준일<input id="pw-insage-date" type="date" value="' + basis + '" data-auto-date="1" onchange="this.dataset.autoDate=\'0\';OSInsuwork.calcToolInsuranceAge()"></label>'
       + '</div><div class="pw-insage-result"><strong id="pw-insage-value">-</strong><span id="pw-insage-caption">생년월일을 입력하세요</span></div></section>'
       + '<div class="pw-insage-note"><b>빠른 확인</b><span>표는 현재 연도에서 출생연도를 뺀 간편 기준입니다. 생일 전후 6개월을 반영한 실제 보험나이는 위 계산값을 사용하세요.</span></div>'
       + '<div class="pw-insage-legend"><span class="major">10세 단위</span><span class="minor">5세 단위</span><span class="youth">15~19세</span></div>'
@@ -2505,7 +2505,7 @@
     if (caption) caption.textContent = '다음 상령일 ' + info.upperDate + ' · ' + info.nextAge + '세';
   }
   function toolsImageHtml() {
-    return '<section class="pw-tool-workspace pw-tool-image-page"><div class="pw-tool-pane"><h3>입력</h3><label class="pw-imgconv-drop" id="pw-imgconv-drop"><input id="pw-imgconv-file" type="file" accept="image/png,image/jpeg,application/pdf,.pdf" onchange="OSPersonalWorkspace.imgConvertLoad(this)"><span class="pw-imgconv-icon">▧</span><strong>PNG · JPG · PDF 파일 선택</strong><em>클릭 또는 드래그앤드롭 · PDF는 페이지별 JPG</em></label><div id="pw-imgconv-file-info"></div><button type="button" class="pw-btn primary pw-tool-fire" onclick="OSPersonalWorkspace.imgConvertRun()">변환</button></div><div class="pw-tool-pane"><h3>결과</h3><div id="pw-imgconv-result" class="pw-imgconv-result"><div class="pw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
+    return '<section class="pw-tool-workspace pw-tool-image-page"><div class="pw-tool-pane"><h3>입력</h3><label class="pw-imgconv-drop" id="pw-imgconv-drop"><input id="pw-imgconv-file" type="file" accept="image/png,image/jpeg,application/pdf,.pdf" onchange="OSInsuwork.imgConvertLoad(this)"><span class="pw-imgconv-icon">▧</span><strong>PNG · JPG · PDF 파일 선택</strong><em>클릭 또는 드래그앤드롭 · PDF는 페이지별 JPG</em></label><div id="pw-imgconv-file-info"></div><button type="button" class="pw-btn primary pw-tool-fire" onclick="OSInsuwork.imgConvertRun()">변환</button></div><div class="pw-tool-pane"><h3>결과</h3><div id="pw-imgconv-result" class="pw-imgconv-result"><div class="pw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
   }
   function hydrateToolsPage() { if (state.toolMode === 'calculator') hydrateCalculator(); if (state.toolMode === 'bmi') calcBmi(); if (state.toolMode === 'image') hydrateImageConvert(); }
   function hydrateImageConvert() {
@@ -2526,7 +2526,7 @@
   function renderImageConvertFile() {
     var info = document.getElementById('pw-imgconv-file-info'); if (!info) return;
     if (!state.toolFile) { info.innerHTML = ''; return; }
-    info.innerHTML = '<div class="pw-imgconv-file-info"><span>' + esc(state.toolFile.name) + ' · ' + fmtBytes(state.toolFile.size) + '</span><button type="button" onclick="OSPersonalWorkspace.imgConvertClear()" aria-label="파일 제거">×</button></div>';
+    info.innerHTML = '<div class="pw-imgconv-file-info"><span>' + esc(state.toolFile.name) + ' · ' + fmtBytes(state.toolFile.size) + '</span><button type="button" onclick="OSInsuwork.imgConvertClear()" aria-label="파일 제거">×</button></div>';
   }
   function imgConvertClear() { state.toolFile = null; state.toolResult = null; state.toolPages = null; var input = document.getElementById('pw-imgconv-file'); if (input) input.value = ''; renderImageConvertFile(); renderImageConvertEmpty(); }
   function renderImageConvertEmpty(text) { var result = document.getElementById('pw-imgconv-result'); if (result) result.innerHTML = '<div class="pw-tool-empty">' + esc(text || '파일 선택 후 변환을 누르세요.') + '</div>'; }
@@ -2555,7 +2555,7 @@
   function renderImageConvertResult() {
     var r = state.toolResult, result = document.getElementById('pw-imgconv-result'); if (!r || !result) return;
     var saved = r.origSize - r.newSize, reduction = r.origSize ? Math.round((1 - r.newSize / r.origSize) * 100) : 0;
-    result.innerHTML = '<div class="pw-imgconv-compare"><div><small>원본</small><strong>' + esc(r.origFormat) + '</strong><span>' + fmtBytes(r.origSize) + '</span></div><b>→</b><div><small>결과</small><strong>JPG</strong><span>' + fmtBytes(r.newSize) + '</span></div></div><div class="pw-imgconv-summary"><span>용량 ' + (reduction > 0 ? reduction + '% 감소' : '변환 완료') + '</span><span>' + r.width + ' × ' + r.height + '</span><span>' + (saved > 0 ? fmtBytes(saved) + ' 절약' : esc(r.newName)) + '</span></div><div class="pw-imgconv-preview"><img src="' + r.url + '" alt="변환 결과"></div><div class="pw-imgconv-actions"><button type="button" class="pw-btn primary" onclick="OSPersonalWorkspace.imgConvertDownload()">다운로드</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.imgConvertCopy()">복사</button></div>';
+    result.innerHTML = '<div class="pw-imgconv-compare"><div><small>원본</small><strong>' + esc(r.origFormat) + '</strong><span>' + fmtBytes(r.origSize) + '</span></div><b>→</b><div><small>결과</small><strong>JPG</strong><span>' + fmtBytes(r.newSize) + '</span></div></div><div class="pw-imgconv-summary"><span>용량 ' + (reduction > 0 ? reduction + '% 감소' : '변환 완료') + '</span><span>' + r.width + ' × ' + r.height + '</span><span>' + (saved > 0 ? fmtBytes(saved) + ' 절약' : esc(r.newName)) + '</span></div><div class="pw-imgconv-preview"><img src="' + r.url + '" alt="변환 결과"></div><div class="pw-imgconv-actions"><button type="button" class="pw-btn primary" onclick="OSInsuwork.imgConvertDownload()">다운로드</button><button type="button" class="pw-btn" onclick="OSInsuwork.imgConvertCopy()">복사</button></div>';
   }
   function imgConvertPdf(file) {
     var result = document.getElementById('pw-imgconv-result'); if (result) result.innerHTML = '<div class="pw-tool-empty">PDF 변환 중입니다.</div>';
@@ -2569,14 +2569,14 @@
   function renderImageConvertPdfResult(total) {
     var pages = state.toolPages || [], result = document.getElementById('pw-imgconv-result'); if (!result) return;
     if (!pages.length) { renderImageConvertEmpty('변환된 페이지가 없습니다.'); return; }
-    result.innerHTML = '<div class="pw-imgconv-pdf-grid">' + pages.map(function (p, i) { return '<article><img src="' + p.url + '" alt="' + p.page + '쪽"><strong>' + p.page + '쪽</strong><span>' + fmtBytes(p.size) + '</span><div><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.imgConvertPdfDownload(' + i + ')">저장</button><button type="button" class="pw-btn" onclick="OSPersonalWorkspace.imgConvertPdfCopy(' + i + ')">복사</button></div></article>'; }).join('') + '</div>' + (total > pages.length ? '<p class="pw-imgconv-pdf-note">총 ' + total + '쪽 중 앞 ' + pages.length + '쪽만 변환했습니다.</p>' : '');
+    result.innerHTML = '<div class="pw-imgconv-pdf-grid">' + pages.map(function (p, i) { return '<article><img src="' + p.url + '" alt="' + p.page + '쪽"><strong>' + p.page + '쪽</strong><span>' + fmtBytes(p.size) + '</span><div><button type="button" class="pw-btn" onclick="OSInsuwork.imgConvertPdfDownload(' + i + ')">저장</button><button type="button" class="pw-btn" onclick="OSInsuwork.imgConvertPdfCopy(' + i + ')">복사</button></div></article>'; }).join('') + '</div>' + (total > pages.length ? '<p class="pw-imgconv-pdf-note">총 ' + total + '쪽 중 앞 ' + pages.length + '쪽만 변환했습니다.</p>' : '');
   }
   function downloadBlob(url, name) { var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
   function imgConvertDownload() { var r = state.toolResult; if (r) downloadBlob(r.url, r.newName); }
   function imgConvertCopy() { var r = state.toolResult; if (!r || !navigator.clipboard || !window.ClipboardItem) return imgConvertDownload(); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': r.blob })]).then(function () { if (typeof window.toast === 'function') window.toast('변환 이미지를 복사했습니다.'); }).catch(imgConvertDownload); }
   function imgConvertPdfDownload(index) { var p = (state.toolPages || [])[index]; if (p) downloadBlob(p.url, p.name); }
   function imgConvertPdfCopy(index) { var p = (state.toolPages || [])[index]; if (!p || !navigator.clipboard || !window.ClipboardItem) return imgConvertPdfDownload(index); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': p.blob })]).then(function () { if (typeof window.toast === 'function') window.toast(p.page + '쪽을 복사했습니다.'); }).catch(function () { imgConvertPdfDownload(index); }); }
-  function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSPersonalWorkspace.saveEvent()')); }
+  function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSInsuwork.saveEvent()')); }
   function deleteEvent(id) {
     if (!id) return;
     briefingConfirm('이 일정을 삭제할까요?', '일정 삭제', '삭제', true).then(function (ok) {
@@ -2603,8 +2603,8 @@
   }
   function openReservationPopup(name) {
     var box = document.getElementById('pw-reservation-dialog'), body = document.getElementById('pw-reservation-body'); if (!box || !body) return;
-    body.innerHTML = formShell('캘린더 일정 추가', formField('날짜', '<input id="pwr-event-date" type="date" required value="' + ymd(new Date()) + '">') + formField('시간', '<input id="pwr-event-time" type="time">') + formField('일정 제목', '<input id="pwr-event-title" required autocomplete="off" value="' + esc((name || '고객') + ' 상담 예약') + '">') + formField('일정 내용', '<textarea id="pwr-event-desc" rows="5"></textarea>'), 'OSPersonalWorkspace.saveReservationEvent()');
-    var cancel = body.querySelector('.pw-form-actions .pw-btn'); if (cancel) cancel.setAttribute('onclick', 'OSPersonalWorkspace.closeReservationPopup()');
+    body.innerHTML = formShell('캘린더 일정 추가', formField('날짜', '<input id="pwr-event-date" type="date" required value="' + ymd(new Date()) + '">') + formField('시간', '<input id="pwr-event-time" type="time">') + formField('일정 제목', '<input id="pwr-event-title" required autocomplete="off" value="' + esc((name || '고객') + ' 상담 예약') + '">') + formField('일정 내용', '<textarea id="pwr-event-desc" rows="5"></textarea>'), 'OSInsuwork.saveReservationEvent()');
+    var cancel = body.querySelector('.pw-form-actions .pw-btn'); if (cancel) cancel.setAttribute('onclick', 'OSInsuwork.closeReservationPopup()');
     if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', '');
   }
   function closeReservationPopup() { var box = document.getElementById('pw-reservation-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
@@ -2657,7 +2657,7 @@
   function selectCustomerDetail(id) { resetRichPending(); state.selectedCustomerDetail = id && String(state.selectedCustomerDetail) !== String(id) ? id : null; renderContent(); }
   function showRowHover(event) {
     var row = event.currentTarget, tip = document.getElementById('pw-row-hover'), text = row && row.getAttribute('data-hover-text');
-    if (!tip || !text || document.querySelector('#v-personal-workspace .pw-consult-layout.has-detail')) return;
+    if (!tip || !text || document.querySelector('#v-insuwork .pw-consult-layout.has-detail')) return;
     tip.textContent = text;
     tip.style.display = 'block';
     var rect = row.getBoundingClientRect(), width = tip.offsetWidth;
@@ -2737,11 +2737,11 @@
   }
   function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
   function openCalendarDay(date) { state.selectedDate = date; state.cursor = parseDate(date); state.calendarMode = 'day'; renderContent(); setUrl(false); }
-  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'personal-workspace') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
+  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
   function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } openWorkspace(state.section, false); }
 
   restoreFromUrl();
-  document.addEventListener('appstate:ready', function () { if (!allowed()) { if (STANDALONE) renderStandaloneGate('denied'); return; } if (!document.getElementById('v-personal-workspace')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
+  document.addEventListener('appstate:ready', function () { if (!allowed()) { if (STANDALONE) renderStandaloneGate('denied'); return; } if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, false); });
   window.addEventListener('popstate', function () { if (!allowed() || !restoreFromUrl()) return; openWorkspace(state.section, false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
   document.addEventListener('click', function (event) { var menu = document.getElementById('pw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.pw-preview-ddak')) closeDdakMenu(); });
@@ -2924,7 +2924,7 @@
       strategyLoading: !!state.strategyLoading
     };
   }
-  window.OSPersonalWorkspace = {
+  window.OSInsuwork = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만

@@ -5,7 +5,7 @@
  *
  * 1장 드롭 = 이미지 그대로 저장. 2장 이상 함께 드롭 = pdf-lib로 1개 PDF로 병합 저장.
  * 클릭 시 미리보기는 insubriefing/leaflet-preview.js(LeafletPreview.open) 재사용.
- * 월/주/일/목록 보기 전환 + 공휴일·절기 표시는 js/personal-workspace.js 보험워크
+ * 월/주/일/목록 보기 전환 + 공휴일·절기 표시는 js/insuwork.js 보험워크
  * 캘린더의 동일 로직을 이식(일정 등록·수정 등 개인업무 기능은 이 공개 화면에는 넣지 않음).
  */
 (function () {

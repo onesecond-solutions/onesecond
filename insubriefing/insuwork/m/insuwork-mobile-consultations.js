@@ -2,8 +2,8 @@
    보험워크 모바일 "상담" 화면 전용 렌더러 (feat/workstation-mobile-consultations-list, 2026-08-22, 대표 직접 요청).
    지금까지 상담 이력은 고객 상세 화면 안에서 그 고객 것만 볼 수 있었다(customers.js). PC 데스크탑에는 전체
    고객을 가로지르는 "상담관리" 화면이 있는데 모바일엔 없어서 그 격차를 메우는 화면이다.
-   데이터/로직은 100% /js/personal-workspace.js 재사용 — consultationsDirectory() 읽기 전용 조회(이번 작업에서
-   새로 추가) + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의
+   데이터/로직은 100% /js/insuwork.js 재사용 — consultationsDirectory() 읽기 전용 조회(이번 작업에서
+   새로 추가) + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — insuwork.js의
    렌더/저장 함수 본문은 호출하지 않는다. 조회 전용이다(쓰기 기능 없음 — 상담 등록/수정/삭제는 범위 밖).
    네임스페이스 = OSInsuworkMobileConsultations (다른 OSInsuworkMobile* 네임스페이스와 충돌 없음).
 
@@ -52,11 +52,11 @@
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
-  /* customers.js/library.js와 동일 패턴 — js/personal-workspace.js의 isDataReady() 읽기 전용 조회를 그대로
+  /* customers.js/library.js와 동일 패턴 — js/insuwork.js의 isDataReady() 읽기 전용 조회를 그대로
      노출한다. loadData(true)가 완료되기 전(fullLoaded=false)에는 directory가 빈 배열이라 "상담 기록이
      없습니다"가 먼저 그려지고 이후 폴링에서 실제 데이터로 뒤늦게 바뀌는 문제 — 로드 완료 여부로 문구를 분기한다. */
   function isDataReady() {
-    return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
+    return !!(window.OSInsuwork && typeof window.OSInsuwork.isDataReady === 'function' && window.OSInsuwork.isDataReady());
   }
   /* customers.js/library.js와 동일 로직 복제(모바일 화면 로그아웃 진입 경로). insubriefing/hub.js의
      logoutAdvisor()·insubriefing/insuwork/insuwork.js의 logout()이 지우는 storage key 4개를 그대로
@@ -114,7 +114,7 @@
       + '</div>'
       + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
       + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=personal-workspace&section=consultations">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=consultations">PC 버전으로 보기</a>'
       + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
@@ -309,8 +309,8 @@
   }
 
   function refreshDirectory() {
-    state.directory = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.consultationsDirectory === 'function')
-      ? window.OSPersonalWorkspace.consultationsDirectory() : [];
+    state.directory = (window.OSInsuwork && typeof window.OSInsuwork.consultationsDirectory === 'function')
+      ? window.OSInsuwork.consultationsDirectory() : [];
   }
 
   function renderCurrent() {
@@ -330,8 +330,8 @@
 
   function startDataFlow() {
     renderLoading();
-    if (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.reload === 'function') {
-      window.OSPersonalWorkspace.reload();
+    if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
+      window.OSInsuwork.reload();
     }
     pollAndRender(0);
   }

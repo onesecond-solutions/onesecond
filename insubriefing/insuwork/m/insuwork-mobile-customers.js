@@ -1,13 +1,13 @@
 /* insubriefing/insuwork/m/insuwork-mobile-customers.js
    보험워크 모바일 "고객" 화면 전용 렌더러 (Phase 3, 2026-08-22, feat/workstation-mobile-customers /
    Phase 4, 2026-08-22, feat/workstation-mobile-quicknote).
-   데이터/로직은 100% /js/personal-workspace.js 재사용(customersDirectory() 읽기 전용 조회 + reload()로
+   데이터/로직은 100% /js/insuwork.js 재사용(customersDirectory() 읽기 전용 조회 + reload()로
    기존 loadData() 실행, quickSaveConsultationNote()로 쓰기). 이 파일은 화면(뷰 셸)만 새로 그린다 —
-   personal-workspace.js의 렌더/저장 함수 본문은 호출하지 않는다(쓰기는 export된 wrapper 1개만 호출).
+   insuwork.js의 렌더/저장 함수 본문은 호출하지 않는다(쓰기는 export된 wrapper 1개만 호출).
    네임스페이스 = OSInsuworkMobileCustomers (OSInsuworkMobile/OSInsuworkMobileCalendar와 충돌 없음).
    코상무 확정 방향: 모바일 고객관리는 표가 아니라 "고객 카드 리스트 → 고객 상세 → 전화/메모/일정추가 버튼" 구조.
    Phase 3은 조회 전용이었다. Phase 4에서 "메모" 버튼에 화면 이동 없는 인라인 빠른 메모 입력을 추가했다 —
-   저장은 js/personal-workspace.js의 quickSaveConsultationNote(customerId, text)만 호출한다(새 REST 로직 없음).
+   저장은 js/insuwork.js의 quickSaveConsultationNote(customerId, text)만 호출한다(새 REST 로직 없음).
    사진 첨부·일정추가는 여전히 범위 밖(PC 안내 링크만 제공). */
 (function () {
   'use strict';
@@ -51,11 +51,11 @@
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
-  /* fix/workstation-mobile-bugs 버그1 대응 — js/personal-workspace.js의 isDataReady() 읽기 전용 조회를 그대로
+  /* fix/workstation-mobile-bugs 버그1 대응 — js/insuwork.js의 isDataReady() 읽기 전용 조회를 그대로
      노출한다. loadData(true)가 완료되기 전(fullLoaded=false)에는 directory가 빈 배열이라 "등록된 고객이
      없습니다"가 먼저 그려지고 이후 폴링에서 실제 데이터로 뒤늦게 바뀌는 문제 — 로드 완료 여부로 문구를 분기한다. */
   function isDataReady() {
-    return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
+    return !!(window.OSInsuwork && typeof window.OSInsuwork.isDataReady === 'function' && window.OSInsuwork.isDataReady());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
      새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
@@ -130,7 +130,7 @@
   }
 
   /* 표시용 전화번호(고객 원본 값, 하이픈 등 서식 포함 가능)와 tel: 링크용 값(숫자만)을 분리한다.
-     phoneText()류 서식 함수는 personal-workspace.js 비공개 클로저 안이라 재사용할 수 없어, 여기서는
+     phoneText()류 서식 함수는 insuwork.js 비공개 클로저 안이라 재사용할 수 없어, 여기서는
      tel: 링크에 반드시 필요한 "숫자만 추출"만 자체 구현한다(표시는 원본 그대로, 새 포맷팅 로직 추가 안 함). */
   function phoneDigits(value) { return String(value || '').replace(/\D/g, ''); }
 
@@ -144,7 +144,7 @@
       + '</div>'
       + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
       + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=personal-workspace&section=customers">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전으로 보기</a>'
       + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
@@ -190,8 +190,8 @@
   }
 
   function refreshDirectory() {
-    state.directory = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.customersDirectory === 'function')
-      ? window.OSPersonalWorkspace.customersDirectory() : [];
+    state.directory = (window.OSInsuwork && typeof window.OSInsuwork.customersDirectory === 'function')
+      ? window.OSInsuwork.customersDirectory() : [];
   }
 
   function findCustomer(id) {
@@ -295,7 +295,7 @@
       + telAction
       + noteSectionHtml(customer)
       + '<div class="wsm-cust-action">'
-      + '<a class="wsm-cust-action-btn" href="/insubriefing/insuwork/?view=personal-workspace&section=calendar&mode=month">일정추가</a>'
+      + '<a class="wsm-cust-action-btn" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">일정추가</a>'
       + '<p class="wsm-cust-action-note">PC 버전에서 일정을 등록해 주세요.</p>'
       + '</div>'
       + '</div>'
@@ -318,7 +318,7 @@
      (2) 펼침 — textarea + 저장/취소, (3) 저장 직후 — 짧게 "저장됐습니다" 배지만 보여주고 자동으로 (1)로 복귀.
      사진 첨부는 이번 Phase 범위 밖이라 PC 링크 안내 문구만 둔다(별도 업로드 UI 없음). */
   function noteSectionHtml(customer) {
-    var pcLink = '<a class="wsm-cust-note-pc-link" href="/insubriefing/insuwork/?view=personal-workspace&section=customers">PC 버전 열기</a>';
+    var pcLink = '<a class="wsm-cust-note-pc-link" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전 열기</a>';
     if (noteUi.open) {
       var errorHtml = noteUi.error ? '<p class="wsm-cust-note-error">' + esc(noteUi.error) + '</p>' : '';
       return '<div class="wsm-cust-action wsm-cust-note-open">'
@@ -361,7 +361,7 @@
     if (save) save.addEventListener('click', function () { submitQuickNote(customer); });
   }
 
-  /* 저장은 js/personal-workspace.js의 quickSaveConsultationNote(customerId, text) 하나만 호출한다.
+  /* 저장은 js/insuwork.js의 quickSaveConsultationNote(customerId, text) 하나만 호출한다.
      이 화면은 REST 필드 조합·owner_id 처리를 새로 만들지 않는다 — 그 함수가 이미 처리한다.
      실패 시 입력한 텍스트(noteUi.draft)를 유지해 다시 시도할 수 있게 한다. */
   function submitQuickNote(customer) {
@@ -374,14 +374,14 @@
       var focusEmpty = document.getElementById('wsm-cust-note-input'); if (focusEmpty) focusEmpty.focus();
       return;
     }
-    if (!window.OSPersonalWorkspace || typeof window.OSPersonalWorkspace.quickSaveConsultationNote !== 'function') {
+    if (!window.OSInsuwork || typeof window.OSInsuwork.quickSaveConsultationNote !== 'function') {
       noteUi.draft = text; noteUi.error = '저장 기능을 사용할 수 없습니다. 페이지를 새로고침해 주세요.';
       renderDetailShell();
       return;
     }
     noteUi.draft = text; noteUi.saving = true; noteUi.error = '';
     renderDetailShell();
-    window.OSPersonalWorkspace.quickSaveConsultationNote(customer.id, text).then(function () {
+    window.OSInsuwork.quickSaveConsultationNote(customer.id, text).then(function () {
       noteUi = { open: false, saving: false, error: '', draft: '', justSaved: true };
       lastRenderedJson = '';
       renderCurrent();
@@ -422,8 +422,8 @@
 
   function startDataFlow() {
     renderLoading();
-    if (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.reload === 'function') {
-      window.OSPersonalWorkspace.reload();
+    if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
+      window.OSInsuwork.reload();
     }
     pollAndRender(0);
   }

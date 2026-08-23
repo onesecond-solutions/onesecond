@@ -1,7 +1,7 @@
 /* insubriefing/insuwork/m/insuwork-mobile-library.js
    보험워크 모바일 "자료" 화면 전용 렌더러 (Phase 5, 2026-08-22, feat/workstation-mobile-library — 5단계 로드맵 마지막 단계).
-   데이터/로직은 100% /js/personal-workspace.js 재사용 — libraryDirectory()/libraryFeedDirectory() 읽기 전용
-   조회 + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의
+   데이터/로직은 100% /js/insuwork.js 재사용 — libraryDirectory()/libraryFeedDirectory() 읽기 전용
+   조회 + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — insuwork.js의
    렌더/저장 함수 본문은 호출하지 않는다. 이번 Phase 5도 조회 전용이다(쓰기 기능 없음).
    네임스페이스 = OSInsuworkMobileLibrary (다른 OSInsuworkMobile* 네임스페이스와 충돌 없음).
 
@@ -17,7 +17,7 @@
       필요한 signStoragePath()는 비공개 클로저라 이 화면에서 재구현하지 않는다. 그래서 통합 검색 대상에서는
       제외하고 "최근 목록 + 원문 바로 URL(source_pdf_url/source_file_url)이 있을 때만 새 창 열기, 없으면
       PC 버전 링크"로만 노출한다.
-   3) 상품라인업 — js/personal-workspace.js 소관이 아니라 완전히 별도 시스템(/insu/index.html,
+   3) 상품라인업 — js/insuwork.js 소관이 아니라 완전히 별도 시스템(/insu/index.html,
       _svLoadProducts 계열이 /data/insurer_products_2608.json을 따로 fetch)이라 이번 Phase 범위에서
       제외하고 PC 버전 안내 카드만 둔다. */
 (function () {
@@ -31,9 +31,9 @@
   var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
 
   var PC_LINKS = {
-    assets: '/insubriefing/insuwork/?view=personal-workspace&section=assets',
-    newsletters: '/insubriefing/insuwork/?view=personal-workspace&section=newsletters',
-    strategy: '/insubriefing/insuwork/?view=personal-workspace&section=sales-strategy',
+    assets: '/insubriefing/insuwork/?view=insuwork&section=assets',
+    newsletters: '/insubriefing/insuwork/?view=insuwork&section=newsletters',
+    strategy: '/insubriefing/insuwork/?view=insuwork&section=sales-strategy',
     productLineup: '/insu/?view=product-lineup'
   };
 
@@ -73,12 +73,12 @@
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
-  /* fix/workstation-mobile-bugs 버그1 대응 — js/personal-workspace.js의 isDataReady() 읽기 전용 조회를 그대로
+  /* fix/workstation-mobile-bugs 버그1 대응 — js/insuwork.js의 isDataReady() 읽기 전용 조회를 그대로
      노출한다. loadData(true)가 완료되기 전(fullLoaded=false)에는 directory가 빈 배열이라 "지정된 자료가
      없습니다"류 문구가 먼저 그려지고 이후 폴링에서 실제 데이터로 뒤늦게 바뀌는 문제 — 로드 완료 여부로
      문구를 분기한다. */
   function isDataReady() {
-    return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
+    return !!(window.OSInsuwork && typeof window.OSInsuwork.isDataReady === 'function' && window.OSInsuwork.isDataReady());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
      새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
@@ -192,7 +192,7 @@
 
   /* 검색·미리보기 대상 통합 목록(자료실+업무노트) 카드. feat/workstation-mobile-header-consistency
      (2026-08-22) — 카드 안 인라인 펼침(아코디언)을 없애고, 탭하면 openDetail()로 풀스크린 상세 화면으로
-     전환한다(customers.js와 동일 패턴). entry.bodyHtml은 js/personal-workspace.js의 libraryDirectory()가
+     전환한다(customers.js와 동일 패턴). entry.bodyHtml은 js/insuwork.js의 libraryDirectory()가
      데스크탑 showAsset()과 동일하게 linkifyRich()(내부적으로 sanitizeRich() 재실행)를 거쳐 돌려준 안전한
      HTML 문자열이다 — expandBodyHtml()에서 그대로 innerHTML에 꽂는 처리는 그대로 유지한다(데스크탑과 동일
      처리, sanitize/linkify 로직 자체는 손대지 않음 — 화면 전환 방식만 바뀜). 제목·미리보기 스니펫은 평문이라
@@ -266,7 +266,7 @@
     return sectionHtml(title, body);
   }
 
-  /* 상품라인업 = js/personal-workspace.js 소관이 아닌 완전히 별도 시스템(/insu/index.html)이라
+  /* 상품라인업 = js/insuwork.js 소관이 아닌 완전히 별도 시스템(/insu/index.html)이라
      이번 Phase 범위에서 제외하고 PC 버전 안내 카드만 둔다(억지로 통합하지 않음). */
   function productLineupSectionHtml() {
     return sectionHtml('상품 라인업', '<a class="wsm-card wsm-lib-feed-card" href="' + esc(PC_LINKS.productLineup) + '">'
@@ -388,10 +388,10 @@
   }
 
   function refreshData() {
-    state.directory = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.libraryDirectory === 'function')
-      ? window.OSPersonalWorkspace.libraryDirectory() : [];
-    state.feed = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.libraryFeedDirectory === 'function')
-      ? window.OSPersonalWorkspace.libraryFeedDirectory() : { newsletters: [], strategies: [], newsletterLoading: false, strategyLoading: false };
+    state.directory = (window.OSInsuwork && typeof window.OSInsuwork.libraryDirectory === 'function')
+      ? window.OSInsuwork.libraryDirectory() : [];
+    state.feed = (window.OSInsuwork && typeof window.OSInsuwork.libraryFeedDirectory === 'function')
+      ? window.OSInsuwork.libraryFeedDirectory() : { newsletters: [], strategies: [], newsletterLoading: false, strategyLoading: false };
   }
 
   function renderCurrent() {
@@ -411,8 +411,8 @@
 
   function startDataFlow() {
     renderLoading();
-    if (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.reload === 'function') {
-      window.OSPersonalWorkspace.reload();
+    if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
+      window.OSInsuwork.reload();
     }
     pollAndRender(0);
   }

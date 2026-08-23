@@ -1,7 +1,7 @@
 /* insubriefing/insuwork/m/insuwork-mobile.js
    보험워크 모바일 "오늘" 화면 전용 렌더러 (Phase 1 MVP, 2026-08-22, feat/workstation-mobile-today).
-   데이터/로직은 100% /js/personal-workspace.js 재사용(todaySummary/upcomingConsultPrep 읽기 전용 조회 + reload()로
-   기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의 렌더 함수는 호출하지 않는다.
+   데이터/로직은 100% /js/insuwork.js 재사용(todaySummary/upcomingConsultPrep 읽기 전용 조회 + reload()로
+   기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — insuwork.js의 렌더 함수는 호출하지 않는다.
    네임스페이스 = OSInsuworkMobile (기존 pw-/_ci/sn- 네임스페이스와 충돌 없음). */
 (function () {
   'use strict';
@@ -28,7 +28,7 @@
   function isLocalHost() {
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
-  /* 게이트 = 기존 js/personal-workspace.js의 allowed()/authenticated()/currentUserId() 패턴을 그대로 복제.
+  /* 게이트 = 기존 js/insuwork.js의 allowed()/authenticated()/currentUserId() 패턴을 그대로 복제.
      임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
   function allowed() {
     return isLocalHost() || currentUserId() === PILOT_ID;
@@ -113,7 +113,7 @@
   }
 
   /* feat/workstation-mobile-agenda-scroll (2026-08-22) — "오늘 일정" 섹션을 양방향 무한스크롤 아젠다로 전환
-     (대표 직접 요청). 데이터는 기존 js/personal-workspace.js의 eventsInRange(start,end)만 재사용(읽기 전용,
+     (대표 직접 요청). 데이터는 기존 js/insuwork.js의 eventsInRange(start,end)만 재사용(읽기 전용,
      새 export 없음). 이 블록만 새로 추가하고 케어/상령일/상담준비 섹션·게이트 로직은 전혀 건드리지 않는다. */
   var AGENDA_INITIAL_SPAN_DAYS = 7;
   var AGENDA_PAGE_DAYS = 7;
@@ -146,8 +146,8 @@
     return '<div class="wsm-agenda-limit">' + esc(message) + '</div>';
   }
   function computeExcludeIds() {
-    var summary = (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.todaySummary === 'function')
-      ? window.OSPersonalWorkspace.todaySummary() : { care: [], insuranceAge: [] };
+    var summary = (window.OSInsuwork && typeof window.OSInsuwork.todaySummary === 'function')
+      ? window.OSInsuwork.todaySummary() : { care: [], insuranceAge: [] };
     var excludeIds = {};
     (summary.care || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
     (summary.insuranceAge || []).forEach(function (event) { excludeIds[String(event && event.id)] = true; });
@@ -156,8 +156,8 @@
   /* startDate~endDate(포함) 구간의 일정을 eventsInRange()로 한 번에 불러와 날짜별로 그룹핑한다.
      여러 날에 걸친 일정(event_end_date)은 구간과 겹치는 모든 날짜에 표시(클리핑). */
   function buildAgendaRangeHtml(startDate, endDate, excludeIds) {
-    if (!window.OSPersonalWorkspace || typeof window.OSPersonalWorkspace.eventsInRange !== 'function' || startDate > endDate) return '';
-    var events = window.OSPersonalWorkspace.eventsInRange(startDate, endDate) || [];
+    if (!window.OSInsuwork || typeof window.OSInsuwork.eventsInRange !== 'function' || startDate > endDate) return '';
+    var events = window.OSInsuwork.eventsInRange(startDate, endDate) || [];
     var byDate = {};
     events.forEach(function (event) {
       if (excludeIds[String(event && event.id)]) return;
@@ -340,11 +340,11 @@
 
   var lastRenderedJson = '';
   function renderToday() {
-    if (!window.OSPersonalWorkspace) return;
-    var summary = typeof window.OSPersonalWorkspace.todaySummary === 'function'
-      ? window.OSPersonalWorkspace.todaySummary() : { events: [], care: [], insuranceAge: [] };
-    var prep = typeof window.OSPersonalWorkspace.upcomingConsultPrep === 'function'
-      ? window.OSPersonalWorkspace.upcomingConsultPrep() : [];
+    if (!window.OSInsuwork) return;
+    var summary = typeof window.OSInsuwork.todaySummary === 'function'
+      ? window.OSInsuwork.todaySummary() : { events: [], care: [], insuranceAge: [] };
+    var prep = typeof window.OSInsuwork.upcomingConsultPrep === 'function'
+      ? window.OSInsuwork.upcomingConsultPrep() : [];
     var json = JSON.stringify({ summary: summary, prep: prep });
     if (json === lastRenderedJson) return;
     lastRenderedJson = json;
@@ -402,8 +402,8 @@
 
   function startDataFlow() {
     renderLoading();
-    if (window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.reload === 'function') {
-      window.OSPersonalWorkspace.reload();
+    if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
+      window.OSInsuwork.reload();
     }
     pollAndRender(0);
   }
