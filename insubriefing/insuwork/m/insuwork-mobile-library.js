@@ -23,7 +23,18 @@
 (function () {
   'use strict';
 
-  var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  // 2026-08-23 대표 승인 — js/insuwork.js의 ALLOWED_IDS와 동일 목록(실제 자료가 있는 사용자만)
+  var ALLOWED_IDS = [
+    '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd', 'ce381ed4-05e3-41cf-8546-9115abe89ec9',
+    'fee71d85-adc4-4db6-81b0-152f07add62a', '583cbad5-f248-4fd9-8693-5c3a79ba9487',
+    '6f5aaa10-be20-4274-a190-53ce38ed3850', '12c8551b-4622-4fe4-9dba-d77fef8504bf',
+    'efe26e96-de4e-4613-9625-7c8193d39a49', 'd19dcb63-3e28-4559-b498-56b19f9c94f2',
+    'e10f9713-a199-47ac-9040-eb8007824cda', '8028a0e9-ec19-408b-8a82-007732fbed2b',
+    'bb49f5b9-e620-41d2-bee5-89329cbc5d7d', '10a859ec-8dc6-43bd-bc7b-09e3f16c8248',
+    '49343788-b3e1-4666-b95f-211ac6b3f878', 'de7ba389-901a-426a-9828-6afb33a16ecc',
+    '64d0e07f-ec84-430b-b2ea-b7213e857ace', '6f7fbad3-fe3f-416c-a077-9e36be425d5c',
+    'ba679086-dc1e-4a99-9245-9f4cf8222455'
+  ];
   var ROOT_SELECTOR = '#iwm-root';
   var RECENT_PAGE_SIZE = 6;
   /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
@@ -66,9 +77,9 @@
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
   /* 게이트 = insuwork-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
-     임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
+     게이트(ALLOWED_IDS, 실제 자료가 있는 사용자만)를 그대로 상속한다. */
   function allowed() {
-    return isLocalHost() || currentUserId() === PILOT_ID;
+    return isLocalHost() || ALLOWED_IDS.indexOf(currentUserId()) >= 0;
   }
   function authenticated() {
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
@@ -117,7 +128,7 @@
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
-      + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
+      + '<p>이 계정은 아직 이용 대상이 아닙니다.</p>'
       + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
   }

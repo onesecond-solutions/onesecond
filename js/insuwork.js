@@ -1,7 +1,28 @@
 (function () {
   'use strict';
 
-  var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  // 2026-08-23 대표 승인 — 파일럿 1인 게이트 -> 실제 자료가 있는 사용자로 확대(diag_insuwork_gate_readiness
+  // 진단 기준, 2026-08-14 일괄 이관 + 2026-08-23 calendar_events 보정까지 반영된 사용자만). 새 사용자를
+  // 추가하려면 이 배열에 owner_id만 추가하면 된다(별도 코드 변경 불필요).
+  var ALLOWED_IDS = [
+    '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd', // 임태성(파일럿)
+    'ce381ed4-05e3-41cf-8546-9115abe89ec9', // 서연자
+    'fee71d85-adc4-4db6-81b0-152f07add62a', // 이은정
+    '583cbad5-f248-4fd9-8693-5c3a79ba9487', // 김주현
+    '6f5aaa10-be20-4274-a190-53ce38ed3850', // 한재성
+    '12c8551b-4622-4fe4-9dba-d77fef8504bf', // 코상무 테스트
+    'efe26e96-de4e-4613-9625-7c8193d39a49', // 박은아
+    'd19dcb63-3e28-4559-b498-56b19f9c94f2', // 변영삼
+    'e10f9713-a199-47ac-9040-eb8007824cda', // 남혜경
+    '8028a0e9-ec19-408b-8a82-007732fbed2b', // 김주영
+    'bb49f5b9-e620-41d2-bee5-89329cbc5d7d', // 카카오임
+    '10a859ec-8dc6-43bd-bc7b-09e3f16c8248',
+    '49343788-b3e1-4666-b95f-211ac6b3f878', // 조현명
+    'de7ba389-901a-426a-9828-6afb33a16ecc', // 어드민
+    '64d0e07f-ec84-430b-b2ea-b7213e857ace', // 김수진
+    '6f7fbad3-fe3f-416c-a077-9e36be425d5c', // 강유미
+    'ba679086-dc1e-4a99-9245-9f4cf8222455'  // 이문수
+  ];
   var TEST_EMAIL = 'bylts0428+codex-insuwork-20260815@gmail.com';
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
@@ -93,7 +114,7 @@
     return "&or=(legacy_source.is.null,and(legacy_source.in.(library,scripts,myspace_folders,myspace_files,scripts_attachment),or(legacy_payload->>scope.is.null,legacy_payload->>scope.eq.personal)))";
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
-  function allowed() { return isLocal() || currentUserId() === PILOT_ID || currentUserEmail() === TEST_EMAIL; }
+  function allowed() { return isLocal() || ALLOWED_IDS.indexOf(currentUserId()) >= 0 || currentUserEmail() === TEST_EMAIL; }
   function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function briefingAlert(message, title) {
@@ -214,7 +235,7 @@
     if (!view) return;
     document.body.classList.remove('is-insuwork');
     if (mode === 'denied') {
-      view.innerHTML = '<div class="iw-access"><strong>보험워크 준비 중</strong><p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p><a class="iw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+      view.innerHTML = '<div class="iw-access"><strong>보험워크 준비 중</strong><p>이 계정은 아직 이용 대상이 아닙니다.</p><a class="iw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
       return;
     }
     view.innerHTML = '<div class="iw-access"><strong>보험워크 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="iw-access-actions"><button class="iw-btn primary" type="button" data-ib-login>로그인</button><button class="iw-btn" type="button" data-ib-signup>회원가입</button></div><a class="iw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
