@@ -1,10 +1,10 @@
-/* insubriefing/workstation/m/workstation-mobile-customers.js
-   워크스테이션 모바일 "고객" 화면 전용 렌더러 (Phase 3, 2026-08-22, feat/workstation-mobile-customers /
+/* insubriefing/insuwork/m/insuwork-mobile-customers.js
+   보험워크 모바일 "고객" 화면 전용 렌더러 (Phase 3, 2026-08-22, feat/workstation-mobile-customers /
    Phase 4, 2026-08-22, feat/workstation-mobile-quicknote).
    데이터/로직은 100% /js/personal-workspace.js 재사용(customersDirectory() 읽기 전용 조회 + reload()로
    기존 loadData() 실행, quickSaveConsultationNote()로 쓰기). 이 파일은 화면(뷰 셸)만 새로 그린다 —
    personal-workspace.js의 렌더/저장 함수 본문은 호출하지 않는다(쓰기는 export된 wrapper 1개만 호출).
-   네임스페이스 = OSWorkstationMobileCustomers (OSWorkstationMobile/OSWorkstationMobileCalendar와 충돌 없음).
+   네임스페이스 = OSInsuworkMobileCustomers (OSInsuworkMobile/OSInsuworkMobileCalendar와 충돌 없음).
    코상무 확정 방향: 모바일 고객관리는 표가 아니라 "고객 카드 리스트 → 고객 상세 → 전화/메모/일정추가 버튼" 구조.
    Phase 3은 조회 전용이었다. Phase 4에서 "메모" 버튼에 화면 이동 없는 인라인 빠른 메모 입력을 추가했다 —
    저장은 js/personal-workspace.js의 quickSaveConsultationNote(customerId, text)만 호출한다(새 REST 로직 없음).
@@ -43,7 +43,7 @@
   function isLocalHost() {
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
-  /* 게이트 = workstation-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
+  /* 게이트 = insuwork-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
      임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
   function allowed() {
     return isLocalHost() || currentUserId() === PILOT_ID;
@@ -58,7 +58,7 @@
     return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
-     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/workstation/workstation.js의
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
      logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
      동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
@@ -72,16 +72,16 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/m/customers.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/customers.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2Fm%2Fcustomers.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Fcustomers.html';
   }
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 로그인이 필요합니다.</strong>'
+      + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 고객 목록을 확인할 수 있습니다.</p>'
       + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
@@ -93,7 +93,7 @@
   function renderDeniedGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 준비 중</strong>'
+      + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
@@ -144,7 +144,7 @@
       + '</div>'
       + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
       + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=personal-workspace&section=customers">PC 버전으로 보기</a>'
       + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
@@ -182,7 +182,7 @@
      이미 "← 고객 목록" 뒤로가기 버튼이 본문 상단에 있어 하단 탭바(다른 화면으로 이동)와 역할이 겹치지
      않는다 — 뒤로가기는 "목록으로", 하단 탭바는 "다른 화면으로"라 혼란 없다. */
   function bottomNavHtml() {
-    return window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('customers') : '';
+    return window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('customers') : '';
   }
 
   function snapshotJson() {
@@ -295,7 +295,7 @@
       + telAction
       + noteSectionHtml(customer)
       + '<div class="wsm-cust-action">'
-      + '<a class="wsm-cust-action-btn" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">일정추가</a>'
+      + '<a class="wsm-cust-action-btn" href="/insubriefing/insuwork/?view=personal-workspace&section=calendar&mode=month">일정추가</a>'
       + '<p class="wsm-cust-action-note">PC 버전에서 일정을 등록해 주세요.</p>'
       + '</div>'
       + '</div>'
@@ -318,7 +318,7 @@
      (2) 펼침 — textarea + 저장/취소, (3) 저장 직후 — 짧게 "저장됐습니다" 배지만 보여주고 자동으로 (1)로 복귀.
      사진 첨부는 이번 Phase 범위 밖이라 PC 링크 안내 문구만 둔다(별도 업로드 UI 없음). */
   function noteSectionHtml(customer) {
-    var pcLink = '<a class="wsm-cust-note-pc-link" href="/insubriefing/workstation/?view=personal-workspace&section=customers">PC 버전 열기</a>';
+    var pcLink = '<a class="wsm-cust-note-pc-link" href="/insubriefing/insuwork/?view=personal-workspace&section=customers">PC 버전 열기</a>';
     if (noteUi.open) {
       var errorHtml = noteUi.error ? '<p class="wsm-cust-note-error">' + esc(noteUi.error) + '</p>' : '';
       return '<div class="wsm-cust-action wsm-cust-note-open">'
@@ -443,6 +443,6 @@
     }
   }
 
-  window.OSWorkstationMobileCustomers = { boot: boot };
+  window.OSInsuworkMobileCustomers = { boot: boot };
   window.addEventListener('load', function () { window.setTimeout(boot, 50); });
 })();

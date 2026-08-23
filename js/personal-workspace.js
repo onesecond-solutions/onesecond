@@ -2,7 +2,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var TEST_EMAIL = 'bylts0428+codex-workstation-20260815@gmail.com';
+  var TEST_EMAIL = 'bylts0428+codex-insuwork-20260815@gmail.com';
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
@@ -19,7 +19,7 @@
     { label: '2차 클로징', stage: 'closing_second', group: 'close' }
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
-  var STANDALONE = document.documentElement.getAttribute('data-workstation') === 'true';
+  var STANDALONE = document.documentElement.getAttribute('data-insuwork') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive'];
   var LIST_PAGE_SIZE = 200;
   var state = {
@@ -214,18 +214,18 @@
     if (!view) return;
     document.body.classList.remove('is-personal-workspace');
     if (mode === 'denied') {
-      view.innerHTML = '<div class="pw-access"><strong>워크스테이션 준비 중</strong><p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+      view.innerHTML = '<div class="pw-access"><strong>보험워크 준비 중</strong><p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
       return;
     }
-    view.innerHTML = '<div class="pw-access"><strong>워크스테이션 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="pw-access-actions"><button class="pw-btn primary" type="button" data-ib-login>로그인</button><button class="pw-btn" type="button" data-ib-signup>회원가입</button></div><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+    view.innerHTML = '<div class="pw-access"><strong>보험워크 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="pw-access-actions"><button class="pw-btn primary" type="button" data-ib-login>로그인</button><button class="pw-btn" type="button" data-ib-signup>회원가입</button></div><a class="pw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
     var loginBtn = view.querySelector('[data-ib-login]');
     var signupBtn = view.querySelector('[data-ib-signup]');
     function openBriefingAuth(mode) {
       if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-        window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/' });
+        window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/' });
         return;
       }
-      window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2F';
+      window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2F';
     }
     if (loginBtn) loginBtn.addEventListener('click', function () { openBriefingAuth('login'); });
     if (signupBtn) signupBtn.addEventListener('click', function () { openBriefingAuth('signup'); });
@@ -419,7 +419,7 @@
     return '<div class="pw-toolbar"><div><h2>‘' + esc(q) + '’ 검색 결과</h2><p class="pw-subtitle">자료, 고객, 상담, 일정, 원전산과 결제정보를 한 번에 검색했습니다.</p></div><span class="pw-result-count">' + results.length + '건</span></div><div class="pw-search-results">' + (results.length ? results.map(function (item) { return '<button type="button" onclick="' + item.action + '"><span class="pw-result-icon">' + item.icon + '</span><span><small>' + item.kind + '</small><b>' + esc(item.title || '(제목 없음)') + '</b><em>' + esc(item.sub) + '</em></span><span>›</span></button>'; }).join('') : '<div class="pw-empty"><strong>검색 결과가 없습니다.</strong><span>띄어쓰기나 검색어를 바꿔 보세요.</span></div>') + '</div>';
   }
 
-  function carrierDirectory() { return Array.isArray(window.OS_WORKSTATION_CARRIERS) ? window.OS_WORKSTATION_CARRIERS : []; }
+  function carrierDirectory() { return Array.isArray(window.OS_INSUWORK_CARRIERS) ? window.OS_INSUWORK_CARRIERS : []; }
   function normalizeCarrierName(value) { return String(value || '').toLocaleLowerCase('ko-KR').replace(/주식회사|보험|손해|생명|화재|라이프|[^0-9a-z가-힣]/g, ''); }
   function loadCarrierDirectory() {
     if (state.carriersLoaded || state.carriersLoading || !window.db || !window.db.fetch) return;
@@ -2385,7 +2385,7 @@
     var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG']];
     var tabs = cards.map(function (card) { return '<button type="button" class="pw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSPersonalWorkspace.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
     var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : toolsCalculatorHtml();
-    return statusHtml() + '<div class="pw-tools-page"><div class="pw-toolbar pw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="pw-subtitle">자주 쓰는 계산과 이미지 변환을 워크스테이션 안에서 바로 처리합니다.</p></div></div><div class="pw-tool-cards">' + tabs + '</div>' + body + '</div>';
+    return statusHtml() + '<div class="pw-tools-page"><div class="pw-toolbar pw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="pw-subtitle">자주 쓰는 계산과 이미지 변환을 보험워크 안에서 바로 처리합니다.</p></div></div><div class="pw-tool-cards">' + tabs + '</div>' + body + '</div>';
   }
   function toolsCalculatorHtml() {
     var keys = [['C', 'C', 'fn'], ['back', '←', 'fn'], ['%', '%', 'fn'], ['/', '÷', 'op'], ['7', '7', ''], ['8', '8', ''], ['9', '9', ''], ['*', '×', 'op'], ['4', '4', ''], ['5', '5', ''], ['6', '6', ''], ['-', '−', 'op'], ['1', '1', ''], ['2', '2', ''], ['3', '3', ''], ['+', '+', 'op'], ['+/-', '±', 'fn'], ['0', '0', ''], ['.', '.', ''], ['=', '=', 'eq']];
@@ -2926,7 +2926,7 @@
   }
   window.OSPersonalWorkspace = {
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
-    /* 워크스테이션 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
+    /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
     isDataReady: function () { return !!state.fullLoaded; },

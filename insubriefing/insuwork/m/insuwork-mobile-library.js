@@ -1,9 +1,9 @@
-/* insubriefing/workstation/m/workstation-mobile-library.js
-   워크스테이션 모바일 "자료" 화면 전용 렌더러 (Phase 5, 2026-08-22, feat/workstation-mobile-library — 5단계 로드맵 마지막 단계).
+/* insubriefing/insuwork/m/insuwork-mobile-library.js
+   보험워크 모바일 "자료" 화면 전용 렌더러 (Phase 5, 2026-08-22, feat/workstation-mobile-library — 5단계 로드맵 마지막 단계).
    데이터/로직은 100% /js/personal-workspace.js 재사용 — libraryDirectory()/libraryFeedDirectory() 읽기 전용
    조회 + reload()로 기존 loadData() 실행. 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의
    렌더/저장 함수 본문은 호출하지 않는다. 이번 Phase 5도 조회 전용이다(쓰기 기능 없음).
-   네임스페이스 = OSWorkstationMobileLibrary (다른 OSWorkstationMobile* 네임스페이스와 충돌 없음).
+   네임스페이스 = OSInsuworkMobileLibrary (다른 OSInsuworkMobile* 네임스페이스와 충돌 없음).
 
    코상무 확정 방향: 모바일 자료실은 "정리"보다 "찾아서 보여주기"가 핵심 — 소식지·상품라인업·업무노트(구 "스크립트"
    표시명)·영업방향을 빠르게 검색·미리보기.
@@ -31,9 +31,9 @@
   var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
 
   var PC_LINKS = {
-    assets: '/insubriefing/workstation/?view=personal-workspace&section=assets',
-    newsletters: '/insubriefing/workstation/?view=personal-workspace&section=newsletters',
-    strategy: '/insubriefing/workstation/?view=personal-workspace&section=sales-strategy',
+    assets: '/insubriefing/insuwork/?view=personal-workspace&section=assets',
+    newsletters: '/insubriefing/insuwork/?view=personal-workspace&section=newsletters',
+    strategy: '/insubriefing/insuwork/?view=personal-workspace&section=sales-strategy',
     productLineup: '/insu/?view=product-lineup'
   };
 
@@ -65,7 +65,7 @@
   function isLocalHost() {
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
-  /* 게이트 = workstation-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
+  /* 게이트 = insuwork-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
      임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
   function allowed() {
     return isLocalHost() || currentUserId() === PILOT_ID;
@@ -81,7 +81,7 @@
     return !!(window.OSPersonalWorkspace && typeof window.OSPersonalWorkspace.isDataReady === 'function' && window.OSPersonalWorkspace.isDataReady());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
-     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/workstation/workstation.js의
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
      logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
      동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
@@ -95,16 +95,16 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/m/library.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/library.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2Fm%2Flibrary.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Flibrary.html';
   }
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 로그인이 필요합니다.</strong>'
+      + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 자료를 확인할 수 있습니다.</p>'
       + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
@@ -116,7 +116,7 @@
   function renderDeniedGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 준비 중</strong>'
+      + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
@@ -334,7 +334,7 @@
       + '<div class="wsm-lib-search-wrap"><input type="search" id="wsm-lib-search" class="wsm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
       + '<div id="wsm-lib-body"></div>'
       + '</main>'
-      + (window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('library') : '');
+      + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
     bindHeaderEvents();
     var input = document.getElementById('wsm-lib-search');
     if (input) {
@@ -369,7 +369,7 @@
       + '</section>'
       + '<div class="wsm-lib-detail-full">' + expandBodyHtml(entry) + '</div>'
       + '</main>'
-      + (window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('library') : '');
+      + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
     bindHeaderEvents();
 
     var back = document.getElementById('wsm-lib-back');
@@ -432,6 +432,6 @@
     }
   }
 
-  window.OSWorkstationMobileLibrary = { boot: boot };
+  window.OSInsuworkMobileLibrary = { boot: boot };
   window.addEventListener('load', function () { window.setTimeout(boot, 50); });
 })();

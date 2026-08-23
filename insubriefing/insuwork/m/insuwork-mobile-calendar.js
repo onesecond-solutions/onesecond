@@ -1,8 +1,8 @@
-/* insubriefing/workstation/m/workstation-mobile-calendar.js
-   워크스테이션 모바일 "캘린더" 화면 전용 렌더러 (Phase 2, 2026-08-22, feat/workstation-mobile-calendar).
+/* insubriefing/insuwork/m/insuwork-mobile-calendar.js
+   보험워크 모바일 "캘린더" 화면 전용 렌더러 (Phase 2, 2026-08-22, feat/workstation-mobile-calendar).
    데이터/로직은 100% /js/personal-workspace.js 재사용(eventsFor/eventsInRange 읽기 전용 조회 + reload()로
    기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — personal-workspace.js의 렌더 함수는 호출하지 않는다.
-   네임스페이스 = OSWorkstationMobileCalendar (OSWorkstationMobile과 충돌 없음).
+   네임스페이스 = OSInsuworkMobileCalendar (OSInsuworkMobile과 충돌 없음).
    코상무 확정 방향: 모바일 월간 그리드는 만들지 않는다. 오늘 / 이번 주 / 일정 목록(리스트형)이 주력이다. */
 (function () {
   'use strict';
@@ -35,7 +35,7 @@
   function isLocalHost() {
     return location.hostname === '127.0.0.1' || location.hostname === 'localhost';
   }
-  /* 게이트 = workstation-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
+  /* 게이트 = insuwork-mobile.js(Phase 1)의 allowed()/authenticated() 패턴을 그대로 복제.
      임태성 실장 전용 게이트(PILOT_ID)를 그대로 상속한다. */
   function allowed() {
     return isLocalHost() || currentUserId() === PILOT_ID;
@@ -44,7 +44,7 @@
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
-     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/workstation/workstation.js의
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
      logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
      동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
@@ -58,16 +58,16 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/workstation/m/calendar.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/calendar.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Fworkstation%2Fm%2Fcalendar.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Fcalendar.html';
   }
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 로그인이 필요합니다.</strong>'
+      + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 캘린더를 확인할 수 있습니다.</p>'
       + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
@@ -79,7 +79,7 @@
   function renderDeniedGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="wsm-gate">'
-      + '<strong>워크스테이션 준비 중</strong>'
+      + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
       + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
@@ -224,7 +224,7 @@
       + '</div>'
       + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
       + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/workstation/?view=personal-workspace&section=calendar&mode=month">PC 버전으로 보기</a>'
+      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=personal-workspace&section=calendar&mode=month">PC 버전으로 보기</a>'
       + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>'
@@ -233,7 +233,7 @@
       + weekSectionHtml(todayDate)
       + upcomingSectionHtml(todayDate)
       + '</main>'
-      + (window.OSWorkstationMobileNav ? window.OSWorkstationMobileNav.render('calendar') : '');
+      + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('calendar') : '');
 
     var logoutLink = document.getElementById('wsm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
@@ -276,6 +276,6 @@
     }
   }
 
-  window.OSWorkstationMobileCalendar = { boot: boot };
+  window.OSInsuworkMobileCalendar = { boot: boot };
   window.addEventListener('load', function () { window.setTimeout(boot, 50); });
 })();

@@ -36,7 +36,7 @@
     ['life','BNP파리바카디프생명','1688-1118','1688-1118','정보 없음','bnp','https://www.cardif.co.kr/'],
     ['life','AIA생명','1588-9898','1588-2513','02-2021-4540','aia','https://www.aia.co.kr/']
   ];
-  window.OS_WORKSTATION_CARRIERS = rows.map(function (row) {
-    return { type: row[0], name: row[1], customer: row[2], monitoring: row[3], claim: row[4], logo: '/insubriefing/workstation/carriers/logos/' + row[5] + '.png', homepageUrl: row[6], systemUrl: '' };
+  window.OS_INSUWORK_CARRIERS = rows.map(function (row) {
+    return { type: row[0], name: row[1], customer: row[2], monitoring: row[3], claim: row[4], logo: '/insubriefing/insuwork/carriers/logos/' + row[5] + '.png', homepageUrl: row[6], systemUrl: '' };
   });
 })();

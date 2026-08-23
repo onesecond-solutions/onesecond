@@ -15,7 +15,7 @@
       --brief-blue: color-mix(in srgb, var(--ac) 88%, #2563eb);
     }
 
-    /* 워크스테이션과 동일한 고정 배경 이미지 + 투명 레이어 패턴.
+    /* 보험워크와 동일한 고정 배경 이미지 + 투명 레이어 패턴.
        body 자체 background는 캔버스로 전파되어 아래 fixed 의사요소보다
        뒤에 그려지므로(HTML/BODY 특례) 그대로 두고 :before/:after만 추가. */
     body:before {
@@ -77,7 +77,7 @@
       background: var(--s1);
     }
 
-    /* 배경화면 모드(워크스테이션과 동일 개념·동일 localStorage 키 ws_bg_mode 공유) */
+    /* 배경화면 모드(보험워크와 동일 개념·동일 localStorage 키 ws_bg_mode 공유) */
     body.ib-bg-flat:before { display: none; }
     body.ib-bg-namsan:before { background-image: url("./assets/generated/namsan-sunny.webp"); }
     body.ib-bg-white:after { background: #f6f7fb; }
@@ -629,9 +629,9 @@
   var toggle = document.getElementById("ib-topic-toggle");
   var all = document.getElementById("ib-all-topics");
 
-  /* 배경화면 모드 — 워크스테이션과 동일 localStorage 키(ws_bg_mode) 공유.
+  /* 배경화면 모드 — 보험워크와 동일 localStorage 키(ws_bg_mode) 공유.
      로그인 여부와 무관하게 항상 적용(브라우저 단위 취향), 변경 버튼만
-     계정 드롭다운(로그인 시)에 노출 — 워크스테이션과 동일한 동작. */
+     계정 드롭다운(로그인 시)에 노출 — 보험워크와 동일한 동작. */
   function currentBgMode() { try { return localStorage.getItem("ws_bg_mode") || "image"; } catch (_e) { return "image"; } }
   function applyBgMode(mode) {
     var body = document.body;
@@ -657,7 +657,7 @@
     return !!((window.localStorage.getItem("os_token") || window.sessionStorage.getItem("os_token")) && currentAccount().id);
   }
 
-  function showWorkstationLoginNotice() {
+  function showInsuworkLoginNotice() {
     if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === "function") {
       window.InsuranceBriefingNotice.alert("로그인 후 사용가능합니다.", { title: "보험브리핑" });
       return;
@@ -691,21 +691,21 @@
 
   function renderAdvisorNav() {
     if (!nav) return;
-    var workstationLink = nav.querySelector(".ib-workstation-link");
+    var insuworkLink = nav.querySelector(".ib-insuwork-link");
     var loggedIn = hasAccountSession();
 
-    if (!workstationLink) {
-      workstationLink = document.createElement("a");
-      workstationLink.className = "ib-workstation-link";
-      workstationLink.href = "/insubriefing/workstation/";
-      workstationLink.textContent = "워크스테이션";
-      workstationLink.setAttribute("aria-label", "워크스테이션 열기");
-      nav.appendChild(workstationLink);
+    if (!insuworkLink) {
+      insuworkLink = document.createElement("a");
+      insuworkLink.className = "ib-insuwork-link";
+      insuworkLink.href = "/insubriefing/insuwork/";
+      insuworkLink.textContent = "보험워크";
+      insuworkLink.setAttribute("aria-label", "보험워크 열기");
+      nav.appendChild(insuworkLink);
     }
-    workstationLink.onclick = function (event) {
+    insuworkLink.onclick = function (event) {
       if (hasAccountSession()) return;
       event.preventDefault();
-      showWorkstationLoginNotice();
+      showInsuworkLoginNotice();
     };
 
     var loginButton = nav.querySelector(".ib-login-button");
@@ -760,20 +760,20 @@
   if (nav) {
     renderAdvisorNav();
     nav.addEventListener("click", function (event) {
-      var workstationLink = event.target.closest(".ib-workstation-link");
-      if (workstationLink && !hasAccountSession()) {
+      var insuworkLink = event.target.closest(".ib-insuwork-link");
+      if (insuworkLink && !hasAccountSession()) {
         event.preventDefault();
         event.stopPropagation();
-        showWorkstationLoginNotice();
+        showInsuworkLoginNotice();
         return;
       }
       var loginButton = event.target.closest(".ib-login-button");
       if (!loginButton) return;
       if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === "function") {
-        window.InsuranceBriefingAuth.open("login", { redirect: "/insubriefing/workstation/" });
+        window.InsuranceBriefingAuth.open("login", { redirect: "/insubriefing/insuwork/" });
         return;
       }
-      window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Fworkstation%2F";
+      window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Finsuwork%2F";
     });
   }
 
@@ -832,10 +832,10 @@
 
   document.addEventListener("click", function (event) {
     if (event.defaultPrevented) return;
-    var link = event.target.closest('a[href="/insubriefing/workstation/"]');
+    var link = event.target.closest('a[href="/insubriefing/insuwork/"]');
     if (!link || hasAccountSession()) return;
     event.preventDefault();
-    showWorkstationLoginNotice();
+    showInsuworkLoginNotice();
   });
 
   if (toggle && all) {

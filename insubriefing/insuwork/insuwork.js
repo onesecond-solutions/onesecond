@@ -35,7 +35,7 @@
     var box = document.getElementById('ws-account'); if (!box) return;
     var user = storedUser();
     if (!user.id || !window.db || !window.db.getToken || !window.db.getToken()) {
-      box.innerHTML = '<a href="/pages/landing.html?auth=login&amp;redirect=%2Finsubriefing%2Fworkstation%2F">로그인</a>'; return;
+      box.innerHTML = '<a href="/pages/landing.html?auth=login&amp;redirect=%2Finsubriefing%2Finsuwork%2F">로그인</a>'; return;
     }
     var name = (window.AppState && window.AppState.name) || user.name || '사용자';
     var email = (window.AppState && window.AppState.email) || user.email || '';
@@ -80,18 +80,18 @@
 
 /* 모바일 자동 전환 (2026-08-22, fix/workstation-mobile-autoredirect — 대표 실사용 재지시로 Phase 1
    "클릭해야 이동" 배너를 자동 리다이렉트로 교체. 폭 768px 미만이면 기본은 즉시 /m/로 이동한다.
-   무한 루프 방지: 모바일 화면(/insubriefing/workstation/m/*)의 "PC로 보기" 링크를 눌러 일부러 이
+   무한 루프 방지: 모바일 화면(/insubriefing/insuwork/m/*)의 "PC로 보기" 링크를 눌러 일부러 이
    PC 화면으로 돌아온 로드는 referrer로 감지해 이번 로드에 한해 자동 이동을 건너뛴다 — 그 파일들은
    이번 작업 범위 밖(다른 작업자 병행 중)이라 대신 referrer만으로 판별한다(완벽한 방어 아님, 대표
    1인 게이트 전용 화면이라 과설계하지 않음). referrer로 건너뛴 예외 상황에서만 기존 수동 배너를
    보조 안내로 남겨 모바일로 다시 갈 수단을 제공한다. 기존 렌더 로직·CSS는 건드리지 않는 별도 IIFE. */
 (function () {
   'use strict';
-  var MOBILE_PATH = '/insubriefing/workstation/m/';
+  var MOBILE_PATH = '/insubriefing/insuwork/m/';
   var FLAG_KEY = 'ws_mobile_banner_dismissed'; // Phase 1 배너 잔재 — 자동 전환이 기본이 된 지금은 참고용
 
   function cameFromMobile() {
-    try { return /\/insubriefing\/workstation\/m\//.test(document.referrer); } catch (_e) { return false; }
+    try { return /\/insubriefing\/insuwork\/m\//.test(document.referrer); } catch (_e) { return false; }
   }
   function dismissed() {
     try { return localStorage.getItem(FLAG_KEY) === '1'; } catch (_e) { return false; }
