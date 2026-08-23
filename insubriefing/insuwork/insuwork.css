@@ -34,6 +34,8 @@ body.iw-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linea
 .iw-brand strong{font-size:var(--fs-title-sm)}
 .iw-brand-logo-only{display:inline-flex;align-items:center;gap:0;min-width:0}
 .iw-brand-logo{display:block;width:auto;height:50px;max-width:318px;object-fit:contain}
+/* 2026-08-23 1차 검수 수정 — 로고 원본이 밝은 배경 전제라 웜차콜 다크에서 안 보임. 다크 전용 흰색 실루엣 처리 */
+body.iw-page.iw-bg-dark .iw-brand-logo{filter:brightness(0) invert(1)}
 .iw-divider{width:1px;height:20px;background:var(--bd);flex-shrink:0}
 /* fix/workstation-mobile-autoredirect 문제A — PR #1799이 .iw-header-actions에 "모바일 화면" 링크를
    추가하면서 auto 폭 컬럼이 넓어져, 옆 브랜드명(.iw-product)이 밀리면 기본 word-break(CJK는 글자
