@@ -38,203 +38,203 @@ body:not(.is-insuwork) .ws-global-search{visibility:hidden}
 .ws-profile-actions{display:flex;justify-content:flex-end;gap:8px}
 .ws-profile-actions button{min-height:40px;padding:0 18px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-weight:var(--fw-medium);cursor:pointer}
 .ws-profile-actions .ws-profile-save{border-color:var(--ac);background:var(--ac);color:var(--s1)}
-.ws-page #v-insuwork .pw-dialog{position:fixed;inset:50% auto auto 50%;max-height:calc(100dvh - 32px);margin:0;overflow:auto;transform:translate(-50%,-50%)}
+.ws-page #v-insuwork .iw-dialog{position:fixed;inset:50% auto auto 50%;max-height:calc(100dvh - 32px);margin:0;overflow:auto;transform:translate(-50%,-50%)}
 .ws-main{position:relative;z-index:1;min-height:0;overflow:hidden;padding:14px}
 .ws-main #v-insuwork{height:100%}
 #v-insuwork{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--s1) 55%,transparent);border-radius:var(--radius-lg);background:transparent;box-shadow:none}
-#v-insuwork .pw-head{border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
-#v-insuwork .pw-search{border-color:color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
-#v-insuwork .pw-shell-compact{grid-template-rows:1fr}
-#v-insuwork .pw-assets-controls{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
-#v-insuwork .pw-assets-controls .pw-tabs{min-width:0;overflow:visible;margin-bottom:0}
-#v-insuwork .pw-assets-controls>.pw-btn{flex:none}
-#v-insuwork .pw-assets-actions{display:flex;align-items:center;gap:10px;flex:none}
-#v-insuwork .pw-add-menu{position:relative;z-index:31;flex:none}
-#v-insuwork .pw-add-menu>summary{display:flex;min-height:36px;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);background:var(--ac);color:#fff;font-size:var(--fs-caption);font-weight:var(--fw-medium);cursor:pointer;list-style:none}
-#v-insuwork .pw-add-menu>summary::-webkit-details-marker{display:none}
-#v-insuwork .pw-add-popover{position:absolute;z-index:40;top:calc(100% + 6px);left:0;display:grid;width:176px;overflow:hidden;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 12px 30px color-mix(in srgb,var(--tp) 18%,transparent)}
-#v-insuwork .pw-add-popover button,#v-insuwork .pw-add-popover label{display:flex;min-height:38px;align-items:center;padding:0 11px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);font-size:var(--fs-caption);text-align:left;cursor:pointer}
-#v-insuwork .pw-add-popover button:hover,#v-insuwork .pw-add-popover label:hover{background:var(--s2)}
-#v-insuwork .pw-folder-path{display:flex;align-items:center;gap:6px;overflow:auto;margin:0 0 12px;padding:2px 0;color:var(--ts);white-space:nowrap}
-#v-insuwork .pw-folder-path button{padding:4px 7px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);cursor:pointer}
-#v-insuwork .pw-folder-path button:hover{background:var(--s2)}
-#v-insuwork .pw-folder-icon{font-size:64px;line-height:1}
-#v-insuwork .large .pw-folder-icon{font-size:96px}
-#v-insuwork .pw-view-switch{display:flex;overflow:hidden;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1)}
-#v-insuwork .pw-view-switch button{display:flex;height:36px;align-items:center;gap:5px;padding:0 10px;border:0;border-right:1px solid var(--bd);background:transparent;color:var(--ts);font-size:var(--fs-caption);cursor:pointer}
-#v-insuwork .pw-view-switch button:last-child{border-right:0}
-#v-insuwork .pw-view-switch button.on{background:color-mix(in srgb,var(--ac) 12%,var(--s1));color:var(--ac)}
-#v-insuwork .pw-assets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:18px 10px;align-content:start}
-#v-insuwork .pw-assets-grid.large{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:24px 14px}
-#v-insuwork .pw-asset-card{display:grid;min-width:0;grid-template-rows:104px auto;padding:8px 6px;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--tp);text-align:center;cursor:pointer}
-#v-insuwork .pw-assets-grid.large .pw-asset-card{grid-template-rows:168px auto;padding:10px 8px}
-#v-insuwork .pw-asset-card:hover{border-color:color-mix(in srgb,var(--ac) 24%,var(--bd));background:color-mix(in srgb,var(--ac) 8%,transparent)}
-#v-insuwork .pw-asset-draggable{cursor:grab}
-#v-insuwork .pw-asset-draggable:active{cursor:grabbing}
-#v-insuwork .pw-asset-draggable.is-dragging{opacity:.42}
-#v-insuwork .pw-folder-drop-target{transition:background .14s,border-color .14s,box-shadow .14s,transform .14s}
-#v-insuwork .pw-folder-drop-target.is-drag-over{background:color-mix(in srgb,var(--ac) 16%,var(--s1));box-shadow:inset 0 0 0 2px var(--ac);transform:translateY(-1px)}
-#v-insuwork .pw-asset-preview{display:flex;height:100%;align-items:center;justify-content:center;overflow:hidden;background:transparent}
-#v-insuwork .pw-asset-preview img{width:auto;max-width:100%;height:auto;max-height:96px;object-fit:contain;border:1px solid color-mix(in srgb,var(--bd) 82%,transparent);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 2px 7px color-mix(in srgb,var(--tp) 12%,transparent)}
-#v-insuwork .large .pw-asset-preview img{max-height:160px}
-#v-insuwork .pw-asset-document{display:flex;width:76px;height:94px;box-sizing:border-box;flex-direction:column;gap:7px;padding:10px 8px;overflow:hidden;border:1px solid color-mix(in srgb,var(--bd) 82%,transparent);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 2px 7px color-mix(in srgb,var(--tp) 12%,transparent);text-align:left}
-#v-insuwork .large .pw-asset-document{width:116px;height:150px;padding:14px 12px}
-#v-insuwork .pw-asset-document span{overflow:hidden;color:var(--ac);font-size:10px;font-weight:var(--fw-medium);text-overflow:ellipsis;white-space:nowrap}
-#v-insuwork .pw-asset-document p{display:-webkit-box;overflow:hidden;margin:0;color:var(--ts);font-size:9px;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:4}
-#v-insuwork .large .pw-asset-document p{font-size:11px;-webkit-line-clamp:7}
-#v-insuwork .pw-asset-document p.pw-asset-ext{display:flex;flex:1;align-items:center;justify-content:center;margin:0;color:var(--ac);font-size:15px;font-weight:var(--fw-bold,700);letter-spacing:.02em;-webkit-line-clamp:1}
-#v-insuwork .large .pw-asset-document p.pw-asset-ext{font-size:20px}
-#v-insuwork .pw-asset-card>b{display:-webkit-box;overflow:hidden;margin:7px 2px 0;font-size:var(--fs-caption);font-weight:var(--fw-medium);line-height:1.35;text-align:center;text-overflow:ellipsis;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-#v-insuwork .pw-asset-card>small{display:none}
-#v-insuwork .pw-body{background:transparent}
-#v-insuwork .pw-nav{border-right:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
-#v-insuwork .pw-main{background:transparent;box-shadow:none}
-#v-insuwork .pw-stat{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));background:transparent;box-shadow:none}
-#v-insuwork .pw-panel{border:0;background:transparent;box-shadow:none}
-#v-insuwork .pw-home-row{border-top:2px solid var(--bd)}
-#v-insuwork .pw-home-row-top{border-top:0}
-#v-insuwork .pw-home-row>.pw-panel:first-child{border-right:2px solid var(--bd)}
-#v-insuwork .pw-panel-head{border-bottom:1px solid var(--bd)}
-#v-insuwork .pw-explorer,#v-insuwork .pw-cal,#v-insuwork .pw-time,#v-insuwork .pw-agenda,#v-insuwork .pw-search-results{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));background:transparent;box-shadow:none}
-#v-insuwork .pw-cal-head{background:transparent;border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent)}
-#v-insuwork .pw-calendar-month .pw-cal{background:transparent;box-shadow:none;border-color:color-mix(in srgb,var(--s1) 55%,var(--bd))}
-#v-insuwork .pw-calendar-month .pw-cal-grid{background:color-mix(in srgb,var(--s1) 40%,transparent)}
-#v-insuwork .pw-calendar-month .pw-day{background:transparent}
-#v-insuwork .pw-calendar-month .pw-day:hover{background:color-mix(in srgb,var(--s1) 30%,transparent)}
-#v-insuwork .pw-calendar-month .pw-day.out{background:transparent}
-#v-insuwork .pw-calendar-shell .pw-mode{background:transparent;box-shadow:none}
-#v-insuwork .pw-dialog{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));box-shadow:0 1px 3px color-mix(in srgb,var(--tp) 10%,transparent)}
-#v-insuwork .pw-consult-layout{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));background:transparent;box-shadow:none}
-#v-insuwork .pw-consult-columns{background:transparent;border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent)}
-#v-insuwork .pw-day{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
-#v-insuwork .pw-day.out{background:color-mix(in srgb,var(--s2) 20%,transparent)}
-#v-insuwork .pw-table th,#v-insuwork .pw-time-head button{background:color-mix(in srgb,var(--s1) 46%,transparent)}
-#v-insuwork .pw-table tbody tr,#v-insuwork .pw-agenda>button,#v-insuwork .pw-search-results>button{background:transparent}
-#v-insuwork .pw-table tbody tr:nth-child(even){background:color-mix(in srgb,var(--s1) 16%,transparent)}
-#v-insuwork .pw-access{display:flex;min-height:100%;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:28px;text-align:center}
-#v-insuwork .pw-access strong{font-size:var(--fs-xl);color:var(--tp)}
-#v-insuwork .pw-access p{max-width:520px;color:var(--ts)}
-#v-insuwork .pw-access-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
-#v-insuwork .pw-access .pw-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+#v-insuwork .iw-head{border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
+#v-insuwork .iw-search{border-color:color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
+#v-insuwork .iw-shell-compact{grid-template-rows:1fr}
+#v-insuwork .iw-assets-controls{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+#v-insuwork .iw-assets-controls .iw-tabs{min-width:0;overflow:visible;margin-bottom:0}
+#v-insuwork .iw-assets-controls>.iw-btn{flex:none}
+#v-insuwork .iw-assets-actions{display:flex;align-items:center;gap:10px;flex:none}
+#v-insuwork .iw-add-menu{position:relative;z-index:31;flex:none}
+#v-insuwork .iw-add-menu>summary{display:flex;min-height:36px;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);background:var(--ac);color:#fff;font-size:var(--fs-caption);font-weight:var(--fw-medium);cursor:pointer;list-style:none}
+#v-insuwork .iw-add-menu>summary::-webkit-details-marker{display:none}
+#v-insuwork .iw-add-popover{position:absolute;z-index:40;top:calc(100% + 6px);left:0;display:grid;width:176px;overflow:hidden;padding:6px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 12px 30px color-mix(in srgb,var(--tp) 18%,transparent)}
+#v-insuwork .iw-add-popover button,#v-insuwork .iw-add-popover label{display:flex;min-height:38px;align-items:center;padding:0 11px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);font-size:var(--fs-caption);text-align:left;cursor:pointer}
+#v-insuwork .iw-add-popover button:hover,#v-insuwork .iw-add-popover label:hover{background:var(--s2)}
+#v-insuwork .iw-folder-path{display:flex;align-items:center;gap:6px;overflow:auto;margin:0 0 12px;padding:2px 0;color:var(--ts);white-space:nowrap}
+#v-insuwork .iw-folder-path button{padding:4px 7px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);cursor:pointer}
+#v-insuwork .iw-folder-path button:hover{background:var(--s2)}
+#v-insuwork .iw-folder-icon{font-size:64px;line-height:1}
+#v-insuwork .large .iw-folder-icon{font-size:96px}
+#v-insuwork .iw-view-switch{display:flex;overflow:hidden;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1)}
+#v-insuwork .iw-view-switch button{display:flex;height:36px;align-items:center;gap:5px;padding:0 10px;border:0;border-right:1px solid var(--bd);background:transparent;color:var(--ts);font-size:var(--fs-caption);cursor:pointer}
+#v-insuwork .iw-view-switch button:last-child{border-right:0}
+#v-insuwork .iw-view-switch button.on{background:color-mix(in srgb,var(--ac) 12%,var(--s1));color:var(--ac)}
+#v-insuwork .iw-assets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:18px 10px;align-content:start}
+#v-insuwork .iw-assets-grid.large{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:24px 14px}
+#v-insuwork .iw-asset-card{display:grid;min-width:0;grid-template-rows:104px auto;padding:8px 6px;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--tp);text-align:center;cursor:pointer}
+#v-insuwork .iw-assets-grid.large .iw-asset-card{grid-template-rows:168px auto;padding:10px 8px}
+#v-insuwork .iw-asset-card:hover{border-color:color-mix(in srgb,var(--ac) 24%,var(--bd));background:color-mix(in srgb,var(--ac) 8%,transparent)}
+#v-insuwork .iw-asset-draggable{cursor:grab}
+#v-insuwork .iw-asset-draggable:active{cursor:grabbing}
+#v-insuwork .iw-asset-draggable.is-dragging{opacity:.42}
+#v-insuwork .iw-folder-drop-target{transition:background .14s,border-color .14s,box-shadow .14s,transform .14s}
+#v-insuwork .iw-folder-drop-target.is-drag-over{background:color-mix(in srgb,var(--ac) 16%,var(--s1));box-shadow:inset 0 0 0 2px var(--ac);transform:translateY(-1px)}
+#v-insuwork .iw-asset-preview{display:flex;height:100%;align-items:center;justify-content:center;overflow:hidden;background:transparent}
+#v-insuwork .iw-asset-preview img{width:auto;max-width:100%;height:auto;max-height:96px;object-fit:contain;border:1px solid color-mix(in srgb,var(--bd) 82%,transparent);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 2px 7px color-mix(in srgb,var(--tp) 12%,transparent)}
+#v-insuwork .large .iw-asset-preview img{max-height:160px}
+#v-insuwork .iw-asset-document{display:flex;width:76px;height:94px;box-sizing:border-box;flex-direction:column;gap:7px;padding:10px 8px;overflow:hidden;border:1px solid color-mix(in srgb,var(--bd) 82%,transparent);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 2px 7px color-mix(in srgb,var(--tp) 12%,transparent);text-align:left}
+#v-insuwork .large .iw-asset-document{width:116px;height:150px;padding:14px 12px}
+#v-insuwork .iw-asset-document span{overflow:hidden;color:var(--ac);font-size:10px;font-weight:var(--fw-medium);text-overflow:ellipsis;white-space:nowrap}
+#v-insuwork .iw-asset-document p{display:-webkit-box;overflow:hidden;margin:0;color:var(--ts);font-size:9px;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:4}
+#v-insuwork .large .iw-asset-document p{font-size:11px;-webkit-line-clamp:7}
+#v-insuwork .iw-asset-document p.iw-asset-ext{display:flex;flex:1;align-items:center;justify-content:center;margin:0;color:var(--ac);font-size:15px;font-weight:var(--fw-bold,700);letter-spacing:.02em;-webkit-line-clamp:1}
+#v-insuwork .large .iw-asset-document p.iw-asset-ext{font-size:20px}
+#v-insuwork .iw-asset-card>b{display:-webkit-box;overflow:hidden;margin:7px 2px 0;font-size:var(--fs-caption);font-weight:var(--fw-medium);line-height:1.35;text-align:center;text-overflow:ellipsis;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+#v-insuwork .iw-asset-card>small{display:none}
+#v-insuwork .iw-body{background:transparent}
+#v-insuwork .iw-nav{border-right:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
+#v-insuwork .iw-main{background:transparent;box-shadow:none}
+#v-insuwork .iw-stat{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));background:transparent;box-shadow:none}
+#v-insuwork .iw-panel{border:0;background:transparent;box-shadow:none}
+#v-insuwork .iw-home-row{border-top:2px solid var(--bd)}
+#v-insuwork .iw-home-row-top{border-top:0}
+#v-insuwork .iw-home-row>.iw-panel:first-child{border-right:2px solid var(--bd)}
+#v-insuwork .iw-panel-head{border-bottom:1px solid var(--bd)}
+#v-insuwork .iw-explorer,#v-insuwork .iw-cal,#v-insuwork .iw-time,#v-insuwork .iw-agenda,#v-insuwork .iw-search-results{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));background:transparent;box-shadow:none}
+#v-insuwork .iw-cal-head{background:transparent;border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent)}
+#v-insuwork .iw-calendar-month .iw-cal{background:transparent;box-shadow:none;border-color:color-mix(in srgb,var(--s1) 55%,var(--bd))}
+#v-insuwork .iw-calendar-month .iw-cal-grid{background:color-mix(in srgb,var(--s1) 40%,transparent)}
+#v-insuwork .iw-calendar-month .iw-day{background:transparent}
+#v-insuwork .iw-calendar-month .iw-day:hover{background:color-mix(in srgb,var(--s1) 30%,transparent)}
+#v-insuwork .iw-calendar-month .iw-day.out{background:transparent}
+#v-insuwork .iw-calendar-shell .iw-mode{background:transparent;box-shadow:none}
+#v-insuwork .iw-dialog{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));box-shadow:0 1px 3px color-mix(in srgb,var(--tp) 10%,transparent)}
+#v-insuwork .iw-consult-layout{border-color:color-mix(in srgb,var(--s1) 55%,var(--bd));background:transparent;box-shadow:none}
+#v-insuwork .iw-consult-columns{background:transparent;border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent)}
+#v-insuwork .iw-day{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+#v-insuwork .iw-day.out{background:color-mix(in srgb,var(--s2) 20%,transparent)}
+#v-insuwork .iw-table th,#v-insuwork .iw-time-head button{background:color-mix(in srgb,var(--s1) 46%,transparent)}
+#v-insuwork .iw-table tbody tr,#v-insuwork .iw-agenda>button,#v-insuwork .iw-search-results>button{background:transparent}
+#v-insuwork .iw-table tbody tr:nth-child(even){background:color-mix(in srgb,var(--s1) 16%,transparent)}
+#v-insuwork .iw-access{display:flex;min-height:100%;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:28px;text-align:center}
+#v-insuwork .iw-access strong{font-size:var(--fs-xl);color:var(--tp)}
+#v-insuwork .iw-access p{max-width:520px;color:var(--ts)}
+#v-insuwork .iw-access-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+#v-insuwork .iw-access .iw-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 body.ws-page.ws-bg-flat:before{display:none}
 body.ws-page.ws-bg-white:after{background:#f6f7fb}
 body.ws-page.ws-bg-dark:after{background:#14161b}
 body.ws-page.ws-bg-flat #v-insuwork{border-color:var(--bd);background:var(--s1)}
-body.ws-page.ws-bg-flat #v-insuwork .pw-head,
-body.ws-page.ws-bg-flat #v-insuwork .pw-search,
-body.ws-page.ws-bg-flat #v-insuwork .pw-body,
-body.ws-page.ws-bg-flat #v-insuwork .pw-nav,
-body.ws-page.ws-bg-flat #v-insuwork .pw-main,
-body.ws-page.ws-bg-flat #v-insuwork .pw-stat,
-body.ws-page.ws-bg-flat #v-insuwork .pw-panel,
-body.ws-page.ws-bg-flat #v-insuwork .pw-explorer,
-body.ws-page.ws-bg-flat #v-insuwork .pw-cal,
-body.ws-page.ws-bg-flat #v-insuwork .pw-time,
-body.ws-page.ws-bg-flat #v-insuwork .pw-agenda,
-body.ws-page.ws-bg-flat #v-insuwork .pw-search-results,
-body.ws-page.ws-bg-flat #v-insuwork .pw-cal-head,
-body.ws-page.ws-bg-flat #v-insuwork .pw-calendar-month .pw-cal,
-body.ws-page.ws-bg-flat #v-insuwork .pw-calendar-month .pw-cal-grid,
-body.ws-page.ws-bg-flat #v-insuwork .pw-calendar-month .pw-day,
-body.ws-page.ws-bg-flat #v-insuwork .pw-calendar-month .pw-day.out,
-body.ws-page.ws-bg-flat #v-insuwork .pw-calendar-shell .pw-mode,
-body.ws-page.ws-bg-flat #v-insuwork .pw-consult-layout,
-body.ws-page.ws-bg-flat #v-insuwork .pw-consult-columns,
-body.ws-page.ws-bg-flat #v-insuwork .pw-day,
-body.ws-page.ws-bg-flat #v-insuwork .pw-day.out,
-body.ws-page.ws-bg-flat #v-insuwork .pw-table th,
-body.ws-page.ws-bg-flat #v-insuwork .pw-time-head button,
-body.ws-page.ws-bg-flat #v-insuwork .pw-table tbody tr,
-body.ws-page.ws-bg-flat #v-insuwork .pw-agenda>button,
-body.ws-page.ws-bg-flat #v-insuwork .pw-search-results>button{background:var(--s1)}
-body.ws-page.ws-bg-flat #v-insuwork .pw-table tbody tr:nth-child(even){background:var(--s2)}
+body.ws-page.ws-bg-flat #v-insuwork .iw-head,
+body.ws-page.ws-bg-flat #v-insuwork .iw-search,
+body.ws-page.ws-bg-flat #v-insuwork .iw-body,
+body.ws-page.ws-bg-flat #v-insuwork .iw-nav,
+body.ws-page.ws-bg-flat #v-insuwork .iw-main,
+body.ws-page.ws-bg-flat #v-insuwork .iw-stat,
+body.ws-page.ws-bg-flat #v-insuwork .iw-panel,
+body.ws-page.ws-bg-flat #v-insuwork .iw-explorer,
+body.ws-page.ws-bg-flat #v-insuwork .iw-cal,
+body.ws-page.ws-bg-flat #v-insuwork .iw-time,
+body.ws-page.ws-bg-flat #v-insuwork .iw-agenda,
+body.ws-page.ws-bg-flat #v-insuwork .iw-search-results,
+body.ws-page.ws-bg-flat #v-insuwork .iw-cal-head,
+body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-cal,
+body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-cal-grid,
+body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-day,
+body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-month .iw-day.out,
+body.ws-page.ws-bg-flat #v-insuwork .iw-calendar-shell .iw-mode,
+body.ws-page.ws-bg-flat #v-insuwork .iw-consult-layout,
+body.ws-page.ws-bg-flat #v-insuwork .iw-consult-columns,
+body.ws-page.ws-bg-flat #v-insuwork .iw-day,
+body.ws-page.ws-bg-flat #v-insuwork .iw-day.out,
+body.ws-page.ws-bg-flat #v-insuwork .iw-table th,
+body.ws-page.ws-bg-flat #v-insuwork .iw-time-head button,
+body.ws-page.ws-bg-flat #v-insuwork .iw-table tbody tr,
+body.ws-page.ws-bg-flat #v-insuwork .iw-agenda>button,
+body.ws-page.ws-bg-flat #v-insuwork .iw-search-results>button{background:var(--s1)}
+body.ws-page.ws-bg-flat #v-insuwork .iw-table tbody tr:nth-child(even){background:var(--s2)}
 /* ── 다크 배경 모드: Google 스타일 블록의 하드코딩 색상을 토큰으로 재정의 ── */
 body.ws-page.ws-bg-dark #v-insuwork{background:var(--bg);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-head{background:var(--bg)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-title p{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-search{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-search:focus-within{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav{background:var(--bg)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav button{color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav button:hover{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav button.on{background:color-mix(in srgb,var(--ac) 22%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav-subgroup button{color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav-subgroup>summary{color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav .archive{border-top-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-nav-planned button:disabled:hover{color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-name-search{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-name-search:focus-within{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-name-search span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-name-search input{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-name-clear{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-name-clear:hover{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-stat{background:var(--s1);color:var(--bodytx);border-top-color:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 45%,var(--bd))}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-stat span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-consult-stat.on{background:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 18%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .pw-main{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-subtitle{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-btn{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-btn:hover{border-color:var(--tf);background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-btn.primary{border-color:var(--ac);background:var(--ac);color:#fff}
-body.ws-page.ws-bg-dark #v-insuwork .pw-stat{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-stat span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-stat strong{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-panel,body.ws-page.ws-bg-dark #v-insuwork .pw-explorer,body.ws-page.ws-bg-dark #v-insuwork .pw-search-results,body.ws-page.ws-bg-dark #v-insuwork .pw-agenda,body.ws-page.ws-bg-dark #v-insuwork .pw-cal,body.ws-page.ws-bg-dark #v-insuwork .pw-time{border-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-panel-head{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-panel-head button{color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-panel .pw-row{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-row small{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-row:hover,body.ws-page.ws-bg-dark #v-insuwork .pw-table tbody tr:hover,body.ws-page.ws-bg-dark #v-insuwork .pw-search-results>button:hover{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-fav{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-fav:hover,body.ws-page.ws-bg-dark #v-insuwork .pw-fav:focus-visible{border-color:var(--bd);background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-asset-card>.pw-fav{background:color-mix(in srgb,var(--s1) 92%,transparent)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-tabs button{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-tabs button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-table th{background:var(--s1);color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-table td{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-badge{background:var(--s2);color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-badge.public{background:color-mix(in srgb,var(--ok) 18%,var(--s1));color:var(--ok)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-system-note{background:color-mix(in srgb,var(--ac) 16%,var(--s1));color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-system-note small{color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-dialog{border-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-field input,body.ws-page.ws-bg-dark #v-insuwork .pw-field select,body.ws-page.ws-bg-dark #v-insuwork .pw-field textarea{border-color:var(--bd);background:var(--s1);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-file-card{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-cal-head{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-cal-head span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-day{border-color:var(--bd);color:var(--bodytx)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-day.today>strong{background:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-event{background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-shell{--pw-cal-main:var(--ac);--pw-cal-deep:color-mix(in srgb,var(--ac) 65%,black);--pw-cal-soft:color-mix(in srgb,var(--ac) 20%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-left h2{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-today{border-color:var(--bd);background:var(--s1);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-month-switcher button{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-shell .pw-mode{border-color:var(--bd);background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-shell .pw-mode .pw-btn{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-shell .pw-mode .pw-btn.primary{background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-cal{border-color:var(--bd);background:var(--s1)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-cal-head{border-bottom-color:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-cal-head span{color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-cal-head span:first-child{color:var(--err)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-cal-head span:last-child{color:var(--t-uw)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-cal-grid{background:var(--bd)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-day{background:var(--s1);color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-day:hover{background:var(--s2)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-day.out{background:color-mix(in srgb,var(--s1) 60%,var(--bg));color:var(--tf)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-day-head strong{color:var(--tp)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-day-head em{background:var(--s2);color:var(--ts)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i{color:var(--err)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i.insurance-age{border-color:color-mix(in srgb,var(--ac) 46%,var(--bd));background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:#8ab4f8}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i.insurance-age-more{border-color:color-mix(in srgb,var(--ac) 58%,var(--bd));background:color-mix(in srgb,var(--ac) 26%,var(--s1));color:#a8c7fa}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i.customer{border-color:color-mix(in srgb,var(--ok) 38%,var(--bd));background:color-mix(in srgb,var(--ok) 14%,var(--s1));color:#8fd6c7}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i.customer-more{border-color:color-mix(in srgb,var(--ok) 46%,var(--bd));background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:#8fd6c7}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i.term{color:var(--ok)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-built-ins i.memorial{color:var(--t-event)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-event,body.ws-page.ws-bg-dark #v-insuwork .pw-event-bar{background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:var(--ac)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-event:hover,body.ws-page.ws-bg-dark #v-insuwork .pw-event-bar:hover{background:color-mix(in srgb,var(--ac) 32%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-event.customer,body.ws-page.ws-bg-dark #v-insuwork .pw-event-bar.customer{background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:var(--ok)}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-event.customer:hover,body.ws-page.ws-bg-dark #v-insuwork .pw-event-bar.customer:hover{background:color-mix(in srgb,var(--ok) 32%,var(--s1))}
-body.ws-page.ws-bg-dark #v-insuwork .pw-calendar-month .pw-more{color:var(--ts)}
-@media(max-width:860px){.ws-main{padding:8px 8px 0}#v-insuwork{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-insuwork .pw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-insuwork .pw-main{grid-row:1;min-width:0}#v-insuwork .pw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-insuwork .pw-assets-controls{align-items:flex-start;flex-direction:column}#v-insuwork .pw-assets-controls .pw-tabs{width:100%;overflow:visible}#v-insuwork .pw-assets-actions{align-self:flex-end}}
+body.ws-page.ws-bg-dark #v-insuwork .iw-head{background:var(--bg)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-title p{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-search{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-search:focus-within{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav{background:var(--bg)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav button{color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav button:hover{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav button.on{background:color-mix(in srgb,var(--ac) 22%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav-subgroup button{color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav-subgroup>summary{color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav .archive{border-top-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-nav-planned button:disabled:hover{color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search:focus-within{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-search input{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-clear{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-name-clear:hover{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-stat{background:var(--s1);color:var(--bodytx);border-top-color:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 45%,var(--bd))}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-stat span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-consult-stat.on{background:color-mix(in srgb,var(--stat-accent,var(--bodytx)) 18%,var(--s1))}
+body.ws-page.ws-bg-dark #v-insuwork .iw-main{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-subtitle{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-btn{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-btn:hover{border-color:var(--tf);background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-btn.primary{border-color:var(--ac);background:var(--ac);color:#fff}
+body.ws-page.ws-bg-dark #v-insuwork .iw-stat{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-stat span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-stat strong{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-panel,body.ws-page.ws-bg-dark #v-insuwork .iw-explorer,body.ws-page.ws-bg-dark #v-insuwork .iw-search-results,body.ws-page.ws-bg-dark #v-insuwork .iw-agenda,body.ws-page.ws-bg-dark #v-insuwork .iw-cal,body.ws-page.ws-bg-dark #v-insuwork .iw-time{border-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-panel-head{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-panel-head button{color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-panel .iw-row{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-row small{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-row:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-table tbody tr:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-search-results>button:hover{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-fav{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-fav:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-fav:focus-visible{border-color:var(--bd);background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-asset-card>.iw-fav{background:color-mix(in srgb,var(--s1) 92%,transparent)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-tabs button{border-color:var(--bd);background:var(--s1);color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-tabs button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-table th{background:var(--s1);color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-table td{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-badge{background:var(--s2);color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-badge.public{background:color-mix(in srgb,var(--ok) 18%,var(--s1));color:var(--ok)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-system-note{background:color-mix(in srgb,var(--ac) 16%,var(--s1));color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-system-note small{color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-dialog{border-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-field input,body.ws-page.ws-bg-dark #v-insuwork .iw-field select,body.ws-page.ws-bg-dark #v-insuwork .iw-field textarea{border-color:var(--bd);background:var(--s1);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-file-card{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-cal-head{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-cal-head span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-day{border-color:var(--bd);color:var(--bodytx)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-day.today>strong{background:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-event{background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell{--iw-cal-main:var(--ac);--iw-cal-deep:color-mix(in srgb,var(--ac) 65%,black);--iw-cal-soft:color-mix(in srgb,var(--ac) 20%,var(--s1))}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-left h2{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-today{border-color:var(--bd);background:var(--s1);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-month-switcher button{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell .iw-mode{border-color:var(--bd);background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell .iw-mode .iw-btn{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-shell .iw-mode .iw-btn.primary{background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal{border-color:var(--bd);background:var(--s1)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head{border-bottom-color:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span{color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span:first-child{color:var(--err)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-head span:last-child{color:var(--t-uw)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-cal-grid{background:var(--bd)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-day{background:var(--s1);color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-day:hover{background:var(--s2)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-day.out{background:color-mix(in srgb,var(--s1) 60%,var(--bg));color:var(--tf)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-day-head strong{color:var(--tp)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-day-head em{background:var(--s2);color:var(--ts)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i{color:var(--err)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.insurance-age{border-color:color-mix(in srgb,var(--ac) 46%,var(--bd));background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:#8ab4f8}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.insurance-age-more{border-color:color-mix(in srgb,var(--ac) 58%,var(--bd));background:color-mix(in srgb,var(--ac) 26%,var(--s1));color:#a8c7fa}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.customer{border-color:color-mix(in srgb,var(--ok) 38%,var(--bd));background:color-mix(in srgb,var(--ok) 14%,var(--s1));color:#8fd6c7}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.customer-more{border-color:color-mix(in srgb,var(--ok) 46%,var(--bd));background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:#8fd6c7}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.term{color:var(--ok)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-built-ins i.memorial{color:var(--t-event)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar{background:color-mix(in srgb,var(--ac) 20%,var(--s1));color:var(--ac)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar:hover{background:color-mix(in srgb,var(--ac) 32%,var(--s1))}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event.customer,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar.customer{background:color-mix(in srgb,var(--ok) 20%,var(--s1));color:var(--ok)}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-event.customer:hover,body.ws-page.ws-bg-dark #v-insuwork .iw-event-bar.customer:hover{background:color-mix(in srgb,var(--ok) 32%,var(--s1))}
+body.ws-page.ws-bg-dark #v-insuwork .iw-calendar-month .iw-more{color:var(--ts)}
+@media(max-width:860px){.ws-main{padding:8px 8px 0}#v-insuwork{border-radius:var(--radius-md) var(--radius-md) 0 0}#v-insuwork .iw-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#v-insuwork .iw-main{grid-row:1;min-width:0}#v-insuwork .iw-nav{background:color-mix(in srgb,var(--s1) 74%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}#v-insuwork .iw-assets-controls{align-items:flex-start;flex-direction:column}#v-insuwork .iw-assets-controls .iw-tabs{width:100%;overflow:visible}#v-insuwork .iw-assets-actions{align-self:flex-end}}
 @media(max-width:860px){.ws-global-search{width:min(400px,38vw)}}
 @media(max-width:680px){body.ws-page{grid-template-rows:106px minmax(0,1fr)}body.ws-page:before{background-position:58% center}.ws-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.ws-identity{gap:9px}.ws-brand{gap:7px}.ws-brand span{width:32px;height:32px}.ws-brand strong,.ws-product{font-size:var(--fs-meta)}.ws-divider{height:16px}.ws-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.ws-header-actions{grid-column:2;grid-row:1;gap:6px}.ws-mobile-link{height:30px;padding:0 8px;font-size:11px}.ws-account-trigger{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ws-main{padding:6px 0 0}#v-insuwork{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
 

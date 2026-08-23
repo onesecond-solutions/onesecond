@@ -8,7 +8,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var ROOT_SELECTOR = '#wsm-root';
+  var ROOT_SELECTOR = '#iwm-root';
   var WEEK_DAYS = 7;
   var LIST_RANGE_DAYS = 30;
   var LIST_PAGE_SIZE = 20;
@@ -66,28 +66,28 @@
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 캘린더를 확인할 수 있습니다.</p>'
-      + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<div class="iwm-gate-actions"><button type="button" class="iwm-btn primary" id="iwm-login-btn">로그인</button></div>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
-    var btn = document.getElementById('wsm-login-btn');
+    var btn = document.getElementById('iwm-login-btn');
     if (btn) btn.addEventListener('click', function () { openBriefingAuth('login'); });
   }
 
   function renderDeniedGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
   }
 
   function renderLoading() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate"><strong>캘린더를 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
+    view.innerHTML = '<div class="iwm-gate"><strong>캘린더를 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
   }
 
   function eventTimeLabel(timeStr) {
@@ -110,20 +110,20 @@
   }
 
   function cardHtml(title, sub, meta) {
-    return '<div class="wsm-card">'
-      + '<div class="wsm-card-title">' + esc(title) + '</div>'
-      + (sub ? '<div class="wsm-card-sub">' + esc(sub) + '</div>' : '')
-      + (meta ? '<div class="wsm-card-meta">' + esc(meta) + '</div>' : '')
+    return '<div class="iwm-card">'
+      + '<div class="iwm-card-title">' + esc(title) + '</div>'
+      + (sub ? '<div class="iwm-card-sub">' + esc(sub) + '</div>' : '')
+      + (meta ? '<div class="iwm-card-meta">' + esc(meta) + '</div>' : '')
       + '</div>';
   }
 
   function emptyHtml(message) {
-    return '<div class="wsm-empty">' + esc(message) + '</div>';
+    return '<div class="iwm-empty">' + esc(message) + '</div>';
   }
 
   function sectionHtml(title, bodyHtml) {
-    return '<section class="wsm-section">'
-      + '<h2 class="wsm-section-title">' + esc(title) + '</h2>'
+    return '<section class="iwm-section">'
+      + '<h2 class="iwm-section-title">' + esc(title) + '</h2>'
       + bodyHtml
       + '</section>';
   }
@@ -142,20 +142,20 @@
   function todaySectionHtml(todayDate) {
     var events = typeof window.OSInsuwork.eventsFor === 'function' ? window.OSInsuwork.eventsFor(todayDate) : [];
     if (!events.length) return sectionHtml('오늘', emptyHtml('오늘 일정이 없습니다.'));
-    var body = '<div class="wsm-list">' + events.map(dayEventCardHtml).join('') + '</div>';
+    var body = '<div class="iwm-list">' + events.map(dayEventCardHtml).join('') + '</div>';
     return sectionHtml('오늘', body);
   }
 
   function weekSectionHtml(todayDate) {
     var days = [];
     for (var i = 0; i < WEEK_DAYS; i++) days.push(addDays(todayDate, i));
-    var body = '<div class="wsm-week">' + days.map(function (dateStr) {
+    var body = '<div class="iwm-week">' + days.map(function (dateStr) {
       var events = typeof window.OSInsuwork.eventsFor === 'function' ? window.OSInsuwork.eventsFor(dateStr) : [];
       var inner = events.length
-        ? '<div class="wsm-list">' + events.map(dayEventCardHtml).join('') + '</div>'
-        : '<div class="wsm-empty wsm-empty-compact">일정 없음</div>';
-      return '<div class="wsm-week-day">'
-        + '<h3 class="wsm-week-day-title">' + esc(dayLabel(dateStr)) + '</h3>'
+        ? '<div class="iwm-list">' + events.map(dayEventCardHtml).join('') + '</div>'
+        : '<div class="iwm-empty iwm-empty-compact">일정 없음</div>';
+      return '<div class="iwm-week-day">'
+        + '<h3 class="iwm-week-day-title">' + esc(dayLabel(dateStr)) + '</h3>'
         + inner
         + '</div>';
     }).join('') + '</div>';
@@ -169,8 +169,8 @@
       ? window.OSInsuwork.eventsInRange(listStart, listEnd) : [];
     if (!all.length) return sectionHtml('일정 목록', emptyHtml('이번 주 이후 예정된 일정이 없습니다.'));
     var visible = all.slice(0, state.listRenderLimit);
-    var body = '<div class="wsm-list">' + visible.map(listEventCardHtml).join('')
-      + (all.length > visible.length ? '<button type="button" class="wsm-btn wsm-loadmore" id="wsm-cal-more">더 보기 (' + (all.length - visible.length) + ')</button>' : '')
+    var body = '<div class="iwm-list">' + visible.map(listEventCardHtml).join('')
+      + (all.length > visible.length ? '<button type="button" class="iwm-btn iwm-loadmore" id="iwm-cal-more">더 보기 (' + (all.length - visible.length) + ')</button>' : '')
       + '</div>';
     return sectionHtml('일정 목록', body);
   }
@@ -181,8 +181,8 @@
      DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
   var menuOutsideBound = false;
   function bindHeaderMenu() {
-    var menuBtn = document.getElementById('wsm-menu-btn');
-    var menuPanel = document.getElementById('wsm-menu-panel');
+    var menuBtn = document.getElementById('iwm-menu-btn');
+    var menuPanel = document.getElementById('iwm-menu-panel');
     if (menuBtn && menuPanel) {
       menuBtn.addEventListener('click', function () {
         var willOpen = menuPanel.hidden;
@@ -193,8 +193,8 @@
     if (!menuOutsideBound) {
       menuOutsideBound = true;
       document.addEventListener('click', function (event) {
-        var panel = document.getElementById('wsm-menu-panel');
-        var btn = document.getElementById('wsm-menu-btn');
+        var panel = document.getElementById('iwm-menu-panel');
+        var btn = document.getElementById('iwm-menu-btn');
         if (!panel || panel.hidden) return;
         if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
         panel.hidden = true;
@@ -218,28 +218,28 @@
     /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/고객/자료)은 하단 고정 탭바로 옮겼다.
        feat/workstation-mobile-header-consistency — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고,
        보험브리핑 홈으로 돌아가는 링크를 추가했다. */
-    view.innerHTML = '<header class="wsm-header"><strong>캘린더</strong>'
-      + '<div class="wsm-header-actions">'
-      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+    view.innerHTML = '<header class="iwm-header"><strong>캘린더</strong>'
+      + '<div class="iwm-header-actions">'
+      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
       + '</div>'
-      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
-      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">PC 버전으로 보기</a>'
-      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
+      + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="iwm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>'
-      + '<main class="wsm-main">'
+      + '<main class="iwm-main">'
       + todaySectionHtml(todayDate)
       + weekSectionHtml(todayDate)
       + upcomingSectionHtml(todayDate)
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('calendar') : '');
 
-    var logoutLink = document.getElementById('wsm-logout-link');
+    var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
     bindHeaderMenu();
 
-    var moreBtn = document.getElementById('wsm-cal-more');
+    var moreBtn = document.getElementById('iwm-cal-more');
     if (moreBtn) moreBtn.addEventListener('click', function () {
       state.listRenderLimit += LIST_PAGE_SIZE;
       lastRenderedJson = '';

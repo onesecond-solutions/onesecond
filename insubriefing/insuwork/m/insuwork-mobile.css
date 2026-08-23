@@ -3,10 +3,10 @@
    톤(대표 확정) = 얇은 테두리 + 텍스트만. backdrop-filter/블러·무거운 box-shadow 금지.
    색·크기는 css/tokens-v2.css·css/app-core.css의 커스텀 프로퍼티만 사용(하드코딩 금지). */
 
-html, body.wsm-page { background: var(--bg); }
-body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
+html, body.iwm-page { background: var(--bg); }
+body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
 
-#wsm-root {
+#iwm-root {
   max-width: 640px;
   margin: 0 auto;
   min-height: 100vh;
@@ -14,7 +14,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   flex-direction: column;
 }
 
-.wsm-header {
+.iwm-header {
   position: sticky;
   top: 0;
   z-index: 5;
@@ -26,16 +26,16 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   background: var(--bg);
   border-bottom: 1px solid var(--bd);
 }
-.wsm-header strong {
+.iwm-header strong {
   font-size: var(--fs-title, 18px);
   font-weight: 700;
   /* fix/workstation-mobile-bugs 버그2 — 탭 전환 직후 헤더 폭 계산 타이밍에 제목이 한 글자씩 줄바꿈되던 문제.
-     .wsm-tab-link/.wsm-pc-link는 이미 white-space:nowrap이 있었는데 제목 <strong>에는 빠져 있었다.
+     .iwm-tab-link/.iwm-pc-link는 이미 white-space:nowrap이 있었는데 제목 <strong>에는 빠져 있었다.
      flex-shrink:0도 함께 줘서 header-actions가 넓어져도 제목 쪽이 눌려 줄바꿈되지 않게 한다. */
   white-space: nowrap;
   flex-shrink: 0;
 }
-.wsm-header-actions {
+.iwm-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -48,8 +48,8 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   -webkit-overflow-scrolling: touch;
 }
 
-.wsm-pc-link,
-.wsm-tab-link {
+.iwm-pc-link,
+.iwm-tab-link {
   font-size: var(--fs-meta, 13px);
   color: var(--ts);
   text-decoration: none;
@@ -65,17 +65,17 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
      flex-shrink:0만 추가한다. */
   flex-shrink: 0;
 }
-.wsm-pc-link:active,
-.wsm-tab-link:active { color: var(--ac); border-color: var(--ac); }
-.wsm-tab-link.is-active { color: var(--ac); border-color: var(--ac); font-weight: 600; }
+.iwm-pc-link:active,
+.iwm-tab-link:active { color: var(--ac); border-color: var(--ac); }
+.iwm-tab-link.is-active { color: var(--ac); border-color: var(--ac); font-weight: 600; }
 
 /* feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — 헤더의 "PC로 보기"/"로그아웃"
    버튼 2개가 항상 노출돼 네이티브 앱스럽지 않다는 지적 → "⋯" 아이콘 버튼 하나로 숨기고, 탭하면 열리는
    드롭다운 안에 보험브리핑 홈/PC 버전으로 보기/로그아웃 3개 링크를 담는다. 새 라이브러리 없이 순수
    CSS(절대배치 패널 + hidden 토글)만 사용. 톤은 기존과 동일 — 얇은 테두리 + 텍스트만, blur/그림자 금지.
-   패널은 .wsm-header-actions(overflow-x:auto, 버그3 대응) 밖의 .wsm-header 직계 자식으로 둬서 그 스크롤
-   컨테이너에 잘리지 않는다 — .wsm-header가 이미 position:sticky라 절대배치 기준(containing block)이 된다. */
-.wsm-menu-btn {
+   패널은 .iwm-header-actions(overflow-x:auto, 버그3 대응) 밖의 .iwm-header 직계 자식으로 둬서 그 스크롤
+   컨테이너에 잘리지 않는다 — .iwm-header가 이미 position:sticky라 절대배치 기준(containing block)이 된다. */
+.iwm-menu-btn {
   min-width: 44px;
   min-height: 44px;
   display: inline-flex;
@@ -89,10 +89,10 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   line-height: 1;
   cursor: pointer;
 }
-.wsm-menu-btn:active,
-.wsm-menu-btn[aria-expanded="true"] { color: var(--ac); border-color: var(--ac); }
+.iwm-menu-btn:active,
+.iwm-menu-btn[aria-expanded="true"] { color: var(--ac); border-color: var(--ac); }
 
-.wsm-menu-panel {
+.iwm-menu-panel {
   position: absolute;
   top: calc(100% + 6px);
   right: 16px;
@@ -105,7 +105,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   background: var(--bg);
   overflow: hidden;
 }
-.wsm-menu-item {
+.iwm-menu-item {
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -115,13 +115,13 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   text-decoration: none;
   border-bottom: 1px solid var(--bd);
 }
-.wsm-menu-item:last-child { border-bottom: none; }
-.wsm-menu-item:active { color: var(--ac); background: var(--s1); }
+.iwm-menu-item:last-child { border-bottom: none; }
+.iwm-menu-item:active { color: var(--ac); background: var(--s1); }
 
-.wsm-main {
+.iwm-main {
   flex: 1;
-  /* feat/workstation-mobile-bottom-nav — 하단 고정 탭바(.wsm-bottom-nav, 약 60px + safe-area)에 마지막
-     섹션이 가려지지 않도록 하단 여백을 늘린다. 탭바가 없는 화면(로그인/거부 게이트)은 .wsm-main 자체가
+  /* feat/workstation-mobile-bottom-nav — 하단 고정 탭바(.iwm-bottom-nav, 약 60px + safe-area)에 마지막
+     섹션이 가려지지 않도록 하단 여백을 늘린다. 탭바가 없는 화면(로그인/거부 게이트)은 .iwm-main 자체가
      쓰이지 않으므로 영향 없음. */
   padding: 16px 16px calc(76px + env(safe-area-inset-bottom));
   display: flex;
@@ -133,7 +133,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
    하단 고정 아이콘 탭바로 전환(대표 직접 요청). 톤은 기존과 동일 — 얇은 테두리 + 텍스트만, blur 금지.
    4개 화면(index/calendar/customers/library.html)이 insuwork-mobile-nav.js의 render()가 그려주는
    동일 마크업을 공유한다. */
-.wsm-bottom-nav {
+.iwm-bottom-nav {
   position: fixed;
   left: 0;
   right: 0;
@@ -150,7 +150,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
 
-.wsm-bottom-nav-item {
+.iwm-bottom-nav-item {
   flex: 1;
   min-height: 48px;
   display: flex;
@@ -162,26 +162,26 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   color: var(--ts);
   text-decoration: none;
 }
-.wsm-bottom-nav-item:active { color: var(--ac); }
-.wsm-bottom-nav-item.is-active { color: var(--ac); font-weight: 600; }
+.iwm-bottom-nav-item:active { color: var(--ac); }
+.iwm-bottom-nav-item.is-active { color: var(--ac); font-weight: 600; }
 
-.wsm-bottom-nav-icon {
+.iwm-bottom-nav-icon {
   font-size: 20px;
   line-height: 1;
 }
-.wsm-bottom-nav-label {
+.iwm-bottom-nav-label {
   font-size: var(--fs-caption, 12px);
   white-space: nowrap;
 }
 
-.wsm-section-title {
+.iwm-section-title {
   margin: 0 0 10px 2px;
   font-size: var(--fs-meta, 13px);
   font-weight: 600;
   color: var(--ts);
 }
 
-.wsm-list {
+.iwm-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -191,7 +191,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
    전환(대표 직접 요청). 고정 높이의 내부 스크롤 박스로 만들어 아래 케어/상령일/상담준비 섹션이 항상
    이어서 보이게 한다(아젠다가 페이지 전체를 삼키지 않음). 톤은 기존과 동일 — 얇은 테두리 + 텍스트만,
    blur/그림자 금지. */
-.wsm-agenda-scroll {
+.iwm-agenda-scroll {
   max-height: 58vh;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -200,54 +200,54 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   border-radius: var(--radius-sm);
   padding: 2px 12px;
 }
-.wsm-agenda-sentinel {
+.iwm-agenda-sentinel {
   height: 1px;
 }
-.wsm-agenda-days {
+.iwm-agenda-days {
   display: flex;
   flex-direction: column;
 }
-.wsm-agenda-day {
+.iwm-agenda-day {
   padding: 12px 0;
   border-bottom: 1px solid var(--bd);
 }
-.wsm-agenda-day:last-child {
+.iwm-agenda-day:last-child {
   border-bottom: none;
 }
-.wsm-agenda-date {
+.iwm-agenda-date {
   margin: 0 0 8px 2px;
   font-size: var(--fs-meta, 13px);
   font-weight: 600;
   color: var(--ts);
 }
-.wsm-agenda-date.is-today {
+.iwm-agenda-date.is-today {
   color: var(--ac);
 }
-.wsm-agenda-limit {
+.iwm-agenda-limit {
   padding: 10px 0;
   text-align: center;
   font-size: var(--fs-caption, 12px);
   color: var(--tf);
 }
 
-.wsm-card {
+.iwm-card {
   min-height: 44px;
   padding: 12px 14px;
   border: 1px solid var(--bd);
   border-radius: var(--radius-sm);
   background: var(--s1);
 }
-.wsm-card-title {
+.iwm-card-title {
   font-size: var(--fs-body, 14px);
   font-weight: 600;
   color: var(--tp);
 }
-.wsm-card-sub {
+.iwm-card-sub {
   margin-top: 4px;
   font-size: var(--fs-meta, 13px);
   color: var(--ts);
 }
-.wsm-card-meta {
+.iwm-card-meta {
   margin-top: 6px;
   font-size: var(--fs-caption, 12px);
   color: var(--tf);
@@ -260,7 +260,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   overflow-wrap: break-word;
 }
 
-.wsm-empty {
+.iwm-empty {
   padding: 16px 14px;
   text-align: center;
   font-size: var(--fs-meta, 13px);
@@ -269,7 +269,7 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   border-radius: var(--radius-sm);
 }
 
-.wsm-gate {
+.iwm-gate {
   margin: auto;
   width: 100%;
   max-width: 420px;
@@ -280,11 +280,11 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   gap: 10px;
   text-align: center;
 }
-.wsm-gate strong { font-size: var(--fs-title, 18px); }
-.wsm-gate p { font-size: var(--fs-body, 14px); color: var(--ts); }
-.wsm-gate-actions { display: flex; gap: 8px; margin-top: 6px; }
+.iwm-gate strong { font-size: var(--fs-title, 18px); }
+.iwm-gate p { font-size: var(--fs-body, 14px); color: var(--ts); }
+.iwm-gate-actions { display: flex; gap: 8px; margin-top: 6px; }
 
-.wsm-btn {
+.iwm-btn {
   min-height: 44px;
   padding: 0 18px;
   border: 1px solid var(--bd);
@@ -294,9 +294,9 @@ body.wsm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   font-size: var(--fs-body, 14px);
   cursor: pointer;
 }
-.wsm-btn.primary { border-color: var(--ac); color: var(--ac); }
+.iwm-btn.primary { border-color: var(--ac); color: var(--ac); }
 
-.wsm-link {
+.iwm-link {
   min-height: 44px;
   display: inline-flex;
   align-items: center;

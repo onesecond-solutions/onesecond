@@ -2,17 +2,17 @@
    보험워크 모바일 "상담" 화면 전용 (feat/workstation-mobile-consultations-list, 2026-08-22).
    insuwork-mobile.css 톤을 그대로 확장 — 얇은 테두리 + 텍스트만, blur/무거운 box-shadow 금지.
    색·크기는 css/tokens-v2.css·css/app-core.css의 커스텀 프로퍼티만 사용(하드코딩 금지).
-   .wsm-main의 하단 패딩(하단 탭바에 안 가리게)은 insuwork-mobile.css가 이미 공통 처리하므로
+   .iwm-main의 하단 패딩(하단 탭바에 안 가리게)은 insuwork-mobile.css가 이미 공통 처리하므로
    이 파일에서 다시 건드리지 않는다. */
 
-.wsm-consult-chips {
+.iwm-consult-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
 }
 
-.wsm-consult-chip {
+.iwm-consult-chip {
   min-height: 36px;
   padding: 0 14px;
   border: 1px solid var(--bd);
@@ -22,46 +22,46 @@
   font-size: var(--fs-meta, 13px);
   cursor: pointer;
 }
-.wsm-consult-chip:active { color: var(--ac); border-color: var(--ac); }
-.wsm-consult-chip.is-active {
+.iwm-consult-chip:active { color: var(--ac); border-color: var(--ac); }
+.iwm-consult-chip.is-active {
   color: var(--ac);
   border-color: var(--ac);
   font-weight: 600;
 }
 
-.wsm-consult-card {
+.iwm-consult-card {
   width: 100%;
   text-align: left;
   font: inherit;
   cursor: pointer;
 }
-.wsm-consult-card:active { border-color: var(--ac); }
+.iwm-consult-card:active { border-color: var(--ac); }
 
 /* feat/workstation-mobile-header-consistency (2026-08-22) — 카드 안 인라인 펼침(아코디언)을
    customers.js와 동일한 "리스트→풀스크린 상세" 구조로 바꿨다. 아래는 상세 화면 전용 스타일
-   (customers.css의 .wsm-cust-back/.wsm-cust-detail-head와 동일한 톤 — 얇은 테두리 + 텍스트만). */
-.wsm-consult-back {
+   (customers.css의 .iwm-cust-back/.iwm-cust-detail-head와 동일한 톤 — 얇은 테두리 + 텍스트만). */
+.iwm-consult-back {
   align-self: flex-start;
   margin-bottom: 4px;
 }
 
-.wsm-consult-detail-head {
+.iwm-consult-detail-head {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 4px 2px 6px;
 }
-.wsm-consult-detail-name {
+.iwm-consult-detail-name {
   font-size: var(--fs-title, 18px);
   font-weight: 700;
   color: var(--tp);
 }
-.wsm-consult-detail-meta {
+.iwm-consult-detail-meta {
   font-size: var(--fs-meta, 13px);
   color: var(--ts);
 }
 
-.wsm-consult-detail-body {
+.iwm-consult-detail-body {
   padding: 14px;
   border: 1px solid var(--bd);
   border-radius: var(--radius-sm);
@@ -71,7 +71,7 @@
   gap: 10px;
 }
 
-.wsm-consult-detail-memo {
+.iwm-consult-detail-memo {
   margin: 0;
   font-size: var(--fs-body, 14px);
   color: var(--tp);
@@ -79,11 +79,11 @@
   white-space: pre-line;
   overflow-wrap: break-word;
 }
-.wsm-consult-detail-memo.wsm-consult-detail-empty {
+.iwm-consult-detail-memo.iwm-consult-detail-empty {
   color: var(--tf);
 }
 
-.wsm-consult-detail-link {
+.iwm-consult-detail-link {
   align-self: flex-start;
   min-height: 44px;
   display: inline-flex;

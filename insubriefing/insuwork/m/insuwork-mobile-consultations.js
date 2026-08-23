@@ -14,7 +14,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var ROOT_SELECTOR = '#wsm-root';
+  var ROOT_SELECTOR = '#iwm-root';
   var PAGE_SIZE = 20;
   var PREVIEW_LEN = 60;
   /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
@@ -80,42 +80,42 @@
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 상담 목록을 확인할 수 있습니다.</p>'
-      + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<div class="iwm-gate-actions"><button type="button" class="iwm-btn primary" id="iwm-login-btn">로그인</button></div>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
-    var btn = document.getElementById('wsm-login-btn');
+    var btn = document.getElementById('iwm-login-btn');
     if (btn) btn.addEventListener('click', function () { openBriefingAuth('login'); });
   }
 
   function renderDeniedGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
   }
 
   function renderLoading() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate"><strong>상담 목록을 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
+    view.innerHTML = '<div class="iwm-gate"><strong>상담 목록을 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
   }
 
   /* 화면 이동 탭(오늘/캘린더/고객/자료)은 하단 고정 탭바로 처리한다. feat/workstation-mobile-header-consistency
      (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는
      링크를 추가했다(다른 화면들과 동일한 구조). */
   function headerHtml() {
-    return '<header class="wsm-header"><strong>상담관리</strong>'
-      + '<div class="wsm-header-actions">'
-      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+    return '<header class="iwm-header"><strong>상담관리</strong>'
+      + '<div class="iwm-header-actions">'
+      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
       + '</div>'
-      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
-      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=consultations">PC 버전으로 보기</a>'
-      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
+      + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="iwm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=consultations">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
   }
@@ -124,10 +124,10 @@
      클릭 시점에 getElementById로 최신 DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
   var menuOutsideBound = false;
   function bindHeaderEvents() {
-    var logoutLink = document.getElementById('wsm-logout-link');
+    var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
-    var menuBtn = document.getElementById('wsm-menu-btn');
-    var menuPanel = document.getElementById('wsm-menu-panel');
+    var menuBtn = document.getElementById('iwm-menu-btn');
+    var menuPanel = document.getElementById('iwm-menu-panel');
     if (menuBtn && menuPanel) {
       menuBtn.addEventListener('click', function () {
         var willOpen = menuPanel.hidden;
@@ -138,8 +138,8 @@
     if (!menuOutsideBound) {
       menuOutsideBound = true;
       document.addEventListener('click', function (event) {
-        var panel = document.getElementById('wsm-menu-panel');
-        var btn = document.getElementById('wsm-menu-btn');
+        var panel = document.getElementById('iwm-menu-panel');
+        var btn = document.getElementById('iwm-menu-btn');
         if (!panel || panel.hidden) return;
         if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
         panel.hidden = true;
@@ -153,7 +153,7 @@
   }
 
   function emptyHtml(message) {
-    return '<div class="wsm-empty">' + esc(message) + '</div>';
+    return '<div class="iwm-empty">' + esc(message) + '</div>';
   }
 
   function shortDate(dateStr) {
@@ -179,11 +179,11 @@
   function filterChipsHtml(list) {
     var options = channelOptions(list);
     if (!options.length) return '';
-    var chips = ['<button type="button" class="wsm-consult-chip' + (state.channel === 'all' ? ' is-active' : '') + '" data-channel="all">전체</button>']
+    var chips = ['<button type="button" class="iwm-consult-chip' + (state.channel === 'all' ? ' is-active' : '') + '" data-channel="all">전체</button>']
       .concat(options.map(function (ch) {
-        return '<button type="button" class="wsm-consult-chip' + (state.channel === ch ? ' is-active' : '') + '" data-channel="' + esc(ch) + '">' + esc(ch) + '</button>';
+        return '<button type="button" class="iwm-consult-chip' + (state.channel === ch ? ' is-active' : '') + '" data-channel="' + esc(ch) + '">' + esc(ch) + '</button>';
       }));
-    return '<div class="wsm-consult-chips" id="wsm-consult-chips">' + chips.join('') + '</div>';
+    return '<div class="iwm-consult-chips" id="iwm-consult-chips">' + chips.join('') + '</div>';
   }
 
   function filteredList() {
@@ -198,15 +198,15 @@
     var preview = memo.length > PREVIEW_LEN ? memo.slice(0, PREVIEW_LEN) + '…' : memo;
     var metaBits = [shortDate(entry.date) || '날짜 없음'];
     if (entry.channel) metaBits.push(entry.channel);
-    return '<button type="button" class="wsm-card wsm-consult-card" data-id="' + esc(entry.id) + '">'
-      + '<div class="wsm-card-title">' + esc(entry.customerName) + '</div>'
-      + '<div class="wsm-card-sub">' + esc(metaBits.join(' · ')) + '</div>'
-      + (preview ? '<div class="wsm-card-meta">' + esc(preview) + '</div>' : '')
+    return '<button type="button" class="iwm-card iwm-consult-card" data-id="' + esc(entry.id) + '">'
+      + '<div class="iwm-card-title">' + esc(entry.customerName) + '</div>'
+      + '<div class="iwm-card-sub">' + esc(metaBits.join(' · ')) + '</div>'
+      + (preview ? '<div class="iwm-card-meta">' + esc(preview) + '</div>' : '')
       + '</button>';
   }
 
   function loadMoreButtonHtml(remaining) {
-    return '<button type="button" class="wsm-btn wsm-loadmore" id="wsm-consult-more">더 보기 (' + remaining + ')</button>';
+    return '<button type="button" class="iwm-btn iwm-loadmore" id="iwm-consult-more">더 보기 (' + remaining + ')</button>';
   }
 
   function listBodyHtml() {
@@ -216,7 +216,7 @@
       return emptyHtml(!ready ? '상담 목록을 불러오는 중입니다.' : (state.channel === 'all' ? '상담 기록이 없습니다.' : '해당 상태의 상담 기록이 없습니다.'));
     }
     var visible = list.slice(0, state.limit);
-    return '<div class="wsm-list">' + visible.map(consultationCardHtml).join('')
+    return '<div class="iwm-list">' + visible.map(consultationCardHtml).join('')
       + (list.length > visible.length ? loadMoreButtonHtml(list.length - visible.length) : '')
       + '</div>';
   }
@@ -232,9 +232,9 @@
   }
 
   function bindListBodyEvents(container) {
-    var chipWrap = document.getElementById('wsm-consult-chips');
+    var chipWrap = document.getElementById('iwm-consult-chips');
     if (chipWrap) {
-      Array.prototype.forEach.call(chipWrap.querySelectorAll('.wsm-consult-chip'), function (chip) {
+      Array.prototype.forEach.call(chipWrap.querySelectorAll('.iwm-consult-chip'), function (chip) {
         chip.addEventListener('click', function () {
           state.channel = chip.getAttribute('data-channel');
           state.limit = PAGE_SIZE;
@@ -243,11 +243,11 @@
         });
       });
     }
-    var cards = container.querySelectorAll('.wsm-consult-card');
+    var cards = container.querySelectorAll('.iwm-consult-card');
     Array.prototype.forEach.call(cards, function (card) {
       card.addEventListener('click', function () { openDetail(card.getAttribute('data-id')); });
     });
-    var more = document.getElementById('wsm-consult-more');
+    var more = document.getElementById('iwm-consult-more');
     if (more) more.addEventListener('click', function () {
       state.limit += PAGE_SIZE;
       renderListBody();
@@ -256,7 +256,7 @@
   }
 
   function renderListBody() {
-    var container = document.getElementById('wsm-consult-body'); if (!container) return;
+    var container = document.getElementById('iwm-consult-body'); if (!container) return;
     container.innerHTML = filterChipsHtml(state.directory) + listBodyHtml();
     bindListBodyEvents(container);
   }
@@ -264,7 +264,7 @@
   function renderListShell() {
     var view = root(); if (!view) return;
     view.innerHTML = headerHtml()
-      + '<main class="wsm-main"><div id="wsm-consult-body"></div></main>'
+      + '<main class="iwm-main"><div id="iwm-consult-body"></div></main>'
       + bottomNavHtml();
     bindHeaderEvents();
     renderListBody();
@@ -283,21 +283,21 @@
     if (entry.channel) metaBits.push(entry.channel);
 
     view.innerHTML = headerHtml()
-      + '<main class="wsm-main">'
-      + '<button type="button" class="wsm-btn wsm-consult-back" id="wsm-consult-back">← 목록</button>'
-      + '<section class="wsm-consult-detail-head">'
-      + '<div class="wsm-consult-detail-name">' + esc(entry.customerName || '(이름 없음)') + '</div>'
-      + '<div class="wsm-consult-detail-meta">' + esc(metaBits.join(' · ')) + '</div>'
+      + '<main class="iwm-main">'
+      + '<button type="button" class="iwm-btn iwm-consult-back" id="iwm-consult-back">← 목록</button>'
+      + '<section class="iwm-consult-detail-head">'
+      + '<div class="iwm-consult-detail-name">' + esc(entry.customerName || '(이름 없음)') + '</div>'
+      + '<div class="iwm-consult-detail-meta">' + esc(metaBits.join(' · ')) + '</div>'
       + '</section>'
-      + '<div class="wsm-consult-detail-body">'
-      + (memo ? '<p class="wsm-consult-detail-memo">' + esc(memo) + '</p>' : '<p class="wsm-consult-detail-memo wsm-consult-detail-empty">상담 메모가 없습니다.</p>')
-      + '<a class="wsm-consult-detail-link" href="./customers.html">이 고객 상세로 이동 →</a>'
+      + '<div class="iwm-consult-detail-body">'
+      + (memo ? '<p class="iwm-consult-detail-memo">' + esc(memo) + '</p>' : '<p class="iwm-consult-detail-memo iwm-consult-detail-empty">상담 메모가 없습니다.</p>')
+      + '<a class="iwm-consult-detail-link" href="./customers.html">이 고객 상세로 이동 →</a>'
       + '</div>'
       + '</main>'
       + bottomNavHtml();
     bindHeaderEvents();
 
-    var back = document.getElementById('wsm-consult-back');
+    var back = document.getElementById('iwm-consult-back');
     if (back) back.addEventListener('click', function () {
       state.view = 'list'; state.selectedId = null; lastRenderedJson = '';
       renderCurrent();

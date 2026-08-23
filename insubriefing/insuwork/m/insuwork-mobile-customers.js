@@ -13,7 +13,7 @@
   'use strict';
 
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  var ROOT_SELECTOR = '#wsm-root';
+  var ROOT_SELECTOR = '#iwm-root';
   var RECENT_CONSULT_LIMIT = 5;
   /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
      대신 짧은 간격으로 재조회 → 직전 렌더와 동일하면 스킵하는 폴링으로 최종 일관성을 맞춘다(추가 API 호출 아님, 순수 재조회). */
@@ -80,45 +80,45 @@
 
   function renderLoginGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 로그인이 필요합니다.</strong>'
       + '<p>보험브리핑 계정으로 로그인하면 고객 목록을 확인할 수 있습니다.</p>'
-      + '<div class="wsm-gate-actions"><button type="button" class="wsm-btn primary" id="wsm-login-btn">로그인</button></div>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<div class="iwm-gate-actions"><button type="button" class="iwm-btn primary" id="iwm-login-btn">로그인</button></div>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
-    var btn = document.getElementById('wsm-login-btn');
+    var btn = document.getElementById('iwm-login-btn');
     if (btn) btn.addEventListener('click', function () { openBriefingAuth('login'); });
   }
 
   function renderDeniedGate() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate">'
+    view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
       + '<p>현재 임태성 계정에서 먼저 완성하고 있습니다.</p>'
-      + '<a class="wsm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<a class="iwm-link" href="/insubriefing/">보험브리핑으로 돌아가기</a>'
       + '</div>';
   }
 
   function renderLoading() {
     var view = root(); if (!view) return;
-    view.innerHTML = '<div class="wsm-gate"><strong>고객 목록을 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
+    view.innerHTML = '<div class="iwm-gate"><strong>고객 목록을 준비하고 있습니다.</strong><p>잠시만 기다려 주세요.</p></div>';
   }
 
   function cardHtml(title, sub, meta) {
-    return '<div class="wsm-card">'
-      + '<div class="wsm-card-title">' + esc(title) + '</div>'
-      + (sub ? '<div class="wsm-card-sub">' + esc(sub) + '</div>' : '')
-      + (meta ? '<div class="wsm-card-meta">' + esc(meta) + '</div>' : '')
+    return '<div class="iwm-card">'
+      + '<div class="iwm-card-title">' + esc(title) + '</div>'
+      + (sub ? '<div class="iwm-card-sub">' + esc(sub) + '</div>' : '')
+      + (meta ? '<div class="iwm-card-meta">' + esc(meta) + '</div>' : '')
       + '</div>';
   }
 
   function emptyHtml(message) {
-    return '<div class="wsm-empty">' + esc(message) + '</div>';
+    return '<div class="iwm-empty">' + esc(message) + '</div>';
   }
 
   function sectionHtml(title, bodyHtml) {
-    return '<section class="wsm-section">'
-      + '<h2 class="wsm-section-title">' + esc(title) + '</h2>'
+    return '<section class="iwm-section">'
+      + '<h2 class="iwm-section-title">' + esc(title) + '</h2>'
       + bodyHtml
       + '</section>';
   }
@@ -138,14 +138,14 @@
      feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은
      "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는 링크를 추가했다. */
   function headerHtml() {
-    return '<header class="wsm-header"><strong>고객</strong>'
-      + '<div class="wsm-header-actions">'
-      + '<button type="button" class="wsm-menu-btn" id="wsm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
+    return '<header class="iwm-header"><strong>고객</strong>'
+      + '<div class="iwm-header-actions">'
+      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
       + '</div>'
-      + '<div class="wsm-menu-panel" id="wsm-menu-panel" hidden>'
-      + '<a class="wsm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="wsm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전으로 보기</a>'
-      + '<a class="wsm-menu-item" href="#" id="wsm-logout-link">로그아웃</a>'
+      + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
+      + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
+      + '<a class="iwm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
   }
@@ -154,10 +154,10 @@
      클릭 시점에 getElementById로 최신 DOM을 다시 조회하는 방식으로 재렌더에도 안전하게 동작). */
   var menuOutsideBound = false;
   function bindHeaderEvents() {
-    var logoutLink = document.getElementById('wsm-logout-link');
+    var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
-    var menuBtn = document.getElementById('wsm-menu-btn');
-    var menuPanel = document.getElementById('wsm-menu-panel');
+    var menuBtn = document.getElementById('iwm-menu-btn');
+    var menuPanel = document.getElementById('iwm-menu-panel');
     if (menuBtn && menuPanel) {
       menuBtn.addEventListener('click', function () {
         var willOpen = menuPanel.hidden;
@@ -168,8 +168,8 @@
     if (!menuOutsideBound) {
       menuOutsideBound = true;
       document.addEventListener('click', function (event) {
-        var panel = document.getElementById('wsm-menu-panel');
-        var btn = document.getElementById('wsm-menu-btn');
+        var panel = document.getElementById('iwm-menu-panel');
+        var btn = document.getElementById('iwm-menu-btn');
         if (!panel || panel.hidden) return;
         if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
         panel.hidden = true;
@@ -213,22 +213,22 @@
     var last = customer.consultations && customer.consultations[0];
     var sub = last ? ('최근 상담 ' + shortDate(last.date)) : '최근 상담 없음';
     var meta = customer.nextCareDate ? ('다음 케어 ' + shortDate(customer.nextCareDate) + (customer.nextCareTitle ? ' · ' + customer.nextCareTitle : '')) : '';
-    return '<button type="button" class="wsm-card wsm-cust-card" data-id="' + esc(customer.id) + '">'
-      + '<div class="wsm-card-title">' + esc(customer.name || '(이름 없음)') + '</div>'
-      + '<div class="wsm-card-sub">' + esc(sub) + '</div>'
-      + (meta ? '<div class="wsm-card-meta">' + esc(meta) + '</div>' : '')
+    return '<button type="button" class="iwm-card iwm-cust-card" data-id="' + esc(customer.id) + '">'
+      + '<div class="iwm-card-title">' + esc(customer.name || '(이름 없음)') + '</div>'
+      + '<div class="iwm-card-sub">' + esc(sub) + '</div>'
+      + (meta ? '<div class="iwm-card-meta">' + esc(meta) + '</div>' : '')
       + '</button>';
   }
 
   function bindCardClicks(container) {
-    var cards = container.querySelectorAll('.wsm-cust-card');
+    var cards = container.querySelectorAll('.iwm-cust-card');
     Array.prototype.forEach.call(cards, function (card) {
       card.addEventListener('click', function () { openDetail(card.getAttribute('data-id')); });
     });
   }
 
   function renderListBody() {
-    var container = document.getElementById('wsm-cust-list'); if (!container) return;
+    var container = document.getElementById('iwm-cust-list'); if (!container) return;
     var list = filteredDirectory();
     container.innerHTML = list.length
       ? list.map(customerCardHtml).join('')
@@ -239,15 +239,15 @@
   function renderListShell() {
     var view = root(); if (!view) return;
     view.innerHTML = headerHtml()
-      + '<main class="wsm-main">'
-      + '<div class="wsm-cust-search-wrap">'
-      + '<input type="search" id="wsm-cust-search" class="wsm-cust-search" placeholder="이름으로 검색" autocomplete="off" inputmode="search">'
+      + '<main class="iwm-main">'
+      + '<div class="iwm-cust-search-wrap">'
+      + '<input type="search" id="iwm-cust-search" class="iwm-cust-search" placeholder="이름으로 검색" autocomplete="off" inputmode="search">'
       + '</div>'
-      + '<div class="wsm-list wsm-cust-list" id="wsm-cust-list"></div>'
+      + '<div class="iwm-list iwm-cust-list" id="iwm-cust-list"></div>'
       + '</main>'
       + bottomNavHtml();
     bindHeaderEvents();
-    var input = document.getElementById('wsm-cust-search');
+    var input = document.getElementById('iwm-cust-search');
     if (input) {
       input.value = state.query;
       input.addEventListener('input', function () {
@@ -269,34 +269,34 @@
     var phoneDisplay = customer.phone || '';
     var tel = phoneDigits(phoneDisplay);
     var telAction = tel
-      ? '<a class="wsm-cust-action-btn" href="tel:' + esc(tel) + '">전화</a>'
-      : '<span class="wsm-cust-action-btn is-disabled">전화번호 없음</span>';
+      ? '<a class="iwm-cust-action-btn" href="tel:' + esc(tel) + '">전화</a>'
+      : '<span class="iwm-cust-action-btn is-disabled">전화번호 없음</span>';
 
     var consultations = (customer.consultations || []).slice(0, RECENT_CONSULT_LIMIT);
     var consultHtml = consultations.length
-      ? '<div class="wsm-list">' + consultations.map(function (entry) {
+      ? '<div class="iwm-list">' + consultations.map(function (entry) {
           return cardHtml(shortDate(entry.date) + ' 상담', '', entry.memo || '상담 내용이 없습니다.');
         }).join('') + '</div>'
       : emptyHtml('상담 이력이 없습니다.');
 
     var careHtml = customer.nextCareDate
-      ? sectionHtml('다음 케어 예정', '<div class="wsm-list">' + cardHtml(customer.nextCareTitle || '케어 알림', shortDate(customer.nextCareDate), '') + '</div>')
+      ? sectionHtml('다음 케어 예정', '<div class="iwm-list">' + cardHtml(customer.nextCareTitle || '케어 알림', shortDate(customer.nextCareDate), '') + '</div>')
       : '';
 
     view.innerHTML = headerHtml()
-      + '<main class="wsm-main">'
-      + '<button type="button" class="wsm-btn wsm-cust-back" id="wsm-cust-back">← 고객 목록</button>'
-      + '<section class="wsm-cust-detail-head">'
-      + '<div class="wsm-cust-detail-name">' + esc(customer.name || '(이름 없음)') + '</div>'
-      + (phoneDisplay ? '<div class="wsm-cust-detail-phone">' + esc(phoneDisplay) + '</div>' : '')
-      + (customer.status ? '<div class="wsm-cust-detail-status">' + esc(customer.status) + '</div>' : '')
+      + '<main class="iwm-main">'
+      + '<button type="button" class="iwm-btn iwm-cust-back" id="iwm-cust-back">← 고객 목록</button>'
+      + '<section class="iwm-cust-detail-head">'
+      + '<div class="iwm-cust-detail-name">' + esc(customer.name || '(이름 없음)') + '</div>'
+      + (phoneDisplay ? '<div class="iwm-cust-detail-phone">' + esc(phoneDisplay) + '</div>' : '')
+      + (customer.status ? '<div class="iwm-cust-detail-status">' + esc(customer.status) + '</div>' : '')
       + '</section>'
-      + '<div class="wsm-cust-actions">'
+      + '<div class="iwm-cust-actions">'
       + telAction
       + noteSectionHtml(customer)
-      + '<div class="wsm-cust-action">'
-      + '<a class="wsm-cust-action-btn" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">일정추가</a>'
-      + '<p class="wsm-cust-action-note">PC 버전에서 일정을 등록해 주세요.</p>'
+      + '<div class="iwm-cust-action">'
+      + '<a class="iwm-cust-action-btn" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">일정추가</a>'
+      + '<p class="iwm-cust-action-note">PC 버전에서 일정을 등록해 주세요.</p>'
       + '</div>'
       + '</div>'
       + careHtml
@@ -305,7 +305,7 @@
       + bottomNavHtml();
     bindHeaderEvents();
 
-    var back = document.getElementById('wsm-cust-back');
+    var back = document.getElementById('iwm-cust-back');
     if (back) back.addEventListener('click', function () {
       resetNoteUi();
       state.view = 'list'; state.selectedId = null; lastRenderedJson = '';
@@ -318,46 +318,46 @@
      (2) 펼침 — textarea + 저장/취소, (3) 저장 직후 — 짧게 "저장됐습니다" 배지만 보여주고 자동으로 (1)로 복귀.
      사진 첨부는 이번 Phase 범위 밖이라 PC 링크 안내 문구만 둔다(별도 업로드 UI 없음). */
   function noteSectionHtml(customer) {
-    var pcLink = '<a class="wsm-cust-note-pc-link" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전 열기</a>';
+    var pcLink = '<a class="iwm-cust-note-pc-link" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전 열기</a>';
     if (noteUi.open) {
-      var errorHtml = noteUi.error ? '<p class="wsm-cust-note-error">' + esc(noteUi.error) + '</p>' : '';
-      return '<div class="wsm-cust-action wsm-cust-note-open">'
-        + '<textarea id="wsm-cust-note-input" class="wsm-cust-note-textarea" rows="4" placeholder="상담 내용을 입력하세요. 링크는 그대로 붙여넣으면 됩니다."' + (noteUi.saving ? ' disabled' : '') + '>' + esc(noteUi.draft) + '</textarea>'
-        + '<p class="wsm-cust-action-note">사진 첨부는 PC 버전에서 해주세요. ' + pcLink + '</p>'
+      var errorHtml = noteUi.error ? '<p class="iwm-cust-note-error">' + esc(noteUi.error) + '</p>' : '';
+      return '<div class="iwm-cust-action iwm-cust-note-open">'
+        + '<textarea id="iwm-cust-note-input" class="iwm-cust-note-textarea" rows="4" placeholder="상담 내용을 입력하세요. 링크는 그대로 붙여넣으면 됩니다."' + (noteUi.saving ? ' disabled' : '') + '>' + esc(noteUi.draft) + '</textarea>'
+        + '<p class="iwm-cust-action-note">사진 첨부는 PC 버전에서 해주세요. ' + pcLink + '</p>'
         + errorHtml
-        + '<div class="wsm-cust-note-actions">'
-        + '<button type="button" class="wsm-btn" id="wsm-cust-note-cancel"' + (noteUi.saving ? ' disabled' : '') + '>취소</button>'
-        + '<button type="button" class="wsm-btn primary" id="wsm-cust-note-save"' + (noteUi.saving ? ' disabled' : '') + '>' + (noteUi.saving ? '저장 중…' : '저장') + '</button>'
+        + '<div class="iwm-cust-note-actions">'
+        + '<button type="button" class="iwm-btn" id="iwm-cust-note-cancel"' + (noteUi.saving ? ' disabled' : '') + '>취소</button>'
+        + '<button type="button" class="iwm-btn primary" id="iwm-cust-note-save"' + (noteUi.saving ? ' disabled' : '') + '>' + (noteUi.saving ? '저장 중…' : '저장') + '</button>'
         + '</div>'
         + '</div>';
     }
     if (noteUi.justSaved) {
-      return '<div class="wsm-cust-action">'
-        + '<span class="wsm-cust-action-btn is-disabled wsm-cust-note-saved">저장됐습니다</span>'
+      return '<div class="iwm-cust-action">'
+        + '<span class="iwm-cust-action-btn is-disabled iwm-cust-note-saved">저장됐습니다</span>'
         + '</div>';
     }
-    return '<div class="wsm-cust-action">'
-      + '<button type="button" class="wsm-cust-action-btn" id="wsm-cust-note-toggle">메모</button>'
-      + '<p class="wsm-cust-action-note">사진 첨부는 PC 버전에서 해주세요. ' + pcLink + '</p>'
+    return '<div class="iwm-cust-action">'
+      + '<button type="button" class="iwm-cust-action-btn" id="iwm-cust-note-toggle">메모</button>'
+      + '<p class="iwm-cust-action-note">사진 첨부는 PC 버전에서 해주세요. ' + pcLink + '</p>'
       + '</div>';
   }
 
   function bindNoteEvents(customer) {
-    var toggle = document.getElementById('wsm-cust-note-toggle');
+    var toggle = document.getElementById('iwm-cust-note-toggle');
     if (toggle) toggle.addEventListener('click', function () {
       noteUi = { open: true, saving: false, error: '', draft: '', justSaved: false };
       renderDetailShell();
-      var input = document.getElementById('wsm-cust-note-input');
+      var input = document.getElementById('iwm-cust-note-input');
       if (input) input.focus();
     });
-    var cancel = document.getElementById('wsm-cust-note-cancel');
+    var cancel = document.getElementById('iwm-cust-note-cancel');
     if (cancel) cancel.addEventListener('click', function () {
       resetNoteUi();
       renderDetailShell();
     });
-    var input = document.getElementById('wsm-cust-note-input');
+    var input = document.getElementById('iwm-cust-note-input');
     if (input) input.addEventListener('input', function () { noteUi.draft = input.value; });
-    var save = document.getElementById('wsm-cust-note-save');
+    var save = document.getElementById('iwm-cust-note-save');
     if (save) save.addEventListener('click', function () { submitQuickNote(customer); });
   }
 
@@ -365,13 +365,13 @@
      이 화면은 REST 필드 조합·owner_id 처리를 새로 만들지 않는다 — 그 함수가 이미 처리한다.
      실패 시 입력한 텍스트(noteUi.draft)를 유지해 다시 시도할 수 있게 한다. */
   function submitQuickNote(customer) {
-    var input = document.getElementById('wsm-cust-note-input');
+    var input = document.getElementById('iwm-cust-note-input');
     var text = input ? input.value : noteUi.draft;
     var trimmed = String(text || '').trim();
     if (!trimmed) {
       noteUi.draft = text; noteUi.error = '메모 내용을 입력해 주세요.';
       renderDetailShell();
-      var focusEmpty = document.getElementById('wsm-cust-note-input'); if (focusEmpty) focusEmpty.focus();
+      var focusEmpty = document.getElementById('iwm-cust-note-input'); if (focusEmpty) focusEmpty.focus();
       return;
     }
     if (!window.OSInsuwork || typeof window.OSInsuwork.quickSaveConsultationNote !== 'function') {
@@ -394,7 +394,7 @@
       noteUi.saving = false;
       noteUi.error = (err && err.message) ? err.message : '저장하지 못했습니다. 다시 시도해 주세요.';
       renderDetailShell();
-      var retry = document.getElementById('wsm-cust-note-input'); if (retry) retry.focus();
+      var retry = document.getElementById('iwm-cust-note-input'); if (retry) retry.focus();
     });
   }
 
