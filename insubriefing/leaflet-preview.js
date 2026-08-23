@@ -2,7 +2,7 @@
  * insubriefing/leaflet-preview.js
  * 리플렛 캘린더 전용 PDF/이미지 미리보기(연속 세로 스크롤, 고해상도 렌더).
  * js/insuwork.js의 보험워크 미리보기(pw-preview)를 그대로 본떠
- * Supabase 인증·workspace_items 의존 없이 순수 URL만으로 동작하도록 축소한 버전.
+ * Supabase 인증·insuwork_items 의존 없이 순수 URL만으로 동작하도록 축소한 버전.
  * 공개 페이지(로그인 불필요)에서 그대로 쓸 수 있다.
  */
 (function () {
