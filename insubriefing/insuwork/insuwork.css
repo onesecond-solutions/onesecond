@@ -141,8 +141,8 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 #v-insuwork .iw-access-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 #v-insuwork .iw-access .iw-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 body.iw-page.iw-bg-flat:before{display:none}
-body.iw-page.iw-bg-white:after{background:#f6f7fb}
-body.iw-page.iw-bg-dark:after{background:#14161b}
+/* 2026-08-23 1차 검수 수정 — 예전 하드코딩(#f6f7fb/#14161b)이 새 웜톤(--bg)과 안 맞아 var(--bg)로 교체 */
+body.iw-page.iw-bg-flat:after{background:var(--bg)}
 body.iw-page.iw-bg-flat #v-insuwork{border-color:var(--bd);background:var(--s1)}
 body.iw-page.iw-bg-flat #v-insuwork .iw-head,
 body.iw-page.iw-bg-flat #v-insuwork .iw-search,
