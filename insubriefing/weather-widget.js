@@ -9,8 +9,8 @@
 
   function enabled() { try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch (_e) { return false; } }
   function setEnabled(value) { try { localStorage.setItem(STORAGE_KEY, value ? '1' : '0'); } catch (_e) {} }
-  function accountBox() { return document.querySelector('.ib-account') || document.getElementById('ws-account'); }
-  function popover() { return document.querySelector('.ib-account-popover,.ws-account-popover'); }
+  function accountBox() { return document.querySelector('.ib-account') || document.getElementById('iw-account'); }
+  function popover() { return document.querySelector('.ib-account-popover,.iw-account-popover'); }
   function condition(code) {
     if (code === 0) return ['맑음', '☀️'];
     if (code === 1) return ['대체로 맑음', '🌤️'];
@@ -71,7 +71,7 @@
   function ensureSetting() {
     var menu = popover();
     if (!menu || menu.querySelector('.os-weather-setting')) return;
-    var bg = menu.querySelector('.ib-account-bgmode,.ws-account-bgmode');
+    var bg = menu.querySelector('.ib-account-bgmode,.iw-account-bgmode');
     if (!bg) return;
     var setting = document.createElement('div');
     setting.className = 'os-weather-setting';
