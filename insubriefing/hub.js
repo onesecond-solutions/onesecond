@@ -77,15 +77,21 @@
       background: var(--s1);
     }
 
-    /* 배경화면 모드(보험워크와 동일 개념·동일 localStorage 키 ws_bg_mode 공유) */
+    /* 배경화면 모드(보험워크와 동일 개념·동일 localStorage 키 ws_bg_mode 공유)
+       색상 팔레트도 보험워크 웜톤 팔레트(2026-08-23 대표 확정, insuwork.css 동일 값)로 통일 */
     body.ib-bg-flat:before { display: none; }
     body.ib-bg-namsan:before { background-image: url("./assets/generated/namsan-sunny.webp"); }
-    body.ib-bg-white:after { background: #f6f7fb; }
-    body.ib-bg-dark:after { background: #14161b; }
+    body.ib-bg-white:after { background: var(--bg); }
+    body.ib-bg-dark:after { background: var(--bg); }
+    body.ib-bg-white {
+      --bg: #FAF7F0; --s1: #FFFFFF; --s2: #F3EEE1; --sh: #EFE9DB; --bd: #E7DFCC;
+      --tp: #1E1B15; --ts: #6B6656; --tf: #98917C; --bodytx: #3A362B;
+      --ac: #A9812E; --ach: #C79A42;
+    }
     body.ib-bg-dark {
-      --bg: #14161b; --s1: #1c1f26; --s2: #22262e; --sh: #1c1f26; --bd: #2c313a;
-      --tp: #f4f5f7; --ts: #c7cad1; --tf: #8b8f98; --bodytx: #d7d9dd;
-      --ac: #818cf8; --ach: #a5b4fc;
+      --bg: #1A1712; --s1: #221E17; --s2: #2A251C; --sh: #322C22; --bd: #3A3226;
+      --tp: #EDE6D8; --ts: #B3A88E; --tf: #7D7360; --bodytx: #D8CFBC;
+      --ac: #D9B568; --ach: #E8C67E;
     }
     body.ib-bg-flat #leaflet-calendar,
     body.ib-bg-flat .ib-leaflet-dow,
