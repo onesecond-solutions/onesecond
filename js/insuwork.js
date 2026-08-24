@@ -467,7 +467,11 @@
     state[composingKey] = false;
     input.addEventListener('compositionstart', function () { state[composingKey] = true; });
     input.addEventListener('compositionend', function () { state[composingKey] = false; scheduleNameSearch(kind, input.value); });
-    input.addEventListener('input', function () { if (!state[composingKey]) scheduleNameSearch(kind, input.value); });
+    input.addEventListener('input', function () {
+      if (state[composingKey]) return;
+      if (/^[0-9-]+$/.test(input.value)) { var formatted = phoneText(input.value); if (formatted !== input.value) input.value = formatted; }
+      scheduleNameSearch(kind, input.value);
+    });
     input.addEventListener('search', function () { if (!state[composingKey]) scheduleNameSearch(kind, input.value); });
   }
   function searchHtml() {
@@ -839,8 +843,8 @@
     var columns = [{ key: 'date', label: '청약일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '고객내용', width: 360, flex: true }, { key: 'status', label: '고객상태', width: 102 }];
     var gridStyle = '--iw-consult-template:' + consultGridTemplate(columns);
     var latest = {}; state.data.consultations.forEach(function (entry) { var old = latest[entry.customer_id]; if (!old || String(entry.consulted_at || entry.created_at || '') > String(old.consulted_at || old.created_at || '')) latest[entry.customer_id] = entry; });
-    var nameQ = state.customerNameQuery.trim().toLocaleLowerCase('ko-KR');
-    var baseRows = state.data.customers.filter(function (item) { if (!isRealCustomerStage(item.status)) return false; if (nameQ && String(item.name || '').toLocaleLowerCase('ko-KR').indexOf(nameQ) < 0) return false; return true; });
+    var nameQ = searchNorm(state.customerNameQuery);
+    var baseRows = state.data.customers.filter(function (item) { if (!isRealCustomerStage(item.status)) return false; if (nameQ && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
     baseRows.sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); });
     var counts = customerStageCounts(baseRows);
     var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = item.status || '청약완료'; return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
@@ -852,7 +856,7 @@
     var header = '<div class="iw-consult-columns" style="' + gridStyle + '">' + columns.map(function (column) { return '<span>' + column.label + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
     var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || (latest[item.id] && latest[item.id].memo) || '', status = item.status || '청약완료'; var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '고객내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
-    var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES, activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명 검색', onStage: 'OSInsuwork.filterCustomerStatus' });
+    var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES, activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·번호 검색', onStage: 'OSInsuwork.filterCustomerStatus' });
     return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>고객관리</h2><button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button></div>' + stats + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function customerDetailHtml(item) {
@@ -879,8 +883,8 @@
   function consultationsHtml() {
     var customers = {}; state.data.customers.forEach(function (item) { customers[item.id] = item; });
     var configuredColumns = consultColumns(), gridStyle = '--iw-consult-template:' + consultGridTemplate(configuredColumns);
-    var nameQ = state.consultNameQuery.trim().toLocaleLowerCase('ko-KR');
-    var baseRows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id]; if (!customer) return false; if (nameQ && String(customer.name || '').toLocaleLowerCase('ko-KR').indexOf(nameQ) < 0) return false; return true; });
+    var nameQ = searchNorm(state.consultNameQuery);
+    var baseRows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id]; if (!customer) return false; if (nameQ && searchNorm((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
     var counts = consultationStageCounts(baseRows, customers);
     var rows = baseRows.filter(function (item) { var customer = customers[item.customer_id], profile = customerProfile(customer), status = consultationStatus(item, customer); return (state.consultationStatusFilter === 'all' || status === state.consultationStatusFilter) && matches((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + (item.memo || '') + ' ' + status); });
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedConsultation); });
@@ -894,7 +898,7 @@
       return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>';
     }).join('') + (rows.length ? '' : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreConsultations()') + '</div>';
     var detail = selected ? consultationDetailHtml(selected, customers[selected.customer_id] || {}) : '';
-    var stats = statFilterBarHtml({ kind: 'consult', stages: CONSULT_STAGES, activeStatus: state.consultationStatusFilter, counts: counts, nameQuery: state.consultNameQuery, nameInputId: 'iw-consult-name-input', namePlaceholder: '고객명 검색', onStage: 'OSInsuwork.filterConsultationStatus' });
+    var stats = statFilterBarHtml({ kind: 'consult', stages: CONSULT_STAGES, activeStatus: state.consultationStatusFilter, counts: counts, nameQuery: state.consultNameQuery, nameInputId: 'iw-consult-name-input', namePlaceholder: '고객명·번호 검색', onStage: 'OSInsuwork.filterConsultationStatus' });
     return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>상담관리</h2><button class="iw-btn primary" onclick="OSInsuwork.addConsultation()">+ 상담 등록</button></div>' + stats + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master">' + list + '</section>' + detail + '</div></div>';
   }
   function manageConsultColumns() {
