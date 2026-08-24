@@ -317,13 +317,14 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-calendar-month .iw-event:hover{background:#c7d4f0}
 #v-insuwork .iw-calendar-month .iw-event.customer{background:#dff1ed;color:#245e56}
 #v-insuwork .iw-calendar-month .iw-event.customer:hover{background:#c5e6de}
-#v-insuwork .iw-calendar-month .iw-more{margin:2px 0 0;padding-left:4px;color:#858c99;font-size:11px;line-height:20px}
+#v-insuwork .iw-calendar-month .iw-more{display:inline-flex;align-items:center;justify-content:center;min-height:22px;margin:2px 0 0;padding:0 9px;border:1px solid color-mix(in srgb,var(--ac) 28%,var(--bd));border-radius:999px;background:color-mix(in srgb,var(--ac) 10%,var(--s1));color:var(--ac);font-size:11px;font-weight:800;line-height:1;cursor:pointer}
+#v-insuwork .iw-calendar-month .iw-more:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 16%,var(--s1))}
 #v-insuwork .iw-calendar-shell{grid-template-rows:auto 1fr;height:100%;min-height:0;gap:8px}
 #v-insuwork .iw-calendar-month{display:flex;flex-direction:column;min-height:0}
 #v-insuwork .iw-calendar-month .iw-cal{display:flex;flex-direction:column;min-height:0;flex:1}
 #v-insuwork .iw-calendar-month .iw-cal-head{flex:0 0 auto}
 #v-insuwork .iw-calendar-month .iw-cal-grid{flex:1;min-height:0;display:flex;flex-direction:column}
-#v-insuwork .iw-calendar-month .iw-cal-week{position:relative;flex:1;min-height:0}
+#v-insuwork .iw-calendar-month .iw-cal-week{position:relative;flex:1;min-height:0;overflow:hidden}
 #v-insuwork .iw-cal-week-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;height:100%}
 #v-insuwork .iw-cal-week-bars{position:absolute;left:0;right:0;top:58px;z-index:2;pointer-events:none}
 #v-insuwork .iw-calendar-month .iw-day{min-height:0;height:100%}
