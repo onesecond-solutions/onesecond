@@ -787,7 +787,11 @@
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
     var consultEmptyText = loginHint ? '로그인 후 상담 기록을 확인할 수 있습니다.' : '상담 기록이 없습니다.';
     var consultPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 상담</strong><button onclick="OSInsuwork.go(\'consultations\')">전체 보기</button></div><div class="iw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSInsuwork.go('consultations');OSInsuwork.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">' + consultEmptyText + '</div>') + '</div></section>';
-    return statusHtml() + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="iw-home-row iw-home-row-bottom">' + assetsPanel + consultPanel + '</div></div>';
+    /* 비로그인 사용자는 state.status가 'waiting-auth'에서 영원히 벗어나지 못하므로(로그인 절차가
+       진행 중인 게 아니라 애초에 로그인을 안 한 것) statusHtml()을 얹으면 "로그인 정보를 확인하고
+       있습니다" 문구가 계속 떠 있는 것처럼 오해를 준다. 로그인된 사용자의 실제 개인 데이터 로딩
+       중에는 기존처럼 문구를 유지한다. */
+    return (allowed() ? statusHtml() : '') + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="iw-home-row iw-home-row-bottom">' + assetsPanel + consultPanel + '</div></div>';
   }
 
   function assetCategory(item) {
@@ -1541,7 +1545,16 @@
     return statusHtml() + '<div class="iw-toolbar"><h2>휴지통</h2></div><div class="iw-trash-list">' + (rows.length ? rows.map(function (item) { return '<div class="iw-trash-row"><span><strong>' + esc(item.name || '(이름 없음)') + '</strong><small>' + esc(phoneText(item.phone || item.phone_raw || '')) + (item.deleted_at ? ' · ' + formatDate(item.deleted_at) + ' 삭제' : '') + '</small></span><button type="button" class="iw-btn" onclick="OSInsuwork.restoreCustomer(\'' + esc(item.id) + '\')">복원</button></div>'; }).join('') : '<div class="iw-empty">휴지통이 비어 있습니다.</div>') + '</div>';
   }
   function sectionHtml() {
-    if (state.status === 'idle' || state.status === 'waiting-auth' || (state.status === 'loading' && !(state.data.items.length || state.data.events.length || state.data.customers.length || state.data.consultations.length))) return statusHtml();
+    /* 2026-08-25 회귀 수정 — 이 가드는 원래 모든 섹션에 걸려 있었고, 비로그인 사용자는
+       authenticated()가 영원히 false라 state.status가 'waiting-auth'에서 못 벗어나
+       홈·보험브리핑·참고자료·영업도구까지 전부 "로그인 정보를 확인하고 있습니다" 화면에
+       막혀 있었다(#1843 공개 구조 전환 라이브 회귀). PROTECTED_SECTIONS(캘린더/고객관리/
+       상담관리/자료)만 개인 데이터 로딩 게이트를 유지하고, 나머지 공개 섹션은 각자의 render
+       함수(homeHtml/newslettersHtml/scriptsHtml/carriersHtml/toolsPageHtml/
+       insuranceAgePageHtml/paymentSectionHtml/strategyHtml)가 가진 자체 로더·빈 상태
+       처리로 넘긴다. */
+    var blockingStatus = state.status === 'idle' || state.status === 'waiting-auth' || (state.status === 'loading' && !(state.data.items.length || state.data.events.length || state.data.customers.length || state.data.consultations.length));
+    if (blockingStatus && PROTECTED_SECTIONS.indexOf(state.section) >= 0) return statusHtml();
     if (state.query.trim()) return searchHtml();
     if (state.section === 'assets') return assetsHtml();
     if (state.section === 'customers') return customersHtml();
@@ -2558,7 +2571,10 @@
     var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG']];
     var tabs = cards.map(function (card) { return '<button type="button" class="iw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSInsuwork.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
     var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : toolsCalculatorHtml();
-    return statusHtml() + '<div class="iw-tools-page"><div class="iw-toolbar iw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="iw-subtitle">자주 쓰는 계산과 이미지 변환을 보험워크 안에서 바로 처리합니다.</p></div></div><div class="iw-tool-cards">' + tabs + '</div>' + body + '</div>';
+    /* 계산기·변환기는 비로그인도 열람 가능한 공개 섹션이라 homeHtml()과 동일하게 statusHtml()을
+       로그인된 사용자의 실제 로딩 중에만 얹는다(2026-08-25 세션에서 새로 발견 — homeHtml만 지시됐으나
+       같은 결함이 여기도 있었다). */
+    return (allowed() ? statusHtml() : '') + '<div class="iw-tools-page"><div class="iw-toolbar iw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="iw-subtitle">자주 쓰는 계산과 이미지 변환을 보험워크 안에서 바로 처리합니다.</p></div></div><div class="iw-tool-cards">' + tabs + '</div>' + body + '</div>';
   }
   function toolsCalculatorHtml() {
     var keys = [['C', 'C', 'fn'], ['back', '←', 'fn'], ['%', '%', 'fn'], ['/', '÷', 'op'], ['7', '7', ''], ['8', '8', ''], ['9', '9', ''], ['*', '×', 'op'], ['4', '4', ''], ['5', '5', ''], ['6', '6', ''], ['-', '−', 'op'], ['1', '1', ''], ['2', '2', ''], ['3', '3', ''], ['+', '+', 'op'], ['+/-', '±', 'fn'], ['0', '0', ''], ['.', '.', ''], ['=', '=', 'eq']];
@@ -2615,7 +2631,8 @@
   }
   function insuranceAgePageHtml() {
     var today = new Date(), basis = ymd(today), year = today.getFullYear();
-    return statusHtml() + '<div class="iw-insage-page"><div class="iw-toolbar iw-insage-toolbar"><div><h2>보험연령표</h2><p class="iw-subtitle">출생연도 빠른 확인표와 생년월일 기준 보험나이 계산을 함께 봅니다.</p></div><span id="iw-insage-year">' + year + '년 기준</span></div>'
+    /* 보험연령표도 비로그인 공개 섹션이라 homeHtml()과 동일 처리(2026-08-25 세션에서 새로 발견). */
+    return (allowed() ? statusHtml() : '') + '<div class="iw-insage-page"><div class="iw-toolbar iw-insage-toolbar"><div><h2>보험연령표</h2><p class="iw-subtitle">출생연도 빠른 확인표와 생년월일 기준 보험나이 계산을 함께 봅니다.</p></div><span id="iw-insage-year">' + year + '년 기준</span></div>'
       + '<section class="iw-insage-calc"><div class="iw-insage-fields">'
       + '<label>생년월일<input id="iw-insage-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSInsuwork.formatBirthInput(this,\'tool\')"></label>'
       + '<label>기준일<input id="iw-insage-date" type="date" value="' + basis + '" data-auto-date="1" onchange="this.dataset.autoDate=\'0\';OSInsuwork.calcToolInsuranceAge()"></label>'
