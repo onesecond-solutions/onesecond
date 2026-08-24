@@ -51,7 +51,7 @@
       + '<span id="lfp-preview-page"></span>'
       + '<button type="button" class="lfp-preview-pdf-only" onclick="LeafletPreview.page(1)" title="다음 페이지">›</button>'
       + '<a id="lfp-preview-download" class="lfp-preview-public-download" href="#" target="_blank" rel="noopener" download title="다운로드">⬇</a>'
-      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ PC에 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.saveToInsuwork()">📁 인슈워크에 저장</button><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
+      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.saveToInsuwork()">📁 인슈워크 저장</button><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
       + '</div></div>';
     document.body.appendChild(div.firstChild);
   }
@@ -266,9 +266,12 @@
 
   function openFolderPicker(folders, preview, owner) {
     var path = [{ id: null, title: '내 파일함' }];
+    var ext = preview.type === 'pdf' ? 'pdf' : (extensionFromName(preview.name) || 'jpg');
+    var baseName = String(preview.name || '리플렛').replace(/\.[^.]+$/, '');
     var dialog = document.createElement('dialog');
     dialog.className = 'lfp-folder-dialog';
-    dialog.innerHTML = '<div class="lfp-folder-head"><h2>인슈워크에 저장</h2><button type="button" class="lfp-folder-close" aria-label="닫기">×</button></div>'
+    dialog.innerHTML = '<div class="lfp-folder-head"><h2>인슈워크 저장</h2><button type="button" class="lfp-folder-close" aria-label="닫기">×</button></div>'
+      + '<label class="lfp-folder-name-field"><span>파일명</span><div class="lfp-folder-filename"><input type="text" class="lfp-folder-name-input" maxlength="80" value="' + esc(baseName) + '"><span>.' + esc(ext) + '</span></div></label>'
       + '<nav class="lfp-folder-trail"></nav>'
       + '<div class="lfp-folder-list"></div>'
       + '<form class="lfp-folder-new" hidden><input type="text" maxlength="60" placeholder="새 폴더 이름" required><button type="submit">추가</button><button type="button" class="lfp-folder-new-cancel">취소</button></form>'
@@ -327,7 +330,8 @@
 
     confirmBtn.addEventListener('click', function () {
       confirmBtn.disabled = true; statusEl.textContent = '저장하는 중…';
-      var ext = preview.type === 'pdf' ? 'pdf' : (extensionFromName(preview.name) || 'jpg');
+      var nameInput = dialog.querySelector('.lfp-folder-name-input');
+      var titleName = ((nameInput && nameInput.value.trim()) || baseName || '리플렛') + '.' + ext;
       var mime = preview.mime || (preview.type === 'pdf' ? 'application/pdf' : 'image/jpeg');
       fetch(preview.url).then(function (res) { if (!res.ok) throw new Error('원본 파일을 불러오지 못했습니다.'); return res.blob(); })
         .then(function (blob) {
@@ -341,7 +345,7 @@
           return window.db.fetch('/rest/v1/insuwork_items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-            body: JSON.stringify({ id: saved.id, owner_id: owner, parent_id: currentParentId() || null, item_type: 'file', title: preview.name || '리플렛', storage_path: saved.path, mime_type: mime, extension: ext, file_size: saved.blob.size, visibility: 'private', created_at: new Date().toISOString() })
+            body: JSON.stringify({ id: saved.id, owner_id: owner, parent_id: currentParentId() || null, item_type: 'file', title: titleName, storage_path: saved.path, mime_type: mime, extension: ext, file_size: saved.blob.size, visibility: 'private', created_at: new Date().toISOString() })
           });
         })
         .then(function (res) { if (!res.ok) throw new Error('저장 정보를 기록하지 못했습니다.'); closePicker(); showNotice('인슈워크 "' + path[path.length - 1].title + '"에 저장했습니다.'); })
