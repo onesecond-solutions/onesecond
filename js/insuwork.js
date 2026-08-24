@@ -1379,14 +1379,14 @@
   function hydrateNewsThumbs() {
     document.querySelectorAll('#v-insuwork .iw-news-thumb img[data-storage-path]').forEach(function (img) {
       var path = img.getAttribute('data-storage-path'); if (!path) return;
-      signStoragePath(path, 'newsletters').then(function (url) { img.src = url; }).catch(function () {});
+      img.src = newslettersPublicUrl(path);
     });
   }
   function openNewsletter(id) {
     var row = (state.newsData || []).find(function (r) { return String(r.id) === String(id); }); if (!row) return;
     var name = (row.source_filename || (row.company || '소식지') + '_' + newsMonthLabel(row)) + '.pdf';
     var pdfUrl = String(row.source_pdf_url || '').trim();
-    var ready = pdfUrl ? Promise.resolve(pdfUrl) : (row.source_path ? signStoragePath(row.source_path, 'newsletters') : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
+    var ready = pdfUrl ? Promise.resolve(pdfUrl) : (row.source_path ? Promise.resolve(newslettersPublicUrl(row.source_path)) : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
     ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'newsletter', id: id }); }).catch(saveError);
   }
   function loadStrategyData() {
@@ -1525,7 +1525,7 @@
   function hydrateStrategyThumbs() {
     document.querySelectorAll('#v-insuwork .iw-news-thumb img[data-strategy-thumb]').forEach(function (img) {
       var path = img.getAttribute('data-strategy-thumb'); if (!path) return;
-      signStoragePath(path, 'newsletters').then(function (url) { img.src = url; }).catch(function () {});
+      img.src = newslettersPublicUrl(path);
     });
   }
   function openStrategy(id) {
@@ -1533,7 +1533,7 @@
     var name = row.source_filename || strategyLabel(row) || ((row.company || '영업방향') + '_' + newsMonthLabel(row) + '.pdf');
     var directUrl = String(row.source_file_url || '').trim();
     var previewPath = String(row.preview_pdf_path || row.source_path || '').trim();
-    var ready = directUrl ? Promise.resolve(directUrl) : (previewPath ? signStoragePath(previewPath, 'newsletters') : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
+    var ready = directUrl ? Promise.resolve(directUrl) : (previewPath ? Promise.resolve(newslettersPublicUrl(previewPath)) : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
     ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'sales-strategy', id: id }); }).catch(saveError);
   }
   function archiveHtml() {
@@ -1781,6 +1781,12 @@
     return fetch(window.db.url('/storage/v1/object/sign/' + bucket + '/' + String(path).split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) })
       .then(function (response) { if (!response.ok) throw new Error('첨부파일을 열지 못했습니다.'); return response.json(); })
       .then(function (data) { var url = window.db.url('/storage/v1' + data.signedURL); state.signedUrlCache[cacheKey] = { url: url, expiresAt: Date.now() + 55 * 60000 }; return url; });
+  }
+  // newsletters 버킷은 storage.buckets.public=true(2026-08-25_newsletters_bucket_public.sql)로 전환되어
+  // 서명(signed) URL 없이도 공개 URL로 즉시 접근 가능 — 비로그인 방문자도 소식지·영업방향 원본을 볼 수 있게 하기 위함.
+  // signStoragePath 는 myspace 등 진짜 비공개 버킷에도 공용으로 쓰이므로 여기서는 건드리지 않고 별도 헬퍼로 분리한다.
+  function newslettersPublicUrl(path) {
+    return window.db.url('/storage/v1/object/public/newsletters/' + String(path).split('/').map(encodeURIComponent).join('/'));
   }
   function hydrateRichStorage() { var nodes = document.querySelectorAll('#v-insuwork [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || ''; signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') { node.src = url; node.classList.add('iw-previewable'); node.title = '클릭하면 크게 보기'; node.onclick = function () { openPreviewUrl(url, title, mime || 'image/*'); }; } else { node.href = url; node.onclick = function (event) { if (previewType({ title: title, mime_type: mime, storage_path: path })) { event.preventDefault(); openPreviewUrl(url, title, mime); } }; } }).catch(function () {}); }); }
   function loadPdfJs() {
