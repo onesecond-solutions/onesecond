@@ -1005,26 +1005,73 @@
     spans.sort(function (a, b) { return a.start.localeCompare(b.start) || eventPriority(a.event) - eventPriority(b.event) || b.end.localeCompare(a.end) || String(a.event.title || '').localeCompare(String(b.event.title || ''), 'ko'); });
     var laneLastEnd = [];
     spans.forEach(function (sp) { var lane = 0; while (lane < laneLastEnd.length && laneLastEnd[lane] >= sp.start) lane++; sp.lane = lane; laneLastEnd[lane] = sp.end; });
-    var MAX_LANES = 2, weeks = [];
+    var weeks = [];
     for (var w = 0; w < 6; w++) {
       var weekDays = days.slice(w * 7, w * 7 + 7), weekStart = weekDays[0], weekEnd = weekDays[6];
-      var weekSpans = spans.filter(function (sp) { return sp.lane < MAX_LANES && sp.end >= weekStart && sp.start <= weekEnd; });
-      var overflow = {}; weekDays.forEach(function (d) { overflow[d] = 0; });
-      spans.forEach(function (sp) { if (sp.lane >= MAX_LANES && sp.end >= weekStart && sp.start <= weekEnd) weekDays.forEach(function (d) { if (d >= sp.start && d <= sp.end) overflow[d]++; }); });
+      // 레인 수를 고정 상한으로 자르지 않고 전부 렌더한다 — 실제로 몇 개가 보이는지는
+      // hydrateMonthOverflow()가 렌더된 셀의 실제 높이를 측정해서 화면 크기에 맞게 정한다.
+      var weekSpans = spans.filter(function (sp) { return sp.end >= weekStart && sp.start <= weekEnd; });
       var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
       var cells = weekDays.map(function (key) {
-        var d = parseDate(key), events = eventsFor(key), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
-        return '<button type="button" class="iw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSInsuwork.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="iw-day-head"><strong>' + d.getDate() + '</strong><span class="iw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="iw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<span class="iw-more" role="button" tabindex="0" onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + key + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + key + '\')}">+' + more + '개 더보기</span>' : '') + '</button>';
+        var d = parseDate(key), events = eventsFor(key), outside = d.getMonth() !== first.getMonth();
+        return '<button type="button" class="iw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" data-date="' + key + '" onclick="OSInsuwork.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="iw-day-head"><strong>' + d.getDate() + '</strong><span class="iw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="iw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span></button>';
       }).join('');
       var bars = weekSpans.map(function (sp) {
         var barStart = sp.start < weekStart ? weekStart : sp.start, barEnd = sp.end > weekEnd ? weekEnd : sp.end;
         var startIdx = weekDays.indexOf(barStart), endIdx = weekDays.indexOf(barEnd);
         var left = 'calc(' + (startIdx / 7 * 100) + '% + 3px)', width = 'calc(' + ((endIdx - startIdx + 1) / 7 * 100) + '% - 6px)';
-        return '<span class="iw-event-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
+        return '<span class="iw-event-bar ' + calendarEventKind(sp.event) + '" data-lane="' + sp.lane + '" data-start="' + barStart + '" data-end="' + barEnd + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 24) + 'px" role="button" tabindex="0" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')" onkeydown="if(event.key===\'Enter\'){event.stopPropagation();OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')}">' + esc(sp.event.title || '일정') + '</span>';
       }).join('');
       weeks.push('<div class="iw-cal-week"><div class="iw-cal-week-cells">' + cells + '</div><div class="iw-cal-week-bars" style="height:' + (laneCount * 24) + 'px">' + bars + '</div></div>');
     }
     return '<section class="iw-calendar-month"><div class="iw-cal"><div class="iw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="iw-cal-grid">' + weeks.join('') + '</div></div></section>';
+  }
+  // 월 캘린더 각 주(week) 행의 실제 렌더된 높이를 재서, 그 높이에 실제로 들어가는
+  // 만큼만 일정 바를 보이고 나머지는 "+N개 더보기"로 접는다(고정 개수 상한 대신
+  // 셀 높이·화면 크기에 반응). 리사이즈 때도 다시 계산한다.
+  function hydrateMonthOverflow() {
+    var LANE_HEIGHT = 24, BARS_TOP_OFFSET = 58;
+    function apply() {
+      var weeks = document.querySelectorAll('#v-insuwork .iw-calendar-month .iw-cal-week');
+      weeks.forEach(function (week) {
+        var cellsEl = week.querySelector('.iw-cal-week-cells'), barsEl = week.querySelector('.iw-cal-week-bars');
+        if (!cellsEl || !barsEl) return;
+        var rowHeight = week.clientHeight;
+        var maxLanes = Math.max(1, Math.floor((rowHeight - BARS_TOP_OFFSET) / LANE_HEIGHT));
+        var overflowByDate = {};
+        Array.prototype.forEach.call(barsEl.querySelectorAll('.iw-event-bar'), function (bar) {
+          var lane = Number(bar.getAttribute('data-lane'));
+          var hide = lane >= maxLanes;
+          bar.style.display = hide ? 'none' : '';
+          if (!hide) return;
+          var start = bar.getAttribute('data-start'), end = bar.getAttribute('data-end');
+          Array.prototype.forEach.call(cellsEl.querySelectorAll('.iw-day'), function (dayEl) {
+            var date = dayEl.getAttribute('data-date');
+            if (date >= start && date <= end) overflowByDate[date] = (overflowByDate[date] || 0) + 1;
+          });
+        });
+        Array.prototype.forEach.call(cellsEl.querySelectorAll('.iw-day'), function (dayEl) {
+          var date = dayEl.getAttribute('data-date'), count = overflowByDate[date] || 0;
+          var moreEl = dayEl.querySelector('.iw-more');
+          if (!count) { if (moreEl) moreEl.style.display = 'none'; return; }
+          if (!moreEl) {
+            moreEl = document.createElement('span');
+            moreEl.className = 'iw-more'; moreEl.setAttribute('role', 'button'); moreEl.setAttribute('tabindex', '0');
+            moreEl.addEventListener('click', function (e) { e.stopPropagation(); openCalendarDay(date); });
+            moreEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openCalendarDay(date); } });
+            dayEl.appendChild(moreEl);
+          }
+          moreEl.style.display = '';
+          moreEl.textContent = '+' + count + '개 더보기';
+        });
+      });
+    }
+    apply();
+    if (!state.monthOverflowResizeBound) {
+      state.monthOverflowResizeBound = true;
+      var timer = 0;
+      window.addEventListener('resize', function () { window.clearTimeout(timer); timer = window.setTimeout(apply, 150); });
+    }
   }
   function timeView(days) {
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
@@ -1472,7 +1519,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'calendar' && state.calendarMode === 'month') hydrateMonthOverflow(); } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
