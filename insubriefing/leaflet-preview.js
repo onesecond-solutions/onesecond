@@ -51,7 +51,7 @@
       + '<span id="lfp-preview-page"></span>'
       + '<button type="button" class="lfp-preview-pdf-only" onclick="LeafletPreview.page(1)" title="다음 페이지">›</button>'
       + '<a id="lfp-preview-download" class="lfp-preview-public-download" href="#" target="_blank" rel="noopener" download title="다운로드">⬇</a>'
-      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
+      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ PC에 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.saveToInsuwork()">📁 인슈워크에 저장</button><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
       + '</div></div>';
     document.body.appendChild(div.firstChild);
   }
@@ -88,7 +88,7 @@
     if (stage) { stage.onscroll = handleScroll; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
-    state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null };
+    state.preview = { type: type, url: url, name: name || '파일', mime: mime || '', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null };
     if (type === 'image') {
       stage.innerHTML = '<div class="lfp-preview-page-wrap lfp-preview-image-wrap"><img id="lfp-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';
       var previewImage = document.getElementById('lfp-preview-image');
@@ -246,7 +246,113 @@
     });
   }
 
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.preview) close(); });
+  // ── 인슈워크(내 파일함)에 저장 ─────────────────────────────────────────
+  function currentUserId() {
+    try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').id || ''; } catch (e) { return ''; }
+  }
+  function extensionFromName(name) { var clean = String(name || '').split('?')[0], dot = clean.lastIndexOf('.'); return dot >= 0 ? clean.slice(dot + 1).toLowerCase() : ''; }
 
-  window.LeafletPreview = { open: open, close: close, zoom: zoom, rotate: rotate, page: page, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, copy: copy };
+  function saveToInsuwork() {
+    closeDdakMenu();
+    var p = state.preview;
+    if (!p) return;
+    var owner = currentUserId();
+    if (!owner || !window.db || !window.db.fetch) { showNotice('로그인이 필요합니다.'); return; }
+    window.db.fetch('/rest/v1/insuwork_items?owner_id=eq.' + encodeURIComponent(owner) + '&item_type=eq.folder&deleted_at=is.null&order=title.asc&select=id,title,parent_id')
+      .then(function (res) { if (!res.ok) throw new Error('폴더 목록을 불러오지 못했습니다.'); return res.json(); })
+      .then(function (folders) { openFolderPicker(folders || [], p, owner); })
+      .catch(function (err) { showNotice(err.message || '폴더 목록을 불러오지 못했습니다.'); });
+  }
+
+  function openFolderPicker(folders, preview, owner) {
+    var path = [{ id: null, title: '내 파일함' }];
+    var dialog = document.createElement('dialog');
+    dialog.className = 'lfp-folder-dialog';
+    dialog.innerHTML = '<div class="lfp-folder-head"><h2>인슈워크에 저장</h2><button type="button" class="lfp-folder-close" aria-label="닫기">×</button></div>'
+      + '<nav class="lfp-folder-trail"></nav>'
+      + '<div class="lfp-folder-list"></div>'
+      + '<form class="lfp-folder-new" hidden><input type="text" maxlength="60" placeholder="새 폴더 이름" required><button type="submit">추가</button><button type="button" class="lfp-folder-new-cancel">취소</button></form>'
+      + '<div class="lfp-folder-actions"><button type="button" class="lfp-folder-new-btn">+ 새 폴더</button><span class="lfp-folder-actions-right"><button type="button" class="lfp-folder-cancel">취소</button><button type="button" class="lfp-folder-confirm">이 폴더에 저장</button></span></div>'
+      + '<p class="lfp-folder-status" role="status"></p>';
+    document.body.appendChild(dialog);
+
+    var trailEl = dialog.querySelector('.lfp-folder-trail'), listEl = dialog.querySelector('.lfp-folder-list'), statusEl = dialog.querySelector('.lfp-folder-status');
+    var newForm = dialog.querySelector('.lfp-folder-new'), newBtn = dialog.querySelector('.lfp-folder-new-btn'), confirmBtn = dialog.querySelector('.lfp-folder-confirm');
+
+    function currentParentId() { return path[path.length - 1].id; }
+    function render() {
+      trailEl.innerHTML = path.map(function (crumb, i) {
+        return (i > 0 ? '<span>›</span>' : '') + '<button type="button" data-idx="' + i + '">' + esc(crumb.title) + '</button>';
+      }).join('');
+      var children = folders.filter(function (f) { return String(f.parent_id || '') === String(currentParentId() || ''); });
+      listEl.innerHTML = children.length
+        ? children.map(function (f) { return '<button type="button" class="lfp-folder-row" data-id="' + esc(f.id) + '">📁 ' + esc(f.title) + '</button>'; }).join('')
+        : '<p class="lfp-folder-empty">하위 폴더가 없습니다.</p>';
+    }
+    trailEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-idx]'); if (!btn) return;
+      path = path.slice(0, Number(btn.getAttribute('data-idx')) + 1); render();
+    });
+    listEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.lfp-folder-row'); if (!btn) return;
+      var id = btn.getAttribute('data-id'), folder = folders.find(function (f) { return String(f.id) === String(id); });
+      if (folder) { path.push({ id: folder.id, title: folder.title }); render(); }
+    });
+    newBtn.addEventListener('click', function () { newForm.hidden = false; newForm.querySelector('input').focus(); });
+    newForm.querySelector('.lfp-folder-new-cancel').addEventListener('click', function () { newForm.hidden = true; newForm.reset(); });
+    newForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = newForm.querySelector('input'), name = input.value.trim();
+      if (!name) return;
+      var submitBtn = newForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      window.db.fetch('/rest/v1/insuwork_items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ owner_id: owner, parent_id: currentParentId() || null, item_type: 'folder', title: name, visibility: 'private' })
+      }).then(function (res) { if (!res.ok) throw new Error('폴더를 만들지 못했습니다.'); return res.json(); })
+        .then(function (rows) {
+          var created = rows && rows[0]; if (!created) throw new Error('폴더를 만들지 못했습니다.');
+          folders.push(created); path.push({ id: created.id, title: created.title });
+          newForm.hidden = true; newForm.reset(); render();
+        })
+        .catch(function (err) { statusEl.textContent = err.message || '폴더를 만들지 못했습니다.'; })
+        .then(function () { submitBtn.disabled = false; });
+    });
+    function closePicker() { dialog.close(); dialog.remove(); }
+    dialog.querySelector('.lfp-folder-close').addEventListener('click', closePicker);
+    dialog.querySelector('.lfp-folder-cancel').addEventListener('click', closePicker);
+    dialog.addEventListener('cancel', function (e) { e.preventDefault(); closePicker(); });
+    dialog.addEventListener('click', function (e) { if (e.target === dialog) closePicker(); });
+
+    confirmBtn.addEventListener('click', function () {
+      confirmBtn.disabled = true; statusEl.textContent = '저장하는 중…';
+      var ext = preview.type === 'pdf' ? 'pdf' : (extensionFromName(preview.name) || 'jpg');
+      var mime = preview.mime || (preview.type === 'pdf' ? 'application/pdf' : 'image/jpeg');
+      fetch(preview.url).then(function (res) { if (!res.ok) throw new Error('원본 파일을 불러오지 못했습니다.'); return res.blob(); })
+        .then(function (blob) {
+          var id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+          var path2 = owner + '/root/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : '');
+          return window.db.fetch('/storage/v1/object/myspace/' + path2.split('/').map(encodeURIComponent).join('/'), {
+            method: 'POST', headers: { 'Content-Type': mime, 'x-upsert': 'false' }, body: blob
+          }).then(function (res) { if (!res.ok) throw new Error('파일 저장에 실패했습니다.'); return { id: id, path: path2, blob: blob }; });
+        })
+        .then(function (saved) {
+          return window.db.fetch('/rest/v1/insuwork_items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+            body: JSON.stringify({ id: saved.id, owner_id: owner, parent_id: currentParentId() || null, item_type: 'file', title: preview.name || '리플렛', storage_path: saved.path, mime_type: mime, extension: ext, file_size: saved.blob.size, visibility: 'private', created_at: new Date().toISOString() })
+          });
+        })
+        .then(function (res) { if (!res.ok) throw new Error('저장 정보를 기록하지 못했습니다.'); closePicker(); showNotice('인슈워크 "' + path[path.length - 1].title + '"에 저장했습니다.'); })
+        .catch(function (err) { statusEl.textContent = err.message || '저장에 실패했습니다.'; confirmBtn.disabled = false; });
+    });
+
+    render();
+    dialog.showModal();
+  }
+
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.preview && !document.querySelector('.lfp-folder-dialog')) close(); });
+
+  window.LeafletPreview = { open: open, close: close, zoom: zoom, rotate: rotate, page: page, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, copy: copy, saveToInsuwork: saveToInsuwork };
 })();
