@@ -1005,7 +1005,7 @@
     spans.sort(function (a, b) { return a.start.localeCompare(b.start) || eventPriority(a.event) - eventPriority(b.event) || b.end.localeCompare(a.end) || String(a.event.title || '').localeCompare(String(b.event.title || ''), 'ko'); });
     var laneLastEnd = [];
     spans.forEach(function (sp) { var lane = 0; while (lane < laneLastEnd.length && laneLastEnd[lane] >= sp.start) lane++; sp.lane = lane; laneLastEnd[lane] = sp.end; });
-    var MAX_LANES = 3, weeks = [];
+    var MAX_LANES = 2, weeks = [];
     for (var w = 0; w < 6; w++) {
       var weekDays = days.slice(w * 7, w * 7 + 7), weekStart = weekDays[0], weekEnd = weekDays[6];
       var weekSpans = spans.filter(function (sp) { return sp.lane < MAX_LANES && sp.end >= weekStart && sp.start <= weekEnd; });
@@ -1014,7 +1014,7 @@
       var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
       var cells = weekDays.map(function (key) {
         var d = parseDate(key), events = eventsFor(key), outside = d.getMonth() !== first.getMonth(), more = overflow[key];
-        return '<button type="button" class="iw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSInsuwork.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="iw-day-head"><strong>' + d.getDate() + '</strong><span class="iw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="iw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<small class="iw-more">+' + more + '개 더보기</small>' : '') + '</button>';
+        return '<button type="button" class="iw-day ' + (outside ? 'out ' : '') + (key === today ? 'today ' : '') + (key === state.selectedDate ? 'selected' : '') + '" onclick="OSInsuwork.openDayCreate(\'' + key + '\')" aria-label="' + esc((d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + events.length + '개') + '"><span class="iw-day-head"><strong>' + d.getDate() + '</strong><span class="iw-built-ins">' + monthCalendarChips(events, key) + '</span></span><span class="iw-day-lane-spacer" style="height:' + (laneCount * 24) + 'px"></span>' + (more ? '<span class="iw-more" role="button" tabindex="0" onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + key + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + key + '\')}">+' + more + '개 더보기</span>' : '') + '</button>';
       }).join('');
       var bars = weekSpans.map(function (sp) {
         var barStart = sp.start < weekStart ? weekStart : sp.start, barEnd = sp.end > weekEnd ? weekEnd : sp.end;
