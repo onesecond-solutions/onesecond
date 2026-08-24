@@ -17,8 +17,8 @@
   }
   function bgModeButtonsHtml(active) {
     var modes = [
-      ['image', '이미지', '/insubriefing/assets/generated/briefing-toss-hero.webp'],
-      ['namsan', '남산', '/insubriefing/assets/generated/namsan-sunny.webp'],
+      ['image', '이미지', '/insuwork/insubriefing/assets/generated/briefing-toss-hero.webp'],
+      ['namsan', '남산', '/insuwork/insubriefing/assets/generated/namsan-sunny.webp'],
       ['white', '화이트', null],
       ['dark', '다크', null],
       ['window', '창문', null]
@@ -31,7 +31,7 @@
   applyBgMode(currentBgMode());
   function logout() {
     ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) { localStorage.removeItem(key); sessionStorage.removeItem(key); });
-    window.location.replace('/insubriefing/');
+    window.location.replace('/insuwork/insubriefing/');
   }
   function openProfile() {
     closeAccountMenu();

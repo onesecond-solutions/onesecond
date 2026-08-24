@@ -252,14 +252,14 @@
     if (!view) return;
     document.body.classList.remove('is-insuwork');
     if (mode === 'denied') {
-      view.innerHTML = '<div class="iw-access"><strong>보험워크 준비 중</strong><p>이 계정은 아직 이용 대상이 아닙니다.</p><a class="iw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+      view.innerHTML = '<div class="iw-access"><strong>보험워크 준비 중</strong><p>이 계정은 아직 이용 대상이 아닙니다.</p><a class="iw-btn" href="/insuwork/insubriefing/">보험브리핑으로 돌아가기</a></div>';
       return;
     }
     if (mode === 'migrate-choice') {
       renderMigrationChoiceGate(view, next);
       return;
     }
-    view.innerHTML = '<div class="iw-access"><strong>보험워크 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="iw-access-actions"><button class="iw-btn primary" type="button" data-ib-login>로그인</button><button class="iw-btn" type="button" data-ib-signup>회원가입</button></div><a class="iw-btn" href="/insubriefing/">보험브리핑으로 돌아가기</a></div>';
+    view.innerHTML = '<div class="iw-access"><strong>보험워크 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="iw-access-actions"><button class="iw-btn primary" type="button" data-ib-login>로그인</button><button class="iw-btn" type="button" data-ib-signup>회원가입</button></div><a class="iw-btn" href="/insuwork/insubriefing/">보험브리핑으로 돌아가기</a></div>';
     var loginBtn = view.querySelector('[data-ib-login]');
     var signupBtn = view.querySelector('[data-ib-signup]');
     function openBriefingAuth(mode) {
@@ -387,7 +387,7 @@
       return '<button type="button" class="iw-nav-link' + (state.section === sectionKey ? ' on' : '') + '" onclick="OSInsuwork.go(\'' + sectionKey + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
     /* 2026-08-25 — 보험브리핑 섹션 전용: 인슈워크 SPA 내부 섹션이 아니라 기존 공개 페이지
-       (/insuwork/의 소식지·캘린더 원본인 /insubriefing/)로 그대로 열어준다. 참고자료/영업도구와
+       (/insuwork/의 소식지·캘린더 원본인 /insuwork/insubriefing/)로 그대로 열어준다. 참고자료/영업도구와
        같은 iw-nav-link 시각 패턴을 재사용하되 이동만 외부 페이지로 한다(최소 구현 — 구조 확인 필요:
        insuwork 내부에 소식지·캘린더를 직접 재조립하는 편이 장기적으로는 더 맞을 수 있음). */
     if (typeof extra === 'string' && extra.indexOf('link:') === 0) {
@@ -404,7 +404,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
-    var briefingGroup = [['◫', '소식지·캘린더', 'link:/insubriefing/']];
+    var briefingGroup = [['◫', '소식지·캘린더', 'link:/insuwork/insubriefing/']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
