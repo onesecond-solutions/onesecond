@@ -34,7 +34,7 @@
 body.lfp-preview-open{overflow:hidden}
 @media(max-width:560px){.lfp-preview{padding:12px}.lfp-preview-stage{height:calc(100% - 64px)}.lfp-preview-bar{bottom:calc(10px + env(safe-area-inset-bottom));overflow-x:auto}}
 
-.lfp-folder-dialog{z-index:12500;width:min(420px,92vw);padding:18px;border:1px solid var(--bd);border-radius:var(--radius-md,12px);background:var(--s1);color:var(--tp);box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.lfp-folder-dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);z-index:12500;width:min(420px,92vw);margin:0;padding:18px;border:1px solid var(--bd);border-radius:var(--radius-md,12px);background:var(--s1);color:var(--tp);box-shadow:0 24px 60px rgba(0,0,0,.3)}
 .lfp-folder-dialog::backdrop{background:rgba(15,23,42,.5)}
 .lfp-folder-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .lfp-folder-head h2{margin:0;font-size:16px;font-weight:800}
@@ -49,6 +49,7 @@ body.lfp-preview-open{overflow:hidden}
 .lfp-folder-row:hover{border-color:var(--bd)}
 .lfp-folder-empty{margin:0;padding:14px 4px;color:var(--ts);font-size:13px;text-align:center}
 .lfp-folder-new{display:flex;gap:6px;margin-bottom:10px}
+.lfp-folder-new[hidden]{display:none}
 .lfp-folder-new input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm,10px);background:var(--s0,var(--s1));color:var(--tp);font:inherit}
 .lfp-folder-new button{padding:0 12px;border:0;border-radius:var(--radius-sm,10px);background:var(--ac);color:#fff;font:inherit;cursor:pointer}
 .lfp-folder-new .lfp-folder-new-cancel{background:var(--s2);color:var(--tp)}
