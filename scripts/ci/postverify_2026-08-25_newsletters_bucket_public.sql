@@ -47,7 +47,7 @@ begin
    where schemaname='storage' and tablename='objects'
      and policyname like 'newsletters_storage_%';
   if v_nselectpol <> 2 then
-    raise exception 'FAIL newsletters_storage_% 정책 개수=% (2 필요).', v_nselectpol;
+    raise exception 'FAIL newsletters_storage_%% 정책 개수=% (2 필요).', v_nselectpol;
   end if;
 
   -- ── 방어: SELECT 외(쓰기) 정책이 이 이름 패턴으로 신규 생성되지 않았는지 ──
@@ -55,7 +55,7 @@ begin
    where schemaname='storage' and tablename='objects'
      and policyname like 'newsletters_storage_%' and cmd <> 'SELECT';
   if v_nwritepol <> 0 then
-    raise exception 'FAIL newsletters_storage_% 쓰기 정책 존재(%). 이 마이그레이션은 SELECT만 추가해야 함.', v_nwritepol;
+    raise exception 'FAIL newsletters_storage_%% 쓰기 정책 존재(%). 이 마이그레이션은 SELECT만 추가해야 함.', v_nwritepol;
   end if;
 
   raise notice 'POSTVERIFY PASS: newsletters 버킷 public=true + storage SELECT 정책2(anon·authenticated) + 쓰기 정책 신규 생성 0.';
