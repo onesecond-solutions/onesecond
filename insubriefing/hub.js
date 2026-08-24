@@ -94,6 +94,13 @@
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }
+    body.ib-bg-flat #leaflet-calendar {
+      max-width: 1400px;
+      margin: 20px auto 48px;
+      padding: 24px 28px 28px;
+      border-radius: var(--radius-lg, 20px);
+      box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 16px 40px rgba(16,24,40,.09);
+    }
     body.ib-bg-flat .ib-tint { background: var(--s2); }
     body.ib-bg-flat .ib-leaflet-day.is-other { background: var(--sh); }
 
