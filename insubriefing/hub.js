@@ -145,6 +145,27 @@
       background: transparent;
     }
 
+    .ib-insuwork-intro[hidden],
+    .ib-insuwork-features[hidden],
+    .ib-insuwork-flow[hidden],
+    .ib-insuwork-cta[hidden] {
+      display: none !important;
+    }
+
+    .ib-brief-tagline {
+      position: relative;
+      z-index: 1;
+      margin: 28px 20px 0;
+      color: var(--tp);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-shadow: 0 1px 12px color-mix(in srgb, var(--bg) 60%, transparent);
+    }
+    @media (max-width: 560px) {
+      .ib-brief-tagline { margin-top: 20px; font-size: 16px; }
+    }
+
     #leaflet-calendar {
       position: relative;
       z-index: 1;
