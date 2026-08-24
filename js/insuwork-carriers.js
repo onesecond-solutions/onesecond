@@ -37,6 +37,6 @@
     ['life','AIA생명','1588-9898','1588-2513','02-2021-4540','aia','https://www.aia.co.kr/']
   ];
   window.OS_INSUWORK_CARRIERS = rows.map(function (row) {
-    return { type: row[0], name: row[1], customer: row[2], monitoring: row[3], claim: row[4], logo: '/insubriefing/insuwork/carriers/logos/' + row[5] + '.png', homepageUrl: row[6], systemUrl: '' };
+    return { type: row[0], name: row[1], customer: row[2], monitoring: row[3], claim: row[4], logo: '/insuwork/carriers/logos/' + row[5] + '.png', homepageUrl: row[6], systemUrl: '' };
   });
 })();

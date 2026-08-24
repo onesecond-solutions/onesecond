@@ -1,4 +1,4 @@
-/* insubriefing/insuwork/m/insuwork-mobile-customers.js
+/* insuwork/m/insuwork-mobile-customers.js
    보험워크 모바일 "고객" 화면 전용 렌더러 (Phase 3, 2026-08-22, feat/workstation-mobile-customers /
    Phase 4, 2026-08-22, feat/workstation-mobile-quicknote).
    데이터/로직은 100% /js/insuwork.js 재사용(customersDirectory() 읽기 전용 조회 + reload()로
@@ -59,7 +59,7 @@
     return !!(window.OSInsuwork && typeof window.OSInsuwork.isDataReady === 'function' && window.OSInsuwork.isDataReady());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
-     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insuwork/insuwork.js의
      logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
      동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
@@ -73,10 +73,10 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/customers.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insuwork/m/customers.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Fcustomers.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsuwork%2Fm%2Fcustomers.html';
   }
 
   function renderLoginGate() {
@@ -112,7 +112,7 @@
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>PC에서 먼저 설정해 주세요</strong>'
       + '<p>PC(보험워크)에서 먼저 한 번 설정을 완료해 주세요.</p>'
-      + '<a class="iwm-link" href="/insubriefing/insuwork/">PC(보험워크) 열기</a>'
+      + '<a class="iwm-link" href="/insuwork/">PC(보험워크) 열기</a>'
       + '</div>';
   }
   function checkMigrationChoiceThenStart() {
@@ -175,7 +175,7 @@
       + '</div>'
       + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
       + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="iwm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=customers">PC 버전으로 보기</a>'
       + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
@@ -326,7 +326,7 @@
       + telAction
       + noteSectionHtml(customer)
       + '<div class="iwm-cust-action">'
-      + '<a class="iwm-cust-action-btn" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">일정추가</a>'
+      + '<a class="iwm-cust-action-btn" href="/insuwork/?view=insuwork&section=calendar&mode=month">일정추가</a>'
       + '<p class="iwm-cust-action-note">PC 버전에서 일정을 등록해 주세요.</p>'
       + '</div>'
       + '</div>'
@@ -349,7 +349,7 @@
      (2) 펼침 — textarea + 저장/취소, (3) 저장 직후 — 짧게 "저장됐습니다" 배지만 보여주고 자동으로 (1)로 복귀.
      사진 첨부는 이번 Phase 범위 밖이라 PC 링크 안내 문구만 둔다(별도 업로드 UI 없음). */
   function noteSectionHtml(customer) {
-    var pcLink = '<a class="iwm-cust-note-pc-link" href="/insubriefing/insuwork/?view=insuwork&section=customers">PC 버전 열기</a>';
+    var pcLink = '<a class="iwm-cust-note-pc-link" href="/insuwork/?view=insuwork&section=customers">PC 버전 열기</a>';
     if (noteUi.open) {
       var errorHtml = noteUi.error ? '<p class="iwm-cust-note-error">' + esc(noteUi.error) + '</p>' : '';
       return '<div class="iwm-cust-action iwm-cust-note-open">'

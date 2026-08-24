@@ -6,7 +6,7 @@
     step: 'form',
     email: '',
     signup: null,
-    redirect: '/insubriefing/insuwork/',
+    redirect: '/insuwork/',
     busy: false
   };
 
@@ -25,13 +25,13 @@
   }
 
   function safeRedirect(value) {
-    if (!value) return '/insubriefing/insuwork/';
+    if (!value) return '/insuwork/';
     try {
       var url = new URL(value, window.location.origin);
-      if (url.origin !== window.location.origin) return '/insubriefing/insuwork/';
+      if (url.origin !== window.location.origin) return '/insuwork/';
       return url.pathname + url.search + url.hash;
     } catch (_e) {
-      return value.charAt(0) === '/' ? value : '/insubriefing/insuwork/';
+      return value.charAt(0) === '/' ? value : '/insuwork/';
     }
   }
 
@@ -118,7 +118,7 @@
     try {
       return safeRedirect(new URLSearchParams(window.location.search).get('redirect'));
     } catch (_e) {
-      return '/insubriefing/insuwork/';
+      return '/insuwork/';
     }
   }
 
@@ -149,7 +149,7 @@
       try {
         localStorage.setItem(PKCE_KEY, verifier);
         sessionStorage.setItem(PKCE_KEY, verifier);
-        localStorage.setItem(OAUTH_REDIRECT_KEY, state.redirect || '/insubriefing/insuwork/');
+        localStorage.setItem(OAUTH_REDIRECT_KEY, state.redirect || '/insuwork/');
       } catch (_e) {}
       var challenge = await pkceChallenge(verifier);
       var redirectTo = window.location.origin + window.location.pathname;
@@ -199,7 +199,7 @@
           localStorage.removeItem(PKCE_KEY);
           sessionStorage.removeItem(PKCE_KEY);
         } catch (_e) {}
-        var next = '/insubriefing/insuwork/';
+        var next = '/insuwork/';
         try { next = safeRedirect(localStorage.getItem(OAUTH_REDIRECT_KEY) || next); localStorage.removeItem(OAUTH_REDIRECT_KEY); } catch (_e) {}
         try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
         window.location.href = next;
@@ -222,7 +222,7 @@
           user_metadata: payload.user_metadata || {}
         }
       });
-      var fallback = '/insubriefing/insuwork/';
+      var fallback = '/insuwork/';
       try { fallback = safeRedirect(localStorage.getItem(OAUTH_REDIRECT_KEY) || fallback); localStorage.removeItem(OAUTH_REDIRECT_KEY); } catch (_e) {}
       try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
       window.location.href = fallback;
@@ -640,7 +640,7 @@
       await storeSession(data);
       setStatus('인증이 완료됐습니다. 보험워크로 이동합니다.', 'success');
       setTimeout(function () {
-        window.location.href = state.redirect || '/insubriefing/insuwork/';
+        window.location.href = state.redirect || '/insuwork/';
       }, 700);
     } catch (_e) {
       setStatus('네트워크 오류가 발생했습니다.', 'error');

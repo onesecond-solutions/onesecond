@@ -1,4 +1,4 @@
-/* insubriefing/insuwork/m/insuwork-mobile-consultations.js
+/* insuwork/m/insuwork-mobile-consultations.js
    보험워크 모바일 "상담" 화면 전용 렌더러 (feat/workstation-mobile-consultations-list, 2026-08-22, 대표 직접 요청).
    지금까지 상담 이력은 고객 상세 화면 안에서 그 고객 것만 볼 수 있었다(customers.js). PC 데스크탑에는 전체
    고객을 가로지르는 "상담관리" 화면이 있는데 모바일엔 없어서 그 격차를 메우는 화면이다.
@@ -60,7 +60,7 @@
     return !!(window.OSInsuwork && typeof window.OSInsuwork.isDataReady === 'function' && window.OSInsuwork.isDataReady());
   }
   /* customers.js/library.js와 동일 로직 복제(모바일 화면 로그아웃 진입 경로). insubriefing/hub.js의
-     logoutAdvisor()·insubriefing/insuwork/insuwork.js의 logout()이 지우는 storage key 4개를 그대로
+     logoutAdvisor()·insuwork/insuwork.js의 logout()이 지우는 storage key 4개를 그대로
      지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어 동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
     ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) {
@@ -73,10 +73,10 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/consultations.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insuwork/m/consultations.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Fconsultations.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsuwork%2Fm%2Fconsultations.html';
   }
 
   function renderLoginGate() {
@@ -112,7 +112,7 @@
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>PC에서 먼저 설정해 주세요</strong>'
       + '<p>PC(보험워크)에서 먼저 한 번 설정을 완료해 주세요.</p>'
-      + '<a class="iwm-link" href="/insubriefing/insuwork/">PC(보험워크) 열기</a>'
+      + '<a class="iwm-link" href="/insuwork/">PC(보험워크) 열기</a>'
       + '</div>';
   }
   function checkMigrationChoiceThenStart() {
@@ -145,7 +145,7 @@
       + '</div>'
       + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
       + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="iwm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=consultations">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=consultations">PC 버전으로 보기</a>'
       + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>';
