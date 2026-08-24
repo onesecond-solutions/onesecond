@@ -1,4 +1,4 @@
-/* insubriefing/insuwork/m/insuwork-mobile-calendar.js
+/* insuwork/m/insuwork-mobile-calendar.js
    보험워크 모바일 "캘린더" 화면 전용 렌더러 (Phase 2, 2026-08-22, feat/workstation-mobile-calendar).
    데이터/로직은 100% /js/insuwork.js 재사용(eventsFor/eventsInRange 읽기 전용 조회 + reload()로
    기존 loadData() 실행). 이 파일은 화면(뷰 셸)만 새로 그린다 — insuwork.js의 렌더 함수는 호출하지 않는다.
@@ -45,7 +45,7 @@
     return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
-     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insubriefing/insuwork/insuwork.js의
+     새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insuwork/insuwork.js의
      logout()이 지우는 storage key 4개를 그대로 지운 뒤 보험브리핑 홈으로 이동한다(같은 함수를 import할 수 없어
      동일 로직만 로컬 복제, 새 판단 없음). */
   function logout() {
@@ -59,10 +59,10 @@
 
   function openBriefingAuth(mode) {
     if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-      window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/m/calendar.html' });
+      window.InsuranceBriefingAuth.open(mode, { redirect: '/insuwork/m/calendar.html' });
       return;
     }
-    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2Fm%2Fcalendar.html';
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsuwork%2Fm%2Fcalendar.html';
   }
 
   function renderLoginGate() {
@@ -98,7 +98,7 @@
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>PC에서 먼저 설정해 주세요</strong>'
       + '<p>PC(보험워크)에서 먼저 한 번 설정을 완료해 주세요.</p>'
-      + '<a class="iwm-link" href="/insubriefing/insuwork/">PC(보험워크) 열기</a>'
+      + '<a class="iwm-link" href="/insuwork/">PC(보험워크) 열기</a>'
       + '</div>';
   }
   function checkMigrationChoiceThenStart() {
@@ -255,7 +255,7 @@
       + '</div>'
       + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
       + '<a class="iwm-menu-item" href="/insubriefing/">보험브리핑 홈</a>'
-      + '<a class="iwm-menu-item" href="/insubriefing/insuwork/?view=insuwork&section=calendar&mode=month">PC 버전으로 보기</a>'
+      + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=calendar&mode=month">PC 버전으로 보기</a>'
       + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
       + '</header>'

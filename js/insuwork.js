@@ -24,6 +24,10 @@
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-insuwork') === 'true';
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive'];
+  /* 2026-08-25 대표 승인 — 보험워크 공개 구조 전환: 셸(사이드바 포함)은 항상 렌더링하고, 아래 4개
+     메뉴(캘린더/고객관리/상담관리/자료)만 비로그인 클릭 시 진입을 막는다. 홈·보험브리핑·참고자료·
+     영업도구는 비로그인도 접근 가능. canEnterSection()이 go()/openWorkspace() 진입 직전에 확인한다. */
+  var PROTECTED_SECTIONS = ['calendar', 'customers', 'consultations', 'assets'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -99,6 +103,24 @@
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || (authenticated() && !!currentUserId()) || currentUserEmail() === TEST_EMAIL; }
   function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
+  function canEnterSection(section) { return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
+     로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
+     그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
+  function promptLoginRequired() {
+    var message = '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.';
+    var redirect = location.pathname + location.search;
+    function startLogin() {
+      if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') window.InsuranceBriefingAuth.open('login', { redirect: redirect });
+      else window.location.href = '/pages/landing.html?auth=login&redirect=' + encodeURIComponent(redirect);
+    }
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') {
+      window.InsuranceBriefingNotice.confirm({ title: '보험워크', message: message, confirmLabel: '로그인' }).then(function (confirmed) { if (confirmed) startLogin(); });
+      return;
+    }
+    if (typeof window.toast === 'function') window.toast(message);
+    startLogin();
+  }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function briefingAlert(message, title) {
     if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') return window.InsuranceBriefingNotice.alert(message, { title: title || '보험브리핑' });
@@ -199,8 +221,12 @@
     state.data.events = [task].concat(state.data.events.filter(function (entry) { return String(entry.id) !== String(task.id); }));
   }
 
+  /* 2026-08-25 대표 승인 — 셸(사이드바 포함)은 로그인 여부와 무관하게 항상 렌더링한다. 과거에는
+     allowed()가 false면 여기서 renderStandaloneGate('login'/'denied')를 호출해 앱 진입 자체를
+     전면 차단했으나, 이제 홈·보험브리핑·참고자료·영업도구는 비로그인도 접근 가능해야 하므로 그
+     차단을 제거했다. 보호 메뉴(캘린더/고객관리/상담관리/자료) 개별 진입 차단은 go()/openWorkspace()의
+     canEnterSection() 가드가 담당한다. */
   function ensureShell() {
-    if (!allowed()) { if (STANDALONE) renderStandaloneGate(authenticated() ? 'denied' : 'login'); return false; }
     document.body.classList.add('is-insuwork');
     if (STANDALONE) return !!document.getElementById('v-insuwork');
     var side = document.querySelector('.side');
@@ -238,10 +264,10 @@
     var signupBtn = view.querySelector('[data-ib-signup]');
     function openBriefingAuth(mode) {
       if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
-        window.InsuranceBriefingAuth.open(mode, { redirect: '/insubriefing/insuwork/' });
+        window.InsuranceBriefingAuth.open(mode, { redirect: '/insuwork/' });
         return;
       }
-      window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsubriefing%2Finsuwork%2F';
+      window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=%2Finsuwork%2F';
     }
     if (loginBtn) loginBtn.addEventListener('click', function () { openBriefingAuth('login'); });
     if (signupBtn) signupBtn.addEventListener('click', function () { openBriefingAuth('signup'); });
@@ -360,6 +386,14 @@
       var sectionKey = extra.slice(8);
       return '<button type="button" class="iw-nav-link' + (state.section === sectionKey ? ' on' : '') + '" onclick="OSInsuwork.go(\'' + sectionKey + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
+    /* 2026-08-25 — 보험브리핑 섹션 전용: 인슈워크 SPA 내부 섹션이 아니라 기존 공개 페이지
+       (/insuwork/의 소식지·캘린더 원본인 /insubriefing/)로 그대로 열어준다. 참고자료/영업도구와
+       같은 iw-nav-link 시각 패턴을 재사용하되 이동만 외부 페이지로 한다(최소 구현 — 구조 확인 필요:
+       insuwork 내부에 소식지·캘린더를 직접 재조립하는 편이 장기적으로는 더 맞을 수 있음). */
+    if (typeof extra === 'string' && extra.indexOf('link:') === 0) {
+      var href = extra.slice(5);
+      return '<button type="button" class="iw-nav-link" onclick="window.location.href=\'' + esc(jsString(href)) + '\'"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
+    }
     if (typeof extra === 'string') {
       return '<button type="button" class="iw-nav-link" onclick="OSInsuwork.openTool(\'' + extra + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
@@ -370,11 +404,13 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
+    var briefingGroup = [['◫', '소식지·캘린더', 'link:/insubriefing/']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
-      return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"><span>' + item[1] + '</span>' + item[2] + '</button>';
-    }).join('') + '<div class="iw-nav-planned" aria-label="준비 중인 메뉴">' + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
+      var locked = PROTECTED_SECTIONS.indexOf(item[0]) >= 0 && !allowed();
+      return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + (locked ? ' iw-nav-locked' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"' + (locked ? ' aria-label="' + esc(item[2]) + ' (로그인 필요)"' : '') + '><span>' + item[1] + '</span>' + item[2] + (locked ? '<span class="iw-nav-lock" aria-hidden="true">🔒</span>' : '') + '</button>';
+    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="iw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
@@ -730,6 +766,12 @@
 
   function homeHtml() {
     var today = ymd(new Date());
+    /* 2026-08-25 — 비로그인 방문자에게도 홈은 열려 있지만, 즐겨찾기/오늘 일정/최근 자료/최근 상담
+       위젯은 임태성 실장 개인 고객 데이터(PII)를 담는다. loadData()가 이미 !authenticated()일 때
+       fetch 자체를 시도하지 않아 state.data는 항상 비어있는 상태로 유지되지만(1차 방어), 여기서도
+       loginHint로 안내 문구를 로그인 유도로 바꿔 "정말 자료가 없는 것"과 "로그인 안 해서 안 보이는 것"을
+       구분해 준다(2차, UX 방어일 뿐 데이터 노출 방어는 loadData/RLS가 담당). */
+    var loginHint = !allowed();
     var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
@@ -737,10 +779,14 @@
     var customersById = {}; state.data.customers.forEach(function (customer) { customersById[customer.id] = customer; });
     var recentConsultations = state.data.consultations.filter(function (item) { return !!customersById[item.customer_id]; })
       .sort(function (a, b) { return String(b.consulted_at || b.created_at).localeCompare(String(a.consulted_at || a.created_at)); }).slice(0, 5);
-    var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoriteRows() + '</div></section>';
-    var todayPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>오늘 일정</strong><button onclick="OSInsuwork.go(\'calendar\')">전체 보기</button></div><div class="iw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="iw-empty">오늘 일정이 없습니다.</div>') + '</div></section>';
-    var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">저장된 자료가 없습니다.</div>') + '</div></section>';
-    var consultPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 상담</strong><button onclick="OSInsuwork.go(\'consultations\')">전체 보기</button></div><div class="iw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSInsuwork.go('consultations');OSInsuwork.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div></section>';
+    var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
+    var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
+    var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
+    var todayPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>오늘 일정</strong><button onclick="OSInsuwork.go(\'calendar\')">전체 보기</button></div><div class="iw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="iw-empty">' + todayEmptyText + '</div>') + '</div></section>';
+    var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
+    var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
+    var consultEmptyText = loginHint ? '로그인 후 상담 기록을 확인할 수 있습니다.' : '상담 기록이 없습니다.';
+    var consultPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 상담</strong><button onclick="OSInsuwork.go(\'consultations\')">전체 보기</button></div><div class="iw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSInsuwork.go('consultations');OSInsuwork.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">' + consultEmptyText + '</div>') + '</div></section>';
     return statusHtml() + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="iw-home-row iw-home-row-bottom">' + assetsPanel + consultPanel + '</div></div>';
   }
 
@@ -1537,12 +1583,17 @@
 
   function openWorkspace(section, push) {
     if (!ensureShell()) { if (!STANDALONE && window.showView) window.showView('home'); return; }
-    state.section = SECTIONS.indexOf(section) >= 0 ? section : 'home';
+    var target = SECTIONS.indexOf(section) >= 0 ? section : 'home';
+    /* 초기 로드/뒤로가기 등 비클릭 진입에서 보호 메뉴로 바로 들어오면(예: 로그아웃 상태로 딥링크
+       또는 popstate) 조용히 홈으로 대체한다 — 클릭 흐름(go())의 로그인 유도 모달과 달리 여기는
+       사용자가 방금 누른 액션이 아니라서 확인 모달로 막지 않고 가벼운 토스트만 남긴다. */
+    if (!canEnterSection(target)) { target = 'home'; if (typeof window.toast === 'function') window.toast('로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
+    state.section = target;
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-insuwork').classList.add('on');
     renderShell(); setUrl(push !== false); loadData(state.section !== 'home');
   }
-  function go(section) { if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
+  function go(section) { if (!canEnterSection(section)) { promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
   function dialog(html) { var box = document.getElementById('iw-dialog'), body = document.getElementById('iw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function closeDialog() { var box = document.getElementById('iw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function sanitizeRich(html) {
@@ -2993,11 +3044,11 @@
   function openCalendarDay(date) { state.selectedDate = date; state.cursor = parseDate(date); state.calendarMode = 'day'; renderContent(); setUrl(false); }
   function toggleTimeAllDay(daysKey) { state.timeAllDayExpandedFor = state.timeAllDayExpandedFor === daysKey ? null : daysKey; renderContent(); }
   function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, false); }); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, false); }); }
 
   restoreFromUrl();
-  document.addEventListener('appstate:ready', function () { if (!allowed()) { if (STANDALONE) renderStandaloneGate('denied'); return; } if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, false); }); });
-  window.addEventListener('popstate', function () { if (!allowed() || !restoreFromUrl()) return; openWorkspace(state.section, false); });
+  document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, false); }); });
+  window.addEventListener('popstate', function () { if (!restoreFromUrl()) return; openWorkspace(state.section, false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
   document.addEventListener('click', function (event) { var menu = document.getElementById('iw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.iw-preview-ddak')) closeDdakMenu(); });
   document.addEventListener('click', function (event) { var open = document.querySelectorAll('.iw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });

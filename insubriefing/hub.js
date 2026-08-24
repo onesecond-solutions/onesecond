@@ -724,7 +724,7 @@
     if (!insuworkLink) {
       insuworkLink = document.createElement("a");
       insuworkLink.className = "ib-insuwork-link";
-      insuworkLink.href = "/insubriefing/insuwork/";
+      insuworkLink.href = "/insuwork/";
       insuworkLink.textContent = "보험워크";
       insuworkLink.setAttribute("aria-label", "보험워크 열기");
       nav.appendChild(insuworkLink);
@@ -797,10 +797,10 @@
       var loginButton = event.target.closest(".ib-login-button");
       if (!loginButton) return;
       if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === "function") {
-        window.InsuranceBriefingAuth.open("login", { redirect: "/insubriefing/insuwork/" });
+        window.InsuranceBriefingAuth.open("login", { redirect: "/insuwork/" });
         return;
       }
-      window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsubriefing%2Finsuwork%2F";
+      window.location.href = "/pages/landing.html?auth=login&redirect=%2Finsuwork%2F";
     });
   }
 
@@ -859,7 +859,7 @@
 
   document.addEventListener("click", function (event) {
     if (event.defaultPrevented) return;
-    var link = event.target.closest('a[href="/insubriefing/insuwork/"]');
+    var link = event.target.closest('a[href="/insuwork/"]');
     if (!link || hasAccountSession()) return;
     event.preventDefault();
     showInsuworkLoginNotice();

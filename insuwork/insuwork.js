@@ -42,11 +42,24 @@
     document.getElementById('iw-profile-message').textContent = '';
     dialog.showModal();
   }
+  /* 2026-08-25 대표 승인 — 비로그인 우측 상단 버튼: 기존 /pages/landing.html 이동 대신 보험브리핑의
+     기존 Google 로그인 흐름(insubriefing/auth.js의 InsuranceBriefingAuth.open, signInWithGoogle())을
+     그대로 재사용한다. 새 OAuth 클라이언트를 만들지 않고 기존 Supabase Auth/Google OAuth 설정을 그대로
+     쓴다. auth.js가 아직 로드되지 않은 극히 짧은 순간(스크립트 defer 로딩 중)을 대비해 fallback으로
+     기존 /pages/landing.html 링크를 유지한다. */
+  function openLogin() {
+    var redirect = location.pathname + location.search;
+    if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') { window.InsuranceBriefingAuth.open('login', { redirect: redirect }); return; }
+    window.location.href = '/pages/landing.html?auth=login&redirect=' + encodeURIComponent(redirect);
+  }
   function renderAccount() {
     var box = document.getElementById('iw-account'); if (!box) return;
     var user = storedUser();
     if (!user.id || !window.db || !window.db.getToken || !window.db.getToken()) {
-      box.innerHTML = '<a href="/pages/landing.html?auth=login&amp;redirect=%2Finsubriefing%2Finsuwork%2F">로그인</a>'; return;
+      box.innerHTML = '<button type="button" class="iw-account-trigger" id="iw-account-login">로그인</button>';
+      var loginBtn = document.getElementById('iw-account-login');
+      if (loginBtn) loginBtn.addEventListener('click', openLogin);
+      return;
     }
     var name = (window.AppState && window.AppState.name) || user.name || '사용자';
     var email = (window.AppState && window.AppState.email) || user.email || '';
@@ -91,18 +104,18 @@
 
 /* 모바일 자동 전환 (2026-08-22, fix/workstation-mobile-autoredirect — 대표 실사용 재지시로 Phase 1
    "클릭해야 이동" 배너를 자동 리다이렉트로 교체. 폭 768px 미만이면 기본은 즉시 /m/로 이동한다.
-   무한 루프 방지: 모바일 화면(/insubriefing/insuwork/m/*)의 "PC로 보기" 링크를 눌러 일부러 이
+   무한 루프 방지: 모바일 화면(/insuwork/m/*)의 "PC로 보기" 링크를 눌러 일부러 이
    PC 화면으로 돌아온 로드는 referrer로 감지해 이번 로드에 한해 자동 이동을 건너뛴다 — 그 파일들은
    이번 작업 범위 밖(다른 작업자 병행 중)이라 대신 referrer만으로 판별한다(완벽한 방어 아님, 대표
    1인 게이트 전용 화면이라 과설계하지 않음). referrer로 건너뛴 예외 상황에서만 기존 수동 배너를
    보조 안내로 남겨 모바일로 다시 갈 수단을 제공한다. 기존 렌더 로직·CSS는 건드리지 않는 별도 IIFE. */
 (function () {
   'use strict';
-  var MOBILE_PATH = '/insubriefing/insuwork/m/';
+  var MOBILE_PATH = '/insuwork/m/';
   var FLAG_KEY = 'iw_mobile_banner_dismissed'; // Phase 1 배너 잔재 — 자동 전환이 기본이 된 지금은 참고용
 
   function cameFromMobile() {
-    try { return /\/insubriefing\/insuwork\/m\//.test(document.referrer); } catch (_e) { return false; }
+    try { return /\/insuwork\/m\//.test(document.referrer); } catch (_e) { return false; }
   }
   function dismissed() {
     try { return localStorage.getItem(FLAG_KEY) === '1'; } catch (_e) { return false; }

@@ -1,4 +1,4 @@
-/* insubriefing/insuwork/m/insuwork-mobile-nav.js
+/* insuwork/m/insuwork-mobile-nav.js
    보험워크 모바일 공통 하단 탭바 (feat/workstation-mobile-bottom-nav, 2026-08-22).
    대표 요청 — 상단 텍스트 탭 링크를 다른 모바일 앱들처럼 하단 고정 아이콘 탭바로 전환.
    상태 없는 순수 렌더 함수 하나만 제공한다. 4개 화면(오늘/캘린더/고객/자료)이 각자 독립 정적 페이지로
