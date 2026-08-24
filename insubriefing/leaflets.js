@@ -514,20 +514,38 @@
     });
   }
   function reloadCurrent() { if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
+  // PNG 업로드는 용량 절감을 위해 저장 전 JPEG로 재인코딩(투명 배경은 흰색으로 채움)
+  function pngToJpeg(file) {
+    return createImageBitmap(file).then(function (bitmap) {
+      var canvas = document.createElement('canvas');
+      canvas.width = bitmap.width; canvas.height = bitmap.height;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0);
+      return new Promise(function (resolve) { canvas.toBlob(resolve, 'image/jpeg', .92); });
+    });
+  }
+  function uploadSingleFile(f, receivedDate) {
+    var kind = fileKind(f), ext = fileExtension(f.name) || (kind === 'image' ? 'jpg' : kind === 'text' ? 'txt' : 'bin');
+    if (kind === 'image' && ext === 'png') {
+      return pngToJpeg(f).then(function (blob) {
+        return uploadBlob(blob, 'image', 'image/jpeg', receivedDate, null, 'jpg', f.name ? f.name.replace(/\.png$/i, '.jpg') : null);
+      });
+    }
+    return uploadBlob(f, kind === 'image' ? 'image' : 'pdf', f.type || 'application/octet-stream', receivedDate, null, ext, f.name);
+  }
   function runUpload(receivedDate, files) {
     var allImages = files.every(function (f) { return fileKind(f) === 'image'; });
     var task;
     if (files.length === 1) {
-      var f = files[0], kind = fileKind(f), ext = fileExtension(f.name) || (kind === 'image' ? 'jpg' : kind === 'text' ? 'txt' : 'bin');
-      task = uploadBlob(f, kind === 'image' ? 'image' : 'pdf', f.type || 'application/octet-stream', receivedDate, null, ext, f.name);
+      task = uploadSingleFile(files[0], receivedDate);
     } else if (allImages) {
       task = mergeImagesToPdf(files).then(function (bytes) {
         return uploadBlob(new Blob([bytes], { type: 'application/pdf' }), 'pdf', 'application/pdf', receivedDate, files.length, 'pdf', receivedDate + ' 리플렛 ' + files.length + '장.pdf');
       });
     } else {
       task = files.reduce(function (chain, f) {
-        var kind = fileKind(f), ext = fileExtension(f.name) || (kind === 'image' ? 'jpg' : kind === 'text' ? 'txt' : 'bin');
-        return chain.then(function () { return uploadBlob(f, kind === 'image' ? 'image' : 'pdf', f.type || 'application/octet-stream', receivedDate, null, ext, f.name); });
+        return chain.then(function () { return uploadSingleFile(f, receivedDate); });
       }, Promise.resolve());
     }
     task.then(function () { reloadCurrent(); showNotice('리플렛을 추가했습니다.'); })
