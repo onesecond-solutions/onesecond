@@ -49,8 +49,9 @@
 /* 공통 날짜 칸 */
 .ib-leaflet-day{position:relative;min-height:108px;padding:6px;background:none}
 .ib-leaflet-day.is-other{background:none;opacity:.55}
-.ib-leaflet-day.is-today .ib-leaflet-daynum{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;border-radius:var(--radius-full,999px);background:var(--ac);color:#fff;font-weight:800}
-.ib-leaflet-daynum{display:block;font-size:12px;color:var(--ts)}
+.ib-leaflet-day.is-today{background:color-mix(in srgb,var(--ac) 6%,transparent);box-shadow:inset 0 0 0 2px var(--ac);border-radius:var(--radius-sm,8px)}
+.ib-leaflet-day.is-today .ib-leaflet-daynum{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 4px;border-radius:var(--radius-full,999px);background:var(--ac);color:#fff;font-weight:800}
+.ib-leaflet-daynum{display:block;font-size:13px;font-weight:700;color:var(--tp)}
 .ib-leaflet-day.is-droppable.drag-over{outline:2px dashed var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--ac) 8%,var(--s1))}
 .ib-leaflet-day.is-droppable.is-selected{outline:2px solid var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--ac) 9%,transparent)}
 .ib-leaflet-holiday{display:inline-block;margin-top:2px;margin-right:4px;font-size:10px;font-weight:700;color:var(--err,#dc2626)}
