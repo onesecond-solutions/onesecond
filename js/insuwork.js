@@ -1077,13 +1077,19 @@
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
     var allDayEvents = [], timedByDate = {};
     days.forEach(function (date) { timedByDate[date] = []; eventsFor(date).forEach(function (event) { if (calendarAllDay(event)) allDayEvents.push(event); else timedByDate[date].push(event); }); });
-    var allDay = calendarSpanBars(days, allDayEvents, 20);
+    var daysKey = days.join(','), expanded = state.timeAllDayExpandedFor === daysKey;
+    var VISIBLE_ALLDAY_LANES = 4;
+    var allDayFull = calendarSpanBars(days, allDayEvents, 999);
+    var hiddenCount = allDayFull.spans.filter(function (sp) { return sp.lane >= VISIBLE_ALLDAY_LANES; }).length;
+    var allDay = expanded ? allDayFull : { spans: allDayFull.spans.filter(function (sp) { return sp.lane < VISIBLE_ALLDAY_LANES; }), laneCount: Math.min(VISIBLE_ALLDAY_LANES, allDayFull.laneCount) };
     var bars = allDay.spans.map(function (sp) {
       var startIdx = days.indexOf(sp.start), endIdx = days.indexOf(sp.end);
       var left = 'calc(' + (startIdx / days.length * 100) + '% + 4px)', width = 'calc(' + ((endIdx - startIdx + 1) / days.length * 100) + '% - 8px)';
       return '<button type="button" class="iw-time-bar ' + calendarEventKind(sp.event) + '" style="left:' + left + ';width:' + width + ';top:' + (sp.lane * 28) + 'px" onclick="OSInsuwork.showEvent(\'' + esc(sp.event.id) + '\')"><small>' + esc(String(sp.event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(sp.event)) + '</b></button>';
     }).join('');
-    var allDayRow = '<div class="iw-time-all-day" style="min-height:' + Math.max(42, allDay.laneCount * 28 + 10) + 'px"><span>종일</span><div class="iw-time-all-grid">' + days.map(function () { return '<i></i>'; }).join('') + '<div class="iw-time-bars">' + bars + '</div></div></div>';
+    var moreBtn = !expanded && hiddenCount > 0 ? '<button type="button" class="iw-time-alldaymore" onclick="OSInsuwork.toggleTimeAllDay(\'' + esc(daysKey) + '\')">+' + hiddenCount + '개 더보기</button>'
+      : expanded && hiddenCount > 0 ? '<button type="button" class="iw-time-alldaymore" onclick="OSInsuwork.toggleTimeAllDay(\'' + esc(daysKey) + '\')">접기</button>' : '';
+    var allDayRow = '<div class="iw-time-all-day" style="min-height:' + Math.max(42, allDay.laneCount * 28 + 10) + 'px"><span>종일</span><div class="iw-time-all-grid">' + days.map(function () { return '<i></i>'; }).join('') + '<div class="iw-time-bars">' + bars + '</div>' + moreBtn + '</div></div>';
     return '<div class="iw-time" style="--iw-days:' + days.length + '"><div class="iw-time-head"><span>GMT+09</span>' + days.map(function (date) { return '<button class="' + (date === ymd(new Date()) ? 'today' : '') + '" onclick="OSInsuwork.selectDate(\'' + date + '\')"><small>' + weekday(date) + '</small><strong>' + Number(date.slice(8)) + '</strong></button>'; }).join('') + '</div>' + allDayRow + '<div class="iw-time-body"><div class="iw-hours">' + hours.map(function (hour) { return '<span>' + (hour < 12 ? '오전 ' + hour : hour === 12 ? '오후 12' : '오후 ' + (hour - 12)) + '시</span>'; }).join('') + '</div>' + days.map(function (date) { return '<div class="iw-time-day">' + hours.map(function () { return '<i></i>'; }).join('') + '<div class="iw-time-events">' + timedByDate[date].map(function (event) { return '<button class="' + calendarEventKind(event) + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>';
   }
   function agendaView() {
@@ -2985,6 +2991,7 @@
   }
   function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
   function openCalendarDay(date) { state.selectedDate = date; state.cursor = parseDate(date); state.calendarMode = 'day'; renderContent(); setUrl(false); }
+  function toggleTimeAllDay(daysKey) { state.timeAllDayExpandedFor = state.timeAllDayExpandedFor === daysKey ? null : daysKey; renderContent(); }
   function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
   function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (STANDALONE && !authenticated() && !localTest) { renderStandaloneGate('login'); return; } if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, false); }); }
 
@@ -3173,7 +3180,7 @@
     };
   }
   window.OSInsuwork = {
-    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
+    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); }, toggleTimeAllDay: toggleTimeAllDay,
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
