@@ -33,6 +33,7 @@
 
     <main>
       <section class="ib-hero" aria-label="보험브리핑 리플렛 캘린더">
+        <p class="ib-brief-tagline">매일매일 최신상품과 영업이슈를 날짜별로 확인하세요.</p>
         <div id="leaflet-calendar">
           <div class="ib-leaflet-head">
             <div class="ib-leaflet-nav">
@@ -54,7 +55,8 @@
         </div>
       </section>
 
-      <section class="ib-insuwork-intro" id="insuwork-intro" aria-labelledby="ib-insuwork-title">
+      <!-- 2026-08-24 대표 결정 — 보험브리핑 캘린더에 자체 헤드라인이 생겨 균형을 맞추기 전까지 인슈워크 소개 블록 4개 섹션 일단 숨김(hidden, 삭제 아님) -->
+      <section class="ib-insuwork-intro" id="insuwork-intro" aria-labelledby="ib-insuwork-title" hidden>
         <div class="ib-insuwork-copy">
           <p class="ib-kicker">INSUWORK</p>
           <h1 id="ib-insuwork-title"><span>오늘 출근해서</span><span>할 일이 보이도록.</span></h1>
@@ -67,14 +69,14 @@
         </figure>
       </section>
 
-      <section class="ib-insuwork-features ib-insuwork-intent" aria-label="보험워크의 업무 의도">
+      <section class="ib-insuwork-features ib-insuwork-intent" aria-label="보험워크의 업무 의도" hidden>
         <article><div class="ib-insuwork-feature-art art-calendar" role="img" aria-label="캘린더 일러스트"></div><div class="ib-insuwork-feature-copy"><span>01</span><h2>오늘 일정</h2><p>하루는 캘린더에서 시작합니다. 오늘 연락할 고객, 처리할 상담, 챙길 기념일이 보이면 출근 직후 해야 할 일이 정리됩니다.</p></div></article>
         <article><div class="ib-insuwork-feature-art art-customers" role="img" aria-label="고객관리 일러스트"></div><div class="ib-insuwork-feature-copy"><span>02</span><h2>고객관리 주기</h2><p>청약 후 한 달, 91일, 6개월, 1년처럼 놓치면 안 되는 관리 시점을 고객 리스트와 일정으로 이어둡니다.</p></div></article>
         <article><div class="ib-insuwork-feature-art art-assets" role="img" aria-label="자료 정리 일러스트"></div><div class="ib-insuwork-feature-copy"><span>03</span><h2>상담자료 준비</h2><p>내일 예정된 고객을 확인하고 필요한 상품자료, 스크립트, 메모를 미리 정리해 연락 전 준비 시간을 줄입니다.</p></div></article>
         <article><div class="ib-insuwork-feature-art art-consultations" role="img" aria-label="상담관리 일러스트"></div><div class="ib-insuwork-feature-copy"><span>04</span><h2>다음 일정</h2><p>오늘의 연락이 추가 상담이 될지, 단순 안부가 될지는 모릅니다. 중요한 건 상담 후 다음 할 일을 다시 일정으로 남기는 것입니다.</p></div></article>
       </section>
 
-      <section class="ib-insuwork-flow" aria-labelledby="ib-insuwork-flow-title">
+      <section class="ib-insuwork-flow" aria-labelledby="ib-insuwork-flow-title" hidden>
         <div><p class="ib-kicker">DAILY LOOP</p><h2 id="ib-insuwork-flow-title"><span>오늘을 소화하고,</span><span>내일을 준비합니다.</span></h2><p class="ib-insuwork-flow-desc">보험워크의 중심은 기능이 아니라 반복되는 영업 루틴입니다. 일정이 고객관리를 만들고, 고객관리가 상담 준비를 만들고, 상담 결과가 다시 다음 일정을 만듭니다.</p></div>
         <ol>
           <li><i class="ib-insuwork-flow-art art-calendar" aria-hidden="true"></i><span>1</span><div><strong>오늘 할 일 확인</strong><small>월·주·일 캘린더에서 오늘의 연락과 상담을 확인</small></div></li>
@@ -84,7 +86,7 @@
         </ol>
       </section>
 
-      <section class="ib-insuwork-cta">
+      <section class="ib-insuwork-cta" hidden>
         <div><p class="ib-kicker">INSURANCE BRIEFING</p><h2>일정이 있으면<br>하루가 시작됩니다.</h2><p>오늘 할 일을 끝내고, 내일 할 일을 준비하는 흐름을 보험워크 안에 쌓아갑니다.</p></div>
         <a href="/insubriefing/insuwork/">보험워크 열기 <span aria-hidden="true">→</span></a>
       </section>
