@@ -23,7 +23,7 @@
   ];
   var SCRIPT_GROUP_COLORS = { open: '#6366F1', mid: '#4F8DDA', close: '#E89A3C' };
   var STANDALONE = document.documentElement.getAttribute('data-insuwork') === 'true';
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing'];
   /* 2026-08-25 대표 승인 — 보험워크 공개 구조 전환: 셸(사이드바 포함)은 항상 렌더링하고, 아래 4개
      메뉴(캘린더/고객관리/상담관리/자료)만 비로그인 클릭 시 진입을 막는다. 홈·보험브리핑·참고자료·
      영업도구는 비로그인도 접근 가능. canEnterSection()이 go()/openWorkspace() 진입 직전에 확인한다. */
@@ -386,10 +386,11 @@
       var sectionKey = extra.slice(8);
       return '<button type="button" class="iw-nav-link' + (state.section === sectionKey ? ' on' : '') + '" onclick="OSInsuwork.go(\'' + sectionKey + '\')"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
     }
-    /* 2026-08-25 — 보험브리핑 섹션 전용: 인슈워크 SPA 내부 섹션이 아니라 기존 공개 페이지
-       (/insuwork/의 소식지·캘린더 원본인 /insuwork/insubriefing/)로 그대로 열어준다. 참고자료/영업도구와
-       같은 iw-nav-link 시각 패턴을 재사용하되 이동만 외부 페이지로 한다(최소 구현 — 구조 확인 필요:
-       insuwork 내부에 소식지·캘린더를 직접 재조립하는 편이 장기적으로는 더 맞을 수 있음). */
+    /* 2026-08-25 회귀 수정 — 보험브리핑을 별도 페이지(/insuwork/insubriefing/)로 이동시키던
+       'link:' 분기는 사이드바가 통째로 사라지는 문제(#1850 후속)가 있어 폐기했다. 이제
+       '소식지·캘린더'는 참고자료/영업도구와 완전히 동일한 'section:briefing' 분기를 타고
+       인슈워크 SPA 내부 섹션으로 렌더된다(아래 briefingHtml()). 'link:' 분기 자체는 다른 향후
+       외부 링크 메뉴를 위해 코드는 남겨두되 현재 briefingGroup에서는 더 이상 쓰지 않는다. */
     if (typeof extra === 'string' && extra.indexOf('link:') === 0) {
       var href = extra.slice(5);
       return '<button type="button" class="iw-nav-link" onclick="window.location.href=\'' + esc(jsString(href)) + '\'"><span>' + entry[0] + '</span>' + entry[1] + '</button>';
@@ -404,7 +405,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
-    var briefingGroup = [['◫', '소식지·캘린더', 'link:/insuwork/insubriefing/']];
+    var briefingGroup = [['◫', '소식지·캘린더', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
@@ -1569,7 +1570,53 @@
     if (state.section === 'tools') return toolsPageHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
+    if (state.section === 'briefing') return briefingHtml();
     return homeHtml();
+  }
+  /* 2026-08-25 — 소식지·캘린더(보험브리핑) 섹션. insuwork/insubriefing/leaflets.js의 리플렛
+     캘린더 엔진을 그대로 이식해 사이드바를 유지한 채 #iw-main 안에서 렌더한다(작업지시서
+     "인슈워크 SPA 내부 섹션으로 흡수" 대응). 이 섹션은 PROTECTED_SECTIONS에 없어 비로그인
+     공개 유지 — 로그인 게이트를 걸지 않는다. 캘린더가 기대하는 DOM 구조는
+     insuwork/insubriefing/index.html의 #leaflet-calendar 블록을 그대로 가져온 것이며,
+     실제 초기화·이벤트 바인딩은 initBriefingCalendar()가 renderContent() 훅에서 담당한다. */
+  function briefingHtml() {
+    return '<div class="iw-toolbar"><h2>소식지·캘린더</h2></div>'
+      + '<div id="leaflet-calendar">'
+      + '<div class="ib-leaflet-head">'
+      + '<div class="ib-leaflet-nav">'
+      + '<span id="ib-leaflet-nav-arrows">'
+      + '<button type="button" id="ib-leaflet-prev" aria-label="이전">‹</button>'
+      + '<span id="ib-leaflet-month-label"></span>'
+      + '<button type="button" id="ib-leaflet-next" aria-label="다음">›</button>'
+      + '</span>'
+      + '<button type="button" id="ib-leaflet-today" class="ib-leaflet-today-btn">오늘</button>'
+      + '</div>'
+      + '<div class="ib-leaflet-modes" aria-label="캘린더 보기 방식">'
+      + '<button type="button" class="ib-leaflet-mode on" data-mode="month">월</button>'
+      + '<button type="button" class="ib-leaflet-mode" data-mode="week">주</button>'
+      + '<button type="button" class="ib-leaflet-mode" data-mode="day">일</button>'
+      + '<button type="button" class="ib-leaflet-mode" data-mode="agenda">목록</button>'
+      + '</div>'
+      + '</div>'
+      + '<div class="ib-leaflet-grid" id="ib-leaflet-grid"></div>'
+      + '</div>';
+  }
+  /* leaflets.js의 init()은 원래 페이지 로드 시 딱 한 번만 자동 실행되도록 설계됐다(DOMContentLoaded
+     1회). 여기서는 '소식지·캘린더' 섹션에 들어올 때마다 #iw-main이 innerHTML로 통째 교체되어
+     #ib-leaflet-grid/이전-다음/오늘/보기모드 버튼이 매번 새 DOM 노드로 다시 만들어지므로, 그
+     새 버튼들에 클릭 리스너를 다시 걸어주려면 init()을 매번 다시 불러야 한다(그렇지 않으면 두
+     번째 진입부터 캘린더가 빈 채로 버튼이 먹통이 된다).
+     ⚠️ 확인 필요(대표 라이브 클릭 검수 권장) — init() 내부의 bindPasteEvents()는 document에,
+     resize 리스너는 window에 매번 새로 addEventListener 하고 old 이전 리스너를 제거하지 않는다
+     (grid 안쪽 버튼 리스너는 옛 DOM이 통째로 버려지며 자연 소멸하지만, document/window에 걸리는
+     이 두 리스너는 페이지 수명 내내 누적된다). 초기 로드 후 loadData()가 완료되며 renderContent()가
+     한 번 더 불려 이 섹션이 재렌더되는 흐름이 있어 보통 페이지당 2회 정도 누적되는 데 그치지만,
+     같은 세션에서 다른 섹션↔소식지·캘린더를 여러 번 오가면 paste 리스너가 계속 쌓여 대표(PILOT_ID)
+     계정이 캘린더에 붙여넣기로 자료를 등록할 때 동일 자료가 중복 업로드될 수 있다. leaflets.js 자체
+     로직은 이번 작업 범위 밖이라 손대지 않았다 — 근본 해결은 leaflets.js의 init()에 document/window
+     리스너 중복 바인딩 가드를 추가하는 별도 후속 작업으로 넘긴다. */
+  function initBriefingCalendar() {
+    if (window.OSBriefingLeaflets && typeof window.OSBriefingLeaflets.init === 'function') window.OSBriefingLeaflets.init();
   }
 
   function renderShell() {
@@ -1584,7 +1631,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'calendar' && state.calendarMode === 'month') hydrateMonthOverflow(); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'calendar' && state.calendarMode === 'month') hydrateMonthOverflow(); if (state.section === 'briefing') initBriefingCalendar(); } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });

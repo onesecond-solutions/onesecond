@@ -656,4 +656,8 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+
+  // 2026-08-25 — 인슈워크 SPA의 '소식지·캘린더' 섹션(js/insuwork.js briefingHtml/
+  // initBriefingCalendar)이 섹션 재진입 시 이 캘린더를 다시 초기화할 수 있도록 외부 노출.
+  window.OSBriefingLeaflets = { init: init };
 })();
