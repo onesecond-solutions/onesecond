@@ -639,17 +639,25 @@
     var modeButtons = document.querySelectorAll('.ib-leaflet-mode');
     Array.prototype.forEach.call(modeButtons, function (btn) { btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); }); });
     state.monthCap = monthThumbCap();
-    bindPasteEvents();
-    var resizeTimer = 0;
-    window.addEventListener('resize', function () {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(function () {
-        var nextCap = monthThumbCap();
-        if (nextCap === state.monthCap) return;
-        state.monthCap = nextCap;
-        if (state.mode === 'month') render();
-      }, 120);
-    });
+    /* 2026-08-25 — init()이 인슈워크 SPA 섹션 재진입마다 다시 불린다(#iw-main이 매번 통째로
+       교체되어 그리드 안 버튼 리스너를 새로 걸어야 함). 그리드 안쪽 리스너는 옛 DOM과 함께
+       자연 소멸하지만, document/window에 붙는 아래 두 리스너는 그렇지 않아 재호출마다 계속
+       쌓인다 — 특히 붙여넣기 리스너가 중복되면 대표(PILOT_ID) 계정이 캘린더에 자료를 붙여넣을 때
+       같은 파일이 여러 번 업로드된다. 페이지 수명 동안 한 번만 바인딩되도록 가드한다. */
+    if (!state.globalListenersBound) {
+      state.globalListenersBound = true;
+      bindPasteEvents();
+      var resizeTimer = 0;
+      window.addEventListener('resize', function () {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(function () {
+          var nextCap = monthThumbCap();
+          if (nextCap === state.monthCap) return;
+          state.monthCap = nextCap;
+          if (state.mode === 'month') render();
+        }, 120);
+      });
+    }
     renderToolbar();
     loadForCursor();
   }

@@ -1606,15 +1606,9 @@
      #ib-leaflet-grid/이전-다음/오늘/보기모드 버튼이 매번 새 DOM 노드로 다시 만들어지므로, 그
      새 버튼들에 클릭 리스너를 다시 걸어주려면 init()을 매번 다시 불러야 한다(그렇지 않으면 두
      번째 진입부터 캘린더가 빈 채로 버튼이 먹통이 된다).
-     ⚠️ 확인 필요(대표 라이브 클릭 검수 권장) — init() 내부의 bindPasteEvents()는 document에,
-     resize 리스너는 window에 매번 새로 addEventListener 하고 old 이전 리스너를 제거하지 않는다
-     (grid 안쪽 버튼 리스너는 옛 DOM이 통째로 버려지며 자연 소멸하지만, document/window에 걸리는
-     이 두 리스너는 페이지 수명 내내 누적된다). 초기 로드 후 loadData()가 완료되며 renderContent()가
-     한 번 더 불려 이 섹션이 재렌더되는 흐름이 있어 보통 페이지당 2회 정도 누적되는 데 그치지만,
-     같은 세션에서 다른 섹션↔소식지·캘린더를 여러 번 오가면 paste 리스너가 계속 쌓여 대표(PILOT_ID)
-     계정이 캘린더에 붙여넣기로 자료를 등록할 때 동일 자료가 중복 업로드될 수 있다. leaflets.js 자체
-     로직은 이번 작업 범위 밖이라 손대지 않았다 — 근본 해결은 leaflets.js의 init()에 document/window
-     리스너 중복 바인딩 가드를 추가하는 별도 후속 작업으로 넘긴다. */
+     2026-08-25 후속 수정 — init() 재호출 시 document(붙여넣기)·window(리사이즈) 리스너가 누적되던
+     문제를 leaflets.js에 state.globalListenersBound 가드를 추가해 해결했다(페이지 수명 동안 한 번만
+     바인딩). 그리드 안쪽 버튼 리스너는 옛 DOM과 함께 자연 소멸하므로 그대로 매번 재바인딩된다. */
   function initBriefingCalendar() {
     if (window.OSBriefingLeaflets && typeof window.OSBriefingLeaflets.init === 'function') window.OSBriefingLeaflets.init();
   }
