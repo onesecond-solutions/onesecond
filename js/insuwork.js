@@ -2574,32 +2574,47 @@
     if (caption) caption.textContent = '다음 상령일 ' + info.upperDate + ' · ' + info.nextAge + '세';
   }
   function toolsImageHtml() {
-    return '<section class="iw-tool-workspace iw-tool-image-page"><div class="iw-tool-pane"><h3>입력</h3><label class="iw-imgconv-drop" id="iw-imgconv-drop"><input id="iw-imgconv-file" type="file" accept="image/png,image/jpeg,application/pdf,.pdf" onchange="OSInsuwork.imgConvertLoad(this)"><span class="iw-imgconv-icon">▧</span><strong>PNG · JPG · PDF 파일 선택</strong><em>클릭 또는 드래그앤드롭 · PDF는 페이지별 JPG</em></label><div id="iw-imgconv-file-info"></div><button type="button" class="iw-btn primary iw-tool-fire" onclick="OSInsuwork.imgConvertRun()">변환</button></div><div class="iw-tool-pane"><h3>결과</h3><div id="iw-imgconv-result" class="iw-imgconv-result"><div class="iw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
+    return '<section class="iw-tool-workspace iw-tool-image-page"><div class="iw-tool-pane"><h3>입력</h3><label class="iw-imgconv-drop" id="iw-imgconv-drop"><input id="iw-imgconv-file" type="file" multiple accept="image/png,image/jpeg,application/pdf,.pdf" onchange="OSInsuwork.imgConvertLoad(this)"><span class="iw-imgconv-icon">▧</span><strong>PNG · JPG · PDF 파일 선택</strong><em>클릭 또는 드래그앤드롭 · PDF는 페이지별 JPG · 이미지 여러 장 선택 시 PDF로 합치기</em></label><div id="iw-imgconv-file-info"></div><button type="button" class="iw-btn primary iw-tool-fire" onclick="OSInsuwork.imgConvertRun()">변환</button></div><div class="iw-tool-pane"><h3>결과</h3><div id="iw-imgconv-result" class="iw-imgconv-result"><div class="iw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
   }
   function hydrateToolsPage() { if (state.toolMode === 'calculator') hydrateCalculator(); if (state.toolMode === 'bmi') calcBmi(); if (state.toolMode === 'image') hydrateImageConvert(); }
   function hydrateImageConvert() {
     var drop = document.getElementById('iw-imgconv-drop'); if (!drop || drop.dataset.bound === '1') return; drop.dataset.bound = '1';
     drop.addEventListener('dragover', function (event) { event.preventDefault(); drop.classList.add('drag'); });
     drop.addEventListener('dragleave', function () { drop.classList.remove('drag'); });
-    drop.addEventListener('drop', function (event) { event.preventDefault(); drop.classList.remove('drag'); var file = event.dataTransfer.files && event.dataTransfer.files[0]; if (file) setImageConvertFile(file); });
+    drop.addEventListener('drop', function (event) { event.preventDefault(); drop.classList.remove('drag'); setImageConvertFiles(event.dataTransfer.files); });
     renderImageConvertFile();
   }
+  function isImageFile(file) { return /image\/(png|jpeg)/i.test(file.type || '') || /\.(png|jpe?g)$/i.test(file.name || ''); }
   function setImageConvertFile(file) {
     if (!file) return;
     if (!/image\/(png|jpeg)|application\/pdf/i.test(file.type || '') && !/\.(png|jpe?g|pdf)$/i.test(file.name || '')) { briefingAlert('PNG · JPG · PDF 파일만 변환할 수 있습니다.'); return; }
-    state.toolFile = file; state.toolResult = null; state.toolPages = null; renderImageConvertFile(); renderImageConvertEmpty();
+    state.toolFile = file; state.toolImages = null; state.toolResult = null; state.toolPages = null; state.toolPdfResult = null; renderImageConvertFile(); renderImageConvertEmpty();
+  }
+  function setImageConvertFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    if (files.length === 1) { setImageConvertFile(files[0]); return; }
+    if (!files.every(isImageFile)) { briefingAlert('여러 장을 한 번에 선택하면 PNG · JPG 이미지만 PDF로 합칠 수 있습니다.'); return; }
+    state.toolFile = null; state.toolResult = null; state.toolPages = null; state.toolPdfResult = null;
+    state.toolImages = files; renderImageConvertFile(); renderImageConvertEmpty();
   }
   function imgConvertLoad(input) {
-    setImageConvertFile(input && input.files && input.files[0]);
+    setImageConvertFiles(input && input.files);
   }
   function renderImageConvertFile() {
     var info = document.getElementById('iw-imgconv-file-info'); if (!info) return;
+    if (state.toolImages && state.toolImages.length) {
+      var totalSize = state.toolImages.reduce(function (sum, f) { return sum + f.size; }, 0);
+      info.innerHTML = '<div class="iw-imgconv-file-info"><span>이미지 ' + state.toolImages.length + '장 · ' + fmtBytes(totalSize) + '</span><button type="button" onclick="OSInsuwork.imgConvertClear()" aria-label="파일 제거">×</button></div>';
+      return;
+    }
     if (!state.toolFile) { info.innerHTML = ''; return; }
     info.innerHTML = '<div class="iw-imgconv-file-info"><span>' + esc(state.toolFile.name) + ' · ' + fmtBytes(state.toolFile.size) + '</span><button type="button" onclick="OSInsuwork.imgConvertClear()" aria-label="파일 제거">×</button></div>';
   }
-  function imgConvertClear() { state.toolFile = null; state.toolResult = null; state.toolPages = null; var input = document.getElementById('iw-imgconv-file'); if (input) input.value = ''; renderImageConvertFile(); renderImageConvertEmpty(); }
+  function imgConvertClear() { state.toolFile = null; state.toolImages = null; state.toolResult = null; state.toolPages = null; state.toolPdfResult = null; var input = document.getElementById('iw-imgconv-file'); if (input) input.value = ''; renderImageConvertFile(); renderImageConvertEmpty(); }
   function renderImageConvertEmpty(text) { var result = document.getElementById('iw-imgconv-result'); if (result) result.innerHTML = '<div class="iw-tool-empty">' + esc(text || '파일 선택 후 변환을 누르세요.') + '</div>'; }
   function imgConvertRun() {
+    if (state.toolImages && state.toolImages.length) return imgConvertMergePdf(state.toolImages);
     var file = state.toolFile; if (!file) { briefingAlert('파일을 먼저 선택해 주세요.'); return; }
     if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) return imgConvertPdf(file);
     var result = document.getElementById('iw-imgconv-result'); if (result) result.innerHTML = '<div class="iw-tool-empty">변환 중입니다.</div>';
@@ -2645,6 +2660,123 @@
   function imgConvertCopy() { var r = state.toolResult; if (!r || !navigator.clipboard || !window.ClipboardItem) return imgConvertDownload(); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': r.blob })]).then(function () { if (typeof window.toast === 'function') window.toast('변환 이미지를 복사했습니다.'); }).catch(imgConvertDownload); }
   function imgConvertPdfDownload(index) { var p = (state.toolPages || [])[index]; if (p) downloadBlob(p.url, p.name); }
   function imgConvertPdfCopy(index) { var p = (state.toolPages || [])[index]; if (!p || !navigator.clipboard || !window.ClipboardItem) return imgConvertPdfDownload(index); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': p.blob })]).then(function () { if (typeof window.toast === 'function') window.toast(p.page + '쪽을 복사했습니다.'); }).catch(function () { imgConvertPdfDownload(index); }); }
+
+  // ── 이미지 여러 장 → PDF 합치기 ──────────────────────────────────────────
+  function loadPdfLib() {
+    if (window.PDFLib) return Promise.resolve(window.PDFLib);
+    if (state.pdfLibPromise) return state.pdfLibPromise;
+    state.pdfLibPromise = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+      script.onload = function () { if (!window.PDFLib) { reject(new Error('PDF 생성 모듈을 불러오지 못했습니다.')); return; } resolve(window.PDFLib); };
+      script.onerror = function () { reject(new Error('PDF 생성 모듈을 불러오지 못했습니다.')); };
+      document.head.appendChild(script);
+    });
+    return state.pdfLibPromise;
+  }
+  function fileToJpegBuffer(file) {
+    return createImageBitmap(file).then(function (bitmap) {
+      var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height;
+      var ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(bitmap, 0, 0);
+      return new Promise(function (resolve) { canvas.toBlob(function (blob) { blob.arrayBuffer().then(resolve); }, 'image/jpeg', .92); });
+    });
+  }
+  function imgConvertMergePdf(files) {
+    var result = document.getElementById('iw-imgconv-result'); if (result) result.innerHTML = '<div class="iw-tool-empty">PDF로 합치는 중입니다.</div>';
+    loadPdfLib().then(function (PDFLib) {
+      return Promise.all(files.map(fileToJpegBuffer)).then(function (buffers) {
+        return PDFLib.PDFDocument.create().then(function (pdfDoc) {
+          return buffers.reduce(function (chain, buf) {
+            return chain.then(function () {
+              return pdfDoc.embedJpg(buf).then(function (img) {
+                var page = pdfDoc.addPage([img.width, img.height]);
+                page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+              });
+            });
+          }, Promise.resolve()).then(function () { return pdfDoc.save(); });
+        });
+      });
+    }).then(function (bytes) {
+      var blob = new Blob([bytes], { type: 'application/pdf' });
+      var name = '이미지_' + files.length + '장_' + ymd(new Date()) + '.pdf';
+      state.toolPdfResult = { blob: blob, url: URL.createObjectURL(blob), name: name, size: blob.size, pageCount: files.length };
+      renderImageConvertPdfMergeResult();
+    }).catch(function (err) { renderImageConvertEmpty((err && err.message) || 'PDF 합치기 실패. 다시 시도해 주세요.'); });
+  }
+  function renderImageConvertPdfMergeResult() {
+    var r = state.toolPdfResult, result = document.getElementById('iw-imgconv-result'); if (!r || !result) return;
+    result.innerHTML = '<div class="iw-imgconv-summary"><span>이미지 ' + r.pageCount + '장 → PDF 1개</span><span>' + fmtBytes(r.size) + '</span></div>'
+      + '<label class="iw-field iw-imgconv-name-field"><span>파일명</span><div class="iw-imgconv-filename"><input id="iw-imgconv-pdf-name" type="text" value="' + esc(r.name.replace(/\.pdf$/i, '')) + '" oninput="OSInsuwork.imgConvertPdfNameInput(this)"><span>.pdf</span></div></label>'
+      + '<div class="iw-imgconv-actions"><button type="button" class="iw-btn primary" onclick="OSInsuwork.imgConvertPdfMergeDownload()">다운로드 저장</button><button type="button" class="iw-btn" onclick="OSInsuwork.imgConvertPdfMergeSaveToInsuwork()">인슈워크 저장</button></div>'
+      + '<p class="iw-imgconv-pdf-note" id="iw-imgconv-pdf-save-status"></p>';
+  }
+  function imgConvertPdfNameInput(input) {
+    var r = state.toolPdfResult; if (!r) return;
+    var value = String(input.value || '').trim() || '파일';
+    r.name = value.replace(/\.pdf$/i, '') + '.pdf';
+  }
+  function imgConvertPdfMergeDownload() { var r = state.toolPdfResult; if (r) downloadBlob(r.url, r.name); }
+  function imgConvertPdfMergeSaveToInsuwork() {
+    var r = state.toolPdfResult; if (!r) return;
+    var status = document.getElementById('iw-imgconv-pdf-save-status');
+    toolSaveFolderPicker(r.blob, r.name, 'application/pdf', status);
+  }
+
+  // ── 저장 위치 선택(내 파일함 폴더 탐색) — 도구 결과물 저장 공용 ─────────────
+  function toolSaveFolderPicker(blob, filename, mime, statusEl) {
+    var owner = currentUserId();
+    if (!owner) { briefingAlert('로그인이 필요합니다.'); return; }
+    if (statusEl) statusEl.textContent = '폴더 목록을 불러오는 중…';
+    window.db.fetch('/rest/v1/insuwork_items?owner_id=eq.' + encodeURIComponent(owner) + '&item_type=eq.folder&deleted_at=is.null&order=title.asc&select=id,title,parent_id')
+      .then(function (res) { if (!res.ok) throw new Error('폴더 목록을 불러오지 못했습니다.'); return res.json(); })
+      .then(function (folders) {
+        if (statusEl) statusEl.textContent = '';
+        state.toolSavePicker = { folders: folders || [], path: [{ id: null, title: '내 파일함' }], blob: blob, filename: filename, mime: mime, owner: owner };
+        renderToolSavePicker();
+      })
+      .catch(function (err) { if (statusEl) statusEl.textContent = err.message || '폴더 목록을 불러오지 못했습니다.'; });
+  }
+  function renderToolSavePicker() {
+    var p = state.toolSavePicker; if (!p) return;
+    var parentId = p.path[p.path.length - 1].id;
+    var trail = p.path.map(function (crumb, i) { return (i > 0 ? '<span>›</span>' : '') + '<button type="button" onclick="OSInsuwork.toolSavePickerGo(' + i + ')">' + esc(crumb.title) + '</button>'; }).join('');
+    var children = p.folders.filter(function (f) { return String(f.parent_id || '') === String(parentId || ''); });
+    var list = children.length
+      ? children.map(function (f) { return '<button type="button" class="iw-folder-row" onclick="OSInsuwork.toolSavePickerEnter(\'' + esc(f.id) + '\')">📁 ' + esc(f.title) + '</button>'; }).join('')
+      : '<p class="iw-folder-empty">하위 폴더가 없습니다.</p>';
+    dialog('<div class="iw-folder-dialog-body"><h2>인슈워크에 저장</h2><nav class="iw-folder-trail">' + trail + '</nav><div class="iw-folder-list">' + list + '</div><button type="button" class="iw-folder-new-btn" onclick="OSInsuwork.toolSavePickerNewFolder()">+ 새 폴더</button><p class="iw-folder-status" id="iw-tool-save-status"></p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.toolSavePickerConfirm()">이 폴더에 저장</button></div></div>');
+  }
+  function toolSavePickerGo(index) { var p = state.toolSavePicker; if (!p) return; p.path = p.path.slice(0, index + 1); renderToolSavePicker(); }
+  function toolSavePickerEnter(id) {
+    var p = state.toolSavePicker; if (!p) return;
+    var folder = p.folders.find(function (f) { return String(f.id) === String(id); });
+    if (folder) { p.path.push({ id: folder.id, title: folder.title }); renderToolSavePicker(); }
+  }
+  function toolSavePickerNewFolder() {
+    var p = state.toolSavePicker; if (!p) return;
+    briefingPrompt('새 폴더 이름을 입력하세요.', '새 폴더').then(function (name) {
+      if (name == null || !String(name).trim()) return;
+      var parentId = p.path[p.path.length - 1].id;
+      writeOne('insuwork_items', { owner_id: p.owner, parent_id: parentId || null, item_type: 'folder', title: String(name).trim(), visibility: 'private' })
+        .then(function (created) { p.folders.push(created); p.path.push({ id: created.id, title: created.title }); renderToolSavePicker(); })
+        .catch(function (err) { briefingAlert(err.message || '폴더를 만들지 못했습니다.'); });
+    });
+  }
+  function toolSavePickerConfirm() {
+    var p = state.toolSavePicker; if (!p) return;
+    var status = document.getElementById('iw-tool-save-status'); if (status) status.textContent = '저장하는 중…';
+    var parentId = p.path[p.path.length - 1].id;
+    var id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+    var ext = (p.filename.split('.').pop() || 'pdf').toLowerCase();
+    var path = p.owner + '/root/' + id + '.' + ext;
+    var token = window.db.getToken();
+    fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), {
+      method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': p.mime, 'x-upsert': 'false' }, body: p.blob
+    }).then(function (res) { if (!res.ok) throw new Error('파일 저장에 실패했습니다.'); return true; })
+      .then(function () { return write('insuwork_items', { id: id, owner_id: p.owner, parent_id: parentId || null, item_type: 'file', title: p.filename, storage_path: path, mime_type: p.mime, extension: ext, file_size: p.blob.size, visibility: 'private', created_at: new Date().toISOString() }); })
+      .then(function () { closeDialog(); if (typeof window.toast === 'function') window.toast('인슈워크 "' + p.path[p.path.length - 1].title + '"에 저장했습니다.'); })
+      .catch(function (err) { if (status) status.textContent = err.message || '저장에 실패했습니다.'; });
+  }
   function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSInsuwork.saveEvent()')); }
   function deleteEvent(id) {
     if (!id) return;
@@ -3010,7 +3142,7 @@
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, filterQuickLinks: filterQuickLinks,
+    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
