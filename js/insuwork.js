@@ -1077,7 +1077,7 @@
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
     var allDayEvents = [], timedByDate = {};
     days.forEach(function (date) { timedByDate[date] = []; eventsFor(date).forEach(function (event) { if (calendarAllDay(event)) allDayEvents.push(event); else timedByDate[date].push(event); }); });
-    var allDay = calendarSpanBars(days, allDayEvents, 4);
+    var allDay = calendarSpanBars(days, allDayEvents, 20);
     var bars = allDay.spans.map(function (sp) {
       var startIdx = days.indexOf(sp.start), endIdx = days.indexOf(sp.end);
       var left = 'calc(' + (startIdx / days.length * 100) + '% + 4px)', width = 'calc(' + ((endIdx - startIdx + 1) / days.length * 100) + '% - 8px)';
