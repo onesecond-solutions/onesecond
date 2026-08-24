@@ -78,7 +78,7 @@
     return new Promise(function (resolve) {
       var dialog = document.createElement('dialog');
       dialog.className = 'ib-confirm-dialog';
-      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">보험브리핑</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="ib-confirm-submit">확인</button></div></form>';
+      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">인슈워크</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="ib-confirm-submit">확인</button></div></form>';
       dialog.querySelector('h2').textContent = title;
       dialog.querySelector('p').textContent = message;
       var submit = dialog.querySelector('.ib-confirm-submit');
@@ -384,7 +384,7 @@
       .then(function (content) {
         var dialog = document.createElement('dialog');
         dialog.className = 'ib-text-dialog';
-        dialog.innerHTML = '<div class="ib-text-head"><div><span>보험브리핑</span><h2></h2></div><button type="button" aria-label="닫기">×</button></div><pre></pre><div class="ib-text-actions"><a target="_blank" rel="noopener" download>다운로드</a></div>';
+        dialog.innerHTML = '<div class="ib-text-head"><div><span>인슈워크</span><h2></h2></div><button type="button" aria-label="닫기">×</button></div><pre></pre><div class="ib-text-actions"><a target="_blank" rel="noopener" download>다운로드</a></div>';
         dialog.querySelector('h2').textContent = name || '텍스트 자료';
         renderLinkedText(dialog.querySelector('pre'), content);
         var close = dialog.querySelector('button'), download = dialog.querySelector('a');

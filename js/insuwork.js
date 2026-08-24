@@ -123,16 +123,16 @@
   }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function briefingAlert(message, title) {
-    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') return window.InsuranceBriefingNotice.alert(message, { title: title || '보험브리핑' });
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') return window.InsuranceBriefingNotice.alert(message, { title: title || '인슈워크' });
     if (typeof window.toast === 'function') { window.toast(message); return Promise.resolve(); }
     return Promise.resolve();
   }
   function briefingConfirm(message, title, confirmLabel, dangerous) {
-    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') return window.InsuranceBriefingNotice.confirm({ title: title || '보험브리핑', message: message, confirmLabel: confirmLabel || '확인', dangerous: !!dangerous });
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') return window.InsuranceBriefingNotice.confirm({ title: title || '인슈워크', message: message, confirmLabel: confirmLabel || '확인', dangerous: !!dangerous });
     return Promise.resolve(false);
   }
   function briefingPrompt(message, title, defaultValue) {
-    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.prompt === 'function') return window.InsuranceBriefingNotice.prompt({ title: title || '보험브리핑', message: message, defaultValue: defaultValue || '' });
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.prompt === 'function') return window.InsuranceBriefingNotice.prompt({ title: title || '인슈워크', message: message, defaultValue: defaultValue || '' });
     return Promise.resolve('');
   }
   function jsString(value) { return String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' '); }

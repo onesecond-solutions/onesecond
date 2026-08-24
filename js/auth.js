@@ -28,13 +28,13 @@
     }
     window.setTimeout(function () {
       if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') {
-        window.InsuranceBriefingNotice.alert(message, { title: title || '보험브리핑' });
+        window.InsuranceBriefingNotice.alert(message, { title: title || '인슈워크' });
         return;
       }
       var dialog = document.createElement('dialog');
       dialog.className = 'ib-notice-dialog';
-      dialog.innerHTML = '<form class="ib-notice-card" method="dialog"><span class="ib-notice-brand">보험브리핑</span><h2></h2><p></p><div class="ib-notice-actions"><button type="submit" value="confirm" class="ib-notice-primary">확인</button></div></form>';
-      dialog.querySelector('h2').textContent = title || '보험브리핑';
+      dialog.innerHTML = '<form class="ib-notice-card" method="dialog"><span class="ib-notice-brand">인슈워크</span><h2></h2><p></p><div class="ib-notice-actions"><button type="submit" value="confirm" class="ib-notice-primary">확인</button></div></form>';
+      dialog.querySelector('h2').textContent = title || '인슈워크';
       dialog.querySelector('p').textContent = message;
       document.body.appendChild(dialog);
       dialog.addEventListener('close', function () { dialog.remove(); }, { once: true });
