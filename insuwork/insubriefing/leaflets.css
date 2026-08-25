@@ -29,7 +29,7 @@
 
 /* 월 보기 */
 .ib-leaflet-grid-month{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto;grid-auto-rows:minmax(108px,1fr);gap:1px;background:#dfe1ec;border:1px solid #dfe1ec;border-radius:var(--radius-md,12px);overflow:hidden;box-shadow:0 8px 22px rgba(38,48,77,.06)}
-.ib-leaflet-dow{background:none;padding:6px 4px;text-align:center;font-size:11px;color:#424956}
+.ib-leaflet-dow{background:rgba(255,255,255,.84);padding:6px 4px;text-align:center;font-size:11px;color:#424956}
 .ib-leaflet-dow:first-child{color:#a74742}
 .ib-leaflet-dow:nth-child(7){color:#3f667f}
 .ib-leaflet-grid-month .ib-leaflet-day{background:rgba(255,255,255,.84);backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -64,7 +64,7 @@
 
 /* 공통 날짜 칸 */
 .ib-leaflet-day{position:relative;min-height:108px;padding:6px;background:none}
-.ib-leaflet-day.is-other{background:none;opacity:.55}
+.ib-leaflet-day.is-other{background:rgba(237,239,246,.7);opacity:.55}
 .ib-leaflet-day.is-other .ib-leaflet-daynum{color:#9aa0ad}
 .ib-leaflet-day.is-today{background:color-mix(in srgb,var(--iw-cal-soft) 85%,white);box-shadow:inset 0 0 0 3px var(--iw-cal-main),inset 0 0 24px color-mix(in srgb,var(--iw-cal-main) 12%,transparent)}
 .ib-leaflet-day.is-today .ib-leaflet-daynum{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;border-radius:var(--radius-full,999px);background:linear-gradient(145deg,var(--iw-cal-main),var(--iw-cal-deep));color:#fff;font-weight:800;box-shadow:0 3px 9px rgba(34,54,82,.28)}
