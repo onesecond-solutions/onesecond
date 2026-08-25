@@ -1019,20 +1019,38 @@
     if (!events.length) return '';
     return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + events.length + '명</i>';
   }
+  function scheduleCalendarChip(event) {
+    return '<i class="schedule" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(event.id) + '\')">' + esc(event.title || '일정') + '</i>';
+  }
+  function scheduleSummaryChip(events, date) {
+    if (!events.length) return '';
+    return '<i class="schedule schedule-more" role="button" tabindex="0" title="일정 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">+' + events.length + '개 더보기</i>';
+  }
+  /* 2026-08-25 대표 확정 — 하루 안에서 공휴일/절기·케어·상령일·짧은(당일) 일정 4종을 각각 독립으로
+     처리한다: 1개면 그대로, 2개 이상이면 요약(공휴일/절기는 한 줄로 이어붙이고, 나머지는 "+N개").
+     예전엔 칩을 최대 2개로 잘라(chips.slice(0,2)) 세 번째 종류가 통째로 사라지는 버그가 있었다 —
+     이제 종류마다 반드시 한 줄을 갖는다(장기간 일정은 아래 iw-cal-week-bars 막대로 별도 처리, 여기 포함 안 됨).
+     여러 날에 걸친 장기 일정은 제외 대상이라 이 함수엔 안 들어온다(monthView()에서 s!==e만 spans로 분리). */
   function monthCalendarChips(events, date) {
     var builtIns = events.filter(function (event) { return event.builtin; });
     var insuranceAgeEvents = builtIns.filter(function (event) { return event.event_type === 'insurance-age'; });
     var otherBuiltIns = builtIns.filter(function (event) { return event.event_type !== 'insurance-age'; });
     var careEvents = events.filter(isCareTask);
+    var shortEvents = events.filter(function (event) {
+      if (event.builtin || isCareTask(event)) return false;
+      var s = String(event.event_date || '').slice(0, 10), e = String(event.event_end_date || event.event_date || '').slice(0, 10);
+      return s === e;
+    });
     var chips = [];
-    if (otherBuiltIns.length) chips.push(builtinCalendarChip(otherBuiltIns[0]));
+    if (otherBuiltIns.length === 1) chips.push(builtinCalendarChip(otherBuiltIns[0]));
+    else if (otherBuiltIns.length > 1) chips.push('<i class="' + calendarEventKind(otherBuiltIns[0]) + '">' + otherBuiltIns.map(function (event) { return esc(event.title); }).join(', ') + '</i>');
     if (careEvents.length === 1) chips.push(careCalendarChip(careEvents[0]));
     else if (careEvents.length > 1) chips.push(careSummaryChip(careEvents, date));
-    if (insuranceAgeEvents.length && chips.length < 2) {
-      if (insuranceAgeEvents.length === 1) chips.push(builtinCalendarChip(insuranceAgeEvents[0]));
-      else chips.push(insuranceAgeSummaryChip(insuranceAgeEvents, date));
-    }
-    return chips.slice(0, 2).join('');
+    if (insuranceAgeEvents.length === 1) chips.push(builtinCalendarChip(insuranceAgeEvents[0]));
+    else if (insuranceAgeEvents.length > 1) chips.push(insuranceAgeSummaryChip(insuranceAgeEvents, date));
+    if (shortEvents.length === 1) chips.push(scheduleCalendarChip(shortEvents[0]));
+    else if (shortEvents.length > 1) chips.push(scheduleSummaryChip(shortEvents, date));
+    return chips.join('');
   }
   function calendarSpanBars(days, events, maxLanes) {
     var rangeStart = days[0], rangeEnd = days[days.length - 1], seen = {}, spans = [];
@@ -1053,11 +1071,15 @@
     for (var i = 0; i < 42; i++) { var day = new Date(start); day.setDate(start.getDate() + i); days.push(ymd(day)); }
     var gridStart = days[0], gridEnd = days[41];
     var seen = {}, spans = [];
+    /* 2026-08-25 대표 확정 — 여러 날에 걸친 장기 일정(s!==e)만 막대(span)로 취급해 항상 그대로 다
+       보인다. 당일 하루짜리 일정(s===e)은 여기 넣지 않고 monthCalendarChips()에서 하루 단위로
+       세어 1개=그대로, 2개 이상="+N개 더보기"로 처리한다(위 함수 참고). */
     days.forEach(function (key) {
       eventsFor(key).forEach(function (event) {
         if (event.builtin || isCareTask(event) || seen[event.id]) return;
-        seen[event.id] = true;
         var s = String(event.event_date || '').slice(0, 10), e = String(event.event_end_date || event.event_date || '').slice(0, 10);
+        if (s === e) return;
+        seen[event.id] = true;
         spans.push({ event: event, start: s < gridStart ? gridStart : s, end: e > gridEnd ? gridEnd : e });
       });
     });
@@ -1067,8 +1089,7 @@
     var weeks = [];
     for (var w = 0; w < 6; w++) {
       var weekDays = days.slice(w * 7, w * 7 + 7), weekStart = weekDays[0], weekEnd = weekDays[6];
-      // 레인 수를 고정 상한으로 자르지 않고 전부 렌더한다 — 실제로 몇 개가 보이는지는
-      // hydrateMonthOverflow()가 렌더된 셀의 실제 높이를 측정해서 화면 크기에 맞게 정한다.
+      // 장기 일정 막대는 상한 없이 전부 렌더한다(항상 그대로 다 보이기, 2026-08-25 대표 확정).
       var weekSpans = spans.filter(function (sp) { return sp.end >= weekStart && sp.start <= weekEnd; });
       var laneCount = weekSpans.reduce(function (m, sp) { return Math.max(m, sp.lane + 1); }, 0);
       var cells = weekDays.map(function (key) {
@@ -1084,53 +1105,6 @@
       weeks.push('<div class="iw-cal-week"><div class="iw-cal-week-cells">' + cells + '</div><div class="iw-cal-week-bars" style="height:' + (laneCount * 24) + 'px">' + bars + '</div></div>');
     }
     return '<section class="iw-calendar-month"><div class="iw-cal"><div class="iw-cal-head">' + ['일', '월', '화', '수', '목', '금', '토'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="iw-cal-grid">' + weeks.join('') + '</div></div></section>';
-  }
-  // 월 캘린더 각 주(week) 행의 실제 렌더된 높이를 재서, 그 높이에 실제로 들어가는
-  // 만큼만 일정 바를 보이고 나머지는 "+N개 더보기"로 접는다(고정 개수 상한 대신
-  // 셀 높이·화면 크기에 반응). 리사이즈 때도 다시 계산한다.
-  function hydrateMonthOverflow() {
-    var LANE_HEIGHT = 24, BARS_TOP_OFFSET = 58;
-    function apply() {
-      var weeks = document.querySelectorAll('#v-insuwork .iw-calendar-month .iw-cal-week');
-      weeks.forEach(function (week) {
-        var cellsEl = week.querySelector('.iw-cal-week-cells'), barsEl = week.querySelector('.iw-cal-week-bars');
-        if (!cellsEl || !barsEl) return;
-        var rowHeight = week.clientHeight;
-        var maxLanes = Math.max(1, Math.floor((rowHeight - BARS_TOP_OFFSET) / LANE_HEIGHT));
-        var overflowByDate = {};
-        Array.prototype.forEach.call(barsEl.querySelectorAll('.iw-event-bar'), function (bar) {
-          var lane = Number(bar.getAttribute('data-lane'));
-          var hide = lane >= maxLanes;
-          bar.style.display = hide ? 'none' : '';
-          if (!hide) return;
-          var start = bar.getAttribute('data-start'), end = bar.getAttribute('data-end');
-          Array.prototype.forEach.call(cellsEl.querySelectorAll('.iw-day'), function (dayEl) {
-            var date = dayEl.getAttribute('data-date');
-            if (date >= start && date <= end) overflowByDate[date] = (overflowByDate[date] || 0) + 1;
-          });
-        });
-        Array.prototype.forEach.call(cellsEl.querySelectorAll('.iw-day'), function (dayEl) {
-          var date = dayEl.getAttribute('data-date'), count = overflowByDate[date] || 0;
-          var moreEl = dayEl.querySelector('.iw-more');
-          if (!count) { if (moreEl) moreEl.style.display = 'none'; return; }
-          if (!moreEl) {
-            moreEl = document.createElement('span');
-            moreEl.className = 'iw-more'; moreEl.setAttribute('role', 'button'); moreEl.setAttribute('tabindex', '0');
-            moreEl.addEventListener('click', function (e) { e.stopPropagation(); openCalendarDay(date); });
-            moreEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openCalendarDay(date); } });
-            dayEl.appendChild(moreEl);
-          }
-          moreEl.style.display = '';
-          moreEl.textContent = '+' + count + '개 더보기';
-        });
-      });
-    }
-    apply();
-    if (!state.monthOverflowResizeBound) {
-      state.monthOverflowResizeBound = true;
-      var timer = 0;
-      window.addEventListener('resize', function () { window.clearTimeout(timer); timer = window.setTimeout(apply, 150); });
-    }
   }
   function timeView(days) {
     var hours = []; for (var h = 8; h <= 20; h++) hours.push(h);
@@ -1627,7 +1601,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'calendar' && state.calendarMode === 'month') hydrateMonthOverflow(); if (state.section === 'briefing') initBriefingCalendar(); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'briefing') initBriefingCalendar(); } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
