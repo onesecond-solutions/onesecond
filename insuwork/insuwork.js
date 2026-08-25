@@ -64,7 +64,9 @@
     }
     var name = (window.AppState && window.AppState.name) || user.name || '사용자';
     var email = (window.AppState && window.AppState.email) || user.email || '';
-    box.innerHTML = '<button type="button" class="iw-account-trigger" id="iw-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button><div class="iw-account-popover" id="iw-account-popover" role="menu" hidden><div class="iw-account-email" aria-label="로그인된 이메일 주소">' + esc(email || '이메일 정보 없음') + '</div><div class="iw-account-bgmode"><span>배경화면</span><div class="iw-bgmode-options" role="group" aria-label="배경화면 모드">' + bgModeButtonsHtml(currentBgMode()) + '</div></div><button type="button" id="iw-profile-open" role="menuitem">개인정보 수정</button><button type="button" id="iw-logout" role="menuitem">로그아웃</button></div>';
+    var nickname = (window.AppState && window.AppState.nickname) || user.nickname || '';
+    var emailLine = esc(email || '이메일 정보 없음') + (nickname ? ' | ' + esc(nickname) : '');
+    box.innerHTML = '<button type="button" class="iw-account-trigger" id="iw-account-trigger" aria-haspopup="menu" aria-expanded="false">' + esc(name) + '</button><div class="iw-account-popover" id="iw-account-popover" role="menu" hidden><div class="iw-account-email" aria-label="로그인된 이메일 주소">' + emailLine + '</div><div class="iw-account-bgmode"><span>배경화면</span><div class="iw-bgmode-options" role="group" aria-label="배경화면 모드">' + bgModeButtonsHtml(currentBgMode()) + '</div></div><button type="button" id="iw-profile-open" role="menuitem">개인정보 수정</button><button type="button" id="iw-logout" role="menuitem">로그아웃</button></div>';
     document.getElementById('iw-account-trigger').addEventListener('click', function () { var menu = document.getElementById('iw-account-popover'), open = menu.hidden; closeAccountMenu(); menu.hidden = !open; this.setAttribute('aria-expanded', String(open)); });
     document.getElementById('iw-profile-open').addEventListener('click', openProfile);
     document.getElementById('iw-logout').addEventListener('click', logout);
