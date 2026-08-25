@@ -805,22 +805,21 @@
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
       .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
-    var customersById = {}; state.data.customers.forEach(function (customer) { customersById[customer.id] = customer; });
-    var recentConsultations = state.data.consultations.filter(function (item) { return !!customersById[item.customer_id]; })
-      .sort(function (a, b) { return String(b.consulted_at || b.created_at).localeCompare(String(a.consulted_at || a.created_at)); }).slice(0, 5);
+    var recentCustomers = state.data.customers.filter(function (item) { return isRealCustomerStage(item.status); })
+      .sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); }).slice(0, 5);
     var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
     var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
     var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
     var todayPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>오늘 일정</strong><button onclick="OSInsuwork.go(\'calendar\')">전체 보기</button></div><div class="iw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="iw-empty">' + todayEmptyText + '</div>') + '</div></section>';
     var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
-    var consultEmptyText = loginHint ? '로그인 후 상담 기록을 확인할 수 있습니다.' : '상담 기록이 없습니다.';
-    var consultPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 상담</strong><button onclick="OSInsuwork.go(\'consultations\')">전체 보기</button></div><div class="iw-list">' + (recentConsultations.length ? recentConsultations.map(function (item) { var customer = customersById[item.customer_id] || item.insuwork_customers; return row(customer ? customer.name || '(이름 없음)' : '(고객 없음)', stripHtml(item.memo || '') || '상담내용이 없습니다.', esc(formatDate(item.consulted_at || item.created_at)), "OSInsuwork.go('consultations');OSInsuwork.selectConsultation('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">' + consultEmptyText + '</div>') + '</div></section>';
+    var customersEmptyText = loginHint ? '로그인 후 고객 정보를 확인할 수 있습니다.' : '등록된 고객이 없습니다.';
+    var customersPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 고객</strong><button onclick="OSInsuwork.go(\'customers\')">전체 보기</button></div><div class="iw-list">' + (recentCustomers.length ? recentCustomers.map(function (item) { var profile = customerProfile(item); return row(item.name || '(이름 없음)', phoneText(item.phone || item.phone_raw || '') || (item.status || ''), esc(formatDate(profile.contract_date || item.created_at)), "OSInsuwork.go('customers');OSInsuwork.selectCustomerDetail('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">' + customersEmptyText + '</div>') + '</div></section>';
     /* 비로그인 사용자는 state.status가 'waiting-auth'에서 영원히 벗어나지 못하므로(로그인 절차가
        진행 중인 게 아니라 애초에 로그인을 안 한 것) statusHtml()을 얹으면 "로그인 정보를 확인하고
        있습니다" 문구가 계속 떠 있는 것처럼 오해를 준다. 로그인된 사용자의 실제 개인 데이터 로딩
        중에는 기존처럼 문구를 유지한다. */
-    return (allowed() ? statusHtml() : '') + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="iw-home-row iw-home-row-bottom">' + assetsPanel + consultPanel + '</div></div>';
+    return (allowed() ? statusHtml() : '') + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="iw-home-row iw-home-row-bottom">' + assetsPanel + customersPanel + '</div></div>';
   }
 
   function assetCategory(item) {
