@@ -1545,23 +1545,35 @@
      화면 자체 검색창만 둔다(전역 검색과는 분리). 기존 '공개 범위' 체크(visibility=public)를 그대로
      재사용 — 새 '공개하기' 버튼 없이, 어떤 사용자든 자기 자료를 공개로 저장하면 자동으로 여기 모인다.
      owner_id 필터 없이 조회하는 이 앱의 첫 사례 — RLS(owner_id=auth.uid() OR visibility='public')가
-     이미 인증 사용자에게 전체 공개 자료 읽기를 허용해서 DB 변경 없이 가능하다. 작성자 표시는 닉네임
-     컬럼이 아직 없어 1차는 전부 '익명'으로 통일(닉네임 DB 마이그레이션은 별도 트랙). */
+     이미 인증 사용자에게 전체 공개 자료 읽기를 허용해서 DB 변경 없이 가능하다.
+     2026-08-25 후속 — public.users.nickname 컬럼 + get_nicknames(uuid[]) RPC 배포 완료 후, 목록에 있는
+     owner_id 집합에 대해 한 번만 조회해 닉네임을 채운다(설정 안 한 사용자는 계속 '익명'). */
   function loadPublicLibrary() {
     if (state.publicLibraryData || state.publicLibraryLoading) return;
     state.publicLibraryLoading = true;
     api('insuwork_items?visibility=eq.public&item_type=neq.folder&order=created_at.desc&limit=500&select=id,item_type,title,body,url,storage_path,mime_type,file_size,created_at,owner_id').then(function (rows) {
-      state.publicLibraryData = rows || []; state.publicLibraryLoading = false;
-      if (state.section === 'public-library') renderContent();
+      state.publicLibraryData = rows || [];
+      var ownerIds = (rows || []).filter(function (row) { return row.owner_id; }).map(function (row) { return row.owner_id; });
+      ownerIds = ownerIds.filter(function (id, index) { return ownerIds.indexOf(id) === index; });
+      if (!ownerIds.length) { state.publicLibraryLoading = false; if (state.section === 'public-library') renderContent(); return; }
+      return window.db.fetch('/rest/v1/rpc/get_nicknames', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_ids: ownerIds }) })
+        .then(function (response) { return response.ok ? response.json() : []; })
+        .then(function (nickRows) {
+          var map = {};
+          (nickRows || []).forEach(function (row) { if (row.nickname) map[row.id] = row.nickname; });
+          state.publicLibraryNicknames = map; state.publicLibraryLoading = false;
+          if (state.section === 'public-library') renderContent();
+        });
     }).catch(function () { state.publicLibraryLoading = false; state.publicLibraryData = []; if (state.section === 'public-library') renderContent(); });
   }
   function publicLibraryKind(item) { return item.item_type === 'file' ? '자료' : item.item_type === 'note' ? '업무노트' : item.item_type === 'link' ? '링크' : '메모'; }
+  function publicLibraryAuthor(item) { return (state.publicLibraryNicknames && state.publicLibraryNicknames[item.owner_id]) || '익명'; }
   function publicLibraryMatches(item) {
     var q = (state.publicLibNameQuery || '').trim().toLowerCase(); if (!q) return true;
     return ((item.title || '') + ' ' + (item.body ? stripHtml(item.body) : '')).toLowerCase().indexOf(q) >= 0;
   }
   function publicLibraryRowHtml(item) {
-    return '<tr tabindex="0" onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + publicLibraryKind(item) + '</td><td>' + formatDate(item.created_at) + '</td></tr>';
+    return '<tr tabindex="0" onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + publicLibraryKind(item) + '</td><td>' + esc(publicLibraryAuthor(item)) + '</td><td>' + formatDate(item.created_at) + '</td></tr>';
   }
   function publicLibraryHtml() {
     var rows = (state.publicLibraryData || []).filter(publicLibraryMatches);
@@ -1571,7 +1583,7 @@
     var body;
     if (state.publicLibraryLoading) body = '<div class="iw-state"><strong>공개자료를 불러오는 중입니다.</strong></div>';
     else if (!rows.length) body = '<div class="iw-empty">' + (state.publicLibNameQuery ? '검색 결과가 없습니다.' : '아직 공개된 자료가 없습니다. 자료 화면에서 \'공개 범위\'를 전체 공개로 저장하면 여기에 나타납니다.') + '</div>';
-    else body = '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>등록일</th></tr></thead><tbody>' + rows.map(publicLibraryRowHtml).join('') + '</tbody></table></div>';
+    else body = '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>작성자</th><th>등록일</th></tr></thead><tbody>' + rows.map(publicLibraryRowHtml).join('') + '</tbody></table></div>';
     return toolbar + notice + body;
   }
   function openPublicLibraryItem(id) {
@@ -1579,7 +1591,7 @@
     var bodyText = item.item_type === 'link' ? '' : stripHtml(item.body || '');
     var link = item.url;
     var actions = item.storage_path ? '<button type="button" class="iw-btn primary" onclick="OSInsuwork.openPublicLibraryFile(\'' + esc(item.id) + '\')">열기</button>' : (link ? '<a class="iw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : '');
-    dialog('<div class="iw-detail"><span class="iw-badge">' + publicLibraryKind(item) + ' · 익명</span><h2 class="iw-detail-title"><span>' + esc(item.title || '(제목 없음)') + '</span></h2><p>' + formatDate(item.created_at) + '</p><div class="iw-detail-body">' + (item.item_type === 'note' ? (item.body || '') : esc(bodyText)) + '</div><div class="iw-detail-actions">' + actions + '</div></div>');
+    dialog('<div class="iw-detail"><span class="iw-badge">' + publicLibraryKind(item) + ' · ' + esc(publicLibraryAuthor(item)) + '</span><h2 class="iw-detail-title"><span>' + esc(item.title || '(제목 없음)') + '</span></h2><p>' + formatDate(item.created_at) + '</p><div class="iw-detail-body">' + (item.item_type === 'note' ? (item.body || '') : esc(bodyText)) + '</div><div class="iw-detail-actions">' + actions + '</div></div>');
   }
   function openPublicLibraryFile(id) {
     var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item || !item.storage_path) return;

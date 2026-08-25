@@ -156,7 +156,7 @@
     try {
       var res = await window.db.fetch(
         '/rest/v1/users?id=eq.' + window.AppState.userId
-        + '&select=name,role,phone,email,company,branch,team,plan,insurer_id'
+        + '&select=name,role,phone,email,company,branch,team,plan,insurer_id,nickname'
       );
       if (!res.ok) {
         // fetch 실패해도 appstate:ready는 발화 (이름/이메일은 빈값 + email fallback)
@@ -187,6 +187,7 @@
       window.AppState.branch  = u.branch  || '';
       window.AppState.team    = u.team    || '';
       window.AppState.insurer_id = u.insurer_id || '';  /* 2026-05-30 PR-B2: 보험사 자료 insert insurer_id 확보 */
+      window.AppState.nickname = u.nickname || '';  /* 2026-08-25: 공개자료실 작성자 표시용, 선택 항목 */
       window.AppState.ready   = true;
 
       /* 2026-05-28: os_user 동기화 — DB select 전 필드 통째 머지.

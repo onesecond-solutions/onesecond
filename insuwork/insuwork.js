@@ -39,6 +39,7 @@
     var user = storedUser(), state = window.AppState || {};
     document.getElementById('iw-profile-name').value = state.name || user.name || (user.user_metadata && user.user_metadata.name) || '';
     document.getElementById('iw-profile-phone').value = state.phone || user.phone || (user.user_metadata && user.user_metadata.phone) || '';
+    document.getElementById('iw-profile-nickname').value = state.nickname || user.nickname || (user.user_metadata && user.user_metadata.nickname) || '';
     document.getElementById('iw-profile-message').textContent = '';
     dialog.showModal();
   }
@@ -82,13 +83,13 @@
     profileDialog.querySelector('.iw-profile-cancel').addEventListener('click', function () { profileDialog.close(); });
     document.getElementById('iw-profile-form').addEventListener('submit', function (event) {
       event.preventDefault();
-      var name = document.getElementById('iw-profile-name').value.trim(), phone = document.getElementById('iw-profile-phone').value.trim(), message = document.getElementById('iw-profile-message');
+      var name = document.getElementById('iw-profile-name').value.trim(), phone = document.getElementById('iw-profile-phone').value.trim(), nickname = document.getElementById('iw-profile-nickname').value.trim(), message = document.getElementById('iw-profile-message');
       if (!name) { message.textContent = '이름을 입력해 주세요.'; return; }
       message.textContent = '저장 중입니다.';
       if (!window.Auth || !window.Auth.saveUser) { message.textContent = '사용자 정보를 불러온 뒤 다시 시도해 주세요.'; return; }
-      window.Auth.saveUser({ name: name, phone: phone || null }).then(function (ok) {
+      window.Auth.saveUser({ name: name, phone: phone || null, nickname: nickname || null }).then(function (ok) {
         if (!ok) { message.textContent = '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'; return; }
-        var user = storedUser(); user.name = name; user.phone = phone; user.user_metadata = Object.assign({}, user.user_metadata || {}, { name: name, phone: phone });
+        var user = storedUser(); user.name = name; user.phone = phone; user.nickname = nickname; user.user_metadata = Object.assign({}, user.user_metadata || {}, { name: name, phone: phone, nickname: nickname });
         localStorage.setItem('os_user', JSON.stringify(user)); sessionStorage.setItem('os_user', JSON.stringify(user));
         renderAccount(); profileDialog.close();
       });
