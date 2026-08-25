@@ -413,7 +413,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
-    var briefingGroup = [['◫', '소식지·캘린더', 'section:briefing']];
+    var briefingGroup = [['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
@@ -1588,7 +1588,7 @@
      insuwork/insubriefing/index.html의 #leaflet-calendar 블록을 그대로 가져온 것이며,
      실제 초기화·이벤트 바인딩은 initBriefingCalendar()가 renderContent() 훅에서 담당한다. */
   function briefingHtml() {
-    return '<div class="iw-toolbar"><h2>소식지·캘린더</h2></div>'
+    return '<div class="iw-toolbar"><h2>보험이슈</h2></div>'
       + '<div id="leaflet-calendar">'
       + '<div class="ib-leaflet-head">'
       + '<div class="ib-leaflet-nav">'
