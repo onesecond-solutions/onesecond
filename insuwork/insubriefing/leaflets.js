@@ -249,13 +249,22 @@
     var c = state.cursor, year = c.getFullYear(), month = c.getMonth();
     var cap = state.monthCap;
     var first = new Date(year, month, 1), startOffset = first.getDay();
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
-    var html = '<div class="ib-leaflet-grid-month">' + DOW.map(function (d) { return '<div class="ib-leaflet-dow">' + d + '</div>'; }).join('');
-    var leadStart = addDays(year + '-' + pad2(month + 1) + '-01', -startOffset);
-    for (var i = 0; i < startOffset; i++) html += dayCellHtml(addDays(leadStart, i), { cls: 'is-other', cap: cap });
-    for (var day = 1; day <= daysInMonth; day++) html += dayCellHtml(year + '-' + pad2(month + 1) + '-' + pad2(day), { cap: cap });
-    html += '</div>';
-    host.innerHTML = html;
+    var monthKey = year + '-' + pad2(month + 1);
+    var leadStart = addDays(monthKey + '-01', -startOffset);
+    var days = [];
+    for (var i = 0; i < 42; i++) days.push(addDays(leadStart, i));
+    var dowRowHtml = '<div class="ib-leaflet-dow-row">' + DOW.map(function (d) { return '<div class="ib-leaflet-dow">' + d + '</div>'; }).join('') + '</div>';
+    var weeksHtml = '';
+    for (var w = 0; w < 6; w++) {
+      var weekDays = days.slice(w * 7, w * 7 + 7);
+      var cellsHtml = weekDays.map(function (dateStr) {
+        var inMonth = dateStr.slice(0, 7) === monthKey;
+        return dayCellHtml(dateStr, inMonth ? { cap: cap } : { cls: 'is-other', cap: cap });
+      }).join('');
+      weeksHtml += '<div class="ib-leaflet-week"><div class="ib-leaflet-week-cells">' + cellsHtml + '</div></div>';
+    }
+    var gridMonthHtml = '<div class="ib-leaflet-grid-month">' + weeksHtml + '</div>';
+    host.innerHTML = '<div class="ib-leaflet-month-card">' + dowRowHtml + gridMonthHtml + '</div>';
     bindMoreEvents();
   }
 
