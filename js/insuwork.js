@@ -1141,7 +1141,30 @@
   function agendaView() {
     var start = state.selectedDate, end = addDays(start, 365);
     var rows = allEvents().filter(function (event) { var date = String(event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return String(a.event_date).localeCompare(String(b.event_date)) || String(a.event_time || '').localeCompare(String(b.event_time || '')); });
-    return '<div class="iw-agenda">' + (rows.length ? rows.map(function (event) { var date = String(event.event_date).slice(0, 10); return '<button onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><time><strong>' + Number(date.slice(8)) + '</strong><span>' + Number(date.slice(5, 7)) + '월 · ' + weekday(date) + '</span></time><span><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></span></button>'; }).join('') : '<div class="iw-empty">예정된 일정이 없습니다.</div>') + '</div>';
+    /* 2026-08-25 대표 확정 — 같은 날짜 일정을 날짜별로 한 번만 묶어서 보여주고, 종류별 4개 컬럼
+       (공휴일·절기·기념일 | 일정 | 케어 | 상령일)으로 나눠 나란히 배치. 일/주/월 화면과 같은
+       calendarEventKind() 색상 클래스(.iw-agenda-chip.<kind>)를 그대로 재사용해 색을 통일한다.
+       열 너비는 4등분이 아니라 내용 길이 기준으로 배분(일정만 사용자 자유 입력이라 더 길어질 수
+       있어 1.6fr, 나머지 3개는 정형화된 짧은 문구라 1fr) — css/insuwork.css .iw-agenda-cols 참고. */
+    var groups = [], byDate = {};
+    rows.forEach(function (event) {
+      var date = String(event.event_date).slice(0, 10);
+      if (!byDate[date]) { byDate[date] = { date: date, cols: [[], [], [], []] }; groups.push(byDate[date]); }
+      var kind = calendarEventKind(event);
+      var colIndex = (kind === 'holiday' || kind === 'term' || kind === 'memorial') ? 0 : kind === 'customer' ? 2 : kind === 'insurance-age' ? 3 : 1;
+      byDate[date].cols[colIndex].push(event);
+    });
+    var header = '<div class="iw-agenda-header"><span></span><div class="iw-agenda-cols"><span>공휴일·절기·기념일</span><span>일정</span><span>케어</span><span>상령일</span></div></div>';
+    var body = groups.length ? groups.map(agendaGroupHtml).join('') : '<div class="iw-empty">예정된 일정이 없습니다.</div>';
+    return '<div class="iw-agenda">' + (groups.length ? header : '') + body + '</div>';
+  }
+  function agendaEventChip(event) {
+    return '<button type="button" class="iw-agenda-chip ' + calendarEventKind(event) + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>';
+  }
+  function agendaGroupHtml(group) {
+    var date = group.date;
+    var cols = group.cols.map(function (col) { return '<div class="iw-agenda-col">' + col.map(agendaEventChip).join('') + '</div>'; }).join('');
+    return '<div class="iw-agenda-row"><time><strong>' + Number(date.slice(8)) + '</strong><span>' + Number(date.slice(5, 7)) + '월 · ' + weekday(date) + '</span></time><div class="iw-agenda-cols">' + cols + '</div></div>';
   }
   function calendarHtml() {
     var modes = [['day', '일'], ['week', '주'], ['month', '월'], ['agenda', '일정']];
