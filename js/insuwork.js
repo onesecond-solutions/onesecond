@@ -31,11 +31,11 @@
     try { var p = new URLSearchParams(location.search); return p.has('view') || p.has('section'); }
     catch (_) { return !!location.search; }
   })();
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'public-library'];
   /* 2026-08-25 대표 승인 — 보험워크 공개 구조 전환: 셸(사이드바 포함)은 항상 렌더링하고, 아래 4개
      메뉴(캘린더/고객관리/상담관리/자료)만 비로그인 클릭 시 진입을 막는다. 홈·보험브리핑·참고자료·
      영업도구는 비로그인도 접근 가능. canEnterSection()이 go()/openWorkspace() 진입 직전에 확인한다. */
-  var PROTECTED_SECTIONS = ['calendar', 'customers', 'consultations', 'assets'];
+  var PROTECTED_SECTIONS = ['calendar', 'customers', 'consultations', 'assets', 'public-library'];
   var LIST_PAGE_SIZE = 200;
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
@@ -49,6 +49,7 @@
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     migrationDecided: false, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
+    publicLibraryData: null, publicLibraryLoading: false, publicLibNameQuery: '', publicLibNameComposing: false, publicLibNameTimer: 0,
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
 
@@ -415,7 +416,7 @@
     return '<details class="iw-nav-group iw-nav-group-' + tone + '"><summary>' + label + '</summary>' + entries.map(navPlannedEntryHtml).join('') + '</details>';
   }
   function navHtml() {
-    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
+    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
     var briefingGroup = [['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
@@ -1540,6 +1541,50 @@
     var rows = (state.data.trashCustomers || []).filter(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '')); });
     return statusHtml() + '<div class="iw-toolbar"><h2>휴지통</h2></div><div class="iw-trash-list">' + (rows.length ? rows.map(function (item) { return '<div class="iw-trash-row"><span><strong>' + esc(item.name || '(이름 없음)') + '</strong><small>' + esc(phoneText(item.phone || item.phone_raw || '')) + (item.deleted_at ? ' · ' + formatDate(item.deleted_at) + ' 삭제' : '') + '</small></span><button type="button" class="iw-btn" onclick="OSInsuwork.restoreCustomer(\'' + esc(item.id) + '\')">복원</button></div>'; }).join('') : '<div class="iw-empty">휴지통이 비어 있습니다.</div>') + '</div>';
   }
+  /* 2026-08-25 대표 확정 — 로그인 사용자끼리 자료를 공유하는 공개자료실. 폴더 없이 평면 목록,
+     화면 자체 검색창만 둔다(전역 검색과는 분리). 기존 '공개 범위' 체크(visibility=public)를 그대로
+     재사용 — 새 '공개하기' 버튼 없이, 어떤 사용자든 자기 자료를 공개로 저장하면 자동으로 여기 모인다.
+     owner_id 필터 없이 조회하는 이 앱의 첫 사례 — RLS(owner_id=auth.uid() OR visibility='public')가
+     이미 인증 사용자에게 전체 공개 자료 읽기를 허용해서 DB 변경 없이 가능하다. 작성자 표시는 닉네임
+     컬럼이 아직 없어 1차는 전부 '익명'으로 통일(닉네임 DB 마이그레이션은 별도 트랙). */
+  function loadPublicLibrary() {
+    if (state.publicLibraryData || state.publicLibraryLoading) return;
+    state.publicLibraryLoading = true;
+    api('insuwork_items?visibility=eq.public&item_type=neq.folder&order=created_at.desc&limit=500&select=id,item_type,title,body,url,storage_path,mime_type,file_size,created_at,owner_id').then(function (rows) {
+      state.publicLibraryData = rows || []; state.publicLibraryLoading = false;
+      if (state.section === 'public-library') renderContent();
+    }).catch(function () { state.publicLibraryLoading = false; state.publicLibraryData = []; if (state.section === 'public-library') renderContent(); });
+  }
+  function publicLibraryKind(item) { return item.item_type === 'file' ? '자료' : item.item_type === 'note' ? '업무노트' : item.item_type === 'link' ? '링크' : '메모'; }
+  function publicLibraryMatches(item) {
+    var q = (state.publicLibNameQuery || '').trim().toLowerCase(); if (!q) return true;
+    return ((item.title || '') + ' ' + (item.body ? stripHtml(item.body) : '')).toLowerCase().indexOf(q) >= 0;
+  }
+  function publicLibraryRowHtml(item) {
+    return '<tr tabindex="0" onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + publicLibraryKind(item) + '</td><td>' + formatDate(item.created_at) + '</td></tr>';
+  }
+  function publicLibraryHtml() {
+    var rows = (state.publicLibraryData || []).filter(publicLibraryMatches);
+    var clearBtn = state.publicLibNameQuery ? '<button type="button" class="iw-consult-name-clear" onclick="OSInsuwork.clearNameSearch(\'publicLib\')" aria-label="검색어 지우기">×</button>' : '';
+    var toolbar = '<div class="iw-toolbar"><h2>공개자료실</h2><label class="iw-consult-name-search"><span aria-hidden="true">⌕</span><input id="iw-publicLib-name-input" type="search" placeholder="공개자료 검색" autocomplete="off" value="' + esc(state.publicLibNameQuery || '') + '">' + clearBtn + '</label></div>';
+    var notice = '<div class="iw-pl-notice">함께 쓰는 공개 자료실입니다. 올리신 자료의 권리·내용은 본인 책임이며, 개인정보·저작권 침해·부적절한 콘텐츠는 통보 없이 삭제될 수 있습니다.</div>';
+    var body;
+    if (state.publicLibraryLoading) body = '<div class="iw-state"><strong>공개자료를 불러오는 중입니다.</strong></div>';
+    else if (!rows.length) body = '<div class="iw-empty">' + (state.publicLibNameQuery ? '검색 결과가 없습니다.' : '아직 공개된 자료가 없습니다. 자료 화면에서 \'공개 범위\'를 전체 공개로 저장하면 여기에 나타납니다.') + '</div>';
+    else body = '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>등록일</th></tr></thead><tbody>' + rows.map(publicLibraryRowHtml).join('') + '</tbody></table></div>';
+    return toolbar + notice + body;
+  }
+  function openPublicLibraryItem(id) {
+    var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
+    var bodyText = item.item_type === 'link' ? '' : stripHtml(item.body || '');
+    var link = item.url;
+    var actions = item.storage_path ? '<button type="button" class="iw-btn primary" onclick="OSInsuwork.openPublicLibraryFile(\'' + esc(item.id) + '\')">열기</button>' : (link ? '<a class="iw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : '');
+    dialog('<div class="iw-detail"><span class="iw-badge">' + publicLibraryKind(item) + ' · 익명</span><h2 class="iw-detail-title"><span>' + esc(item.title || '(제목 없음)') + '</span></h2><p>' + formatDate(item.created_at) + '</p><div class="iw-detail-body">' + (item.item_type === 'note' ? (item.body || '') : esc(bodyText)) + '</div><div class="iw-detail-actions">' + actions + '</div></div>');
+  }
+  function openPublicLibraryFile(id) {
+    var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item || !item.storage_path) return;
+    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, item.title || '파일', item.mime_type || ''); }).catch(function () { if (typeof window.toast === 'function') window.toast('파일을 열지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
+  }
   function sectionHtml() {
     /* 2026-08-25 회귀 수정 — 이 가드는 원래 모든 섹션에 걸려 있었고, 비로그인 사용자는
        authenticated()가 영원히 false라 state.status가 'waiting-auth'에서 못 벗어나
@@ -1565,6 +1610,7 @@
     if (state.section === 'tools') return toolsPageHtml();
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
+    if (state.section === 'public-library') return publicLibraryHtml();
     if (state.section === 'briefing') return briefingHtml();
     return homeHtml();
   }
@@ -1620,7 +1666,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'briefing') initBriefingCalendar(); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) hydrateRichStorage(); } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -3311,7 +3357,7 @@
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
