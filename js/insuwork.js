@@ -359,7 +359,7 @@
       api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
       api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ] : [
-      api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=5&select=' + itemSelect),
+      api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=30&select=' + itemSelect),
       api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=20&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
       api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
       api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,insuwork_customers(id,name,phone,status)'),
