@@ -28,12 +28,16 @@
 .ib-leaflet-grid.is-loading{opacity:.5}
 
 /* 월 보기 */
-.ib-leaflet-grid-month{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto;grid-auto-rows:minmax(108px,1fr);gap:1px;background:#dfe1ec;border:1px solid #dfe1ec;border-radius:var(--radius-md,12px);overflow:hidden;box-shadow:0 8px 22px rgba(38,48,77,.06)}
-.ib-leaflet-dow{background:rgba(255,255,255,.84);padding:6px 4px;text-align:center;font-size:11px;color:#424956}
+.ib-leaflet-month-card{flex:0 0 auto;display:flex;flex-direction:column;border:1px solid #dfe1ec;border-radius:var(--radius-md,12px);background:rgba(255,255,255,.8);box-shadow:0 8px 22px rgba(38,48,77,.06);overflow:hidden}
+.ib-leaflet-dow-row{display:grid;grid-template-columns:repeat(7,1fr);flex:0 0 auto;border-bottom:1px solid #dfe1ec}
+.ib-leaflet-dow{background:none;padding:6px 4px;text-align:center;font-size:11px;color:#424956}
 .ib-leaflet-dow:first-child{color:#a74742}
 .ib-leaflet-dow:nth-child(7){color:#3f667f}
-.ib-leaflet-grid-month .ib-leaflet-day{background:rgba(255,255,255,.84);backdrop-filter:none;-webkit-backdrop-filter:none}
-.ib-leaflet-grid-month .ib-leaflet-day:hover{background:#fff}
+.ib-leaflet-grid-month{flex:0 0 auto;display:flex;flex-direction:column;gap:1px;background:#dfe1ec}
+.ib-leaflet-week{flex:0 0 auto;min-height:108px;overflow:hidden}
+.ib-leaflet-week-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;height:100%}
+.ib-leaflet-week-cells .ib-leaflet-day{background:rgba(255,255,255,.84);backdrop-filter:none;-webkit-backdrop-filter:none}
+.ib-leaflet-week-cells .ib-leaflet-day:hover{background:#fff}
 .ib-leaflet-grid-month .ib-leaflet-thumbs{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,48px));align-content:start;gap:5px}
 .ib-leaflet-grid-month .ib-leaflet-thumb{width:46px;height:46px;border-radius:var(--radius-sm,6px)}
 .ib-leaflet-grid-month .ib-leaflet-more{display:inline-flex;align-items:center;justify-content:center;min-height:28px;margin-top:6px;padding:0 10px;border:1px solid color-mix(in srgb,var(--ac) 28%,var(--bd));border-radius:var(--radius-full,999px);background:color-mix(in srgb,var(--ac) 10%,var(--s1));font-size:12px;font-weight:800;line-height:1;color:var(--ac)}
@@ -113,7 +117,7 @@
 .ib-text-dialog pre a{color:var(--ac);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .ib-text-actions{display:flex;justify-content:flex-end;padding:14px 24px;border-top:1px solid var(--bd)}.ib-text-actions a{padding:9px 16px;border-radius:var(--radius-full);background:var(--ac);color:var(--s1);font-size:13px;font-weight:700;text-decoration:none}
 @media(max-width:900px){.ib-leaflet-grid-month .ib-leaflet-thumbs{grid-template-columns:repeat(auto-fit,minmax(36px,42px))}.ib-leaflet-grid-month .ib-leaflet-thumb{width:40px;height:40px}}
-@media(max-width:560px){#leaflet-calendar,.ib-leaflet-head,.ib-leaflet-grid{box-sizing:border-box;width:100%;max-width:100%}.ib-leaflet-head{align-items:stretch;gap:10px}.ib-leaflet-nav{justify-content:space-between;min-width:0}.ib-leaflet-modes{align-self:flex-end;max-width:100%;overflow:hidden}.ib-leaflet-mode{padding:6px 10px}.ib-leaflet-grid-month{width:100%;grid-template-columns:repeat(7,minmax(0,1fr))}.ib-leaflet-day{min-width:0;min-height:82px;padding:3px}.ib-leaflet-daynum{max-width:100%;overflow:hidden;text-overflow:ellipsis}.ib-leaflet-thumb{width:18px;height:18px}.ib-leaflet-grid-month .ib-leaflet-thumbs{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.ib-leaflet-grid-month .ib-leaflet-thumb{width:100%;height:auto;aspect-ratio:1}.ib-leaflet-grid-month .ib-leaflet-more{min-height:24px;margin-top:4px;padding:0 7px;font-size:11px}.ib-leaflet-week-day{min-height:140px!important}.ib-leaflet-week-day .ib-leaflet-thumbs{grid-template-columns:1fr;gap:3px}.ib-leaflet-week-day .ib-leaflet-thumb{width:100%;max-width:none;height:auto}.ib-leaflet-day-view{padding:8px}.ib-leaflet-day-view .ib-leaflet-thumbs{grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));gap:8px}.ib-leaflet-day-view .ib-leaflet-thumb{width:100%;height:auto}}
+@media(max-width:560px){#leaflet-calendar,.ib-leaflet-head,.ib-leaflet-grid{box-sizing:border-box;width:100%;max-width:100%}.ib-leaflet-head{align-items:stretch;gap:10px}.ib-leaflet-nav{justify-content:space-between;min-width:0}.ib-leaflet-modes{align-self:flex-end;max-width:100%;overflow:hidden}.ib-leaflet-mode{padding:6px 10px}.ib-leaflet-week-cells{width:100%;grid-template-columns:repeat(7,minmax(0,1fr))}.ib-leaflet-day{min-width:0;min-height:82px;padding:3px}.ib-leaflet-daynum{max-width:100%;overflow:hidden;text-overflow:ellipsis}.ib-leaflet-thumb{width:18px;height:18px}.ib-leaflet-grid-month .ib-leaflet-thumbs{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}.ib-leaflet-grid-month .ib-leaflet-thumb{width:100%;height:auto;aspect-ratio:1}.ib-leaflet-grid-month .ib-leaflet-more{min-height:24px;margin-top:4px;padding:0 7px;font-size:11px}.ib-leaflet-week-day{min-height:140px!important}.ib-leaflet-week-day .ib-leaflet-thumbs{grid-template-columns:1fr;gap:3px}.ib-leaflet-week-day .ib-leaflet-thumb{width:100%;max-width:none;height:auto}.ib-leaflet-day-view{padding:8px}.ib-leaflet-day-view .ib-leaflet-thumbs{grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));gap:8px}.ib-leaflet-day-view .ib-leaflet-thumb{width:100%;height:auto}}
 
 /* 호버 확대(이미지 전용, PDF는 클릭으로만) */
 .ib-leaflet-hover{position:fixed;z-index:9000;width:240px;height:320px;padding:4px;border:1px solid var(--bd);border-radius:var(--radius-md,12px);background:var(--s1);box-shadow:0 20px 48px rgba(0,0,0,.28);pointer-events:none}
