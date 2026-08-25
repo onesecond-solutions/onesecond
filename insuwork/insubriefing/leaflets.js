@@ -14,7 +14,7 @@
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var BUCKET = 'briefing-leaflets';
   var DOW = ['일', '월', '화', '수', '목', '금', '토'];
-  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5, selectedDate: '' };
+  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5, selectedDate: '', loadedRangeKey: null, agendaLoaded: false };
   var MAX_FILE_SIZE = 20 * 1024 * 1024;
   var OFFICE_EXTENSIONS = ['xls', 'xlsx', 'csv', 'doc', 'docx', 'ppt', 'pptx', 'hwp', 'hwpx', 'odt', 'ods', 'odp', 'rtf'];
   var TEXT_EXTENSIONS = ['txt', 'md', 'log', 'json', 'xml', 'yaml', 'yml'];
@@ -144,18 +144,21 @@
   // ── 데이터 조회(공개, anon) ──────────────────────────────────────────────
   function loadRange(start, end, done) {
     if (!window.db || !window.db.fetchPublic) return;
+    var rangeKey = start + '|' + end;
+    if (state.loadedRangeKey === rangeKey) { if (done) done(); render(); return; }
     state.loading = true; render();
     window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.asc,sort_order.asc&select=id,file_type,storage_path,mime_type,file_size,received_date,sort_order')
       .then(function (res) { return res.ok ? res.json() : []; })
       .then(function (rows) {
         var map = {};
         (rows || []).forEach(function (row) { (map[row.received_date] = map[row.received_date] || []).push(row); });
-        state.itemsByDate = map; state.loading = false; if (done) done(); render();
+        state.itemsByDate = map; state.loadedRangeKey = rangeKey; state.loading = false; if (done) done(); render();
       })
       .catch(function () { state.loading = false; render(); });
   }
   function loadAgenda() {
     if (!window.db || !window.db.fetchPublic) return;
+    if (state.agendaLoaded) { render(); return; }
     state.loading = true; render();
     var end = ymd(new Date()), start = addDays(end, -120);
     window.db.fetchPublic('/rest/v1/briefing_leaflets?received_date=gte.' + start + '&received_date=lte.' + end + '&order=received_date.desc,sort_order.asc&select=id,file_type,storage_path,mime_type,file_size,received_date,sort_order')
@@ -164,7 +167,7 @@
         var map = {}, order = [];
         (rows || []).forEach(function (row) { if (!map[row.received_date]) { map[row.received_date] = []; order.push(row.received_date); } map[row.received_date].push(row); });
         state.agendaRows = order.map(function (date) { return { date: date, items: map[date] }; });
-        state.loading = false; render();
+        state.agendaLoaded = true; state.loading = false; render();
       })
       .catch(function () { state.loading = false; render(); });
   }
@@ -522,7 +525,7 @@
       if (!res.ok) return uploadError(res, '캘린더 정보 저장에 실패했습니다.').then(function (error) { throw error; });
     });
   }
-  function reloadCurrent() { if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
+  function reloadCurrent() { state.loadedRangeKey = null; state.agendaLoaded = false; if (state.mode === 'agenda') loadAgenda(); else loadForCursor(); }
   // PNG 업로드는 용량 절감을 위해 저장 전 JPEG로 재인코딩(투명 배경은 흰색으로 채움)
   function pngToJpeg(file) {
     return createImageBitmap(file).then(function (bitmap) {
