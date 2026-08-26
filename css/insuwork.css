@@ -14,8 +14,12 @@ body.is-insuwork:not(.is-admin) .side #nav-insuwork{display:flex!important}
 #v-insuwork .iw-main{min-width:0;overflow:auto;padding:clamp(16px,2.5vw,30px)}
 #v-insuwork .iw-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}#v-insuwork .iw-toolbar h2{margin:0;color:var(--tp);font-size:1.2rem}#v-insuwork .iw-actions{display:flex;gap:8px;flex-wrap:wrap}
 #v-insuwork .iw-btn{min-height:38px;padding:0 14px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit;font-weight:700;cursor:pointer}#v-insuwork .iw-btn:hover{background:var(--s2)}#v-insuwork .iw-btn.primary{border-color:var(--ac);background:var(--ac);color:#fff}
-#v-insuwork .iw-toolbar-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;position:relative}
-#v-insuwork .iw-fav-panel{position:absolute;top:100%;right:0;z-index:60;width:300px;max-height:380px;overflow-y:auto;margin-top:6px;padding:8px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 12px 32px rgba(0,0,0,.18)}
+#v-insuwork .iw-fav-fab-wrap{position:fixed;right:32px;bottom:32px;z-index:70}
+#v-insuwork .iw-fav-fab{width:52px;height:52px;font-size:26px;background:var(--s1);box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .15s ease,box-shadow .15s ease}
+#v-insuwork .iw-fav-fab:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.25)}
+#v-insuwork .iw-fav-panel{position:absolute;right:0;bottom:100%;z-index:60;width:300px;max-height:380px;overflow-y:auto;margin-bottom:10px;padding:8px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 12px 32px rgba(0,0,0,.18)}
+#v-insuwork .iw-consult-register{margin-left:auto}
+@media(max-width:860px){#v-insuwork .iw-fav-fab-wrap{right:16px;bottom:96px}}
 #v-insuwork .iw-fav-panel-head{padding:4px 8px 8px;color:var(--tp);font-weight:700}
 #v-insuwork .iw-fav-panel .iw-list{display:flex;flex-direction:column;gap:2px}
 #v-insuwork .iw-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}#v-insuwork .iw-stat{padding:18px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1)}#v-insuwork .iw-stat span{display:block;color:var(--ts);font-size:var(--ts-meta)}#v-insuwork .iw-stat strong{display:block;margin-top:8px;color:var(--tp);font-size:1.65rem}
@@ -385,6 +389,7 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-month-switcher button{width:30px;height:30px;font-size:19px}
 #v-insuwork .iw-calendar-left h2{font-size:17px;min-width:auto}
 #v-insuwork .iw-main:has(>.iw-calendar-shell){padding-top:10px;padding-bottom:10px}
+#v-insuwork .iw-main:has(>.iw-consult-screen){padding-top:10px}
 #v-insuwork .iw-calendar-shell>.iw-time,#v-insuwork .iw-calendar-shell>.iw-agenda{min-height:0}
 @media(max-width:760px){#v-insuwork .iw-calendar-shell .iw-calendar-toolbar{align-items:flex-start;flex-direction:column}#v-insuwork .iw-calendar-left{flex-wrap:wrap}#v-insuwork .iw-calendar-left h2{order:3;width:100%;min-width:0;font-size:18px}#v-insuwork .iw-calendar-shell .iw-mode{width:100%;overflow:auto}#v-insuwork .iw-calendar-month .iw-day{min-height:82px;padding:5px}#v-insuwork .iw-day-items{grid-auto-rows:7px;gap:3px;margin-left:0;width:100%}#v-insuwork .iw-calendar-month .iw-event{height:7px;min-height:7px;margin:0;padding:0;font-size:0}#v-insuwork .iw-calendar-month .iw-more{font-size:0;line-height:7px}}
 @media(max-width:860px){#v-insuwork .iw-body{padding:0;gap:0}#v-insuwork .iw-main{border-radius:0}#v-insuwork .iw-head{padding:14px 16px}#v-insuwork .iw-nav{background:var(--bg)}#v-insuwork .iw-nav button{min-height:44px;border-radius:12px}}
