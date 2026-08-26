@@ -2212,6 +2212,49 @@
     return out;
   }
   function earliestContractDateValue(prefix) { var dates = gatherContractDates(prefix); return dates.length ? dates[0] : ''; }
+  /* 2026-08-26 대표 확정 — 인수정보 "운전여부"를 자유입력에서 복수선택 드롭다운으로 전환.
+     "운전 안함"은 배타 선택(고르면 나머지 전부 해제, 다른 걸 고르면 "운전 안함" 해제)이라
+     체크박스 change 핸들러에서 직접 상호배제를 처리한다. 저장값은 profile.driving_status에
+     문자열 배열로 저장(과거 자유입력 문자열이 남아 있어도 drivingStatusArray()가 쉼표 분해로
+     흡수해 표시는 깨지지 않는다). */
+  var DRIVING_OPTIONS = ['운전 안함', '자가용 승용차', '영업용 승용차', '자가용 화물차', '영업용 화물차', '자가용 이륜자동차', '영업용 이륜자동차', '건설기계', '농기계', '기타'];
+  function drivingStatusArray(raw) {
+    if (Array.isArray(raw)) return raw.filter(Boolean);
+    if (typeof raw === 'string' && raw.trim()) return raw.split(',').map(function (entry) { return entry.trim(); }).filter(Boolean);
+    return [];
+  }
+  function drivingFieldHtml(prefix, profile) {
+    var selected = drivingStatusArray(profile.driving_status);
+    var summary = selected.length ? selected.join(', ') : '선택하세요';
+    var boxes = DRIVING_OPTIONS.map(function (option) {
+      return '<label><input type="checkbox" value="' + esc(option) + '"' + (selected.indexOf(option) >= 0 ? ' checked' : '') + ' onchange="OSInsuwork.drivingCheckChanged(this)">' + esc(option) + '</label>';
+    }).join('');
+    return '<div class="iw-driving-field">'
+      + '<button type="button" class="iw-driving-toggle" onclick="OSInsuwork.toggleDrivingPanel(event,\'' + prefix + '\')" aria-haspopup="true" aria-expanded="false">' + esc(summary) + '</button>'
+      + '<div class="iw-driving-panel" id="' + prefix + '-driving-panel" hidden>' + boxes + '</div>'
+      + '</div>';
+  }
+  function toggleDrivingPanel(event, prefix) {
+    if (event) event.stopPropagation();
+    var panel = document.getElementById(prefix + '-driving-panel'); if (!panel) return;
+    var opening = panel.hidden;
+    document.querySelectorAll('.iw-driving-panel').forEach(function (p) { p.hidden = true; });
+    panel.hidden = !opening;
+    var btn = event && event.currentTarget; if (btn) btn.setAttribute('aria-expanded', String(opening));
+  }
+  function drivingCheckChanged(checkbox) {
+    var panel = checkbox.closest('.iw-driving-panel'); if (!panel) return;
+    var boxes = Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"]'));
+    if (checkbox.value === '운전 안함' && checkbox.checked) boxes.forEach(function (b) { if (b !== checkbox) b.checked = false; });
+    else if (checkbox.checked) boxes.forEach(function (b) { if (b.value === '운전 안함') b.checked = false; });
+    var selected = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; });
+    var toggle = panel.parentElement && panel.parentElement.querySelector('.iw-driving-toggle');
+    if (toggle) toggle.textContent = selected.length ? selected.join(', ') : '선택하세요';
+  }
+  function drivingStatusValues(prefix) {
+    var panel = document.getElementById(prefix + '-driving-panel'); if (!panel) return [];
+    return Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"]:checked')).map(function (b) { return b.value; });
+  }
   function customerExtraFieldsHtml(profile, prefix) {
     profile = profile || {};
     return '<div class="iw-customer-extra"><section><h3>주소 정보</h3>'
@@ -2223,7 +2266,7 @@
       + inlineField('상세주소', '<input id="' + prefix + '-address-detail" placeholder="동·호수 등 상세 주소 (주소 선택 후 입력)" value="' + esc(profile.address_detail || '') + '">')
       + '</section><section><h3>인수 정보</h3><div class="iw-customer-underwriting">'
       + inlineField('직업', '<input id="' + prefix + '-job" value="' + esc(profile.job || '') + '" placeholder="예: 사무직 / 운전직 / 농업">')
-      + inlineField('운전여부', '<input id="' + prefix + '-driving" value="' + esc(profile.driving_status || '') + '" placeholder="예: 자가운전 / 대중교통 / 없음">')
+      + inlineField('운전여부', drivingFieldHtml(prefix, profile))
       + inlineField('병력', '<input id="' + prefix + '-history" value="' + esc(profile.medical_history || '') + '" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨">')
       + inlineField('약복용', '<select id="' + prefix + '-medication"><option value="">선택</option><option' + (profile.medication === '복용 중' ? ' selected' : '') + '>복용 중</option><option' + (profile.medication === '복용 안 함' ? ' selected' : '') + '>복용 안 함</option><option' + (profile.medication === '과거 복용' ? ' selected' : '') + '>과거 복용</option></select>')
       + inlineField('진단시기', '<input id="' + prefix + '-diagnosis" value="' + esc(profile.diagnosis_date || '') + '" placeholder="예: 2025년 3월">')
@@ -3137,7 +3180,7 @@
       return write('insuwork_items', row).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return row; });
     }).then(function (row) { state.assetFilter = category; state.assetFolder = parent; upsertWorkspaceItem(row); resetRichPending(); finishSave('자료를 저장했습니다.'); }).catch(saveError);
   }
-  function saveCustomer() { var name = value('iwf-customer-name'), phone = phoneText(value('iwf-customer-phone')), note = richValue('iwf-customer-note'), contractDates = gatherContractDates('iwf-customer'), birth = value('iwf-customer-birth'), genderInput = document.querySelector('input[name="iwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('iwf-customer-zip') || null, address: value('iwf-customer-address') || null, address_detail: value('iwf-customer-address-detail') || null, job: value('iwf-customer-job') || null, driving_status: value('iwf-customer-driving') || null, medication: value('iwf-customer-medication') || null, medical_history: value('iwf-customer-history') || null, diagnosis_date: value('iwf-customer-diagnosis') || null, current_condition: value('iwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('iwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
+  function saveCustomer() { var name = value('iwf-customer-name'), phone = phoneText(value('iwf-customer-phone')), note = richValue('iwf-customer-note'), contractDates = gatherContractDates('iwf-customer'), birth = value('iwf-customer-birth'), genderInput = document.querySelector('input[name="iwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('iwf-customer-zip') || null, address: value('iwf-customer-address') || null, address_detail: value('iwf-customer-address-detail') || null, job: value('iwf-customer-job') || null, driving_status: drivingStatusValues('iwf-customer'), medication: value('iwf-customer-medication') || null, medical_history: value('iwf-customer-history') || null, diagnosis_date: value('iwf-customer-diagnosis') || null, current_condition: value('iwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('iwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
   function saveCustomerRich(customer, profile, body) { var root = customerAttachmentRoot(customer.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(customer); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '고객 첨부 · ' + customer.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customer.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('insuwork_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'customer'); }).then(function (prepared) { return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { var updatedProfile = Object.assign({}, profile, { note: prepared.body }); return updateOne('insuwork_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { profile: updatedProfile }); }); }); }
   function saveConsultation() {
     var customerId = value('iwf-consult-customer-id'), consultationId = value('iwf-consult-id'), name = value('iwf-consult-name'), birth = value('iwf-consult-birth'), date = value('iwf-consult-date'), phone = phoneText(value('iwf-consult-phone')), status = value('iwf-consult-status'), memo = richValue('iwf-consult-memo');
@@ -3197,7 +3240,7 @@
     var profile = Object.assign({}, existingProfile, {
       customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null,
       zip: value('iwd-customer-zip') || null, address: value('iwd-customer-address') || null, address_detail: value('iwd-customer-address-detail') || null,
-      job: value('iwd-customer-job') || null, driving_status: value('iwd-customer-driving') || null, medication: value('iwd-customer-medication') || null, medical_history: value('iwd-customer-history') || null,
+      job: value('iwd-customer-job') || null, driving_status: drivingStatusValues('iwd-customer'), medication: value('iwd-customer-medication') || null, medical_history: value('iwd-customer-history') || null,
       diagnosis_date: value('iwd-customer-diagnosis') || null, current_condition: value('iwd-customer-current-status') || null, note: note
     });
     updateOne('insuwork_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: status || '청약완료', profile: profile })
@@ -3214,7 +3257,7 @@
     var profile = Object.assign({}, customerProfile(customer), {
       birth_date: birth || null, gender: gender || null, custom_fields: customValues,
       zip: value('iwd-consult-care-zip') || null, address: value('iwd-consult-care-address') || null, address_detail: value('iwd-consult-care-address-detail') || null,
-      job: value('iwd-consult-care-job') || null, driving_status: value('iwd-consult-care-driving') || null, medication: value('iwd-consult-care-medication') || null, medical_history: value('iwd-consult-care-history') || null,
+      job: value('iwd-consult-care-job') || null, driving_status: drivingStatusValues('iwd-consult-care'), medication: value('iwd-consult-care-medication') || null, medical_history: value('iwd-consult-care-history') || null,
       diagnosis_date: value('iwd-consult-care-diagnosis') || null, current_condition: value('iwd-consult-care-current-status') || null
     });
     var content = sanitizeRich(richValue('iwd-consult-new'));
@@ -3253,6 +3296,7 @@
   document.addEventListener('click', function (event) { var menu = document.getElementById('iw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.iw-preview-ddak')) closeDdakMenu(); });
   document.addEventListener('click', function (event) { var open = document.querySelectorAll('.iw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });
   document.addEventListener('click', function (event) { var panel = document.getElementById('iw-fav-panel'); if (panel && !panel.hidden && !panel.contains(event.target) && !event.target.closest('.iw-fav-toggle')) closeFavoritesPanel(); });
+  document.addEventListener('click', function (event) { document.querySelectorAll('.iw-driving-panel').forEach(function (panel) { if (!panel.hidden && !panel.contains(event.target) && !event.target.closest('.iw-driving-toggle')) panel.hidden = true; }); });
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   /* 모바일 "오늘" 화면 전용 읽기 전용 조회 함수 2종 (2026-08-22, Phase 1 — feat/workstation-mobile-today).
      기존 렌더 함수·로직은 그대로 두고 애디티브로만 추가. state.data는 읽기만 하고(변형 금지), 반환값은 얕은 복사만 넘긴다.
@@ -3445,7 +3489,7 @@
     setPublicLibView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.publicLibView = view; renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
