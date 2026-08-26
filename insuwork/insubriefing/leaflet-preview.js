@@ -51,7 +51,7 @@
       + '<span id="lfp-preview-page"></span>'
       + '<button type="button" class="lfp-preview-pdf-only" onclick="LeafletPreview.page(1)" title="다음 페이지">›</button>'
       + '<a id="lfp-preview-download" class="lfp-preview-public-download" href="#" target="_blank" rel="noopener" download title="다운로드">⬇</a>'
-      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.saveToInsuwork()">📁 인슈워크 저장</button><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
+      + '<div class="lfp-ddak-wrap"><button type="button" class="lfp-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="LeafletPreview.toggleDdakMenu(event)">⚡ 딸깍</button><div class="lfp-ddak-menu" id="lfp-preview-ddak-menu" role="menu" hidden><a id="lfp-preview-ddak-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="LeafletPreview.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="LeafletPreview.saveToInsuwork()">📁 보험워크 저장</button><button type="button" role="menuitem" onclick="LeafletPreview.copy()">📋 복사</button></div></div>'
       + '</div></div>';
     document.body.appendChild(div.firstChild);
   }
@@ -246,7 +246,7 @@
     });
   }
 
-  // ── 인슈워크(내 파일함)에 저장 ─────────────────────────────────────────
+  // ── 보험워크(내 파일함)에 저장 ─────────────────────────────────────────
   function currentUserId() {
     try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').id || ''; } catch (e) { return ''; }
   }
@@ -270,7 +270,7 @@
     var baseName = String(preview.name || '리플렛').replace(/\.[^.]+$/, '');
     var dialog = document.createElement('dialog');
     dialog.className = 'lfp-folder-dialog';
-    dialog.innerHTML = '<div class="lfp-folder-head"><h2>인슈워크 저장</h2><button type="button" class="lfp-folder-close" aria-label="닫기">×</button></div>'
+    dialog.innerHTML = '<div class="lfp-folder-head"><h2>보험워크 저장</h2><button type="button" class="lfp-folder-close" aria-label="닫기">×</button></div>'
       + '<label class="lfp-folder-name-field"><span>파일명</span><div class="lfp-folder-filename"><input type="text" class="lfp-folder-name-input" maxlength="80" value="' + esc(baseName) + '"><span>.' + esc(ext) + '</span></div></label>'
       + '<nav class="lfp-folder-trail"></nav>'
       + '<div class="lfp-folder-list"></div>'
@@ -348,7 +348,7 @@
             body: JSON.stringify({ id: saved.id, owner_id: owner, parent_id: currentParentId() || null, item_type: 'file', title: titleName, storage_path: saved.path, mime_type: mime, extension: ext, file_size: saved.blob.size, visibility: 'private', created_at: new Date().toISOString() })
           });
         })
-        .then(function (res) { if (!res.ok) throw new Error('저장 정보를 기록하지 못했습니다.'); closePicker(); showNotice('인슈워크 "' + path[path.length - 1].title + '"에 저장했습니다.'); })
+        .then(function (res) { if (!res.ok) throw new Error('저장 정보를 기록하지 못했습니다.'); closePicker(); showNotice('보험워크 "' + path[path.length - 1].title + '"에 저장했습니다.'); })
         .catch(function (err) { statusEl.textContent = err.message || '저장에 실패했습니다.'; confirmBtn.disabled = false; });
     });
 

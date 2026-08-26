@@ -135,16 +135,16 @@
   }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function briefingAlert(message, title) {
-    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') return window.InsuranceBriefingNotice.alert(message, { title: title || '인슈워크' });
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === 'function') return window.InsuranceBriefingNotice.alert(message, { title: title || '보험워크' });
     if (typeof window.toast === 'function') { window.toast(message); return Promise.resolve(); }
     return Promise.resolve();
   }
   function briefingConfirm(message, title, confirmLabel, dangerous) {
-    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') return window.InsuranceBriefingNotice.confirm({ title: title || '인슈워크', message: message, confirmLabel: confirmLabel || '확인', dangerous: !!dangerous });
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') return window.InsuranceBriefingNotice.confirm({ title: title || '보험워크', message: message, confirmLabel: confirmLabel || '확인', dangerous: !!dangerous });
     return Promise.resolve(false);
   }
   function briefingPrompt(message, title, defaultValue) {
-    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.prompt === 'function') return window.InsuranceBriefingNotice.prompt({ title: title || '인슈워크', message: message, defaultValue: defaultValue || '' });
+    if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.prompt === 'function') return window.InsuranceBriefingNotice.prompt({ title: title || '보험워크', message: message, defaultValue: defaultValue || '' });
     return Promise.resolve('');
   }
   function jsString(value) { return String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' '); }
@@ -401,7 +401,7 @@
     /* 2026-08-25 회귀 수정 — 보험브리핑을 별도 페이지(/insuwork/insubriefing/)로 이동시키던
        'link:' 분기는 사이드바가 통째로 사라지는 문제(#1850 후속)가 있어 폐기했다. 이제
        '소식지·캘린더'는 참고자료/영업도구와 완전히 동일한 'section:briefing' 분기를 타고
-       인슈워크 SPA 내부 섹션으로 렌더된다(아래 briefingHtml()). 'link:' 분기 자체는 다른 향후
+       보험워크 SPA 내부 섹션으로 렌더된다(아래 briefingHtml()). 'link:' 분기 자체는 다른 향후
        외부 링크 메뉴를 위해 코드는 남겨두되 현재 briefingGroup에서는 더 이상 쓰지 않는다. */
     if (typeof extra === 'string' && extra.indexOf('link:') === 0) {
       var href = extra.slice(5);
@@ -1667,7 +1667,7 @@
   }
   /* 2026-08-25 — 소식지·캘린더(보험브리핑) 섹션. insuwork/insubriefing/leaflets.js의 리플렛
      캘린더 엔진을 그대로 이식해 사이드바를 유지한 채 #iw-main 안에서 렌더한다(작업지시서
-     "인슈워크 SPA 내부 섹션으로 흡수" 대응). 이 섹션은 PROTECTED_SECTIONS에 없어 비로그인
+     "보험워크 SPA 내부 섹션으로 흡수" 대응). 이 섹션은 PROTECTED_SECTIONS에 없어 비로그인
      공개 유지 — 로그인 게이트를 걸지 않는다. 캘린더가 기대하는 DOM 구조는
      insuwork/insubriefing/index.html의 #leaflet-calendar 블록을 그대로 가져온 것이며,
      실제 초기화·이벤트 바인딩은 initBriefingCalendar()가 renderContent() 훅에서 담당한다. */
@@ -2971,7 +2971,7 @@
     var r = state.toolPdfResult, result = document.getElementById('iw-imgconv-result'); if (!r || !result) return;
     result.innerHTML = '<div class="iw-imgconv-summary"><span>이미지 ' + r.pageCount + '장 → PDF 1개</span><span>' + fmtBytes(r.size) + '</span></div>'
       + '<label class="iw-field iw-imgconv-name-field"><span>파일명</span><div class="iw-imgconv-filename"><input id="iw-imgconv-pdf-name" type="text" value="' + esc(r.name.replace(/\.pdf$/i, '')) + '" oninput="OSInsuwork.imgConvertPdfNameInput(this)"><span>.pdf</span></div></label>'
-      + '<div class="iw-imgconv-actions"><button type="button" class="iw-btn primary" onclick="OSInsuwork.imgConvertPdfMergeDownload()">다운로드 저장</button><button type="button" class="iw-btn" onclick="OSInsuwork.imgConvertPdfMergeSaveToInsuwork()">인슈워크 저장</button></div>'
+      + '<div class="iw-imgconv-actions"><button type="button" class="iw-btn primary" onclick="OSInsuwork.imgConvertPdfMergeDownload()">다운로드 저장</button><button type="button" class="iw-btn" onclick="OSInsuwork.imgConvertPdfMergeSaveToInsuwork()">보험워크 저장</button></div>'
       + '<p class="iw-imgconv-pdf-note" id="iw-imgconv-pdf-save-status"></p>';
   }
   function imgConvertPdfNameInput(input) {
@@ -3008,7 +3008,7 @@
     var list = children.length
       ? children.map(function (f) { return '<button type="button" class="iw-folder-row" onclick="OSInsuwork.toolSavePickerEnter(\'' + esc(f.id) + '\')">📁 ' + esc(f.title) + '</button>'; }).join('')
       : '<p class="iw-folder-empty">하위 폴더가 없습니다.</p>';
-    dialog('<div class="iw-folder-dialog-body"><h2>인슈워크에 저장</h2><nav class="iw-folder-trail">' + trail + '</nav><div class="iw-folder-list">' + list + '</div><button type="button" class="iw-folder-new-btn" onclick="OSInsuwork.toolSavePickerNewFolder()">+ 새 폴더</button><p class="iw-folder-status" id="iw-tool-save-status"></p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.toolSavePickerConfirm()">이 폴더에 저장</button></div></div>');
+    dialog('<div class="iw-folder-dialog-body"><h2>보험워크에 저장</h2><nav class="iw-folder-trail">' + trail + '</nav><div class="iw-folder-list">' + list + '</div><button type="button" class="iw-folder-new-btn" onclick="OSInsuwork.toolSavePickerNewFolder()">+ 새 폴더</button><p class="iw-folder-status" id="iw-tool-save-status"></p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.toolSavePickerConfirm()">이 폴더에 저장</button></div></div>');
   }
   function toolSavePickerGo(index) { var p = state.toolSavePicker; if (!p) return; p.path = p.path.slice(0, index + 1); renderToolSavePicker(); }
   function toolSavePickerEnter(id) {
@@ -3038,7 +3038,7 @@
       method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': p.mime, 'x-upsert': 'false' }, body: p.blob
     }).then(function (res) { if (!res.ok) throw new Error('파일 저장에 실패했습니다.'); return true; })
       .then(function () { return write('insuwork_items', { id: id, owner_id: p.owner, parent_id: parentId || null, item_type: 'file', title: p.filename, storage_path: path, mime_type: p.mime, extension: ext, file_size: p.blob.size, visibility: 'private', created_at: new Date().toISOString() }); })
-      .then(function () { closeDialog(); if (typeof window.toast === 'function') window.toast('인슈워크 "' + p.path[p.path.length - 1].title + '"에 저장했습니다.'); })
+      .then(function () { closeDialog(); if (typeof window.toast === 'function') window.toast('보험워크 "' + p.path[p.path.length - 1].title + '"에 저장했습니다.'); })
       .catch(function (err) { if (status) status.textContent = err.message || '저장에 실패했습니다.'; });
   }
   function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSInsuwork.saveEvent()')); }

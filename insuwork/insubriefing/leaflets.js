@@ -78,7 +78,7 @@
     return new Promise(function (resolve) {
       var dialog = document.createElement('dialog');
       dialog.className = 'ib-confirm-dialog';
-      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">인슈워크</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="ib-confirm-submit">확인</button></div></form>';
+      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">보험워크</span><h2></h2><p></p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="ib-confirm-submit">확인</button></div></form>';
       dialog.querySelector('h2').textContent = title;
       dialog.querySelector('p').textContent = message;
       var submit = dialog.querySelector('.ib-confirm-submit');
@@ -415,7 +415,7 @@
         var canEdit = isPilot() && id && storagePath;
         var dialog = document.createElement('dialog');
         dialog.className = 'ib-text-dialog';
-        dialog.innerHTML = '<div class="ib-text-head"><div><span>인슈워크</span><h2></h2></div><button type="button" class="ib-text-close" aria-label="닫기">×</button></div>'
+        dialog.innerHTML = '<div class="ib-text-head"><div><span>보험워크</span><h2></h2></div><button type="button" class="ib-text-close" aria-label="닫기">×</button></div>'
           + '<pre></pre><textarea class="ib-text-edit" hidden></textarea>'
           + '<div class="ib-text-actions">'
           + (canEdit ? '<button type="button" class="ib-text-edit-btn">수정</button><button type="button" class="ib-text-save-btn" hidden>저장</button><button type="button" class="ib-text-cancel-btn" hidden>취소</button>' : '')
@@ -703,7 +703,7 @@
     var modeButtons = document.querySelectorAll('.ib-leaflet-mode');
     Array.prototype.forEach.call(modeButtons, function (btn) { btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); }); });
     state.monthCap = monthThumbCap();
-    /* 2026-08-25 — init()이 인슈워크 SPA 섹션 재진입마다 다시 불린다(#iw-main이 매번 통째로
+    /* 2026-08-25 — init()이 보험워크 SPA 섹션 재진입마다 다시 불린다(#iw-main이 매번 통째로
        교체되어 그리드 안 버튼 리스너를 새로 걸어야 함). 그리드 안쪽 리스너는 옛 DOM과 함께
        자연 소멸하지만, document/window에 붙는 아래 두 리스너는 그렇지 않아 재호출마다 계속
        쌓인다 — 특히 붙여넣기 리스너가 중복되면 대표(PILOT_ID) 계정이 캘린더에 자료를 붙여넣을 때
@@ -729,7 +729,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  // 2026-08-25 — 인슈워크 SPA의 '소식지·캘린더' 섹션(js/insuwork.js briefingHtml/
+  // 2026-08-25 — 보험워크 SPA의 '소식지·캘린더' 섹션(js/insuwork.js briefingHtml/
   // initBriefingCalendar)이 섹션 재진입 시 이 캘린더를 다시 초기화할 수 있도록 외부 노출.
   window.OSBriefingLeaflets = { init: init };
 })();
