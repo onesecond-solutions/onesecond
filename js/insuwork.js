@@ -2213,11 +2213,11 @@
   }
   function earliestContractDateValue(prefix) { var dates = gatherContractDates(prefix); return dates.length ? dates[0] : ''; }
   /* 2026-08-26 대표 확정 — 인수정보 "운전여부"를 자유입력에서 복수선택 드롭다운으로 전환.
-     "운전 안함"은 배타 선택(고르면 나머지 전부 해제, 다른 걸 고르면 "운전 안함" 해제)이라
-     체크박스 change 핸들러에서 직접 상호배제를 처리한다. 저장값은 profile.driving_status에
-     문자열 배열로 저장(과거 자유입력 문자열이 남아 있어도 drivingStatusArray()가 쉼표 분해로
-     흡수해 표시는 깨지지 않는다). */
-  var DRIVING_OPTIONS = ['운전 안함', '자가용 승용차', '영업용 승용차', '자가용 화물차', '영업용 화물차', '자가용 이륜자동차', '영업용 이륜자동차', '건설기계', '농기계', '기타'];
+     대표 지정 순서와 묶음(단독/승용차/화물차/이륜자동차/기타 장비)을 그대로 표시한다.
+     저장값은 profile.driving_status에 문자열 배열로 저장(과거 자유입력 문자열이 남아 있어도
+     drivingStatusArray()가 쉼표 분해로 흡수해 표시는 깨지지 않는다). */
+  var DRIVING_OPTION_GROUPS = [['운전 안함'], ['자가용 승용차', '영업용 승용차'], ['자가용 화물차', '영업용 화물차'], ['자가용 이륜자동차', '영업용 이륜자동차'], ['건설기계', '농기계', '기타']];
+  var DRIVING_OPTIONS = DRIVING_OPTION_GROUPS.reduce(function (out, group) { return out.concat(group); }, []);
   function drivingStatusArray(raw) {
     if (Array.isArray(raw)) return raw.filter(Boolean);
     if (typeof raw === 'string' && raw.trim()) return raw.split(',').map(function (entry) { return entry.trim(); }).filter(Boolean);
@@ -2226,8 +2226,10 @@
   function drivingFieldHtml(prefix, profile) {
     var selected = drivingStatusArray(profile.driving_status);
     var summary = selected.length ? selected.join(', ') : '선택하세요';
-    var boxes = DRIVING_OPTIONS.map(function (option) {
-      return '<label><input type="checkbox" value="' + esc(option) + '"' + (selected.indexOf(option) >= 0 ? ' checked' : '') + ' onchange="OSInsuwork.drivingCheckChanged(this)">' + esc(option) + '</label>';
+    var boxes = DRIVING_OPTION_GROUPS.map(function (group) {
+      return '<div class="iw-driving-row">' + group.map(function (option) {
+        return '<label class="iw-driving-option"><input type="checkbox" value="' + esc(option) + '"' + (selected.indexOf(option) >= 0 ? ' checked' : '') + ' onchange="OSInsuwork.drivingCheckChanged(this)"><span>' + esc(option) + '</span></label>';
+      }).join('') + '</div>';
     }).join('');
     return '<div class="iw-driving-field">'
       + '<button type="button" class="iw-driving-toggle" onclick="OSInsuwork.toggleDrivingPanel(event,\'' + prefix + '\')" aria-haspopup="true" aria-expanded="false">' + esc(summary) + '</button>'
@@ -2245,8 +2247,6 @@
   function drivingCheckChanged(checkbox) {
     var panel = checkbox.closest('.iw-driving-panel'); if (!panel) return;
     var boxes = Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"]'));
-    if (checkbox.value === '운전 안함' && checkbox.checked) boxes.forEach(function (b) { if (b !== checkbox) b.checked = false; });
-    else if (checkbox.checked) boxes.forEach(function (b) { if (b.value === '운전 안함') b.checked = false; });
     var selected = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; });
     var toggle = panel.parentElement && panel.parentElement.querySelector('.iw-driving-toggle');
     if (toggle) toggle.textContent = selected.length ? selected.join(', ') : '선택하세요';
