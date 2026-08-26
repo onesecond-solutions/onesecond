@@ -501,16 +501,20 @@
   function favoritesFabHtml() {
     return '<div class="iw-fav-fab-wrap"><button type="button" class="iw-btn iw-fav-toggle iw-fav-fab" onclick="OSInsuwork.toggleFavoritesPanel(event)" aria-haspopup="true" aria-expanded="false" title="즐겨찾기">★</button><div class="iw-fav-panel" id="iw-fav-panel" hidden></div></div>';
   }
-  /* 2026-08-26 대표 확정 — 화면 제목 옆 도움말 배지. 마우스 오버 = CSS만으로 여는 미리보기 툴팁,
-     클릭 = openHelp()가 기존 iw-dialog(다이얼로그 시스템)를 재사용해 더 큰 팝업으로 같은 내용을 보여준다. */
+  /* 2026-08-26 대표 확정 → 08-26 2·3차 수정(대표 "엉망이야, 제대로 수정해") — 커스텀 CSS 툴팁(형제
+     span 하나 elements 위치를 아래·옆 어디로 옮겨도 높이가 배너·통계카드 줄과 겹쳐 화면이 뭉개졌다.
+     원인은 툴팁 자체가 아니라 "제목+전체 문단"을 다 욱여넣어 박스가 커진 것 → 마우스 오버 미리보기는
+     브라우저 네이티브 title 속성(겹침·위치 계산 버그 없음, OS가 알아서 화면 안에 배치)으로 전환하고,
+     "전문 디자이너의 손길"이 필요한 자리(대표 표현)는 클릭 시 여는 iw-help-popup 하나로 집중한다. */
   var HELP_CONTENT = {
-    calendar: { title: '캘린더 보여주기', body: '상담 일정, 고객 케어, 보험상령일 등 동일한 종류의 일정이 2개 이상인 경우 <strong>+n개 더보기</strong>로 보여지며, 마우스를 올려두면 미리보기, 클릭하면 하루 일정 보기로 화면 전환 됩니다.' },
-    customers: { title: '케어일정 자동 생성', body: '청약완료로 등록하면 청약일 기준 <strong>31·91·181·365일 케어 일정</strong>과, 이후 매년 청약 기념일이 캘린더에 자동으로 만들어집니다.<br>별도 설정은 필요 없습니다.' },
-    consultations: { title: '상담 플로우 기능', body: '상담상태 결과값에 따라 통계 카드에 수치화되고, 카드 클릭하면 해당 고객리스트만 보여주며, 상담상태 결과값이 <strong>청약완료</strong>가 되면 고객관리 화면으로 자동 저장됩니다.' }
+    calendar: { title: '캘린더 보여주기', preview: '같은 종류 일정이 2개 이상이면 +n개 더보기로 모아 보여줘요.', body: '상담 일정, 고객 케어, 보험상령일 등 동일한 종류의 일정이 2개 이상인 경우 <strong>+n개 더보기</strong>로 보여지며, 마우스를 올려두면 미리보기, 클릭하면 하루 일정 보기로 화면 전환 됩니다.' },
+    customers: { title: '케어일정 자동 생성', preview: '청약완료로 등록하면 케어 일정이 자동으로 만들어져요.', body: '청약완료로 등록하면 청약일 기준 <strong>31·91·181·365일 케어 일정</strong>과, 이후 매년 청약 기념일이 캘린더에 자동으로 만들어집니다.<br>별도 설정은 필요 없습니다.' },
+    consultations: { title: '상담 플로우 기능', preview: '상담상태별로 통계 카드에 자동 집계돼요.', body: '상담상태 결과값에 따라 통계 카드에 수치화되고, 카드 클릭하면 해당 고객리스트만 보여주며, 상담상태 결과값이 <strong>청약완료</strong>가 되면 고객관리 화면으로 자동 저장됩니다.' }
   };
   function helpBadgeHtml(key) {
     var info = HELP_CONTENT[key]; if (!info) return '';
-    return '<span class="iw-help-wrap"><button type="button" class="iw-help-badge" aria-label="' + esc(info.title) + ' 도움말" onclick="event.stopPropagation();OSInsuwork.openHelp(\'' + key + '\')">?</button><span class="iw-help-tip" role="tooltip"><strong>' + esc(info.title) + '</strong><span>' + info.body + '</span></span></span>';
+    var tipText = info.title + ' — ' + info.preview + ' (클릭하면 자세히 보기)';
+    return '<button type="button" class="iw-help-badge" title="' + esc(tipText) + '" aria-label="' + esc(info.title) + ' 도움말" onclick="event.stopPropagation();OSInsuwork.openHelp(\'' + key + '\')">?</button>';
   }
   function openHelp(key) {
     var info = HELP_CONTENT[key]; if (!info) return;
