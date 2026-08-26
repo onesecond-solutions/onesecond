@@ -14,7 +14,7 @@
   var PILOT_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var BUCKET = 'briefing-leaflets';
   var DOW = ['일', '월', '화', '수', '목', '금', '토'];
-  var state = { mode: 'month', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5, selectedDate: '', loadedRangeKey: null, agendaLoaded: false };
+  var state = { mode: 'day', cursor: new Date(), itemsByDate: {}, pdfLibPromise: null, loading: false, agendaRows: null, monthCap: 5, selectedDate: '', loadedRangeKey: null, agendaLoaded: false };
   var MAX_FILE_SIZE = 20 * 1024 * 1024;
   var OFFICE_EXTENSIONS = ['xls', 'xlsx', 'csv', 'doc', 'docx', 'ppt', 'pptx', 'hwp', 'hwpx', 'odt', 'ods', 'odp', 'rtf'];
   var TEXT_EXTENSIONS = ['txt', 'md', 'log', 'json', 'xml', 'yaml', 'yml'];
