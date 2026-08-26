@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>사업자정보 — 보험워크</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+<style>
+:root {
+  --brand-500:#123A63; --brand-600:#0D2C4C;
+  --accent-50:#EAF0F7;
+  --neutral-100:#F4F5F7; --neutral-200:#E5E7EB;
+  --neutral-400:#9AA1AC; --neutral-500:#6B7280; --neutral-600:#4B5563; --neutral-700:#374151; --neutral-800:#1F2937;
+  --gradient-brand: linear-gradient(135deg, #123A63 0%, #4C7BAE 100%);
+  --gradient-soft: linear-gradient(135deg, #F8FAFD 0%, #EAF0F7 100%);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--gradient-soft);
+  color: var(--neutral-800);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+.nav { background:#FFFFFF; border-bottom:1px solid color-mix(in srgb, var(--brand-500) 40%, transparent); padding:16px 32px; }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:10px; }
+.logo-mark { width:28px; height:28px; border-radius:8px; display:block; flex-shrink:0; }
+.logo-text { font-weight:800; font-size:18px; color:var(--neutral-800); letter-spacing:-0.02em; }
+
+.main { flex:1; padding:56px 24px; display:flex; align-items:flex-start; justify-content:center; }
+.card { background:#fff; border:1px solid var(--neutral-200); border-radius:24px; padding:56px 48px; max-width:560px; width:100%; box-shadow:0 8px 24px rgba(18,58,99,0.08); }
+
+.head { text-align:center; margin-bottom:32px; }
+.icon { width:72px; height:72px; border-radius:18px; background:var(--accent-50); color:var(--brand-500); font-size:32px; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; }
+.title { font-size:28px; font-weight:900; color:var(--neutral-800); letter-spacing:-0.025em; margin-bottom:12px; }
+.intro { font-size:15px; color:var(--neutral-500); line-height:1.7; text-align:center; }
+
+.biz-table { width:100%; border-collapse:collapse; margin-bottom:32px; }
+.biz-table tr { border-bottom:1px solid var(--neutral-200); }
+.biz-table tr:last-child { border-bottom:0; }
+.biz-table th,.biz-table td { padding:13px 4px; text-align:left; font-size:14.5px; line-height:1.6; vertical-align:top; }
+.biz-table th { width:132px; color:var(--neutral-500); font-weight:600; white-space:nowrap; }
+.biz-table td { color:var(--neutral-800); font-weight:500; }
+.biz-table td a { color:var(--brand-500); font-weight:700; text-decoration:none; }
+.biz-table td a:hover { text-decoration:underline; }
+
+.link-row { display:flex; gap:12px; flex-wrap:wrap; padding-top:28px; border-top:1px solid var(--neutral-200); }
+.btn { flex:1; min-width:160px; padding:14px 20px; border-radius:12px; font-weight:700; font-size:14.5px; text-decoration:none; text-align:center; transition:all .2s ease; }
+.btn-secondary { background:var(--neutral-100); color:var(--neutral-700); border:1px solid var(--neutral-200); }
+.btn-secondary:hover { background:var(--neutral-200); }
+
+@media (max-width:640px) {
+  .card { padding:40px 24px; border-radius:20px; }
+  .title { font-size:23px; }
+  .biz-table th { width:104px; font-size:13px; }
+  .biz-table td { font-size:13.5px; }
+}
+</style>
+</head>
+
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <img src="/insuwork/insubriefing/assets/brand/insurance-briefing-favicon.png" alt="보험워크" class="logo-mark">
+    <div class="logo-text">보험워크</div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="card">
+    <div class="head">
+      <div class="icon">🏢</div>
+      <h1 class="title">사업자정보</h1>
+      <p class="intro">보험워크를 운영하는 사업자 정보를 안내합니다.</p>
+    </div>
+
+    <table class="biz-table">
+      <tr><th>상호</th><td>티솔루션 (T-Solutions)</td></tr>
+      <tr><th>대표자</th><td>임태성</td></tr>
+      <tr><th>사업자등록번호</th><td>604-10-68738</td></tr>
+      <tr><th>사업장 소재지</th><td>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라동, 청라프라자)</td></tr>
+      <tr><th>개인정보보호책임자</th><td>임태성 / <a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a></td></tr>
+      <tr><th>통신판매업 신고</th><td>제2026-인천서구-2514호</td></tr>
+      <tr><th>고객센터</th><td><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a> · <a href="tel:050-6890-9104">050-6890-9104</a></td></tr>
+    </table>
+
+    <div class="link-row">
+      <a href="/insuwork/terms.html" class="btn btn-secondary" target="_blank" rel="noopener">📋 이용약관</a>
+      <a href="/insuwork/privacy.html" class="btn btn-secondary" target="_blank" rel="noopener">🔒 개인정보처리방침</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>
