@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>이용약관 — 보험워크</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+<style>
+:root {
+  --brand-500:#123A63; --brand-600:#0D2C4C;
+  --accent-50:#EAF0F7; --accent-400:#4C7BAE;
+  --neutral-100:#F4F5F7; --neutral-200:#E5E7EB;
+  --neutral-400:#9AA1AC; --neutral-500:#6B7280; --neutral-600:#4B5563; --neutral-700:#374151; --neutral-800:#1F2937;
+  --gradient-brand: linear-gradient(135deg, #123A63 0%, #4C7BAE 100%);
+  --gradient-soft: linear-gradient(135deg, #F8FAFD 0%, #EAF0F7 100%);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--gradient-soft);
+  color: var(--neutral-800);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+.nav { background:#FFFFFF; border-bottom:1px solid color-mix(in srgb, var(--brand-500) 40%, transparent); padding:16px 32px; }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:10px; }
+.logo-mark { width:28px; height:28px; border-radius:8px; display:block; flex-shrink:0; }
+.logo-text { font-weight:800; font-size:18px; color:var(--neutral-800); letter-spacing:-0.02em; }
+
+.main { flex:1; padding:56px 24px; display:flex; align-items:flex-start; justify-content:center; }
+.card { background:#fff; border:1px solid var(--neutral-200); border-radius:24px; padding:56px 48px; max-width:720px; width:100%; box-shadow:0 8px 24px rgba(18,58,99,0.08); }
+
+.head { text-align:center; margin-bottom:36px; }
+.icon { width:72px; height:72px; border-radius:18px; background:var(--accent-50); color:var(--brand-500); font-size:32px; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; }
+.title { font-size:32px; font-weight:900; color:var(--neutral-800); letter-spacing:-0.025em; margin-bottom:16px; }
+.intro { font-size:16px; color:var(--neutral-500); line-height:1.75; text-align:center; }
+.intro strong { color:var(--brand-500); font-weight:700; }
+
+.section { margin-bottom:32px; }
+.section:last-of-type { margin-bottom:36px; }
+.section-title { font-size:17px; font-weight:800; color:var(--neutral-800); letter-spacing:-0.02em; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--neutral-200); }
+.section-list { list-style:none; padding:0; }
+.section-list li { font-size:15px; color:var(--neutral-700); line-height:1.75; padding:8px 0 8px 18px; position:relative; }
+.section-list li::before { content:'•'; position:absolute; left:4px; top:8px; color:var(--brand-500); font-weight:800; }
+.section-list li strong { color:var(--brand-500); font-weight:700; }
+
+.highlight-box { background:linear-gradient(135deg,#FFFBEB 0%,#FEF9E7 100%); border:1.5px solid #F59E0B; border-radius:16px; padding:24px 28px; margin-bottom:32px; }
+.highlight-title { font-size:16px; font-weight:800; color:#78350F; letter-spacing:-0.015em; margin-bottom:12px; display:flex; align-items:center; gap:8px; line-height:1.5; }
+.highlight-body { font-size:14.5px; color:var(--neutral-700); line-height:1.75; }
+.highlight-body p { margin:0; }
+
+.btn-row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; border-top:1px solid var(--neutral-200); margin-top:24px; padding-top:28px; }
+.btn { padding:14px 24px; border-radius:12px; font-weight:700; font-size:15px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all .2s ease; cursor:pointer; border:none; letter-spacing:-0.01em; }
+.btn-primary { background:var(--gradient-brand); color:#fff; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(18,58,99,0.3); }
+.btn-secondary { background:var(--neutral-100); color:var(--neutral-700); border:1px solid var(--neutral-200); }
+.btn-secondary:hover { background:var(--neutral-200); }
+
+@media (max-width:640px) {
+  .card { padding:40px 24px; border-radius:20px; }
+  .title { font-size:26px; }
+  .intro { font-size:15px; }
+  .section-list li { font-size:14.5px; }
+  .section-title { font-size:16px; }
+}
+
+.footer { background:var(--neutral-100); border-top:1px solid color-mix(in srgb, var(--brand-500) 40%, transparent); padding:48px 32px 32px; color:var(--neutral-800); margin-top:48px; }
+.footer-inner { max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:40px; }
+.footer-grid { display:grid; grid-template-columns:1.2fr 1fr 1.6fr; gap:40px; }
+.footer-col { display:flex; flex-direction:column; gap:12px; }
+.footer-col-title { font-size:14px; font-weight:700; color:var(--neutral-800); letter-spacing:-0.025em; margin-bottom:4px; }
+.footer-brand { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.footer-brand-name { font-size:18px; font-weight:900; color:var(--neutral-800); letter-spacing:-0.025em; }
+.footer-brand-tagline { font-size:12px; color:var(--neutral-500); line-height:1.55; margin:0; }
+.footer-link { font-size:14px; color:var(--neutral-500); text-decoration:none; transition:color .15s; }
+.footer-link:hover { color:var(--brand-500); }
+.footer-biz { font-size:12px; color:var(--neutral-600); line-height:1.7; }
+.footer-biz .row { margin:0; }
+.footer-biz .row strong { color:var(--neutral-700); font-weight:700; margin-right:4px; }
+.footer-biz a { color:inherit; text-decoration:none; }
+.footer-biz a:hover { color:var(--brand-500); }
+.footer-bottom { border-top:1px solid var(--neutral-200); padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.footer-copy { font-size:12px; color:var(--neutral-400); }
+@media (max-width:1024px) { .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+@media (max-width:768px)  { .footer-grid { grid-template-columns:1fr; gap:28px; } .footer { padding:40px 20px 24px; } }
+</style>
+</head>
+
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <img src="/insuwork/insubriefing/assets/brand/insurance-briefing-favicon.png" alt="보험워크" class="logo-mark">
+    <div class="logo-text">보험워크</div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="card">
+    <div class="head">
+      <div class="icon">📋</div>
+      <h1 class="title">이용약관</h1>
+      <p class="intro">
+        본 약관은 <strong>티솔루션 (T-Solutions)</strong>이 제공하는 보험워크 서비스의 이용과<br>
+        관련하여 회사와 이용자 간의 권리·의무 및 책임사항을 규정합니다.
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제1조 (목적)</div>
+      <ul class="section-list">
+        <li>본 약관은 티솔루션(T-Solutions, 이하 "회사")이 제공하는 보험설계사 업무지원 도구 보험워크 및 보험브리핑(이하 통틀어 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리·의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제2조 (정의)</div>
+      <ul class="section-list">
+        <li>"서비스"란 회사가 제공하는 보험설계사용 고객관리·일정관리·자료관리 도구인 보험워크 및 보험 정보 열람 도구인 보험브리핑을 말합니다.</li>
+        <li>"이용자"란 본 약관에 동의하고 서비스에 가입하여 이를 이용하는 자를 말합니다.</li>
+        <li>"상담고객"이란 이용자가 업무 수행을 위해 서비스 내에 등록하는 이용자의 고객(피상담자)을 말합니다.</li>
+        <li>"유료서비스"란 회사가 향후 유료로 제공할 수 있는 구독형 서비스를 말합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제3조 (약관의 게시와 개정)</div>
+      <ul class="section-list">
+        <li>회사는 본 약관의 내용을 이용자가 쉽게 확인할 수 있도록 서비스 초기 화면 또는 연결 화면에 게시합니다.</li>
+        <li>회사는 관련 법령을 위배하지 않는 범위에서 본 약관을 개정할 수 있으며, 개정 시 적용일자 및 개정사유를 명시하여 적용일 7일 전(이용자에게 불리한 변경의 경우 30일 전)부터 공지합니다.</li>
+        <li>이용자가 개정 약관의 적용일까지 거부 의사를 표시하지 않으면 개정에 동의한 것으로 봅니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제4조 (서비스의 성격)</div>
+      <ul class="section-list">
+        <li>서비스는 보험설계사인 이용자의 고객관리·일정관리·상담관리·자료관리 업무를 지원하는 생산성 도구입니다.</li>
+        <li>서비스는 일반 소비자를 대상으로 보험 상품을 판매·중개·권유하지 않으며, 보험 계약의 체결을 대리하거나 중개하지 않습니다.</li>
+        <li>서비스에서 제공되는 정보 및 자료는 업무 참고용이며, 회사는 해당 정보의 활용으로 발생하는 결과에 대해 법적 책임을 지지 않습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제5조 (회원가입)</div>
+      <ul class="section-list">
+        <li>이용자는 Google 계정 연동 또는 이메일 인증(OTP) 절차를 거쳐 본 약관에 동의함으로써 회원가입을 신청합니다.</li>
+        <li>회사는 다음 각 호에 해당하는 신청에 대하여 승낙을 거부하거나 사후에 이용계약을 해지할 수 있습니다.<br>
+          — 타인의 정보를 도용하거나 허위 정보를 기재한 경우<br>
+          — 사회질서 또는 미풍양속을 저해할 목적으로 신청한 경우<br>
+          — 기타 회사가 정한 이용 조건을 충족하지 못한 경우</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제6조 (서비스의 제공 및 변경)</div>
+      <ul class="section-list">
+        <li>회사는 연중무휴, 1일 24시간 서비스 제공을 원칙으로 합니다.</li>
+        <li>회사는 시스템 점검, 설비 교체, 통신 두절 등의 사유가 있는 경우 서비스 제공을 일시적으로 중단할 수 있으며, 이 경우 사전 또는 사후에 공지합니다.</li>
+        <li>회사는 서비스의 내용을 변경할 수 있으며, 변경 시 그 내용을 사전에 공지합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제7조 (유료서비스의 이용)</div>
+      <ul class="section-list">
+        <li>현재 서비스는 무료로 제공됩니다.</li>
+        <li>회사가 향후 유료서비스를 도입하는 경우 이용요금, 결제방법, 환불기준 등을 서비스 내 화면 및 별도 정책을 통해 사전에 고지하며, 이용자는 유료서비스를 언제든지 해지할 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-title">⚠ 상담고객 정보를 입력하는 이용자의 책임</div>
+      <div class="highlight-body">
+        <p>이용자는 상담고객 등 제3자의 개인정보를 서비스에 입력함에 있어 「개인정보 보호법」 등 관련 법령을 준수하여야 하며, 적법하게 수집·이용 동의를 받은 정보만 입력하여야 합니다. 이를 위반하여 발생하는 모든 책임은 해당 이용자에게 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제8조 (이용자의 의무)</div>
+      <ul class="section-list">
+        <li>이용자는 다음 행위를 하여서는 안 됩니다.<br>
+          — 타인의 정보 도용<br>
+          — 적법한 동의 없이 취득한 제3자의 개인정보를 서비스에 등록하는 행위<br>
+          — 회사가 게시한 정보의 무단 변경 또는 영업·상업적 목적의 무단 활용<br>
+          — 서비스를 이용하여 취득한 자료를 회사의 동의 없이 외부에 배포·판매하는 행위<br>
+          — 서비스의 운영을 방해하거나 안정성을 해치는 행위<br>
+          — 기타 관련 법령 및 본 약관에 위배되는 행위</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제9조 (저작권 및 자료의 이용)</div>
+      <ul class="section-list">
+        <li>서비스 내에서 회사가 제공하는 정보·자료에 대한 저작권 및 지적재산권은 회사에 귀속됩니다.</li>
+        <li>이용자가 "공개자료실"에 게시한 자료의 저작권은 게시한 이용자에게 있으며, 이용자는 다른 이용자와의 열람·공유를 위해 회사가 해당 자료를 서비스 내에서 게시·전송·복제하는 것을 허락한 것으로 봅니다.</li>
+        <li>이용자는 제3자의 저작권 등 권리를 침해하는 자료를 게시해서는 안 되며, 이를 위반하여 발생하는 책임은 게시한 이용자에게 있습니다.</li>
+        <li>회사가 제공하는 자료는 이용자의 업무 참고 및 교육 목적으로만 제공되며, 회사의 사전 서면 동의 없이 복제·전송·출판·배포·방송 기타 방법으로 이용하거나 제3자에게 이용하게 하여서는 안 됩니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제10조 (계약 해지 및 이용 제한)</div>
+      <ul class="section-list">
+        <li>이용자는 언제든지 서비스 내 메뉴 또는 고객센터를 통해 이용계약 해지를 신청할 수 있습니다.</li>
+        <li>회사는 이용자가 본 약관을 위반한 경우 사전 통지 후 이용을 제한하거나 계약을 해지할 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제11조 (면책조항)</div>
+      <ul class="section-list">
+        <li>회사는 천재지변, 불가항력, 이용자의 귀책사유로 인한 서비스 이용 장애에 대해 책임을 지지 않습니다.</li>
+        <li>회사는 이용자가 서비스에 입력한 상담고객 정보의 정확성, 적법한 수집 여부에 대해 보증하지 않으며, 이에 관한 책임은 입력한 이용자에게 있습니다.</li>
+        <li>회사는 서비스에서 제공하는 정보·자료의 정확성·완전성을 보증하지 않으며, 이를 업무에 활용한 결과에 대한 책임은 이용자에게 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제12조 (분쟁의 해결 및 관할)</div>
+      <ul class="section-list">
+        <li>회사와 이용자 간 발생한 분쟁은 상호 협의하여 해결하는 것을 원칙으로 합니다.</li>
+        <li>협의가 이루어지지 않을 경우, 관할 법원은 민사소송법상의 관할 법원으로 합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제13조 (자료의 자동 처리)</div>
+      <ul class="section-list">
+        <li>회사는 서비스 제공을 위하여 이용자가 붙여넣거나 업로드한 고객정보 화면·자료에 대해 자동 인식(OCR) 및 자동 입력 처리를 수행할 수 있으며, 이는 서비스의 본질적 기능에 해당합니다.</li>
+        <li>회사는 제1항의 처리를 위하여 외부 AI 처리 서비스(Google Gemini API 등)에 처리를 위탁할 수 있으며, 위탁 현황은 개인정보처리방침에 따릅니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">부칙</div>
+      <ul class="section-list">
+        <li>본 약관은 <strong>2026년 8월 26일</strong>부터 시행합니다.</li>
+      </ul>
+    </div>
+
+    <div class="btn-row">
+      <a href="/insuwork/privacy.html" class="btn btn-primary">🔒 개인정보처리방침</a>
+      <a href="/insuwork/" class="btn btn-secondary">✕ 닫기</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+
+      <div class="footer-col">
+        <div class="footer-brand">
+          <span class="footer-brand-name">보험워크</span>
+        </div>
+        <p class="footer-brand-tagline">보험설계사를 위한 고객관리·일정관리·자료관리 업무 도구</p>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">지원</div>
+        <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">💬 카카오 오픈채팅</a>
+        <a class="footer-link" href="mailto:bylts0428@gmail.com">✉️ 이메일 문의</a>
+        <a class="footer-link" href="tel:050-6890-9104">📞 050-6890-9104</a>
+        <a class="footer-link" href="/insuwork/terms.html" style="font-weight:700;color:var(--neutral-800);">이용약관</a>
+        <a class="footer-link" href="/insuwork/privacy.html">개인정보처리방침</a>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">사업자 정보</div>
+        <div class="footer-biz">
+          <p class="row"><strong>상호</strong>티솔루션 (T-Solutions)</p>
+          <p class="row"><strong>대표자</strong>임태성</p>
+          <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
+          <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라동, 청라프라자)</p>
+          <p class="row"><strong>개인정보보호책임자</strong>임태성 / bylts0428@gmail.com</p>
+          <p class="row"><strong>통신판매업 신고</strong>제2026-인천서구-2514호</p>
+          <p class="row"><strong>고객센터</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a> / 050-6890-9104</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 보험워크 · 티솔루션(T-Solutions). All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
