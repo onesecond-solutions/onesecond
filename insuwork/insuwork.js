@@ -3,7 +3,7 @@
   function storedUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (_e) { return {}; } }
   function esc(value) { return String(value || '').replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
   function closeAccountMenu() { var menu = document.getElementById('iw-account-popover'), trigger = document.getElementById('iw-account-trigger'); if (menu) menu.hidden = true; if (trigger) trigger.setAttribute('aria-expanded', 'false'); }
-  function currentBgMode() { try { return localStorage.getItem('iw_bg_mode') || 'image'; } catch (_e) { return 'image'; } }
+  function currentBgMode() { try { return localStorage.getItem('iw_bg_mode') || 'white'; } catch (_e) { return 'white'; } }
   function applyBgMode(mode) {
     var body = document.body;
     body.classList.remove('iw-bg-flat', 'iw-bg-white', 'iw-bg-dark', 'iw-bg-namsan', 'iw-bg-window');
@@ -17,10 +17,10 @@
   }
   function bgModeButtonsHtml(active) {
     var modes = [
-      ['image', '이미지', '/insuwork/insubriefing/assets/generated/briefing-toss-hero.webp'],
-      ['namsan', '남산', '/insuwork/insubriefing/assets/generated/namsan-sunny.webp'],
       ['white', '화이트', null],
       ['dark', '다크', null],
+      ['image', '이미지', '/insuwork/insubriefing/assets/generated/briefing-toss-hero.webp'],
+      ['namsan', '남산', '/insuwork/insubriefing/assets/generated/namsan-sunny.webp'],
       ['window', '창문', null]
     ];
     return modes.map(function (m) {
