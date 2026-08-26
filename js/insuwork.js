@@ -2165,7 +2165,16 @@
     var badge = care && event.customer_id ? '<button type="button" class="iw-badge iw-badge-link" onclick="OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')">' + kind + (done ? ' · 완료' : '') + '</button>' : '<span class="iw-badge">' + kind + (done ? ' · 완료' : '') + '</span>';
     dialog('<div class="iw-detail">' + badge + '<h2 class="iw-detail-title">' + (event.builtin ? '' : favoriteButton('event', id, event.title || '일정', sub)) + '<span>' + esc(event.title) + '</span></h2><p>' + esc(sub) + '</p><div class="iw-detail-body">' + esc(event.description || '') + '</div>' + actions + '</div>');
   }
-  function openCustomerFromEvent(customerId) { closeDialog(); state.customerStatusFilter = 'all'; state.customerNameQuery = ''; state.selectedCustomerDetail = null; go('customers'); selectCustomerDetail(customerId); }
+  /* 2026-08-26 대표 확정 — 캘린더(월보기 상령일 단건 칩 직접클릭·이벤트 팝업 "고객관리" 배지)와
+     통합검색 "고객" 결과가 전부 이 함수 하나로 수렴한다. 예전엔 customerNameQuery를 비워버려
+     고객관리 리스트가 전체 121명 그대로 뜬 채 상세카드만 열렸다 — 이름을 채워 리스트도 그 1명으로
+     좁혀지게(대표가 원한 "깔끔한 단일 결과" 화면) 한다. */
+  function openCustomerFromEvent(customerId) {
+    closeDialog();
+    var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId); });
+    state.customerStatusFilter = 'all'; state.customerNameQuery = customer ? (customer.name || '') : ''; state.selectedCustomerDetail = null;
+    go('customers'); selectCustomerDetail(customerId);
+  }
 
   function formField(label, input) { return '<label class="iw-field"><span>' + label + '</span>' + input + '</label>'; }
   /* 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()는 다른 화면(자료실 등)에서도 쓰여서 그대로 두고, 여기서만 별도 헬퍼로 분리 */
