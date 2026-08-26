@@ -433,10 +433,10 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-driving-toggle{width:100%;box-sizing:border-box;overflow:hidden;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit;text-align:left;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
 #v-insuwork .iw-driving-toggle:hover{background:var(--s2)}
 #v-insuwork .iw-driving-toggle:focus-visible{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
-#v-insuwork .iw-driving-panel{position:absolute;top:calc(100% + 4px);right:0;z-index:60;width:230px;max-width:calc(100vw - 40px);padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 12px 32px rgba(0,0,0,.18);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+#v-insuwork .iw-driving-panel{position:absolute;top:calc(100% + 4px);right:0;z-index:60;width:180px;max-width:calc(100vw - 40px);max-height:min(60vh,320px);overflow-y:auto;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 12px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:2px}
 #v-insuwork .iw-driving-panel label{display:flex;align-items:center;gap:6px;padding:4px 2px;color:var(--tp);font-size:13px;white-space:nowrap;cursor:pointer}
 #v-insuwork .iw-driving-panel input[type="checkbox"]{margin:0;flex:0 0 auto}
-@media(max-width:680px){#v-insuwork .iw-customer-address-row{flex-direction:column;align-items:flex-start}#v-insuwork .iw-customer-underwriting{grid-template-columns:1fr}#v-insuwork .iw-driving-panel{grid-template-columns:1fr}}
+@media(max-width:680px){#v-insuwork .iw-customer-address-row{flex-direction:column;align-items:flex-start}#v-insuwork .iw-customer-underwriting{grid-template-columns:1fr}}
 
 /* ── 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()의 라벨-위 스타일과 별개(다른 화면 영향 없음) ── */
 #v-insuwork .iw-inline-field{display:flex;align-items:center;gap:8px;min-width:0}
