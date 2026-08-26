@@ -338,16 +338,16 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-day.today .iw-day-head strong{width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,var(--iw-cal-main),var(--iw-cal-deep));color:#fff;font-size:12px;font-weight:700;box-shadow:0 3px 9px rgba(34,54,82,.28)}
 #v-insuwork .iw-day-head em{min-width:18px;padding:2px 6px;border-radius:999px;background:#eef2f8;color:#6f7785;font-size:10px;font-style:normal;font-weight:800;text-align:center}
 #v-insuwork .iw-built-ins{display:flex;min-width:0;flex:1;flex-direction:column;align-items:flex-end;gap:2px;padding-top:1px}
-#v-insuwork .iw-built-ins i{max-width:100%;overflow:hidden;color:#b1404f;font-size:11px;font-style:normal;font-weight:800;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
-#v-insuwork .iw-built-ins i.insurance-age{display:inline-flex;align-items:center;max-width:100%;padding:1px 5px;border:1px solid #bad3f8;border-radius:999px;background:#eef6ff;color:#174ea6;cursor:pointer}
-#v-insuwork .iw-built-ins i.insurance-age:hover{border-color:#7baaf7;background:#dbeafe}
-#v-insuwork .iw-built-ins i.insurance-age-more{background:#e7f0ff;border-color:#8bbcff;color:#0f4f9e;font-weight:900}
+#v-insuwork .iw-built-ins i{max-width:100%;overflow:hidden;color:var(--iw-cal-holiday-fg);font-size:11px;font-style:normal;font-weight:800;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+#v-insuwork .iw-built-ins i.insurance-age{display:inline-flex;align-items:center;max-width:100%;padding:1px 5px;border:1px solid color-mix(in srgb,var(--iw-cal-insage-fg) 30%,transparent);border-radius:999px;background:var(--iw-cal-insage-bg);color:var(--iw-cal-insage-fg);cursor:pointer}
+#v-insuwork .iw-built-ins i.insurance-age:hover{border-color:var(--iw-cal-insage-fg);background:color-mix(in srgb,var(--iw-cal-insage-bg) 72%,var(--iw-cal-insage-fg))}
+#v-insuwork .iw-built-ins i.insurance-age-more{background:color-mix(in srgb,var(--iw-cal-insage-bg) 55%,var(--iw-cal-insage-fg));border-color:var(--iw-cal-insage-fg);color:var(--iw-cal-insage-fg);font-weight:900}
 #v-insuwork .iw-built-ins i.customer{display:inline-flex;align-items:center;max-width:100%;padding:1px 5px;border:1px solid #b7ded7;border-radius:999px;background:#edf8f5;color:#276c62;cursor:pointer}
 #v-insuwork .iw-built-ins i.customer:hover{border-color:#8bcabf;background:#dff1ed}
 #v-insuwork .iw-built-ins i.customer-more{border-color:#a9d8cf;background:#e6f6f2;color:#24695f;font-weight:900}
 #v-insuwork .iw-built-ins i.customer-more:hover{border-color:#7fc5b8;background:#d4eee8}
-#v-insuwork .iw-built-ins i.term{color:#397269}
-#v-insuwork .iw-built-ins i.memorial{color:#7a5a9a}
+#v-insuwork .iw-built-ins i.term{color:var(--iw-cal-term-fg)}
+#v-insuwork .iw-built-ins i.memorial{color:var(--iw-cal-memorial-fg)}
 #v-insuwork .iw-built-ins i.schedule{display:inline-flex;align-items:center;max-width:100%;padding:1px 5px;border:1px solid #c7cef2;border-radius:999px;background:#e7ebfa;color:#3f5185;cursor:pointer}
 #v-insuwork .iw-built-ins i.schedule:hover{border-color:#a9b4e8;background:#dbe1f7}
 #v-insuwork .iw-built-ins i.schedule-more{border-color:#a9b4e8;background:#dbe1f7;color:#33456e;font-weight:900}
