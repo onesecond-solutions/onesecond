@@ -7,6 +7,16 @@
 .ib-account-popover[hidden],.iw-account-popover[hidden]{display:none}
 .ib-account-email,.iw-account-email{margin:0 6px 6px;padding:10px 8px 12px;border-bottom:1px solid var(--bd);color:var(--ts);font-size:var(--fs-meta,12px);line-height:1.4;overflow-wrap:anywhere}
 .ib-account-bgmode,.iw-account-bgmode{margin:0 6px 6px;padding:2px 2px 12px;border-bottom:1px solid var(--bd)}
+.iw-account-popover .iw-account-bgmode{border-bottom:0;margin-bottom:0;padding-bottom:10px}
+.iw-account-popover .os-weather-setting{border-bottom:0;margin-bottom:0;padding-top:8px;padding-bottom:0}
+/* 2026-08-26 계정 메뉴 섹션 정리 (보험워크 전용) — 항목을 의미 단위로 묶고 그룹 사이에만
+   옅은 구분선을 둬서 배경화면/날씨/개인정보수정/사업자정보/로그아웃이 전부 같은 줄로
+   나열되던 문제를 정리한다. */
+.iw-account-group{margin:0 6px;padding:2px 0}
+.iw-account-group+.iw-account-group{border-top:1px solid color-mix(in srgb,var(--bd) 65%,transparent);margin-top:2px;padding-top:6px}
+.iw-account-group .iw-account-bgmode,.iw-account-group .os-weather-setting{margin-left:0;margin-right:0}
+.iw-account-legal{min-height:32px!important;padding:0 8px!important;font-size:11px!important;font-weight:500!important;color:var(--ts)!important;justify-content:center!important}
+.iw-account-legal:hover,.iw-account-legal:focus-visible{color:var(--tp)!important;background:transparent!important;text-decoration:underline}
 .ib-account-bgmode>span,.iw-account-bgmode>span{display:block;margin-bottom:7px;color:var(--ts);font-size:var(--fs-meta,12px);font-weight:var(--fw-medium,700)}
 .ib-bgmode-options,.iw-bgmode-options{display:flex;gap:10px}
 .ib-account-popover button,.iw-account-popover button,.iw-account-popover a{display:flex;width:100%;min-height:40px;align-items:center;justify-content:flex-start;padding:0 14px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);font-size:var(--fs-meta,12px);font-weight:var(--fw-medium,700);cursor:pointer;text-decoration:none;box-sizing:border-box}
