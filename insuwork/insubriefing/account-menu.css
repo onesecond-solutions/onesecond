@@ -6,6 +6,8 @@
 .ib-account-popover,.iw-account-popover{position:absolute;z-index:40;top:calc(100% + 8px);right:0;width:min(320px,calc(100vw - 24px));padding:8px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 16px 40px color-mix(in srgb,var(--tp) 16%,transparent)}
 .ib-account-popover[hidden],.iw-account-popover[hidden]{display:none}
 .ib-account-email,.iw-account-email{margin:0 6px 6px;padding:10px 8px 12px;border-bottom:1px solid var(--bd);color:var(--ts);font-size:var(--fs-meta,12px);line-height:1.4;overflow-wrap:anywhere}
+.iw-account-email{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.iw-account-email>span{overflow-wrap:anywhere}
 .ib-account-bgmode,.iw-account-bgmode{margin:0 6px 6px;padding:2px 2px 12px;border-bottom:1px solid var(--bd)}
 .iw-account-popover .iw-account-bgmode{border-bottom:0;margin-bottom:0;padding-bottom:10px}
 .iw-account-popover .os-weather-setting{border-bottom:0;margin-bottom:0;padding-top:8px;padding-bottom:0}
@@ -15,8 +17,8 @@
 .iw-account-group{margin:0 6px;padding:2px 0}
 .iw-account-group+.iw-account-group{border-top:1px solid color-mix(in srgb,var(--bd) 65%,transparent);margin-top:2px;padding-top:6px}
 .iw-account-group .iw-account-bgmode,.iw-account-group .os-weather-setting{margin-left:0;margin-right:0}
-.iw-account-legal{min-height:32px!important;padding:0 8px!important;font-size:11px!important;font-weight:500!important;color:var(--ts)!important;justify-content:center!important}
-.iw-account-legal:hover,.iw-account-legal:focus-visible{color:var(--tp)!important;background:transparent!important;text-decoration:underline}
+.iw-account-email .iw-account-legal{flex:0 0 auto;display:inline-flex;width:auto;min-height:0;align-items:center;justify-content:center;padding:4px 10px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s2);color:var(--ts);font-size:11px;font-weight:500;text-decoration:none;white-space:nowrap}
+.iw-account-email .iw-account-legal:hover,.iw-account-email .iw-account-legal:focus-visible{color:var(--tp);background:var(--s1);border-color:var(--ac)}
 .ib-account-bgmode>span,.iw-account-bgmode>span{display:block;margin-bottom:7px;color:var(--ts);font-size:var(--fs-meta,12px);font-weight:var(--fw-medium,700)}
 .ib-bgmode-options,.iw-bgmode-options{display:flex;gap:10px}
 .ib-account-popover button,.iw-account-popover button,.iw-account-popover a{display:flex;width:100%;min-height:40px;align-items:center;justify-content:flex-start;padding:0 14px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);font-size:var(--fs-meta,12px);font-weight:var(--fw-medium,700);cursor:pointer;text-decoration:none;box-sizing:border-box}
