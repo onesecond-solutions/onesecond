@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>개인정보처리방침 — 보험워크</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+<style>
+:root {
+  --brand-500:#123A63; --brand-600:#0D2C4C;
+  --accent-50:#EAF0F7; --accent-400:#4C7BAE;
+  --neutral-100:#F4F5F7; --neutral-200:#E5E7EB;
+  --neutral-400:#9AA1AC; --neutral-500:#6B7280; --neutral-600:#4B5563; --neutral-700:#374151; --neutral-800:#1F2937;
+  --warning-bg:#FFFBEB; --warning-soft:#FEF9E7; --warning-border:#F59E0B; --warning-text:#78350F;
+  --gradient-brand: linear-gradient(135deg, #123A63 0%, #4C7BAE 100%);
+  --gradient-soft: linear-gradient(135deg, #F8FAFD 0%, #EAF0F7 100%);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--gradient-soft);
+  color: var(--neutral-800);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+.nav { background:#FFFFFF; border-bottom:1px solid color-mix(in srgb, var(--brand-500) 40%, transparent); padding:16px 32px; }
+.nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:10px; }
+.logo-mark { width:28px; height:28px; border-radius:8px; display:block; flex-shrink:0; }
+.logo-text { font-weight:800; font-size:18px; color:var(--neutral-800); letter-spacing:-0.02em; }
+
+.main { flex:1; padding:56px 24px; display:flex; align-items:flex-start; justify-content:center; }
+.card { background:#fff; border:1px solid var(--neutral-200); border-radius:24px; padding:56px 48px; max-width:720px; width:100%; box-shadow:0 8px 24px rgba(18,58,99,0.08); }
+
+.head { text-align:center; margin-bottom:36px; }
+.icon { width:72px; height:72px; border-radius:18px; background:var(--accent-50); color:var(--brand-500); font-size:32px; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; }
+.title { font-size:32px; font-weight:900; color:var(--neutral-800); letter-spacing:-0.025em; margin-bottom:16px; }
+.intro { font-size:16px; color:var(--neutral-500); line-height:1.75; text-align:center; }
+.intro strong { color:var(--brand-500); font-weight:700; }
+
+.section { margin-bottom:32px; }
+.section-title { font-size:17px; font-weight:800; color:var(--neutral-800); letter-spacing:-0.02em; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--neutral-200); }
+.section-list { list-style:none; padding:0; }
+.section-list li { font-size:15px; color:var(--neutral-700); line-height:1.75; padding:8px 0 8px 18px; position:relative; }
+.section-list li::before { content:'•'; position:absolute; left:4px; top:8px; color:var(--brand-500); font-weight:800; }
+.section-list li strong { color:var(--brand-500); font-weight:700; }
+
+.highlight-box { background:linear-gradient(135deg, var(--warning-bg) 0%, var(--warning-soft) 100%); border:1.5px solid var(--warning-border); border-radius:16px; padding:24px 28px; margin-bottom:32px; }
+.highlight-title { font-size:16px; font-weight:800; color:var(--warning-text); letter-spacing:-0.015em; margin-bottom:12px; display:flex; align-items:center; gap:8px; line-height:1.5; }
+.highlight-body { font-size:14.5px; color:var(--neutral-700); line-height:1.75; }
+.highlight-body p { margin-bottom:10px; }
+.highlight-body p:last-child { margin-bottom:0; }
+.highlight-body strong { color:var(--warning-text); font-weight:700; }
+
+.btn-row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; padding-top:28px; border-top:1px solid var(--neutral-200); margin-top:24px; }
+.btn { padding:14px 24px; border-radius:12px; font-weight:700; font-size:15px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all .2s ease; cursor:pointer; border:none; letter-spacing:-0.01em; }
+.btn-primary { background:var(--gradient-brand); color:#fff; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(18,58,99,0.3); }
+.btn-secondary { background:var(--neutral-100); color:var(--neutral-700); border:1px solid var(--neutral-200); }
+.btn-secondary:hover { background:var(--neutral-200); }
+
+@media (max-width:640px) {
+  .card { padding:40px 24px; border-radius:20px; }
+  .title { font-size:26px; }
+  .intro { font-size:15px; }
+  .section-list li { font-size:14.5px; }
+  .section-title { font-size:16px; }
+  .highlight-box { padding:20px 22px; }
+  .highlight-title { font-size:15px; }
+  .highlight-body { font-size:14px; }
+}
+
+.footer { background:var(--neutral-100); border-top:1px solid color-mix(in srgb, var(--brand-500) 40%, transparent); padding:48px 32px 32px; color:var(--neutral-800); margin-top:48px; }
+.footer-inner { max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:40px; }
+.footer-grid { display:grid; grid-template-columns:1.2fr 1fr 1.6fr; gap:40px; }
+.footer-col { display:flex; flex-direction:column; gap:12px; }
+.footer-col-title { font-size:14px; font-weight:700; color:var(--neutral-800); letter-spacing:-0.025em; margin-bottom:4px; }
+.footer-brand { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.footer-brand-name { font-size:18px; font-weight:900; color:var(--neutral-800); letter-spacing:-0.025em; }
+.footer-brand-tagline { font-size:12px; color:var(--neutral-500); line-height:1.55; margin:0; }
+.footer-link { font-size:14px; color:var(--neutral-500); text-decoration:none; transition:color .15s; }
+.footer-link:hover { color:var(--brand-500); }
+.footer-biz { font-size:12px; color:var(--neutral-600); line-height:1.7; }
+.footer-biz .row { margin:0; }
+.footer-biz .row strong { color:var(--neutral-700); font-weight:700; margin-right:4px; }
+.footer-biz a { color:inherit; text-decoration:none; }
+.footer-biz a:hover { color:var(--brand-500); }
+.footer-bottom { border-top:1px solid var(--neutral-200); padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.footer-copy { font-size:12px; color:var(--neutral-400); }
+@media (max-width:1024px) { .footer-grid { grid-template-columns:1fr 1fr; gap:32px; } }
+@media (max-width:768px)  { .footer-grid { grid-template-columns:1fr; gap:28px; } .footer { padding:40px 20px 24px; } }
+</style>
+</head>
+
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <img src="/insuwork/insubriefing/assets/brand/insurance-briefing-favicon.png" alt="보험워크" class="logo-mark">
+    <div class="logo-text">보험워크</div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="card">
+    <div class="head">
+      <div class="icon">🔒</div>
+      <h1 class="title">개인정보처리방침</h1>
+      <p class="intro">
+        <strong>티솔루션 (T-Solutions)</strong>은 「개인정보 보호법」 등 관련 법령을 준수하며,<br>
+        보험워크 서비스 이용자의 개인정보를 다음과 같이 처리합니다.
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제1조 (수집하는 개인정보 항목)</div>
+      <ul class="section-list">
+        <li><strong>회원(설계사) 필수항목:</strong> 이메일 주소, 이름 · Google 계정으로 로그인하는 경우 Google 계정 식별자</li>
+        <li><strong>회원(설계사) 선택항목:</strong> 연락처, 닉네임(공개자료실 표시용)</li>
+        <li><strong>상담고객(피상담자) 정보:</strong> 이용자가 업무 수행을 위해 서비스에 직접 등록하는 정보로, 이름 · 생년월일 · 성별 · 연락처 · 주소 · 보험 가입내역 및 보장분석 정보 · 상담메모(건강 관련 내용이 포함될 수 있음) · 첨부파일(보장분석표 등)</li>
+        <li><strong>자동수집항목:</strong> 서비스 이용 기록, 접속 로그, 쿠키, 접속 IP 정보</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-title">⚠ 상담고객 정보는 이용자가 직접 입력·관리하는 업무자료입니다</div>
+      <div class="highlight-body">
+        <p>보험워크는 설계사인 이용자가 자신의 상담고객 정보를 관리할 수 있도록 저장 공간과 기능을 제공하는 업무 도구입니다. 상담고객 정보의 수집 주체 및 적법한 수집·이용 동의 확보 책임은 이를 입력하는 이용자에게 있으며, 회사는 해당 정보를 이용자의 업무 목적 범위 내에서 안전하게 저장·처리하는 역할을 합니다.</p>
+        <p>회사는 상담고객 정보를 이용자가 등록한 목적 외로 열람·이용하지 않으며, 접근제어·암호화 등 보호조치를 통해 안전하게 관리합니다.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제2조 (개인정보의 수집·이용 목적)</div>
+      <ul class="section-list">
+        <li>회원 식별 및 가입 의사 확인</li>
+        <li>고객관리·캘린더·상담관리·자료실·공개자료실 등 서비스 기능 제공</li>
+        <li>고객 등록 화면 캡처의 자동 인식(OCR) 등 입력 보조 기능 제공</li>
+        <li>고객 문의 응대 및 공지사항 전달</li>
+        <li>서비스 개선 및 부정 이용 방지</li>
+        <li>(도입 시) 유료 구독 결제·정산</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제3조 (개인정보의 보유 및 이용 기간)</div>
+      <ul class="section-list">
+        <li>회사는 회원 탈퇴 시 이용자 본인 정보 및 이용자가 등록한 상담고객 정보를 지체 없이 파기합니다.</li>
+        <li>다만 관련 법령에 따라 다음 정보는 명시된 기간 동안 보관합니다.</li>
+        <li>접속 로그 기록: <strong>3개월</strong> (통신비밀보호법)</li>
+        <li>(유료서비스 도입 시) 계약·청약철회, 대금결제, 소비자 불만·분쟁처리 기록: 전자상거래법이 정한 기간(각 5년, 5년, 3년) 동안 보관</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제4조 (개인정보의 제3자 제공)</div>
+      <ul class="section-list">
+        <li>회사는 이용자 및 상담고객의 개인정보를 본 방침에 명시한 범위를 초과하여 이용하거나 제3자에게 제공하지 않습니다. 다만 법령에 의거하거나 수사기관의 적법한 요청이 있는 경우는 예외로 합니다.</li>
+        <li>본 조의 '제3자 제공'은 개인정보를 외부에 제공하는 경우를 의미하며, 서비스 처리를 위한 제5조의 '처리 위탁'은 이에 해당하지 않습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제5조 (개인정보 처리의 위탁)</div>
+      <p style="font-size:14px;color:var(--neutral-700);line-height:1.7;margin-bottom:12px;">회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리 업무를 위탁하고 있습니다.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;color:var(--neutral-700);">
+        <thead>
+          <tr style="background:var(--neutral-100);">
+            <th style="padding:10px;text-align:left;border:1px solid var(--neutral-200);font-weight:700;">수탁업체</th>
+            <th style="padding:10px;text-align:left;border:1px solid var(--neutral-200);font-weight:700;">위탁업무</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:10px;border:1px solid var(--neutral-200);">Supabase</td>
+            <td style="padding:10px;border:1px solid var(--neutral-200);">데이터베이스·회원 인증·파일 저장 인프라 운영</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;border:1px solid var(--neutral-200);">Google LLC</td>
+            <td style="padding:10px;border:1px solid var(--neutral-200);">Google 계정 로그인 인증 · 고객 등록 화면 캡처 이미지의 자동 인식(OCR, Gemini API) 처리</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:13px;color:var(--neutral-500);line-height:1.7;margin-top:12px;">(유료서비스 도입 시) 결제대행사가 위탁업체로 추가될 수 있으며, 추가 시 본 방침을 개정하여 사전 고지합니다. 카드번호 등 결제 정보는 결제대행사가 처리하며 회사는 저장하지 않습니다.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제6조 (이용자의 권리와 행사 방법)</div>
+      <ul class="section-list">
+        <li>이용자는 언제든지 자신의 개인정보 및 자신이 등록한 상담고객 정보를 조회·수정·삭제할 수 있으며, 회원 탈퇴를 통해 개인정보의 수집·이용에 대한 동의를 철회할 수 있습니다. 권리 행사는 고객센터(<a href="mailto:bylts0428@gmail.com" style="color:var(--brand-500);font-weight:700;">bylts0428@gmail.com</a>)를 통해 요청할 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제7조 (개인정보의 파기)</div>
+      <ul class="section-list">
+        <li>개인정보 보유기간이 경과하거나 처리 목적이 달성된 경우, 전자적 파일은 복구 불가능한 방법으로 영구 삭제하고, 출력물은 분쇄 또는 소각합니다.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제8조 (개인정보 보호책임자)</div>
+      <ul class="section-list">
+        <li><strong>책임자:</strong> 임태성</li>
+        <li><strong>연락처:</strong> <a href="mailto:bylts0428@gmail.com" style="color:var(--brand-500);font-weight:700;">bylts0428@gmail.com</a></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">제9조 (고지의 의무)</div>
+      <ul class="section-list">
+        <li>본 개인정보처리방침은 <strong>2026년 8월 26일</strong>부터 적용되며, 법령·정책 또는 서비스 변경에 따라 내용이 추가·삭제·수정될 경우 시행 7일 전부터 공지합니다.</li>
+      </ul>
+    </div>
+
+    <div class="btn-row">
+      <a href="/insuwork/terms.html" class="btn btn-primary">📋 이용약관</a>
+      <a href="/insuwork/" class="btn btn-secondary">✕ 닫기</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+
+      <div class="footer-col">
+        <div class="footer-brand">
+          <span class="footer-brand-name">보험워크</span>
+        </div>
+        <p class="footer-brand-tagline">보험설계사를 위한 고객관리·일정관리·자료관리 업무 도구</p>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">지원</div>
+        <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">💬 카카오 오픈채팅</a>
+        <a class="footer-link" href="mailto:bylts0428@gmail.com">✉️ 이메일 문의</a>
+        <a class="footer-link" href="tel:050-6890-9104">📞 050-6890-9104</a>
+        <a class="footer-link" href="/insuwork/terms.html">이용약관</a>
+        <a class="footer-link" href="/insuwork/privacy.html" style="font-weight:700;color:var(--neutral-800);">개인정보처리방침</a>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">사업자 정보</div>
+        <div class="footer-biz">
+          <p class="row"><strong>상호</strong>티솔루션 (T-Solutions)</p>
+          <p class="row"><strong>대표자</strong>임태성</p>
+          <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
+          <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라동, 청라프라자)</p>
+          <p class="row"><strong>개인정보보호책임자</strong>임태성 / bylts0428@gmail.com</p>
+          <p class="row"><strong>통신판매업 신고</strong>제2026-인천서구-2514호</p>
+          <p class="row"><strong>고객센터</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a> / 050-6890-9104</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 보험워크 · 티솔루션(T-Solutions). All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
