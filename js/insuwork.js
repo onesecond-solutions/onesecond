@@ -363,7 +363,7 @@
       api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=20&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
       api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
       api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,insuwork_customers(id,name,phone,status)'),
-      api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=30&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
+      api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ];
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
       if (requestId !== state.requestId) return false;
@@ -832,13 +832,13 @@
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
       .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
-    /* 2026-08-26 대표 확정("엉뚱한 고객들이 보인다") — 고객상세를 조회로만 열어도 매번 updated_at을
-       PATCH로 갱신하므로(saveCustomerDetail 등), 청약일자(profile.contract_date, 등록 당시 값 고정)로
-       정렬하면 "최근" 위젯이 실제로는 매번 같은 청약일자 상위권만 보여줘 방금 만지작거린 고객과
-       무관해진다. 홈 라이트 로드 자체가 이미 updated_at.desc 30건만 가져오므로(loadData 366행),
-       클라이언트 정렬도 그 기준(updated_at)에 맞춘다. */
+    /* 2026-08-26 대표 확정 — "최근 고객" = 청약일자(profile.contract_date) 최근순이 원래 사양(1차
+       수정에서 updated_at으로 잘못 바꿨다가 대표 지적으로 원복). 진짜 원인은 정렬 기준이 아니라
+       홈 라이트 로드가 고객을 updated_at.desc 30건만 가져오던 것(loadData 366행) — 그 30건 안에서만
+       청약일자로 재정렬하니 전체 고객 중 진짜 청약일자 상위 5명이 아니라 "최근에 DB가 손댄 30명
+       중 상위 5명"이 나와 엉뚱해 보였다. 정렬은 원래대로, 원인은 loadData의 limit(아래에서 수정). */
     var recentCustomers = state.data.customers.filter(function (item) { return isRealCustomerStage(item.status); })
-      .sort(function (a, b) { return String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')); }).slice(0, 5);
+      .sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); }).slice(0, 5);
     var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
     var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
     var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
@@ -846,7 +846,7 @@
     var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
     var customersEmptyText = loginHint ? '로그인 후 고객 정보를 확인할 수 있습니다.' : '등록된 고객이 없습니다.';
-    var customersPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 고객</strong><button onclick="OSInsuwork.go(\'customers\')">전체 보기</button></div><div class="iw-list">' + (recentCustomers.length ? recentCustomers.map(function (item) { return row(item.name || '(이름 없음)', phoneText(item.phone || item.phone_raw || '') || (item.status || ''), esc(formatDate(item.updated_at || item.created_at)), "OSInsuwork.openCustomerFromEvent('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">' + customersEmptyText + '</div>') + '</div></section>';
+    var customersPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 고객</strong><button onclick="OSInsuwork.go(\'customers\')">전체 보기</button></div><div class="iw-list">' + (recentCustomers.length ? recentCustomers.map(function (item) { var profile = customerProfile(item); return row(item.name || '(이름 없음)', phoneText(item.phone || item.phone_raw || '') || (item.status || ''), esc(formatDate(profile.contract_date || item.created_at)), "OSInsuwork.openCustomerFromEvent('" + esc(item.id) + "')"); }).join('') : '<div class="iw-empty">' + customersEmptyText + '</div>') + '</div></section>';
     /* 비로그인 사용자는 state.status가 'waiting-auth'에서 영원히 벗어나지 못하므로(로그인 절차가
        진행 중인 게 아니라 애초에 로그인을 안 한 것) statusHtml()을 얹으면 "로그인 정보를 확인하고
        있습니다" 문구가 계속 떠 있는 것처럼 오해를 준다. 로그인된 사용자의 실제 개인 데이터 로딩
