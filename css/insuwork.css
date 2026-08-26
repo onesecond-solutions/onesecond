@@ -433,11 +433,10 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-driving-toggle{width:100%;box-sizing:border-box;overflow:hidden;padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit;text-align:left;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
 #v-insuwork .iw-driving-toggle:hover{background:var(--s2)}
 #v-insuwork .iw-driving-toggle:focus-visible{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
-#v-insuwork .iw-driving-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;box-sizing:border-box;width:100%;max-width:100%;max-height:min(60vh,320px);overflow-y:auto;overflow-x:hidden;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 12px 32px rgba(0,0,0,.18);display:grid;gap:4px}
-#v-insuwork .iw-driving-row{display:flex;align-items:center;gap:0;min-width:0}
-#v-insuwork .iw-driving-panel label,#v-insuwork .iw-driving-option{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;box-sizing:border-box;min-width:0;padding:5px 2px;color:var(--tp);font-size:12px;line-height:1.35;text-align:left;white-space:nowrap;cursor:pointer}
-#v-insuwork .iw-driving-row .iw-driving-option{flex:1 1 0}
-#v-insuwork .iw-driving-row .iw-driving-option:only-child{flex:0 0 auto;min-width:96px}
+#v-insuwork .iw-driving-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;box-sizing:border-box;width:100%;max-width:100%;max-height:min(60vh,320px);overflow-y:auto;overflow-x:hidden;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);box-shadow:0 12px 32px rgba(0,0,0,.18);display:grid;gap:5px}
+#v-insuwork .iw-driving-row{display:flex;align-items:center;min-width:0;gap:0;white-space:nowrap}
+#v-insuwork .iw-driving-panel label,#v-insuwork .iw-driving-option{display:inline-flex;align-items:center;justify-content:flex-start;gap:5px;box-sizing:border-box;min-width:0;padding:5px 1px;color:var(--tp);font-size:12px;line-height:1.35;text-align:left;white-space:nowrap;cursor:pointer}
+#v-insuwork .iw-driving-sep{flex:0 0 auto;padding:0 4px;color:var(--ts);font-size:12px}
 #v-insuwork .iw-driving-option span{min-width:0;overflow:visible;text-overflow:clip;white-space:nowrap}
 #v-insuwork .iw-driving-panel input[type="checkbox"]{margin:0;flex:0 0 auto}
 @media(max-width:680px){#v-insuwork .iw-customer-address-row{flex-direction:column;align-items:flex-start}#v-insuwork .iw-customer-underwriting{grid-template-columns:1fr}}

@@ -65,12 +65,11 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 .iw-profile-actions button{min-height:40px;padding:0 18px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-weight:var(--fw-medium);cursor:pointer}
 .iw-profile-actions .iw-profile-save{border-color:var(--ac);background:var(--ac);color:var(--s1)}
 .iw-page #v-insuwork .iw-dialog{position:fixed;inset:50% auto auto 50%;max-height:calc(100dvh - 32px);margin:0;overflow:auto;transform:translate(-50%,-50%)}
-/* 로그인 후 고객 등록 모달의 운전여부 복수선택 패널은 입력칸 안에서만 열린다. */
+/* 로그인 후 고객 등록 모달의 운전여부는 대표 지정 문장 줄 기준으로 표시한다. */
 .iw-page #v-insuwork .iw-driving-panel{left:0;right:0;box-sizing:border-box;width:100%;max-width:100%;overflow-x:hidden}
-.iw-page #v-insuwork .iw-driving-row{display:flex;align-items:center;gap:0;min-width:0}
-.iw-page #v-insuwork .iw-driving-panel label,.iw-page #v-insuwork .iw-driving-option{justify-content:flex-start;box-sizing:border-box;gap:6px;text-align:left}
-.iw-page #v-insuwork .iw-driving-row .iw-driving-option{flex:1 1 0}
-.iw-page #v-insuwork .iw-driving-row .iw-driving-option:only-child{flex:0 0 auto;min-width:96px}
+.iw-page #v-insuwork .iw-driving-row{display:flex;align-items:center;gap:0;min-width:0;white-space:nowrap}
+.iw-page #v-insuwork .iw-driving-panel label,.iw-page #v-insuwork .iw-driving-option{justify-content:flex-start;box-sizing:border-box;gap:5px;text-align:left}
+.iw-page #v-insuwork .iw-driving-sep{flex:0 0 auto;padding:0 4px;color:var(--ts);font-size:12px}
 .iw-page #v-insuwork .iw-driving-option span{min-width:0;overflow:visible;text-overflow:clip;white-space:nowrap}
 .iw-main{position:relative;z-index:1;min-height:0;overflow:hidden;padding:14px}
 .iw-main #v-insuwork{height:100%}
