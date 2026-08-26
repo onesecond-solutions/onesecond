@@ -54,7 +54,7 @@
       return new Promise(function (resolve) {
         var dialog = document.createElement('dialog');
         var type = options.type || 'alert';
-        var title = options.title || '인슈워크';
+        var title = options.title || '보험워크';
         var message = options.message || '';
         var confirmLabel = options.confirmLabel || '확인';
         var cancelLabel = options.cancelLabel || '취소';
@@ -62,7 +62,7 @@
         dialog.setAttribute('aria-label', title);
         dialog.innerHTML = ''
           + '<form class="ib-notice-card" method="dialog">'
-          + '<span class="ib-notice-brand">인슈워크</span>'
+          + '<span class="ib-notice-brand">보험워크</span>'
           + '<h2></h2>'
           + '<p></p>'
           + (type === 'prompt' ? '<input class="ib-notice-input" autocomplete="off" maxlength="60">' : '')
@@ -99,15 +99,15 @@
 
   function noticeAlert(message, options) {
     options = options || {};
-    return noticeDialog(Object.assign({}, options, { type: 'alert', title: options.title || '인슈워크', message: message }));
+    return noticeDialog(Object.assign({}, options, { type: 'alert', title: options.title || '보험워크', message: message }));
   }
 
   function noticeConfirm(options) {
-    return noticeDialog(Object.assign({ type: 'confirm', title: '인슈워크', message: '', confirmLabel: '확인' }, options || {}));
+    return noticeDialog(Object.assign({ type: 'confirm', title: '보험워크', message: '', confirmLabel: '확인' }, options || {}));
   }
 
   function noticePrompt(options) {
-    return noticeDialog(Object.assign({ type: 'prompt', title: '인슈워크', message: '', confirmLabel: '확인' }, options || {}));
+    return noticeDialog(Object.assign({ type: 'prompt', title: '보험워크', message: '', confirmLabel: '확인' }, options || {}));
   }
 
   function noticeToast(message) {
@@ -239,8 +239,8 @@
     dialog.innerHTML = ''
       + '<form class="ib-auth-card" method="dialog" id="ib-auth-form" novalidate>'
       + '<div class="ib-auth-head"><div>'
-      + '<img src="/insuwork/insubriefing/assets/brand/insurance-briefing-logo-original.webp?v=20260824webp" alt="인슈워크">'
-      + '<h2 id="ib-auth-title">인슈워크 시작하기</h2>'
+      + '<img src="/insuwork/insubriefing/assets/brand/insurance-briefing-logo-original.webp?v=20260824webp" alt="보험워크">'
+      + '<h2 id="ib-auth-title">보험워크 시작하기</h2>'
       + '<p id="ib-auth-desc"></p></div>'
       + '<button type="button" class="ib-auth-close" aria-label="닫기">×</button></div>'
       + '<div class="ib-auth-tabs" role="tablist" aria-label="인증 방식">'
@@ -411,7 +411,7 @@
       return;
     }
     if (state.mode === 'signup') {
-      title.textContent = '인슈워크 회원가입';
+      title.textContent = '보험워크 회원가입';
       desc.textContent = '이름, 연락처, 이메일, 소속회사명 확인 후 바로 가입됩니다.';
       fields.innerHTML = '<label class="ib-auth-field">이름<input id="ib-auth-name" type="text" autocomplete="name" maxlength="30" required></label>'
         + '<label class="ib-auth-field">전화번호<input id="ib-auth-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="010-0000-0000" required></label>'
@@ -419,7 +419,7 @@
         + '<label class="ib-auth-field ib-auth-company-wrap">소속회사명<input id="ib-auth-company" type="text" autocomplete="organization" maxlength="50" placeholder="회사명을 입력하세요" required><input id="ib-auth-company-id" type="hidden"><span class="ib-auth-company-list" id="ib-auth-company-list" hidden></span></label>';
       actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>이메일 인증번호 받기</button>';
     } else {
-      title.textContent = '인슈워크 로그인';
+      title.textContent = '보험워크 로그인';
       desc.textContent = '기존 원세컨드 가입자는 같은 이메일로 로그인할 수 있습니다.';
       fields.innerHTML = '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>';
       actions.innerHTML = googleButton

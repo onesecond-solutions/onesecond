@@ -686,7 +686,7 @@
 
   function showInsuworkLoginNotice() {
     if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.alert === "function") {
-      window.InsuranceBriefingNotice.alert("로그인 후 사용가능합니다.", { title: "인슈워크" });
+      window.InsuranceBriefingNotice.alert("로그인 후 사용가능합니다.", { title: "보험워크" });
       return;
     }
     window.alert("로그인 후 사용가능합니다.");
