@@ -346,7 +346,7 @@
         var kind = node.getAttribute('data-kind');
         if (kind === 'document') downloadFile(node.getAttribute('data-url'), node.getAttribute('data-name'));
         else if (kind === 'link') openStoredLink(node.getAttribute('data-url'));
-        else if (kind === 'text') openTextPreview(node.getAttribute('data-url'), node.getAttribute('data-name'));
+        else if (kind === 'text') openTextPreview(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-id'), node.getAttribute('data-path'));
         else if (window.LeafletPreview) window.LeafletPreview.open(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-mime'));
       });
       node.addEventListener('mouseenter', function () { showHover(node); });
@@ -391,19 +391,71 @@
     }
     if (cursor < content.length) host.appendChild(document.createTextNode(content.slice(cursor)));
   }
-  function openTextPreview(url, name) {
+  function saveTextContent(id, storagePath, newText) {
+    var blob = new Blob([newText], { type: 'text/plain' });
+    var encodedPath = String(storagePath).split('/').map(encodeURIComponent).join('/');
+    return window.db.fetch('/storage/v1/object/' + BUCKET + '/' + encodedPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'x-upsert': 'true' },
+      body: blob
+    }).then(function (res) {
+      if (!res.ok) return uploadError(res, '메모 저장에 실패했습니다.').then(function (error) { throw error; });
+      return window.db.fetch('/rest/v1/briefing_leaflets?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ file_size: blob.size })
+      });
+    }).then(function (res) {
+      if (res && !res.ok) return uploadError(res, '메모 정보 갱신에 실패했습니다.').then(function (error) { throw error; });
+    });
+  }
+  function openTextPreview(url, name, id, storagePath) {
     fetch(url).then(function (res) { if (!res.ok) throw new Error('텍스트를 불러오지 못했습니다.'); return res.text(); })
       .then(function (content) {
+        var canEdit = isPilot() && id && storagePath;
         var dialog = document.createElement('dialog');
         dialog.className = 'ib-text-dialog';
-        dialog.innerHTML = '<div class="ib-text-head"><div><span>인슈워크</span><h2></h2></div><button type="button" aria-label="닫기">×</button></div><pre></pre><div class="ib-text-actions"><a target="_blank" rel="noopener" download>다운로드</a></div>';
+        dialog.innerHTML = '<div class="ib-text-head"><div><span>인슈워크</span><h2></h2></div><button type="button" class="ib-text-close" aria-label="닫기">×</button></div>'
+          + '<pre></pre><textarea class="ib-text-edit" hidden></textarea>'
+          + '<div class="ib-text-actions">'
+          + (canEdit ? '<button type="button" class="ib-text-edit-btn">수정</button><button type="button" class="ib-text-save-btn" hidden>저장</button><button type="button" class="ib-text-cancel-btn" hidden>취소</button>' : '')
+          + '<a target="_blank" rel="noopener" download>다운로드</a></div>';
         dialog.querySelector('h2').textContent = name || '텍스트 자료';
-        renderLinkedText(dialog.querySelector('pre'), content);
-        var close = dialog.querySelector('button'), download = dialog.querySelector('a');
+        var pre = dialog.querySelector('pre'), textarea = dialog.querySelector('.ib-text-edit');
+        renderLinkedText(pre, content);
+        var close = dialog.querySelector('.ib-text-close'), download = dialog.querySelector('a');
         close.addEventListener('click', function () { dialog.close(); });
         download.href = url; download.download = name || '';
         dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close(); });
         dialog.addEventListener('close', function () { dialog.remove(); }, { once: true });
+        if (canEdit) {
+          var editBtn = dialog.querySelector('.ib-text-edit-btn'), saveBtn = dialog.querySelector('.ib-text-save-btn'), cancelBtn = dialog.querySelector('.ib-text-cancel-btn');
+          var enterEdit = function () {
+            textarea.value = pre.textContent;
+            pre.hidden = true; textarea.hidden = false; textarea.focus();
+            editBtn.hidden = true; saveBtn.hidden = false; cancelBtn.hidden = false;
+          };
+          var exitEdit = function () {
+            pre.hidden = false; textarea.hidden = true;
+            editBtn.hidden = false; saveBtn.hidden = true; cancelBtn.hidden = true;
+          };
+          editBtn.addEventListener('click', enterEdit);
+          cancelBtn.addEventListener('click', exitEdit);
+          saveBtn.addEventListener('click', function () {
+            var newText = textarea.value;
+            saveBtn.disabled = true; saveBtn.textContent = '저장 중…';
+            saveTextContent(id, storagePath, newText).then(function () {
+              pre.innerHTML = ''; renderLinkedText(pre, newText);
+              exitEdit();
+              saveBtn.disabled = false; saveBtn.textContent = '저장';
+              reloadCurrent();
+              showNotice('메모를 수정했습니다.');
+            }).catch(function (err) {
+              saveBtn.disabled = false; saveBtn.textContent = '저장';
+              showNotice(err.message || '저장에 실패했습니다.');
+            });
+          });
+        }
         document.body.appendChild(dialog); dialog.showModal();
       }).catch(function (err) { showNotice(err.message || '텍스트를 불러오지 못했습니다.'); });
   }
