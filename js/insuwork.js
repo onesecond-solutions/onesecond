@@ -2228,7 +2228,8 @@
     var summary = selected.length ? selected.join(', ') : '선택하세요';
     var boxes = DRIVING_OPTION_GROUPS.map(function (group) {
       var separator = group.length > 2 ? ', ' : ' / ';
-      return '<div class="iw-driving-row">' + group.map(function (option, index) {
+      var rowClass = group.length === 3 ? ' three' : group.length === 2 ? ' two' : ' one';
+      return '<div class="iw-driving-row' + rowClass + '">' + group.map(function (option, index) {
         var sep = index ? '<span class="iw-driving-sep">' + esc(separator) + '</span>' : '';
         return sep + '<label class="iw-driving-option"><input type="checkbox" value="' + esc(option) + '"' + (selected.indexOf(option) >= 0 ? ' checked' : '') + ' onchange="OSInsuwork.drivingCheckChanged(this)"><span>' + esc(option) + '</span></label>';
       }).join('') + '</div>';
