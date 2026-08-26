@@ -2246,7 +2246,8 @@
     resetRichPending();
     var fileOnly = item.item_type === 'file';
     var fields = formField('제목', '<input id="iwf-edit-title" required autocomplete="off" value="' + esc(item.title || '') + '" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSInsuwork.focusRich(\'iwf-edit-body\')}">');
-    if (fileOnly) fields += '<p class="iw-form-note">업로드 파일은 표시 이름을 수정할 수 있습니다.</p>';
+    if (fileOnly) fields += '<p class="iw-form-note">업로드 파일은 표시 이름을 수정할 수 있습니다.</p>'
+      + formField('공개 범위', '<select id="iwf-edit-visibility"><option value="private"' + (item.visibility !== 'public' ? ' selected' : '') + '>나만 보기</option><option value="public"' + (item.visibility === 'public' ? ' selected' : '') + '>로그인 사용자 전체 공개</option></select>');
     else fields += formField('내용', richEditorField('iwf-edit-body', item.body || ''))
       + formField('링크 (선택)', '<input id="iwf-edit-link" type="url" placeholder="https://" value="' + esc(item.url || '') + '">')
       + formField('공개 범위', '<select id="iwf-edit-visibility"><option value="private"' + (item.visibility !== 'public' ? ' selected' : '') + '>나만 보기</option><option value="public"' + (item.visibility === 'public' ? ' selected' : '') + '>로그인 사용자 전체 공개</option></select>');
@@ -2267,6 +2268,7 @@
       }).then(function (updated) { upsertWorkspaceItem(updated); resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
       return;
     }
+    changes.visibility = value('iwf-edit-visibility') === 'public' ? 'public' : 'private';
     updateOne('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
       .then(function (updated) { upsertWorkspaceItem(updated); finishSave('자료를 수정했습니다.'); }).catch(saveError);
   }
