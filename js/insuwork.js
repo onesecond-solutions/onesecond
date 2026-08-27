@@ -2658,6 +2658,7 @@
     if (key === 'bmi') return openBmiTool();
     if (key === 'insurance-age') return go('insurance-age');
     if (key === 'image-convert') return openImageConvertTool();
+    if (key === 'audio-convert') return openAudioConvertTool();
     if (key === 'system-links') { go('carriers'); return; }
     if (key === 'payment-info') { go('payments'); return; }
   }
@@ -2787,15 +2788,16 @@
       var slot = document.getElementById('iw-quick-tool-slot'); if (slot) slot.innerHTML = '<div class="iw-quick-tool-empty">불러오지 못했습니다. 다시 시도해 주세요.</div>';
     });
   }
-  function setToolMode(mode) { state.toolMode = ['calculator', 'bmi', 'image'].indexOf(mode) >= 0 ? mode : 'calculator'; renderContent(); setUrl(false); }
+  function setToolMode(mode) { state.toolMode = ['calculator', 'bmi', 'image', 'audio'].indexOf(mode) >= 0 ? mode : 'calculator'; renderContent(); setUrl(false); }
   function openCalculatorTool() { state.toolMode = 'calculator'; go('tools'); }
   function openBmiTool() { state.toolMode = 'bmi'; go('tools'); }
   function openImageConvertTool() { state.toolMode = 'image'; go('tools'); }
+  function openAudioConvertTool() { state.toolMode = 'audio'; go('tools'); }
   function fmtBytes(bytes) { var n = Number(bytes) || 0, units = ['B', 'KB', 'MB', 'GB']; var i = 0; while (n >= 1024 && i < units.length - 1) { n /= 1024; i += 1; } return (i ? n.toFixed(n >= 10 ? 1 : 2) : Math.round(n)) + units[i]; }
   function toolsPageHtml() {
-    var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG']];
+    var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG'], ['audio', '오디오 변환', 'MP3·MP4 → WAV']];
     var tabs = cards.map(function (card) { return '<button type="button" class="iw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSInsuwork.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
-    var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : toolsCalculatorHtml();
+    var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : state.toolMode === 'audio' ? toolsAudioHtml() : toolsCalculatorHtml();
     /* 계산기·변환기는 비로그인도 열람 가능한 공개 섹션이라 homeHtml()과 동일하게 statusHtml()을
        로그인된 사용자의 실제 로딩 중에만 얹는다(2026-08-25 세션에서 새로 발견 — homeHtml만 지시됐으나
        같은 결함이 여기도 있었다). */
@@ -2922,7 +2924,10 @@
   function toolsImageHtml() {
     return '<section class="iw-tool-workspace iw-tool-image-page"><div class="iw-tool-pane"><h3>입력</h3><label class="iw-imgconv-drop" id="iw-imgconv-drop"><input id="iw-imgconv-file" type="file" multiple accept="image/png,image/jpeg,application/pdf,.pdf" onchange="OSInsuwork.imgConvertLoad(this)"><span class="iw-imgconv-icon">▧</span><strong>PNG · JPG · PDF 파일 선택</strong><em>클릭 또는 드래그앤드롭 · PDF는 페이지별 JPG · 이미지 여러 장 선택 시 PDF로 합치기</em></label><div id="iw-imgconv-file-info"></div><button type="button" class="iw-btn primary iw-tool-fire" onclick="OSInsuwork.imgConvertRun()">변환</button></div><div class="iw-tool-pane"><h3>결과</h3><div id="iw-imgconv-result" class="iw-imgconv-result"><div class="iw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
   }
-  function hydrateToolsPage() { if (state.toolMode === 'calculator') hydrateCalculator(); if (state.toolMode === 'bmi') calcBmi(); if (state.toolMode === 'image') hydrateImageConvert(); }
+  function toolsAudioHtml() {
+    return '<section class="iw-tool-workspace iw-tool-audio-page"><div class="iw-tool-pane"><h3>입력</h3><label class="iw-imgconv-drop" id="iw-audioconv-drop"><input id="iw-audioconv-file" type="file" multiple accept="audio/*,video/mp4,.mp3,.mp4,.m4a,.aac,.wav,.ogg,.wma" onchange="OSInsuwork.audioConvertLoad(this)"><span class="iw-imgconv-icon">♪</span><strong>MP3 · MP4 · M4A 파일 선택</strong><em>클릭 또는 드래그앤드롭 · 여러 개 선택 시 한 번에 변환 · 브라우저 안에서만 처리(서버 전송 없음)</em></label><div id="iw-audioconv-file-info"></div><button type="button" class="iw-btn primary iw-tool-fire" onclick="OSInsuwork.audioConvertRun()">변환</button></div><div class="iw-tool-pane"><h3>결과</h3><div id="iw-audioconv-result" class="iw-audioconv-result"><div class="iw-tool-empty">파일 선택 후 변환을 누르세요.</div></div></div></section>';
+  }
+  function hydrateToolsPage() { if (state.toolMode === 'calculator') hydrateCalculator(); if (state.toolMode === 'bmi') calcBmi(); if (state.toolMode === 'image') hydrateImageConvert(); if (state.toolMode === 'audio') hydrateAudioConvert(); }
   function hydrateImageConvert() {
     var drop = document.getElementById('iw-imgconv-drop'); if (!drop || drop.dataset.bound === '1') return; drop.dataset.bound = '1';
     drop.addEventListener('dragover', function (event) { event.preventDefault(); drop.classList.add('drag'); });
@@ -3006,6 +3011,105 @@
   function imgConvertCopy() { var r = state.toolResult; if (!r || !navigator.clipboard || !window.ClipboardItem) return imgConvertDownload(); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': r.blob })]).then(function () { if (typeof window.toast === 'function') window.toast('변환 이미지를 복사했습니다.'); }).catch(imgConvertDownload); }
   function imgConvertPdfDownload(index) { var p = (state.toolPages || [])[index]; if (p) downloadBlob(p.url, p.name); }
   function imgConvertPdfCopy(index) { var p = (state.toolPages || [])[index]; if (!p || !navigator.clipboard || !window.ClipboardItem) return imgConvertPdfDownload(index); navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': p.blob })]).then(function () { if (typeof window.toast === 'function') window.toast(p.page + '쪽을 복사했습니다.'); }).catch(function () { imgConvertPdfDownload(index); }); }
+
+  // ── 오디오 → WAV 변환 ──────────────────────────────────────────────────
+  var audioConvertCtx = null;
+  function getAudioConvertCtx() { if (!audioConvertCtx) audioConvertCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioConvertCtx; }
+  function isAudioLikeFile(file) { return /^(audio|video)\//i.test(file.type || '') || /\.(mp3|mp4|m4a|aac|wav|ogg|wma|flac|webm)$/i.test(file.name || ''); }
+  function audioConvertLoad(input) { setAudioConvertFiles(input && input.files); }
+  function setAudioConvertFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    if (!files.every(isAudioLikeFile)) { briefingAlert('오디오(또는 오디오가 포함된 동영상) 파일만 변환할 수 있습니다.'); return; }
+    state.toolAudioFiles = files.map(function (file) { return { file: file, status: 'idle', wavBlob: null, url: null, error: '' }; });
+    renderAudioConvertFile();
+    renderAudioConvertEmpty();
+  }
+  function renderAudioConvertFile() {
+    var info = document.getElementById('iw-audioconv-file-info'); if (!info) return;
+    var files = state.toolAudioFiles || [];
+    if (!files.length) { info.innerHTML = ''; return; }
+    var totalSize = files.reduce(function (sum, e) { return sum + e.file.size; }, 0);
+    info.innerHTML = '<div class="iw-imgconv-file-info"><span>오디오 ' + files.length + '개 · ' + fmtBytes(totalSize) + '</span><button type="button" onclick="OSInsuwork.audioConvertClear()" aria-label="파일 제거">×</button></div>';
+  }
+  function audioConvertClear() {
+    state.toolAudioFiles = null;
+    var input = document.getElementById('iw-audioconv-file'); if (input) input.value = '';
+    renderAudioConvertFile();
+    renderAudioConvertEmpty();
+  }
+  function renderAudioConvertEmpty(text) { var result = document.getElementById('iw-audioconv-result'); if (result) result.innerHTML = '<div class="iw-tool-empty">' + esc(text || '파일 선택 후 변환을 누르세요.') + '</div>'; }
+  function audioConvertBaseName(name) { var i = name.lastIndexOf('.'); return i > 0 ? name.slice(0, i) : name; }
+  function audioBufferToWav(abuffer) {
+    var numChan = abuffer.numberOfChannels, sampleRate = abuffer.sampleRate, numFrames = abuffer.length;
+    var blockAlign = numChan * 2, dataSize = numFrames * blockAlign;
+    var buffer = new ArrayBuffer(44 + dataSize), view = new DataView(buffer), pos = 0;
+    function ws(s) { for (var i = 0; i < s.length; i++) view.setUint8(pos++, s.charCodeAt(i)); }
+    function u32(v) { view.setUint32(pos, v, true); pos += 4; }
+    function u16(v) { view.setUint16(pos, v, true); pos += 2; }
+    ws('RIFF'); u32(36 + dataSize); ws('WAVE'); ws('fmt '); u32(16); u16(1); u16(numChan);
+    u32(sampleRate); u32(sampleRate * blockAlign); u16(blockAlign); u16(16); ws('data'); u32(dataSize);
+    var channels = []; for (var c = 0; c < numChan; c++) channels.push(abuffer.getChannelData(c));
+    for (var i = 0; i < numFrames; i++) {
+      for (var ch = 0; ch < numChan; ch++) {
+        var sample = Math.max(-1, Math.min(1, channels[ch][i]));
+        sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(pos, sample, true); pos += 2;
+      }
+    }
+    return buffer;
+  }
+  function renderAudioConvertResult() {
+    var files = state.toolAudioFiles || [], result = document.getElementById('iw-audioconv-result'); if (!result) return;
+    if (!files.length) { renderAudioConvertEmpty(); return; }
+    var anyDone = files.some(function (e) { return e.status === 'done'; });
+    result.innerHTML = '<div class="iw-audioconv-list">' + files.map(function (entry, i) {
+      var statusText = entry.status === 'done' ? '완료 · ' + fmtBytes(entry.wavBlob.size)
+        : entry.status === 'working' ? '변환 중…'
+        : entry.status === 'error' ? '변환 실패: ' + esc(entry.error)
+        : fmtBytes(entry.file.size) + ' · 대기 중';
+      var statusClass = entry.status === 'done' ? 'ok' : entry.status === 'error' ? 'err' : '';
+      var actionBtn = entry.status === 'done'
+        ? '<button type="button" class="iw-btn primary" onclick="OSInsuwork.audioConvertDownload(' + i + ')">저장</button>'
+        : '<button type="button" class="iw-btn"' + (entry.status === 'working' ? ' disabled' : '') + ' onclick="OSInsuwork.audioConvertRunOne(' + i + ')">' + (entry.status === 'error' ? '다시 시도' : '변환') + '</button>';
+      return '<article class="iw-audioconv-row"><div class="iw-audioconv-meta"><strong>' + esc(entry.file.name) + '</strong><span class="' + statusClass + '">' + statusText + '</span></div><div class="iw-audioconv-actions">' + actionBtn + '</div></article>';
+    }).join('') + '</div>' + (anyDone ? '<div class="iw-imgconv-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.audioConvertDownloadAll()">완료된 파일 전체 저장</button></div>' : '');
+  }
+  function audioConvertRunOne(index) {
+    var entry = (state.toolAudioFiles || [])[index]; if (!entry || entry.status === 'working' || entry.status === 'done') return Promise.resolve();
+    entry.status = 'working'; renderAudioConvertResult();
+    return entry.file.arrayBuffer().then(function (buf) {
+      return getAudioConvertCtx().decodeAudioData(buf);
+    }).then(function (audioBuffer) {
+      var wavBuffer = audioBufferToWav(audioBuffer);
+      entry.wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+      entry.url = URL.createObjectURL(entry.wavBlob);
+      entry.status = 'done';
+      renderAudioConvertResult();
+    }).catch(function (err) {
+      entry.status = 'error';
+      entry.error = (err && err.message) || '알 수 없는 오류';
+      renderAudioConvertResult();
+    });
+  }
+  function audioConvertRun() {
+    var files = state.toolAudioFiles;
+    if (!files || !files.length) { briefingAlert('파일을 먼저 선택해 주세요.'); return; }
+    var chain = Promise.resolve();
+    files.forEach(function (entry, i) { chain = chain.then(function () { return audioConvertRunOne(i); }); });
+  }
+  function audioConvertDownload(index) { var entry = (state.toolAudioFiles || [])[index]; if (entry && entry.wavBlob) downloadBlob(entry.url, audioConvertBaseName(entry.file.name) + '.wav'); }
+  function audioConvertDownloadAll() {
+    var files = (state.toolAudioFiles || []).filter(function (e) { return e.status === 'done'; });
+    files.forEach(function (entry, i) { window.setTimeout(function () { downloadBlob(entry.url, audioConvertBaseName(entry.file.name) + '.wav'); }, i * 250); });
+  }
+  function hydrateAudioConvert() {
+    var drop = document.getElementById('iw-audioconv-drop'); if (!drop || drop.dataset.bound === '1') return; drop.dataset.bound = '1';
+    drop.addEventListener('dragover', function (event) { event.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', function () { drop.classList.remove('drag'); });
+    drop.addEventListener('drop', function (event) { event.preventDefault(); drop.classList.remove('drag'); setAudioConvertFiles(event.dataTransfer.files); });
+    renderAudioConvertFile();
+  }
 
   // ── 이미지 여러 장 → PDF 합치기 ──────────────────────────────────────────
   function loadPdfLib() {
@@ -3496,7 +3600,7 @@
     closeDialog: closeDialog, openHelp: openHelp, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
-    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
+    openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
