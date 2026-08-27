@@ -194,6 +194,63 @@
   margin-top: 2px;
 }
 
+.ib-auth-agreements {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--bd, #d7deea);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--s2, #f6f8fb);
+}
+
+.ib-auth-agreements label {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 8px;
+  color: var(--tp, #152033);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ib-auth-agreements input {
+  width: 17px;
+  min-height: 17px;
+  flex: 0 0 17px;
+  margin: 0;
+  accent-color: var(--ac, #3867f6);
+}
+
+.ib-auth-agree-all {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--bd, #d7deea);
+  font-weight: 700 !important;
+}
+
+.ib-auth-agree-items {
+  display: grid;
+  gap: 4px;
+}
+
+.ib-auth-agree-items span {
+  flex: 1;
+}
+
+.ib-auth-agree-items a {
+  color: var(--ts, #687386);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.ib-auth-agree-items a:hover,
+.ib-auth-agree-items a:focus-visible {
+  color: var(--ac, #3867f6);
+}
+
 .ib-auth-primary,
 .ib-auth-secondary,
 .ib-auth-google {
@@ -275,7 +332,7 @@
 .ib-auth-secondary:disabled,
 .ib-auth-google:disabled {
   opacity: .58;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 .ib-auth-secondary {

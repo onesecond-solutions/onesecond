@@ -295,6 +295,26 @@
     Array.prototype.forEach.call(document.querySelectorAll('#ib-auth-dialog input'), function (input) {
       input.disabled = state.busy;
     });
+    syncAgreementState();
+  }
+
+  function agreementsAccepted() {
+    if (state.mode !== 'signup' || state.step !== 'form') return true;
+    var terms = document.getElementById('ib-auth-agree-terms');
+    var privacy = document.getElementById('ib-auth-agree-privacy');
+    return !!(terms && terms.checked && privacy && privacy.checked);
+  }
+
+  function syncAgreementState() {
+    var send = document.querySelector('[data-ib-auth-send]');
+    if (send && state.mode === 'signup' && state.step === 'form') send.disabled = state.busy || !agreementsAccepted();
+    var all = document.getElementById('ib-auth-agree-all');
+    var terms = document.getElementById('ib-auth-agree-terms');
+    var privacy = document.getElementById('ib-auth-agree-privacy');
+    if (all && terms && privacy) {
+      all.checked = terms.checked && privacy.checked;
+      all.indeterminate = !all.checked && (terms.checked || privacy.checked);
+    }
   }
 
   function clearCompanyList() {
@@ -416,8 +436,14 @@
       fields.innerHTML = '<label class="ib-auth-field">이름<input id="ib-auth-name" type="text" autocomplete="name" maxlength="30" required></label>'
         + '<label class="ib-auth-field">전화번호<input id="ib-auth-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="010-0000-0000" required></label>'
         + '<label class="ib-auth-field">이메일<input id="ib-auth-email" type="email" autocomplete="email" required></label>'
-        + '<label class="ib-auth-field ib-auth-company-wrap">소속회사명<input id="ib-auth-company" type="text" autocomplete="organization" maxlength="50" placeholder="회사명을 입력하세요" required><input id="ib-auth-company-id" type="hidden"><span class="ib-auth-company-list" id="ib-auth-company-list" hidden></span></label>';
-      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send>이메일 인증번호 받기</button>';
+        + '<label class="ib-auth-field ib-auth-company-wrap">소속회사명<input id="ib-auth-company" type="text" autocomplete="organization" maxlength="50" placeholder="회사명을 입력하세요" required><input id="ib-auth-company-id" type="hidden"><span class="ib-auth-company-list" id="ib-auth-company-list" hidden></span></label>'
+        + '<div class="ib-auth-agreements" aria-label="회원가입 필수 동의">'
+        + '<label class="ib-auth-agree-all"><input id="ib-auth-agree-all" type="checkbox"><span>전체 동의</span></label>'
+        + '<div class="ib-auth-agree-items">'
+        + '<label><input id="ib-auth-agree-terms" type="checkbox" required><span>[필수] 이용약관 동의</span><a href="/insuwork/terms.html" target="_blank" rel="noopener">내용 보기</a></label>'
+        + '<label><input id="ib-auth-agree-privacy" type="checkbox" required><span>[필수] 개인정보 수집·이용 동의</span><a href="/insuwork/privacy.html" target="_blank" rel="noopener">내용 보기</a></label>'
+        + '</div></div>';
+      actions.innerHTML = '<button class="ib-auth-primary" type="submit" data-ib-auth-send disabled>이메일 인증번호 받기</button>';
     } else {
       title.textContent = '보험워크 로그인';
       desc.textContent = '기존 원세컨드 가입자는 같은 이메일로 로그인할 수 있습니다.';
@@ -436,6 +462,17 @@
         company.addEventListener('keydown', companyKeydown);
         company.addEventListener('blur', function () { setTimeout(clearCompanyList, 160); });
       }
+      var agreeAll = document.getElementById('ib-auth-agree-all');
+      var agreeTerms = document.getElementById('ib-auth-agree-terms');
+      var agreePrivacy = document.getElementById('ib-auth-agree-privacy');
+      if (agreeAll) agreeAll.addEventListener('change', function () {
+        agreeTerms.checked = agreeAll.checked;
+        agreePrivacy.checked = agreeAll.checked;
+        syncAgreementState();
+      });
+      if (agreeTerms) agreeTerms.addEventListener('change', syncAgreementState);
+      if (agreePrivacy) agreePrivacy.addEventListener('change', syncAgreementState);
+      syncAgreementState();
     }, 50);
   }
 
@@ -489,6 +526,10 @@
         phone: state.signup.phone,
         company: state.signup.company,
         company_id: state.signup.companyId,
+        terms_agreed_at: new Date().toISOString(),
+        terms_version: '2026-08-27',
+        privacy_agreed_at: new Date().toISOString(),
+        privacy_version: '2026-08-27',
         role: 'ga_member',
         status: 'active',
         site: 'insubriefing'
@@ -504,6 +545,10 @@
       return;
     }
     if (state.mode === 'signup') {
+      if (!agreementsAccepted()) {
+        setStatus('이용약관과 개인정보 수집·이용에 모두 동의해 주세요.', 'error');
+        return;
+      }
       if (!form.name) {
         setStatus('이름을 입력해 주세요.', 'error');
         return;
