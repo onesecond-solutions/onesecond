@@ -9,6 +9,7 @@
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
+  var CUSTOMER_REVIEW_STAGE = { key: '상태 확인 필요', color: '#e8710a' };
   var SCRIPT_STAGES = [
     { label: '도입 인사', stage: 'opening', group: 'open' },
     { label: '도입 반론', stage: 'opening_rejection', group: 'open' },
@@ -193,6 +194,8 @@
     return latest ? (latest.memo || '') : '';
   }
   function isRealCustomerStage(status) { return CUSTOMER_STAGES.some(function (stage) { return stage.key === status; }); }
+  function customerNeedsStatusReview(customer) { return !!customer && !isRealCustomerStage(customer.status); }
+  function customerDisplayStatus(customer) { return customerNeedsStatusReview(customer) ? CUSTOMER_REVIEW_STAGE.key : customer.status; }
   function digits(value) { return String(value || '').replace(/\D/g, '').slice(0, 11); }
   function phoneText(value) { var number = digits(value); if (number.length <= 3) return number; if (number.length <= 7) return number.slice(0, 3) + '-' + number.slice(3); if (number.length === 10) return number.slice(0, 3) + '-' + number.slice(3, 6) + '-' + number.slice(6); return number.slice(0, 3) + '-' + number.slice(3, 7) + '-' + number.slice(7); }
   function writtenAt() { var now = new Date(); return ymd(now) + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
@@ -411,10 +414,23 @@
       state.status = failed.length ? 'partial' : 'ready';
       state.error = failed.length ? failed.join(', ') + ' 자료를 불러오지 못했습니다.' : '';
       renderContent();
+      if (failed.indexOf('customers') < 0) window.setTimeout(maybeShowCustomerStatusNotice, 0);
       if (full && failed.indexOf('customers') < 0) syncCareTasksForAll();
       return failed.length === 0;
     }).finally(function () { if (requestId === state.requestId) { state.loadPromise = null; state.loadFull = false; } });
     return state.loadPromise;
+  }
+
+  function maybeShowCustomerStatusNotice() {
+    var pending = state.data.customers.filter(customerNeedsStatusReview);
+    if (!pending.length || !authenticated()) return;
+    var key = 'iw_customer_status_notice_' + currentUserId();
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, 'shown'); } catch (_) {}
+    briefingConfirm('기존 원세컨드 고객 정보 ' + pending.length + '건을 가져왔습니다. 이름·연락처·메모 등은 그대로 보존되어 있으며, 보험워크 기준에 맞게 고객상태만 확인해 주세요.', '기존 고객 상태 확인', '상태 확인 시작').then(function (start) {
+      if (!start) return;
+      state.customerStatusFilter = CUSTOMER_REVIEW_STAGE.key;
+      go('customers');
+    });
   }
 
   var CALC_TOOLS = [['calculator', '계산기'], ['bmi', 'BMI 계산기'], ['image-convert', '이미지 변환']];
@@ -974,8 +990,8 @@
     });
   }
   function customerStageCounts(rows) {
-    var counts = { all: rows.length }; CUSTOMER_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
-    rows.forEach(function (item) { var status = item.status || ''; if (counts.hasOwnProperty(status)) counts[status]++; });
+    var counts = { all: rows.length }; CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]).forEach(function (stage) { counts[stage.key] = 0; });
+    rows.forEach(function (item) { var status = customerDisplayStatus(item); if (counts.hasOwnProperty(status)) counts[status]++; });
     return counts;
   }
   function customersHtml() {
@@ -983,23 +999,23 @@
     var gridStyle = '--iw-consult-template:' + consultGridTemplate(columns);
     var latest = {}; state.data.consultations.forEach(function (entry) { var old = latest[entry.customer_id]; if (!old || String(entry.consulted_at || entry.created_at || '') > String(old.consulted_at || old.created_at || '')) latest[entry.customer_id] = entry; });
     var nameQ = searchNorm(state.customerNameQuery);
-    var baseRows = state.data.customers.filter(function (item) { if (!isRealCustomerStage(item.status)) return false; if (nameQ && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
+    var baseRows = state.data.customers.filter(function (item) { if (nameQ && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
     baseRows.sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); });
     var counts = customerStageCounts(baseRows);
-    var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = item.status || '청약완료'; return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
+    var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = customerDisplayStatus(item); return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedCustomerDetail); });
     if (!selected && state.selectedCustomerDetail) state.selectedCustomerDetail = null;
     var totalRowCount = rows.length;
     if (selected && rows.indexOf(selected) >= state.customersRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.customersRenderLimit - 1));
     else rows = rows.slice(0, state.customersRenderLimit);
     var header = '<div class="iw-consult-columns" style="' + gridStyle + '">' + columns.map(function (column) { return '<span>' + column.label + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
-    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || (latest[item.id] && latest[item.id].memo) || '', status = item.status || '청약완료'; var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '고객내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
+    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || (latest[item.id] && latest[item.id].memo) || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '고객내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
-    var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES, activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
+    var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
     return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>고객관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function customerDetailHtml(item) {
-    var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), status = item.status || '청약완료';
+    var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), needsReview = customerNeedsStatusReview(item), status = needsReview ? '' : item.status;
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectCustomerDetail()">‹ 목록</button>'
       + '<div class="iw-inline-form-block">'
@@ -1010,9 +1026,9 @@
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
-      + inlineField('고객상태', '<select id="iwd-customer-status">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
+      + inlineField('고객상태', '<select id="iwd-customer-status">' + (needsReview ? '<option value="" selected>상태를 선택하세요</option>' : '') + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>고객내용</h3>' + richEditorField('iwd-customer-new', profile.note || latestConsultationMemo(item.id)) + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="iw-consult-save"><button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveCustomerDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>고객내용</h3>' + richEditorField('iwd-customer-new', profile.note || latestConsultationMemo(item.id)) + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="iw-consult-save"><button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -3472,6 +3488,15 @@
       .then(function (saved) { return saveCustomerRich(saved, profile, note); })
       .then(function (saved) { upsertCustomer(saved); resetRichPending(); return syncCareTasksForCustomer(saved); }).then(function () { finishSave('고객을 저장했습니다.'); }).catch(saveError);
   }
+  function saveLegacyCustomerStatus(id) {
+    var item = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!item || !customerNeedsStatusReview(item)) return;
+    var status = value('iwd-customer-status');
+    if (!isRealCustomerStage(status)) { briefingAlert('보험워크 고객상태를 선택해 주세요.', '고객상태 확인'); return; }
+    var profile = Object.assign({}, customerProfile(item));
+    if (!profile.legacy_customer_status) profile.legacy_customer_status = item.status || '미지정';
+    updateOne('insuwork_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { status: status, profile: profile })
+      .then(function (saved) { upsertCustomer(saved); state.selectedCustomerDetail = null; renderContent(); if (typeof window.toast === 'function') window.toast('고객상태를 저장했습니다.'); }).catch(saveError);
+  }
   function saveConsultationDetail(id) {
     var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
     var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }); if (!customer) return;
@@ -3701,6 +3726,7 @@
     };
   }
   window.OSInsuwork = {
+    saveLegacyCustomerStatus: saveLegacyCustomerStatus,
     boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
