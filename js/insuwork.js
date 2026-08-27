@@ -49,7 +49,7 @@
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     migrationDecided: false, draftTimer: 0, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
-    adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all',
+    adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all', adminUserComposing: false, adminUserTimer: 0,
     publicLibraryData: null, publicLibraryLoading: false, publicLibNameQuery: '', publicLibNameComposing: false, publicLibNameTimer: 0, publicLibView: 'list',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
@@ -1755,9 +1755,26 @@
     }).join('');
     return '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">보험워크 가입자 정보를 조회합니다.</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
       + '<div class="iw-stats iw-admin-users-stats"><div class="iw-stat"><span>전체 사용자</span><strong>' + state.adminUsers.length + '</strong></div><div class="iw-stat"><span>오늘 가입</span><strong>' + todayCount + '</strong></div><div class="iw-stat"><span>검색 결과</span><strong>' + rows.length + '</strong></div></div>'
-      + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색" oninput="OSInsuwork.filterAdminUsers(this.value)"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
+      + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
       + (state.adminUsersError ? '<div class="iw-error" role="alert"><span>' + esc(state.adminUsersError) + '</span></div>' : '')
       + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>최근 로그인</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="8" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
+  }
+  function scheduleAdminUserSearch(value) {
+    window.clearTimeout(state.adminUserTimer);
+    state.adminUserTimer = window.setTimeout(function () {
+      if (state.adminUserComposing) return;
+      state.adminUserQuery = value || '';
+      renderContent();
+      var input = document.getElementById('iw-admin-user-search'); if (input) { input.focus(); try { input.setSelectionRange(input.value.length, input.value.length); } catch (_) {} }
+    }, 180);
+  }
+  function bindAdminUserSearch() {
+    var input = document.getElementById('iw-admin-user-search'); if (!input) return;
+    state.adminUserComposing = false;
+    input.addEventListener('compositionstart', function () { state.adminUserComposing = true; });
+    input.addEventListener('compositionend', function () { state.adminUserComposing = false; scheduleAdminUserSearch(input.value); });
+    input.addEventListener('input', function () { if (!state.adminUserComposing) scheduleAdminUserSearch(input.value); });
+    input.addEventListener('search', function () { if (!state.adminUserComposing) scheduleAdminUserSearch(input.value); });
   }
   /* 2026-08-25 — 소식지·캘린더(보험브리핑) 섹션. insuwork/insubriefing/leaflets.js의 리플렛
      캘린더 엔진을 그대로 이식해 사이드바를 유지한 채 #iw-main 안에서 렌더한다(작업지시서
@@ -1811,7 +1828,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') loadAdminUsers(false); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { loadAdminUsers(false); bindAdminUserSearch(); } } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -3684,7 +3701,7 @@
     };
   }
   window.OSInsuwork = {
-    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUsers: function (query) { state.adminUserQuery = query || ''; renderContent(); window.setTimeout(function () { var input = document.getElementById('iw-admin-user-search'); if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } }, 0); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
+    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
