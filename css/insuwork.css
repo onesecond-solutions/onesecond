@@ -37,6 +37,22 @@ body.is-insuwork:not(.is-admin) .side #nav-insuwork{display:flex!important}
 #v-insuwork .iw-tabs{display:flex;gap:4px;overflow:auto;margin-bottom:12px;padding-bottom:2px}#v-insuwork .iw-tabs button{flex:none;padding:8px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer}#v-insuwork .iw-tabs button.on{border-color:var(--ac);background:var(--ac);color:#fff}
 #v-insuwork .iw-explorer{overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1)}#v-insuwork .iw-table{width:100%;min-width:680px;border-collapse:collapse}#v-insuwork .iw-table th{padding:10px 14px;border-bottom:1px solid var(--bd);background:var(--s2);color:var(--ts);font-size:var(--ts-meta);text-align:left}#v-insuwork .iw-table td{padding:12px 14px;border-bottom:1px solid var(--bd);color:var(--tp)}#v-insuwork .iw-table tr:last-child td{border-bottom:0}#v-insuwork .iw-table tbody tr{cursor:pointer}#v-insuwork .iw-table tbody tr:hover{background:var(--s2)}
 #v-insuwork .iw-table th:not(:first-child),#v-insuwork .iw-table td:not(:first-child){width:130px;white-space:nowrap}
+#v-insuwork .iw-admin-users-head{align-items:flex-start}
+#v-insuwork .iw-admin-users-stats{grid-template-columns:repeat(3,minmax(130px,220px))}
+#v-insuwork .iw-admin-users-tools{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+#v-insuwork .iw-admin-user-search{display:flex;flex:1;max-width:520px;min-height:40px;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);color:var(--ts)}
+#v-insuwork .iw-admin-user-search input{width:100%;border:0;outline:0;background:transparent;color:var(--tp);font:inherit}
+#v-insuwork .iw-admin-users-tools select{min-height:40px;padding:0 34px 0 11px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}
+#v-insuwork .iw-admin-users-table table{width:100%;min-width:1060px;border-collapse:collapse}
+#v-insuwork .iw-admin-users-table th,#v-insuwork .iw-admin-users-table td{padding:11px 13px;border-bottom:1px solid var(--bd);color:var(--tp);font-size:12px;text-align:left;white-space:nowrap}
+#v-insuwork .iw-admin-users-table th{position:sticky;top:0;z-index:1;background:var(--s2);color:var(--ts);font-size:11px}
+#v-insuwork .iw-admin-users-table tbody tr:hover{background:var(--s2)}
+#v-insuwork .iw-admin-status{display:inline-flex;padding:4px 8px;border-radius:var(--radius-full);background:var(--s2);color:var(--ts);font-size:11px;font-weight:700}
+#v-insuwork .iw-admin-status-active{background:color-mix(in srgb,var(--ok) 13%,var(--s1));color:var(--ok)}
+#v-insuwork .iw-admin-status-pending{background:color-mix(in srgb,var(--warn) 14%,var(--s1));color:var(--warn)}
+#v-insuwork .iw-admin-status-suspended,#v-insuwork .iw-admin-status-inactive,#v-insuwork .iw-admin-status-withdrawn,#v-insuwork .iw-admin-status-deleted{background:color-mix(in srgb,var(--danger) 12%,var(--s1));color:var(--danger)}
+#v-insuwork .iw-admin-users-table .iw-admin-users-empty{padding:42px;text-align:center;color:var(--ts)}
+@media(max-width:680px){#v-insuwork .iw-admin-users-stats{grid-template-columns:1fr 1fr 1fr}#v-insuwork .iw-admin-users-tools{align-items:stretch;flex-direction:column}#v-insuwork .iw-admin-user-search{max-width:none}#v-insuwork .iw-admin-users-tools select{width:100%}}
 #v-insuwork .iw-pl-notice{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 #v-insuwork .iw-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:var(--radius-full);background:var(--s2);color:var(--ts);font-size:var(--ts-badge)}#v-insuwork .iw-badge.public{background:color-mix(in srgb,var(--ok) 13%,var(--s1));color:var(--ok)}#v-insuwork button.iw-badge-link{border:0;cursor:pointer;font:inherit}#v-insuwork button.iw-badge-link:hover{background:color-mix(in srgb,var(--ac) 14%,var(--s2));color:var(--ac)}
 #v-insuwork .iw-empty{padding:42px 20px;color:var(--ts);text-align:center}#v-insuwork .iw-loading{display:grid;min-height:260px;place-items:center;color:var(--ts)}
