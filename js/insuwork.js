@@ -31,7 +31,7 @@
     try { var p = new URLSearchParams(location.search); return p.has('view') || p.has('section'); }
     catch (_) { return !!location.search; }
   })();
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'public-library'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'public-library', 'admin-users'];
   /* 2026-08-25 대표 승인 — 보험워크 공개 구조 전환: 셸(사이드바 포함)은 항상 렌더링하고, 아래 4개
      메뉴(캘린더/고객관리/상담관리/자료)만 비로그인 클릭 시 진입을 막는다. 홈·보험브리핑·참고자료·
      영업도구는 비로그인도 접근 가능. canEnterSection()이 go()/openWorkspace() 진입 직전에 확인한다. */
@@ -49,6 +49,7 @@
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     migrationDecided: false, draftTimer: 0, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
+    adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all',
     publicLibraryData: null, publicLibraryLoading: false, publicLibNameQuery: '', publicLibNameComposing: false, publicLibNameTimer: 0, publicLibView: 'list',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
@@ -61,8 +62,9 @@
     return String((window.AppState && window.AppState.userId) || storedUser().id || '');
   }
   function currentUserEmail() {
-    return String((window.AppState && window.AppState.user && window.AppState.user.email) || storedUser().email || '').toLowerCase();
+    return String((window.AppState && (window.AppState.email || (window.AppState.user && window.AppState.user.email))) || storedUser().email || '').toLowerCase();
   }
+  function canSeeAdminUsers() { return isLocal() || currentUserEmail() === 'bylts@naver.com'; }
   function consultColumnStorageKey() { return 'ws_consult_columns_' + (currentUserId() || currentUserEmail() || 'local'); }
   function favoriteStorageKey() { return 'ws_favorites_' + (currentUserId() || currentUserEmail() || 'local'); }
   function workDraftKey(kind, target) { return 'iw_work_draft_' + (currentUserId() || currentUserEmail() || 'local') + '_' + kind + '_' + (target || 'new'); }
@@ -142,7 +144,7 @@
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
   function allowed() { return isLocal() || (authenticated() && !!currentUserId()) || currentUserEmail() === TEST_EMAIL; }
   function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
-  function canEnterSection(section) { return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  function canEnterSection(section) { if (section === 'admin-users') return isLocal() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
   /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
      로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
      그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
@@ -1715,7 +1717,47 @@
     if (state.section === 'archive') return archiveHtml();
     if (state.section === 'public-library') return publicLibraryHtml();
     if (state.section === 'briefing') return briefingHtml();
+    if (state.section === 'admin-users') return adminUsersHtml();
     return homeHtml();
+  }
+  function adminUserDateTime(value) {
+    if (!value) return '-';
+    var date = new Date(value); if (isNaN(date.getTime())) return String(value).slice(0, 16).replace('T', ' ');
+    var parts = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(date).forEach(function (part) { parts[part.type] = part.value; });
+    return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute;
+  }
+  function adminUserStatusLabel(status) {
+    var value = String(status || 'active').toLowerCase();
+    return { active: '정상', suspended: '정지', pending: '대기', inactive: '비활성', withdrawn: '탈퇴', deleted: '탈퇴' }[value] || status || '정상';
+  }
+  function loadAdminUsers(force) {
+    if (!canSeeAdminUsers() || !authenticated() || state.adminUsersLoading || (!force && state.adminUsers)) return;
+    state.adminUsersLoading = true; state.adminUsersError = ''; renderContent();
+    window.db.fetch('/rest/v1/users?select=id,name,nickname,email,company,phone,status,created_at,last_seen_at&order=created_at.desc&limit=2000')
+      .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+      .then(function (rows) { state.adminUsers = Array.isArray(rows) ? rows : []; })
+      .catch(function () { state.adminUsers = []; state.adminUsersError = '사용자 목록을 불러오지 못했습니다. 관리자 조회 권한을 확인해 주세요.'; })
+      .finally(function () { state.adminUsersLoading = false; if (state.section === 'admin-users') renderContent(); });
+  }
+  function adminUsersHtml() {
+    if (!canSeeAdminUsers()) return '<div class="iw-state"><strong>접근할 수 없는 화면입니다.</strong><span>보험워크 홈으로 이동합니다.</span></div>';
+    if (state.adminUsersLoading || !state.adminUsers) return '<div class="iw-loading">사용자 목록을 불러오는 중입니다.</div>';
+    var query = searchNorm(state.adminUserQuery), status = state.adminUserStatus;
+    var rows = state.adminUsers.filter(function (user) {
+      var matchesQuery = !query || searchNorm([user.name, user.nickname, user.email, user.company, user.phone].join(' ')).indexOf(query) >= 0;
+      return matchesQuery && (status === 'all' || String(user.status || 'active').toLowerCase() === status);
+    });
+    var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()), todayCount = state.adminUsers.filter(function (user) { var created = new Date(user.created_at); return !isNaN(created.getTime()) && new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(created) === today; }).length;
+    var statusOptions = [['all', '전체 상태'], ['active', '정상'], ['pending', '대기'], ['suspended', '정지'], ['inactive', '비활성'], ['withdrawn', '탈퇴']];
+    var body = rows.map(function (user) {
+      var rawStatus = String(user.status || 'active').toLowerCase();
+      return '<tr><td><strong>' + esc(user.name || '-') + '</strong></td><td>' + esc(user.nickname || '-') + '</td><td>' + esc(user.email || '-') + '</td><td>' + esc(user.company || '-') + '</td><td>' + esc(phoneText(user.phone || '') || '-') + '</td><td>' + esc(adminUserDateTime(user.created_at)) + '</td><td>' + esc(adminUserDateTime(user.last_seen_at)) + '</td><td><span class="iw-admin-status iw-admin-status-' + esc(rawStatus) + '">' + esc(adminUserStatusLabel(rawStatus)) + '</span></td></tr>';
+    }).join('');
+    return '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">보험워크 가입자 정보를 조회합니다.</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
+      + '<div class="iw-stats iw-admin-users-stats"><div class="iw-stat"><span>전체 사용자</span><strong>' + state.adminUsers.length + '</strong></div><div class="iw-stat"><span>오늘 가입</span><strong>' + todayCount + '</strong></div><div class="iw-stat"><span>검색 결과</span><strong>' + rows.length + '</strong></div></div>'
+      + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색" oninput="OSInsuwork.filterAdminUsers(this.value)"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
+      + (state.adminUsersError ? '<div class="iw-error" role="alert"><span>' + esc(state.adminUsersError) + '</span></div>' : '')
+      + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>최근 로그인</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="8" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
   }
   /* 2026-08-25 — 소식지·캘린더(보험브리핑) 섹션. insuwork/insubriefing/leaflets.js의 리플렛
      캘린더 엔진을 그대로 이식해 사이드바를 유지한 채 #iw-main 안에서 렌더한다(작업지시서
@@ -1769,7 +1811,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); } }
+  function renderContent() { hideRowHover(); var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') loadAdminUsers(false); } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -1785,13 +1827,13 @@
     /* 초기 로드/뒤로가기 등 비클릭 진입에서 보호 메뉴로 바로 들어오면(예: 로그아웃 상태로 딥링크
        또는 popstate) 조용히 홈으로 대체한다 — 클릭 흐름(go())의 로그인 유도 모달과 달리 여기는
        사용자가 방금 누른 액션이 아니라서 확인 모달로 막지 않고 가벼운 토스트만 남긴다. */
-    if (!canEnterSection(target)) { target = 'home'; if (typeof window.toast === 'function') window.toast('로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
+    if (!canEnterSection(target)) { var deniedAdmin = target === 'admin-users'; target = 'home'; if (typeof window.toast === 'function') window.toast(deniedAdmin ? '관리자 전용 화면입니다.' : '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
     state.section = target;
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-insuwork').classList.add('on');
     renderShell(); if (push !== 'skip-url') setUrl(push !== false); loadData(state.section !== 'home');
   }
-  function go(section) { if (!canEnterSection(section)) { promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
+  function go(section) { if (!canEnterSection(section)) { if (section === 'admin-users') { if (typeof window.toast === 'function') window.toast('관리자 전용 화면입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
   function dialog(html) { var box = document.getElementById('iw-dialog'), body = document.getElementById('iw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function forceCloseDialog() { var box = document.getElementById('iw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function closeDialog() { var box = document.getElementById('iw-dialog'), root = box && box.querySelector('[data-work-draft-key]'), key = root && root.dataset.workDraftKey, hasDraft = key && (readWorkDraft(key) || root.dataset.workDraftDirty === '1'); if (!hasDraft) { forceCloseDialog(); return; } saveBoundWorkDraft(root); briefingConfirm('작성 중인 임시 내용을 삭제하고 닫을까요?', '작성 취소', '삭제', true).then(function (ok) { if (!ok) return; clearWorkDraft(key); forceCloseDialog(); }); }
@@ -3453,7 +3495,7 @@
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
      'skip-url'이 아닌 false(=replaceState)를 써서 지금까지의 동작을 유지한다. */
   function initialOpenPush() { return (!INITIAL_URL_HAD_VIEW_PARAMS && state.section === 'home') ? 'skip-url' : false; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: 'u1', name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: 'u2', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); }
 
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
@@ -3642,7 +3684,7 @@
     };
   }
   window.OSInsuwork = {
-    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); },
+    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUsers: function (query) { state.adminUserQuery = query || ''; renderContent(); window.setTimeout(function () { var input = document.getElementById('iw-admin-user-search'); if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } }, 0); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
