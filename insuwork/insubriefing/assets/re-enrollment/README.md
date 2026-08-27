@@ -2,9 +2,11 @@
 
 - `customer-card-01.png`: 대상 여부 확인
 - `customer-card-02.png`: 안내를 받은 뒤 진행 순서
-- `customer-card-03.png`: 미응답·자동연장 관련 주의
-- `advisor-checklist.png`: 설계사용 계약별 확인표
-- `cards.html`: 수정 가능한 원본
+- `customer-card-03.png`: 미재가입 시 세대별 결과 비교
+- `advisor-checklist.png`: 자동연장 뒤 확인할 사항
+- `renewal-cards-4pack.zip`: 스마트폰용 PNG 4장 다운로드 묶음
+- `render-smartphone-cards.ps1`: 스마트폰용 최종 이미지 원본
+- `cards.html`: 초기 웹 조판 원본
 
 ## 편집 원칙
 
