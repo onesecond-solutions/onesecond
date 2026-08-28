@@ -395,15 +395,7 @@
     /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(캘린더/고객/자료)은 하단 고정 탭바로 옮겼다.
        feat/workstation-mobile-header-consistency — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고,
        보험브리핑 홈으로 돌아가는 링크를 새로 추가했다(이전에는 "오늘" 화면에 이 진입로가 아예 없었다). */
-    view.innerHTML = '<header class="iwm-header"><strong>오늘</strong>'
-      + '<div class="iwm-header-actions">'
-      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
-      + '</div>'
-      + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
-      + '<a class="iwm-menu-item" href="/insuwork/">PC 버전으로 보기</a>'
-      + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
-      + '</div>'
-      + '</header>'
+    view.innerHTML = '<header class="iwm-header"><strong>오늘</strong></header>'
       + '<main class="iwm-main">'
       + agendaSectionHtml(excludeIds)
       + careSectionHtml(summary.care)
@@ -414,7 +406,6 @@
 
     var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
-    bindHeaderMenu();
 
     setupAgendaObserver();
     var nextAgendaScrollBox = document.getElementById('iwm-agenda-scroll');

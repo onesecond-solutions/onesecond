@@ -162,15 +162,7 @@
      feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은
      "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는 링크를 추가했다. */
   function headerHtml() {
-    return '<header class="iwm-header"><strong>자료</strong>'
-      + '<div class="iwm-header-actions">'
-      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
-      + '</div>'
-      + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
-      + '<a class="iwm-menu-item" href="' + esc(PC_LINKS.assets) + '">PC 버전으로 보기</a>'
-      + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
-      + '</div>'
-      + '</header>';
+    return '<header class="iwm-header"><strong>자료</strong></header>';
   }
 
   /* 바깥 클릭 닫기 리스너는 document에 한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로,
@@ -365,7 +357,6 @@
       + '<div id="iwm-lib-body"></div>'
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
-    bindHeaderEvents();
     var input = document.getElementById('iwm-lib-search');
     if (input) {
       input.value = state.query;
@@ -400,7 +391,6 @@
       + '<div class="iwm-lib-detail-full">' + expandBodyHtml(entry) + '</div>'
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
-    bindHeaderEvents();
 
     var back = document.getElementById('iwm-lib-back');
     if (back) back.addEventListener('click', function () {
