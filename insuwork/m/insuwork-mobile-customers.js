@@ -66,7 +66,7 @@
     ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) {
       localStorage.removeItem(key); sessionStorage.removeItem(key);
     });
-    window.location.replace('/insuwork/insubriefing/');
+    window.location.replace('/insuwork/');
   }
 
   function root() { return document.querySelector(ROOT_SELECTOR); }
@@ -83,9 +83,9 @@
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 로그인이 필요합니다.</strong>'
-      + '<p>보험브리핑 계정으로 로그인하면 고객 목록을 확인할 수 있습니다.</p>'
+      + '<p>보험워크 계정으로 로그인하면 고객 목록을 확인할 수 있습니다.</p>'
       + '<div class="iwm-gate-actions"><button type="button" class="iwm-btn primary" id="iwm-login-btn">로그인</button></div>'
-      + '<a class="iwm-link" href="/insuwork/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<a class="iwm-link" href="/insuwork/">보험워크 홈으로 돌아가기</a>'
       + '</div>';
     var btn = document.getElementById('iwm-login-btn');
     if (btn) btn.addEventListener('click', function () { openBriefingAuth('login'); });
@@ -96,7 +96,7 @@
     view.innerHTML = '<div class="iwm-gate">'
       + '<strong>보험워크 준비 중</strong>'
       + '<p>이 계정은 아직 이용 대상이 아닙니다.</p>'
-      + '<a class="iwm-link" href="/insuwork/insubriefing/">보험브리핑으로 돌아가기</a>'
+      + '<a class="iwm-link" href="/insuwork/">보험워크 홈으로 돌아가기</a>'
       + '</div>';
   }
 
@@ -174,7 +174,6 @@
       + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">⋯</button>'
       + '</div>'
       + '<div class="iwm-menu-panel" id="iwm-menu-panel" hidden>'
-      + '<a class="iwm-menu-item" href="/insuwork/insubriefing/">보험브리핑 홈</a>'
       + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=customers">PC 버전으로 보기</a>'
       + '<a class="iwm-menu-item" href="#" id="iwm-logout-link">로그아웃</a>'
       + '</div>'
