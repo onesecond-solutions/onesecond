@@ -10,13 +10,16 @@
 
   /* 모바일 핵심 업무 흐름을 왼쪽부터 고객→상담→홈→일정→자료로 배치한다.
      홈은 항상 정중앙에 고정하고 별도 클래스(.is-home)로 강조해 어느 화면에서도 복귀 지점을
-     즉시 찾을 수 있게 한다. 아이콘은 기존처럼 외부 리소스 없는 이모지를 사용한다. */
+     즉시 찾을 수 있게 한다. 아이콘은 currentColor를 따르는 동일한 선형 SVG 세트로 통일한다. */
+  function icon(path) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' + path + '"></path></svg>';
+  }
   var ITEMS = [
-    { key: 'customers', href: './customers.html', label: '고객', icon: '👤' },
-    { key: 'consultations', href: './consultations.html', label: '상담', icon: '📝' },
-    { key: 'today', href: './index.html', label: '홈', icon: '⌂', home: true },
-    { key: 'calendar', href: './calendar.html', label: '일정', icon: '📅' },
-    { key: 'library', href: './library.html', label: '자료', icon: '📁' }
+    { key: 'customers', href: './customers.html', label: '고객', icon: icon('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75') },
+    { key: 'consultations', href: './consultations.html', label: '상담', icon: icon('M21 15a4 4 0 0 1-4 4H8l-5 3v-3a4 4 0 0 1-2-3.46V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z M6 8h10 M6 12h7') },
+    { key: 'today', href: './index.html', label: '홈', icon: icon('M3 11.5 12 4l9 7.5 M5 10v10h14V10 M9 20v-6h6v6'), home: true },
+    { key: 'calendar', href: './calendar.html', label: '일정', icon: icon('M3 5h18v16H3z M16 3v4 M8 3v4 M3 10h18 M8 14h.01 M12 14h.01 M16 14h.01 M8 18h.01 M12 18h.01') },
+    { key: 'library', href: './library.html', label: '자료', icon: icon('M3 6h7l2 2h9v12H3z M3 6V4h7l2 2') }
   ];
 
   /* activeKey와 일치하는 항목만 활성 스타일(.is-active) + aria-current="page"를 받는다.
