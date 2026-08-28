@@ -165,6 +165,28 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
 .iwm-bottom-nav-item:active { color: var(--ac); }
 .iwm-bottom-nav-item.is-active { color: var(--ac); font-weight: 600; }
 
+.iwm-bottom-nav-item.is-home {
+  position: relative;
+  padding-top: 4px;
+  color: var(--tp);
+}
+.iwm-bottom-nav-item.is-home .iwm-bottom-nav-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--ac);
+  color: var(--s1);
+  font-size: calc(var(--fs-heading) * 1.35);
+  font-weight: 700;
+  line-height: 1;
+}
+.iwm-bottom-nav-item.is-home.is-active .iwm-bottom-nav-icon {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ac) 16%, transparent);
+}
+.iwm-bottom-nav-item.is-home .iwm-bottom-nav-label { font-weight: 700; }
+
 .iwm-bottom-nav-icon {
   font-size: 20px;
   line-height: 1;

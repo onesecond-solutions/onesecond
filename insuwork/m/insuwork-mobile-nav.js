@@ -8,16 +8,14 @@
 (function () {
   'use strict';
 
-  /* 아이콘 = 이모지(새 아이콘 폰트/외부 리소스 로드 금지). 화면마다 한눈에 구분되도록 단순한 것으로 선택.
-     오늘=집(하루의 홈 베이스) · 캘린더=달력 · 고객=사람 · 상담=메모(전체 고객을 가로지르는 상담 목록,
-     feat/workstation-mobile-consultations-list, 2026-08-22 대표 직접 요청 — PC 데스크탑에는 있던
-     "상담관리" 화면이 모바일에 없던 격차) · 자료=폴더.
-     순서는 고객 다음이 자연스러워 고객→상담→자료로 배치(청약 전 상담 흐름이 고객 바로 옆). */
+  /* 모바일 핵심 업무 흐름을 왼쪽부터 고객→상담→홈→일정→자료로 배치한다.
+     홈은 항상 정중앙에 고정하고 별도 클래스(.is-home)로 강조해 어느 화면에서도 복귀 지점을
+     즉시 찾을 수 있게 한다. 아이콘은 기존처럼 외부 리소스 없는 이모지를 사용한다. */
   var ITEMS = [
-    { key: 'today', href: './index.html', label: '오늘', icon: '🏠' },
-    { key: 'calendar', href: './calendar.html', label: '캘린더', icon: '📅' },
     { key: 'customers', href: './customers.html', label: '고객', icon: '👤' },
     { key: 'consultations', href: './consultations.html', label: '상담', icon: '📝' },
+    { key: 'today', href: './index.html', label: '홈', icon: '⌂', home: true },
+    { key: 'calendar', href: './calendar.html', label: '일정', icon: '📅' },
     { key: 'library', href: './library.html', label: '자료', icon: '📁' }
   ];
 
@@ -26,7 +24,7 @@
   function render(activeKey) {
     var itemsHtml = ITEMS.map(function (item) {
       var active = item.key === activeKey;
-      return '<a class="iwm-bottom-nav-item' + (active ? ' is-active' : '') + '" href="' + item.href + '"'
+      return '<a class="iwm-bottom-nav-item' + (item.home ? ' is-home' : '') + (active ? ' is-active' : '') + '" href="' + item.href + '"'
         + (active ? ' aria-current="page"' : '') + '>'
         + '<span class="iwm-bottom-nav-icon" aria-hidden="true">' + item.icon + '</span>'
         + '<span class="iwm-bottom-nav-label">' + item.label + '</span>'
