@@ -327,7 +327,8 @@
     dialog.querySelector('.lfp-folder-close').addEventListener('click', closePicker);
     dialog.querySelector('.lfp-folder-cancel').addEventListener('click', closePicker);
     dialog.addEventListener('cancel', function (e) { e.preventDefault(); closePicker(); });
-    dialog.addEventListener('click', function (e) { if (e.target === dialog) closePicker(); });
+    // 파일명 텍스트를 드래그 선택하다 포인터가 dialog 밖에서 놓이면 Chrome이 배경 click으로
+    // 합성할 수 있다. 저장창은 명시적인 닫기·취소·Esc로만 닫아 작성 중 입력을 보호한다.
 
     confirmBtn.addEventListener('click', function () {
       confirmBtn.disabled = true; statusEl.textContent = '저장하는 중…';
