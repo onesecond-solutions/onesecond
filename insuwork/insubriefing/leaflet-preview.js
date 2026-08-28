@@ -317,6 +317,7 @@
         .then(function (rows) {
           var created = rows && rows[0]; if (!created) throw new Error('폴더를 만들지 못했습니다.');
           folders.push(created); path.push({ id: created.id, title: created.title });
+          if (window.OSInsuwork && typeof window.OSInsuwork.syncSavedWorkspaceItem === 'function') window.OSInsuwork.syncSavedWorkspaceItem(created);
           newForm.hidden = true; newForm.reset(); render();
         })
         .catch(function (err) { statusEl.textContent = err.message || '폴더를 만들지 못했습니다.'; })
@@ -344,11 +345,16 @@
         .then(function (saved) {
           return window.db.fetch('/rest/v1/insuwork_items', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+            headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
             body: JSON.stringify({ id: saved.id, owner_id: owner, parent_id: currentParentId() || null, item_type: 'file', title: titleName, storage_path: saved.path, mime_type: mime, extension: ext, file_size: saved.blob.size, visibility: 'private', created_at: new Date().toISOString() })
           });
         })
-        .then(function (res) { if (!res.ok) throw new Error('저장 정보를 기록하지 못했습니다.'); closePicker(); showNotice('보험워크 "' + path[path.length - 1].title + '"에 저장했습니다.'); })
+        .then(function (res) { if (!res.ok) throw new Error('저장 정보를 기록하지 못했습니다.'); return res.json(); })
+        .then(function (rows) {
+          var created = rows && rows[0]; if (!created) throw new Error('저장 결과를 확인하지 못했습니다.');
+          if (window.OSInsuwork && typeof window.OSInsuwork.syncSavedWorkspaceItem === 'function') window.OSInsuwork.syncSavedWorkspaceItem(created);
+          closePicker(); showNotice('보험워크 "' + path[path.length - 1].title + '"에 저장했습니다.');
+        })
         .catch(function (err) { statusEl.textContent = err.message || '저장에 실패했습니다.'; confirmBtn.disabled = false; });
     });
 

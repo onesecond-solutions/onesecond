@@ -3384,7 +3384,7 @@
       if (name == null || !String(name).trim()) return;
       var parentId = p.path[p.path.length - 1].id;
       writeOne('insuwork_items', { owner_id: p.owner, parent_id: parentId || null, item_type: 'folder', title: String(name).trim(), visibility: 'private' })
-        .then(function (created) { p.folders.push(created); p.path.push({ id: created.id, title: created.title }); renderToolSavePicker(); })
+        .then(function (created) { upsertWorkspaceItem(created); p.folders.push(created); p.path.push({ id: created.id, title: created.title }); renderToolSavePicker(); })
         .catch(function (err) { briefingAlert(err.message || '폴더를 만들지 못했습니다.'); });
     });
   }
@@ -3396,11 +3396,12 @@
     var ext = (p.filename.split('.').pop() || 'pdf').toLowerCase();
     var path = p.owner + '/root/' + id + '.' + ext;
     var token = window.db.getToken();
+    var row = { id: id, owner_id: p.owner, parent_id: parentId || null, item_type: 'file', title: p.filename, storage_path: path, mime_type: p.mime, extension: ext, file_size: p.blob.size, visibility: 'private', created_at: new Date().toISOString() };
     fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), {
       method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': p.mime, 'x-upsert': 'false' }, body: p.blob
     }).then(function (res) { if (!res.ok) throw new Error('파일 저장에 실패했습니다.'); return true; })
-      .then(function () { return write('insuwork_items', { id: id, owner_id: p.owner, parent_id: parentId || null, item_type: 'file', title: p.filename, storage_path: path, mime_type: p.mime, extension: ext, file_size: p.blob.size, visibility: 'private', created_at: new Date().toISOString() }); })
-      .then(function () { closeDialog(); if (typeof window.toast === 'function') window.toast('보험워크 "' + p.path[p.path.length - 1].title + '"에 저장했습니다.'); })
+      .then(function () { return write('insuwork_items', row); })
+      .then(function () { upsertWorkspaceItem(row); closeDialog(); if (typeof window.toast === 'function') window.toast('보험워크 "' + p.path[p.path.length - 1].title + '"에 저장했습니다.'); })
       .catch(function (err) { if (status) status.textContent = err.message || '저장에 실패했습니다.'; });
   }
   function editEvent(id) { var event = state.data.events.find(function (entry) { return String(entry.id) === String(id); }); if (!event) return; closeDialog(); dialog(formShell('일정 수정', eventFormHtml(event), 'OSInsuwork.saveEvent()')); }
@@ -3787,6 +3788,7 @@
        새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
     isDataReady: function () { return !!state.fullLoaded; },
+    syncSavedWorkspaceItem: function (item) { upsertWorkspaceItem(item); if (state.section === 'assets') renderContent(); },
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreCustomers: function () { state.customersRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreConsultations: function () { state.consultationsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
