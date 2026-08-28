@@ -954,9 +954,9 @@
     return "OSInsuwork.showAsset('" + item.source + "','" + esc(item.raw.id) + "')";
   }
   function assetDragAttributes(item) {
-    var id = esc(item.raw.id), category = esc(item.type);
+    var id = esc(item.raw.id), category = esc(item.type), raw = item.raw || {};
     if (item.folder) return 'ondragover="OSInsuwork.assetDragOver(event,\'' + id + '\',\'' + category + '\')" ondragleave="OSInsuwork.assetDragLeave(event)" ondrop="OSInsuwork.assetDrop(event,\'' + id + '\',\'' + category + '\')"';
-    return 'draggable="true" ondragstart="OSInsuwork.assetDragStart(event,\'' + id + '\',\'' + category + '\')" ondragend="OSInsuwork.assetDragEnd(event)"';
+    return 'draggable="true" data-file-drag="true" data-file-title="' + esc(raw.title || item.title || '파일') + '" data-file-mime="' + esc(raw.mime_type || '') + '" data-storage-path="' + esc(raw.storage_path || '') + '" data-direct-url="' + esc(raw.image_url || raw.url || '') + '" ondragstart="OSInsuwork.assetDragStart(event,\'' + id + '\',\'' + category + '\')" ondragend="OSInsuwork.assetDragEnd(event)"';
   }
   function assetBreadcrumbHtml() {
     if (!state.assetFolder) return '';
@@ -1672,7 +1672,7 @@
     return ((item.title || '') + ' ' + (item.body ? stripHtml(item.body) : '')).toLowerCase().indexOf(q) >= 0;
   }
   function publicLibraryRowHtml(item) {
-    return '<tr tabindex="0" onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + publicLibraryKind(item) + '</td><td>' + esc(publicLibraryAuthor(item)) + '</td><td>' + formatDate(item.created_at) + '</td></tr>';
+    return '<tr tabindex="0" ' + publicLibraryDragAttributes(item) + ' onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><td><b>' + esc(item.title || '(제목 없음)') + '</b></td><td>' + publicLibraryKind(item) + '</td><td>' + esc(publicLibraryAuthor(item)) + '</td><td>' + formatDate(item.created_at) + '</td></tr>';
   }
   function publicLibraryHtml() {
     var rows = (state.publicLibraryData || []).filter(publicLibraryMatches);
@@ -1693,7 +1693,11 @@
     var image = direct ? '<img src="' + esc(direct) + '" alt="">' : ((item.storage_path && /^image\//.test(item.mime_type || '')) ? '<img data-storage-path="' + esc(item.storage_path) + '" alt="">' : '');
     var docBody = item.item_type === 'note' ? '<p class="iw-asset-ext">Note</p>' : item.item_type === 'memo' ? '<p class="iw-asset-ext">Memo</p>' : item.body ? '<p>' + esc(stripHtml(item.body).slice(0, 110)) + '</p>' : '<p class="iw-asset-ext">' + esc((fileExtension(item) || publicLibraryKind(item) || '파일').toUpperCase()) + '</p>';
     var preview = image || '<div class="iw-asset-document"><span>' + publicLibraryKind(item) + '</span>' + docBody + '</div>';
-    return '<button type="button" class="iw-asset-card" onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><span class="iw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + publicLibraryKind(item) + ' · ' + esc(publicLibraryAuthor(item)) + ' · ' + formatDate(item.created_at) + '</small></button>';
+    return '<button type="button" class="iw-asset-card" ' + publicLibraryDragAttributes(item) + ' onclick="OSInsuwork.openPublicLibraryItem(\'' + esc(item.id) + '\')"><span class="iw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + publicLibraryKind(item) + ' · ' + esc(publicLibraryAuthor(item)) + ' · ' + formatDate(item.created_at) + '</small></button>';
+  }
+  function publicLibraryDragAttributes(item) {
+    if (!item || (!item.storage_path && !item.url)) return '';
+    return 'draggable="true" data-file-drag="true" data-file-title="' + esc(item.title || '파일') + '" data-file-mime="' + esc(item.mime_type || '') + '" data-storage-path="' + esc(item.storage_path || '') + '" data-direct-url="' + esc(item.url || '') + '" ondragstart="OSInsuwork.externalFileDragStart(event)" ondragend="OSInsuwork.assetDragEnd(event)"';
   }
   function openPublicLibraryItem(id) {
     var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
@@ -1844,7 +1848,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { hideRowHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { loadAdminUsers(false); bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
+  function renderContent() { hideRowHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); hydrateFileDrags(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { loadAdminUsers(false); bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -2042,6 +2046,44 @@
     return fetch(window.db.url('/storage/v1/object/sign/' + bucket + '/' + String(path).split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) })
       .then(function (response) { if (!response.ok) throw new Error('첨부파일을 열지 못했습니다.'); return response.json(); })
       .then(function (data) { var url = window.db.url('/storage/v1' + data.signedURL); state.signedUrlCache[cacheKey] = { url: url, expiresAt: Date.now() + 55 * 60000 }; return url; });
+  }
+  function prepareFileDrag(node, url) {
+    if (!node || !url) return;
+    node.dataset.fileDragUrl = url;
+    node.setAttribute('draggable', 'true');
+    if (!node.hasAttribute('data-file-drag')) {
+      node.setAttribute('data-file-drag', 'true');
+      node.addEventListener('dragstart', externalFileDragStart);
+      node.addEventListener('dragend', assetDragEnd);
+    }
+    node.title = node.title || '카카오톡으로 끌어서 파일 보내기';
+  }
+  function hydrateFileDrags() {
+    document.querySelectorAll('#v-insuwork [data-storage-path], #v-insuwork [data-direct-url]').forEach(function (node) {
+      var parent = node.parentElement && node.parentElement.closest('[data-file-drag]');
+      if (parent && parent !== node) return;
+      var direct = node.getAttribute('data-direct-url'), path = node.getAttribute('data-storage-path');
+      if (direct) prepareFileDrag(node, direct);
+      else if (path && window.db && window.db.getToken) signStoragePath(path).then(function (url) { prepareFileDrag(node, url); }).catch(function () {});
+    });
+  }
+  function fileDragPayload(event, internalId) {
+    var node = event && event.currentTarget, transfer = event && event.dataTransfer;
+    if (!node || !transfer) return false;
+    var url = node.dataset.fileDragUrl || node.getAttribute('data-direct-url') || '';
+    if (!url && internalId) { transfer.effectAllowed = 'move'; transfer.setData('text/plain', String(internalId)); transfer.setData('application/x-insuwork-asset-id', String(internalId)); return true; }
+    if (!url) { event.preventDefault(); if (typeof window.toast === 'function') window.toast('파일을 준비하는 중입니다. 잠시 후 다시 끌어 주세요.'); return false; }
+    var name = String(node.getAttribute('data-file-title') || '파일').replace(/[\r\n:]/g, '_');
+    var mime = node.getAttribute('data-file-mime') || 'application/octet-stream';
+    transfer.effectAllowed = internalId ? 'copyMove' : 'copy';
+    transfer.setData('DownloadURL', mime + ':' + name + ':' + url);
+    transfer.setData('text/uri-list', url);
+    transfer.setData('text/plain', url);
+    if (internalId) transfer.setData('application/x-insuwork-asset-id', String(internalId));
+    return true;
+  }
+  function externalFileDragStart(event) {
+    if (fileDragPayload(event, '')) event.currentTarget.classList.add('is-dragging');
   }
   // newsletters 버킷은 storage.buckets.public=true(2026-08-25_newsletters_bucket_public.sql)로 전환되어
   // 서명(signed) URL 없이도 공개 URL로 즉시 접근 가능 — 비로그인 방문자도 소식지·영업방향 원본을 볼 수 있게 하기 위함.
@@ -2543,8 +2585,7 @@
   }
   function assetDragStart(event, id, category) {
     state.draggingAsset = { id: String(id), category: String(category) };
-    if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(id)); }
-    if (event.currentTarget) event.currentTarget.classList.add('is-dragging');
+    if (fileDragPayload(event, id) && event.currentTarget) event.currentTarget.classList.add('is-dragging');
   }
   function assetDragEnd(event) {
     state.draggingAsset = null;
@@ -3756,7 +3797,7 @@
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
-    assetDragStart: assetDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
+    assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
