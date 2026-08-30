@@ -1078,7 +1078,7 @@
       + contractDatesField('iwd-customer', contractDatesOf(item), 'customerDetail')
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="iwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'customerDetail\')"><span id="iwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-customer-birth" type="date" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'customerDetail\')"><span id="iwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -1124,10 +1124,10 @@
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectConsultation()">‹ 목록</button>'
       + '<div class="iw-inline-form-block">'
-      + '<div class="iw-inline-form-row">' + inlineField('등록일자', '<input id="iwd-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')">') + '</div>'
+      + '<div class="iw-inline-form-row">' + inlineField('등록일자', '<input id="iwd-consult-date" type="date" value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')">') + '</div>'
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<input id="iwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')"><span id="iwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')"><span id="iwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -2463,7 +2463,7 @@
   function inlineField(label, input) { return '<label class="iw-inline-field"><span>' + label + '</span>' + input + '</label>'; }
   /* 청약일자 다중 입력행(고객관리 전용, 2026-08-20) — DOM에서 직접 값을 수집/추가/삭제(별도 JS 배열 보관 없음). 좁은 폭(fit-content)으로 렌더되도록 CSS(.iw-contract-dates-*)가 잡아준다. */
   function contractDateRowHtml(date, ageContext) {
-    return '<div class="iw-contract-date-row"><input type="text" class="iw-contract-date-input" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + (ageContext || '') + '\')"><button type="button" class="iw-contract-date-del" aria-label="청약일자 삭제" onclick="OSInsuwork.removeContractDateRow(this)">×</button></div>';
+    return '<div class="iw-contract-date-row"><input type="date" class="iw-contract-date-input" value="' + esc(date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + (ageContext || '') + '\')"><button type="button" class="iw-contract-date-del" aria-label="청약일자 삭제" onclick="OSInsuwork.removeContractDateRow(this)">×</button></div>';
   }
   function contractDatesField(prefix, dates, ageContext) {
     var list = dates && dates.length ? dates : [ymd(new Date())];
@@ -2791,7 +2791,7 @@
       + contractDatesField('iwf-customer', [ymd(new Date())], 'customer')
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', '<input id="iwf-customer-name" required autocomplete="name">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSInsuwork.formatBirthInput(this,\'customer\')"><span id="iwf-customer-insurance-age">보험나이 -</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-customer-birth" type="date" oninput="OSInsuwork.formatBirthInput(this,\'customer\')"><span id="iwf-customer-insurance-age">보험나이 -</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwf-customer-gender" value="남">남</label><label><input type="radio" name="iwf-customer-gender" value="여">여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -2868,10 +2868,10 @@
     item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<div class="iw-consult-registration"><div class="iw-inline-form-block">'
-      + '<div class="iw-inline-form-row">' + inlineField('등록일자', '<input id="iwf-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this)">') + '</div>'
+      + '<div class="iw-inline-form-row">' + inlineField('등록일자', '<input id="iwf-consult-date" type="date" required value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this)">') + '</div>'
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', '<input id="iwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-consult-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'form\')"><span id="iwf-insurance-age">보험나이 -</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'form\')"><span id="iwf-insurance-age">보험나이 -</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -3169,7 +3169,7 @@
     /* 보험연령표도 비로그인 공개 섹션이라 homeHtml()과 동일 처리(2026-08-25 세션에서 새로 발견). */
     return (allowed() ? statusHtml() : '') + '<div class="iw-insage-page"><div class="iw-toolbar iw-insage-toolbar"><div><h2>보험연령표</h2><p class="iw-subtitle">출생연도 빠른 확인표와 생년월일 기준 보험나이 계산을 함께 봅니다.</p></div><span id="iw-insage-year">' + year + '년 기준</span></div>'
       + '<section class="iw-insage-calc"><div class="iw-insage-fields">'
-      + '<label>생년월일<input id="iw-insage-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSInsuwork.formatBirthInput(this,\'tool\')"></label>'
+      + '<label>생년월일<input id="iw-insage-birth" type="date" oninput="OSInsuwork.formatBirthInput(this,\'tool\')"></label>'
       + '<label>기준일<input id="iw-insage-date" type="date" value="' + basis + '" data-auto-date="1" onchange="this.dataset.autoDate=\'0\';OSInsuwork.calcToolInsuranceAge()"></label>'
       + '</div><div class="iw-insage-result"><strong id="iw-insage-value">-</strong><span id="iw-insage-caption">생년월일을 입력하세요</span></div></section>'
       + '<div class="iw-insage-note"><b>빠른 확인</b><span>표는 현재 연도에서 출생연도를 뺀 간편 기준입니다. 생일 전후 6개월을 반영한 실제 보험나이는 위 계산값을 사용하세요.</span></div>'
