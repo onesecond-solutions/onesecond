@@ -532,7 +532,8 @@
         privacy_version: '2026-08-27',
         role: 'ga_member',
         status: 'active',
-        site: 'insubriefing'
+        site: 'insuwork',
+        service_name: '보험워크'
       }
     };
   }
