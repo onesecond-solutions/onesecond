@@ -936,21 +936,14 @@
        구분해 준다(2차, UX 방어일 뿐 데이터 노출 방어는 loadData/RLS가 담당). */
     var loginHint = !allowed();
     var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
-    var customersById = {}; state.data.customers.forEach(function (item) { customersById[String(item.id)] = item; });
     var careToday = todayEvents.filter(isCareTask);
-    var activeConsults = state.data.consultations.filter(function (item) {
-      var customer = customersById[String(item.customer_id)];
-      var status = consultationStatus(item, customer);
-      return customer && ['예약', '진행중', '제안서발송', '클로징'].indexOf(status) >= 0;
-    }).sort(function (a, b) { return String(b.consulted_at || b.created_at || '').localeCompare(String(a.consulted_at || a.created_at || '')); });
-    var closingCount = activeConsults.filter(function (item) { return consultationStatus(item, customersById[String(item.customer_id)]) === '클로징'; }).length;
-    var taskItems = todayEvents.map(function (event) {
+    var urgentToday = todayEvents.filter(function (event) { return !event.completed_at && (isCareTask(event) || event.event_type === 'insurance-age' || /상령|기념일|만기|청약/i.test((event.title || '') + ' ' + (event.description || ''))); });
+    var taskItems = todayEvents.slice().sort(function (a, b) {
+      return (a.completed_at ? 1 : 0) - (b.completed_at ? 1 : 0) || eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
+    }).map(function (event) {
       var time = String(event.event_time || '').slice(0, 5);
       return { type: 'event', raw: event, id: event.id, title: eventTitleLabel(event), subtitle: event.description || (isCareTask(event) ? '고객 케어 알림' : '오늘 일정'), badge: time || (isCareTask(event) ? '케어' : '일정'), action: 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')' };
-    }).concat(activeConsults.slice(0, 4).map(function (item) {
-      var customer = customersById[String(item.customer_id)] || {}, status = consultationStatus(item, customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10);
-      return { type: 'consultation', id: item.id, title: customer.name || '고객 상담', subtitle: stripHtml(item.memo || '상담내용 확인'), badge: status, action: 'OSInsuwork.go(\'consultations\');OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')' };
-    })).slice(0, 8);
+    }).slice(0, 8);
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
       .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
@@ -964,7 +957,7 @@
     var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
     var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
     var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
-    var todayStats = '<div class="iw-task-stats"><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>오늘 일정</span><strong>' + todayEvents.length + '건</strong></button><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>고객 케어</span><strong>' + careToday.length + '건</strong></button><button type="button" onclick="OSInsuwork.go(\'consultations\');OSInsuwork.filterConsultationStatus(\'클로징\')"><span>클로징 대기</span><strong>' + closingCount + '건</strong></button></div>';
+    var todayStats = '<div class="iw-task-stats"><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>오늘 일정</span><strong>' + todayEvents.length + '건</strong></button><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>고객 케어</span><strong>' + careToday.length + '건</strong></button><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>긴급 확인</span><strong>' + urgentToday.length + '건</strong></button></div>';
     var todayPanel = '<section class="iw-panel iw-today-work-panel"><div class="iw-panel-head"><strong>오늘 할 일</strong><button onclick="OSInsuwork.go(\'calendar\')">캘린더 보기</button></div>' + todayStats + '<div class="iw-list iw-task-list">' + (taskItems.length ? taskItems.map(todayTaskRow).join('') : '<div class="iw-empty">' + todayEmptyText + '</div>') + '</div></section>';
     var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
