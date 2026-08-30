@@ -669,6 +669,34 @@
     var check = item.type === 'event' && item.id ? '<button type="button" class="iw-task-check' + (done ? ' done' : '') + '" aria-label="' + (done ? '완료 취소' : '완료 처리') + '" onclick="event.stopPropagation();OSInsuwork.toggleEventComplete(\'' + esc(item.id) + '\')">' + (done ? '✓' : '') + '</button>' : '<span class="iw-task-check passive"></span>';
     return '<div class="iw-task-row">' + check + '<button type="button" class="iw-task-open" onclick="' + item.action + '"><span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.subtitle || '') + '</small></span><em>' + esc(item.badge || '') + '</em></button></div>';
   }
+  function homeTodayKind(event) {
+    var text = ((event && event.title) || '') + ' ' + ((event && event.description) || '') + ' ' + ((event && event.legacy_id) || '');
+    if (event && event.event_type === 'insurance-age') return 'age';
+    if (isCareTask(event)) return /\+\s*(31|91|181|365)\s*일|31일|91일|181일|365일|케어/i.test(text) ? 'care' : 'schedule';
+    return 'schedule';
+  }
+  function homeTodayColumnIndex(event) {
+    var kind = homeTodayKind(event);
+    return kind === 'age' ? 2 : kind === 'care' ? 1 : 0;
+  }
+  function homeTodayChip(event) {
+    var kind = homeTodayKind(event);
+    var cls = kind === 'age' ? 'insurance-age' : kind === 'care' ? 'customer' : 'schedule';
+    var done = event.completed_at ? ' done' : '';
+    return '<button type="button" class="iw-agenda-chip iw-home-today-chip ' + cls + done + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>';
+  }
+  function homeTodayBoard(todayEvents, emptyText) {
+    var labels = ['오늘일정', '고객케어', '상령일'];
+    var columns = [[], [], []];
+    todayEvents.slice().sort(function (a, b) {
+      return (a.completed_at ? 1 : 0) - (b.completed_at ? 1 : 0) || eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
+    }).forEach(function (event) { columns[homeTodayColumnIndex(event)].push(event); });
+    var total = columns.reduce(function (sum, col) { return sum + col.length; }, 0);
+    if (!total) return '<div class="iw-empty iw-home-today-empty">' + emptyText + '</div>';
+    return '<div class="iw-home-today-board">' + labels.map(function (label, index) {
+      return '<section class="iw-home-today-col"><div class="iw-home-today-col-head"><span>' + label + '</span><strong>' + columns[index].length + '건</strong></div><div class="iw-home-today-list">' + (columns[index].length ? columns[index].map(homeTodayChip).join('') : '<p>없음</p>') + '</div></section>';
+    }).join('') + '</div>';
+  }
   function favoriteKey(type, id) { return String(type) + ':' + String(id); }
   function isFavorited(type, id) { var key = favoriteKey(type, id); return state.favorites.some(function (entry) { return favoriteKey(entry.target_type, entry.target_id) === key; }); }
   function favoriteButton(type, id, title, subtitle) {
@@ -936,14 +964,6 @@
        구분해 준다(2차, UX 방어일 뿐 데이터 노출 방어는 loadData/RLS가 담당). */
     var loginHint = !allowed();
     var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
-    var careToday = todayEvents.filter(isCareTask);
-    var urgentToday = todayEvents.filter(function (event) { return !event.completed_at && (isCareTask(event) || event.event_type === 'insurance-age' || /상령|기념일|만기|청약/i.test((event.title || '') + ' ' + (event.description || ''))); });
-    var taskItems = todayEvents.slice().sort(function (a, b) {
-      return (a.completed_at ? 1 : 0) - (b.completed_at ? 1 : 0) || eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
-    }).map(function (event) {
-      var time = String(event.event_time || '').slice(0, 5);
-      return { type: 'event', raw: event, id: event.id, title: eventTitleLabel(event), subtitle: event.description || (isCareTask(event) ? '고객 케어 알림' : '오늘 일정'), badge: time || (isCareTask(event) ? '케어' : '일정'), action: 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')' };
-    }).slice(0, 8);
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
       .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
@@ -957,8 +977,7 @@
     var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
     var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
     var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
-    var todayStats = '<div class="iw-task-stats"><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>오늘 일정</span><strong>' + todayEvents.length + '건</strong></button><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>고객 케어</span><strong>' + careToday.length + '건</strong></button><button type="button" onclick="OSInsuwork.go(\'calendar\')"><span>긴급 확인</span><strong>' + urgentToday.length + '건</strong></button></div>';
-    var todayPanel = '<section class="iw-panel iw-today-work-panel"><div class="iw-panel-head"><strong>오늘 할 일</strong><button onclick="OSInsuwork.go(\'calendar\')">캘린더 보기</button></div>' + todayStats + '<div class="iw-list iw-task-list">' + (taskItems.length ? taskItems.map(todayTaskRow).join('') : '<div class="iw-empty">' + todayEmptyText + '</div>') + '</div></section>';
+    var todayPanel = '<section class="iw-panel iw-today-work-panel"><div class="iw-panel-head"><strong>오늘 할 일</strong><button onclick="OSInsuwork.go(\'calendar\')">캘린더 보기</button></div>' + homeTodayBoard(todayEvents, todayEmptyText) + '</section>';
     var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
     var customersEmptyText = loginHint ? '로그인 후 고객 정보를 확인할 수 있습니다.' : '등록된 고객이 없습니다.';
