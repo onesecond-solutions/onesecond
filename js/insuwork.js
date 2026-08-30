@@ -670,9 +670,8 @@
     return '<div class="iw-task-row">' + check + '<button type="button" class="iw-task-open" onclick="' + item.action + '"><span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.subtitle || '') + '</small></span><em>' + esc(item.badge || '') + '</em></button></div>';
   }
   function homeTodayKind(event) {
-    var text = ((event && event.title) || '') + ' ' + ((event && event.description) || '') + ' ' + ((event && event.legacy_id) || '');
     if (event && event.event_type === 'insurance-age') return 'age';
-    if (isCareTask(event)) return /\+\s*(31|91|181|365)\s*일|31일|91일|181일|365일|케어/i.test(text) ? 'care' : 'schedule';
+    if (isCareTask(event)) return 'care';
     return 'schedule';
   }
   function homeTodayColumnIndex(event) {
