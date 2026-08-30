@@ -159,6 +159,91 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 #v-insuwork .iw-access p{max-width:520px;color:var(--ts)}
 #v-insuwork .iw-access-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 #v-insuwork .iw-access .iw-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+#v-insuwork .iw-nav-guide{
+  position:relative;
+  margin:18px 10px 12px;
+  padding:8px 10px;
+  border:1px solid color-mix(in srgb,var(--bd) 86%,transparent);
+  border-radius:8px;
+  background:color-mix(in srgb,var(--s1) 72%,transparent);
+}
+#v-insuwork .iw-nav-guide summary{
+  display:flex;
+  min-height:28px;
+  align-items:center;
+  justify-content:space-between;
+  color:var(--tp);
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+  list-style:none;
+}
+#v-insuwork .iw-nav-guide summary::-webkit-details-marker{display:none}
+#v-insuwork .iw-nav-guide summary:after{
+  content:"⌄";
+  color:var(--ts);
+  font-size:11px;
+  transition:transform .15s ease;
+}
+#v-insuwork .iw-nav-guide[open] summary:after{
+  transform:rotate(180deg);
+}
+#v-insuwork .iw-nav-guide-body{
+  position:absolute;
+  z-index:85;
+  left:calc(100% + 10px);
+  bottom:0;
+  width:270px;
+  padding:14px;
+  border:1px solid color-mix(in srgb,var(--bd) 88%,transparent);
+  border-radius:8px;
+  background:var(--s1);
+  box-shadow:0 16px 38px color-mix(in srgb,var(--tp) 16%,transparent);
+}
+#v-insuwork .iw-nav-guide p{
+  margin:0 0 10px;
+  color:var(--ts);
+  font-size:11px;
+  line-height:1.55;
+}
+#v-insuwork .iw-nav-guide ol{
+  display:grid;
+  gap:8px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+#v-insuwork .iw-nav-guide li{
+  display:grid;
+  grid-template-columns:22px minmax(0,1fr);
+  gap:0 8px;
+  align-items:start;
+}
+#v-insuwork .iw-nav-guide li span{
+  display:grid;
+  width:22px;
+  height:22px;
+  place-items:center;
+  border-radius:50%;
+  background:color-mix(in srgb,var(--ac) 14%,var(--s1));
+  color:var(--ac);
+  font-size:9px;
+  font-weight:900;
+}
+#v-insuwork .iw-nav-guide b{
+  min-width:0;
+  color:var(--tp);
+  font-size:11px;
+  line-height:1.15;
+}
+#v-insuwork .iw-nav-guide em{
+  grid-column:2;
+  min-width:0;
+  color:var(--ts);
+  font-size:10px;
+  font-style:normal;
+  line-height:1.45;
+}
 body.iw-page.iw-bg-flat:before{display:none}
 /* 2026-08-23 1차 검수 수정 — 예전 하드코딩(#f6f7fb/#14161b)이 새 웜톤(--bg)과 안 맞아 var(--bg)로 교체 */
 body.iw-page.iw-bg-flat:after{background:var(--bg)}
@@ -217,6 +302,12 @@ body.iw-page.iw-bg-dark #v-insuwork .iw-nav-subgroup button{color:var(--ac)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-nav-subgroup>summary{color:var(--bodytx)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-nav .archive{border-top-color:var(--bd)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-nav-planned button:disabled:hover{color:var(--bodytx)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide{border-color:var(--bd);background:var(--s2)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide-body{border-color:var(--bd);background:var(--s1);box-shadow:0 16px 38px rgba(0,0,0,.42)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide summary,
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide b{color:var(--tp)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide p,
+body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide em{color:var(--ts)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search{background:var(--s2)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search:focus-within{background:var(--s1)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search span{color:var(--ts)}
@@ -347,16 +438,16 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
 .iw-public-landing{
   width:min(100%,1500px);
   margin:0 auto;
-  padding:68px 64px 38px;
+  padding:42px 64px 38px;
   color:var(--tp);
 }
 .iw-public-hero{
   display:grid;
   grid-template-columns:minmax(470px,.78fr) minmax(480px,1.22fr);
   align-items:center;
-  gap:72px;
-  min-height:min(620px,calc(100dvh - 170px));
-  padding-bottom:60px;
+  gap:64px;
+  min-height:min(540px,calc(100dvh - 220px));
+  padding-bottom:34px;
 }
 .iw-public-kicker{
   margin:0 0 28px;
@@ -374,7 +465,7 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
 }
 .iw-public-copy>p{
   max-width:560px;
-  margin:26px 0 0;
+  margin:22px 0 0;
   color:#5B687F;
   font-size:17px;
   line-height:1.78;
@@ -383,7 +474,7 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   display:flex;
   flex-wrap:wrap;
   gap:10px 14px;
-  margin:28px 0 0;
+  margin:24px 0 0;
   padding:0;
   list-style:none;
 }
@@ -406,7 +497,7 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   display:flex;
   flex-wrap:wrap;
   gap:10px;
-  margin-top:34px;
+  margin-top:30px;
 }
 .iw-public-primary,
 .iw-public-secondary{
@@ -432,10 +523,122 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   justify-items:center;
   margin:0;
 }
-.iw-public-brand img{
+.iw-story-logo{
+  display:grid;
+  width:min(100%,720px);
+  min-height:124px;
+  place-items:center;
+}
+.iw-public-brand img,
+.iw-story-logo img{
   display:block;
-  width:min(100%,760px);
+  width:min(100%,680px);
   height:auto;
+}
+.iw-story-board{
+  position:relative;
+  display:grid;
+  width:min(100%,760px);
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:30px;
+  padding:22px;
+  border:1px solid #D8E0EA;
+  border-radius:8px;
+  background:linear-gradient(180deg,#FFFFFF,#F6F8FB);
+  box-shadow:0 18px 44px rgba(13,27,51,.08);
+}
+.iw-story-line{
+  position:absolute;
+  left:42px;
+  right:42px;
+  top:78px;
+  height:2px;
+  overflow:hidden;
+  background:#D8E0EA;
+}
+.iw-story-line span{
+  display:block;
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,#2563EB,#FFB020);
+  transform-origin:left center;
+  animation:iwStoryLine 8s ease-in-out infinite;
+}
+.iw-story-step{
+  position:relative;
+  display:grid;
+  min-height:158px;
+  align-content:start;
+  gap:8px;
+  padding:18px 14px 14px;
+  border:1px solid #E6EBF1;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(13,27,51,.05);
+  opacity:.48;
+  transform:translateY(10px);
+  animation:iwStoryStep 8s ease-in-out infinite;
+}
+.iw-story-step.s2{animation-delay:.7s}
+.iw-story-step.s3{animation-delay:1.4s}
+.iw-story-step.s4{animation-delay:2.1s}
+.iw-story-step span{
+  display:grid;
+  width:30px;
+  height:30px;
+  place-items:center;
+  border-radius:50%;
+  background:#0D1B33;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+}
+.iw-story-step strong{
+  color:#0D1B33;
+  font-size:15px;
+  line-height:1.25;
+}
+.iw-story-step b{
+  display:inline-flex;
+  width:max-content;
+  max-width:100%;
+  min-height:24px;
+  align-items:center;
+  padding:0 9px;
+  border-radius:999px;
+  background:#FFF2D8;
+  color:#8B5A00;
+  font-size:11px;
+  line-height:1;
+}
+.iw-story-step p{
+  margin:0;
+  color:#5B687F;
+  font-size:12px;
+  line-height:1.55;
+}
+.iw-story-output{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-top:2px;
+  padding:14px 16px;
+  border-radius:8px;
+  background:#0D1B33;
+  color:#fff;
+  animation:iwStoryOutput 8s ease-in-out infinite;
+}
+.iw-story-output strong{
+  font-size:14px;
+}
+.iw-story-output span{
+  color:#D8E0EA;
+  font-size:12px;
+  line-height:1.55;
+  text-align:right;
 }
 .iw-public-brand figcaption{
   margin-top:26px;
@@ -444,6 +647,24 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   font-weight:800;
   letter-spacing:.18em;
   text-align:center;
+}
+@keyframes iwStoryLine{
+  0%,12%{transform:scaleX(.06)}
+  28%{transform:scaleX(.34)}
+  44%{transform:scaleX(.58)}
+  60%{transform:scaleX(.82)}
+  76%,100%{transform:scaleX(1)}
+}
+@keyframes iwStoryStep{
+  0%,100%{opacity:.48;transform:translateY(10px)}
+  16%,72%{opacity:1;transform:translateY(0)}
+}
+@keyframes iwStoryOutput{
+  0%,54%{opacity:.72;transform:translateY(8px)}
+  68%,100%{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .iw-story-line span,.iw-story-step,.iw-story-output{animation:none;opacity:1;transform:none}
 }
 .iw-public-concepts{
   display:grid;
@@ -480,9 +701,13 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   .iw-public-hero{grid-template-columns:1fr;min-height:auto}
   .iw-public-brand{justify-items:start}
   .iw-public-brand figcaption{text-align:left}
+  .iw-story-board{width:100%}
   .iw-public-concepts{grid-template-columns:1fr}
   .iw-public-concepts article{min-height:0;border-right:0;border-bottom:1px solid var(--bd)}
   .iw-public-concepts article:last-child{border-bottom:0}
+}
+@media(max-width:860px){
+  #v-insuwork .iw-nav-guide{display:none}
 }
 @media(max-width:680px){
   body.iw-page.is-insuwork-public{grid-template-rows:64px minmax(0,1fr)}
@@ -496,5 +721,30 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   .iw-public-copy h1{font-size:34px}
   .iw-public-copy>p{font-size:15px}
   .iw-public-brand img{width:min(100%,520px)}
+  .iw-story-logo{min-height:74px}
+  .iw-story-board{
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:20px;
+    padding:12px;
+  }
+  .iw-story-line{display:none}
+  .iw-story-step{
+    min-height:0;
+    grid-template-columns:30px minmax(0,1fr) auto;
+    gap:4px 9px;
+    padding:12px;
+    opacity:1;
+    transform:none;
+  }
+  .iw-story-step strong{align-self:center}
+  .iw-story-step b{align-self:center}
+  .iw-story-step p{grid-column:2/-1}
+  .iw-story-output{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:4px;
+  }
+  .iw-story-output span{text-align:left}
   .iw-public-brand figcaption{font-size:10px;line-height:1.7}
 }

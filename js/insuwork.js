@@ -462,6 +462,18 @@
   function navPlannedGroupHtml(label, entries, tone) {
     return '<details class="iw-nav-group iw-nav-group-' + tone + '"><summary>' + label + '</summary>' + entries.map(navPlannedEntryHtml).join('') + '</details>';
   }
+  function userGuideNavHtml() {
+    var steps = [
+      ['01', '홈', '오늘 일정과 최근 자료를 먼저 확인'],
+      ['02', '상담관리', '예약부터 청약완료까지 단계 관리'],
+      ['03', '고객관리', '계약일과 보험나이로 케어 기준 생성'],
+      ['04', '자료', '업무노트와 파일을 상담 옆에 고정'],
+      ['05', '도구', '소식지·스크립트·원전산을 현장에서 사용']
+    ];
+    return '<details class="iw-nav-guide"><summary>사용자 가이드</summary><div class="iw-nav-guide-body"><p>보험워크는 상담, 고객, 일정, 자료를 한 흐름으로 연결합니다.</p><ol>'
+      + steps.map(function (step) { return '<li><span>' + step[0] + '</span><b>' + step[1] + '</b><em>' + step[2] + '</em></li>'; }).join('')
+      + '</ol></div></details>';
+  }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
     var briefingGroup = [['◫', '보험이슈', 'section:briefing']];
@@ -470,7 +482,7 @@
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       var locked = PROTECTED_SECTIONS.indexOf(item[0]) >= 0 && !allowed();
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + (locked ? ' iw-nav-locked' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"' + (locked ? ' aria-label="' + esc(item[2]) + ' (로그인 필요)"' : '') + '><span>' + item[1] + '</span>' + item[2] + (locked ? '<span class="iw-nav-lock" aria-hidden="true">🔒</span>' : '') + '</button>';
-    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div><div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
+    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div>' + userGuideNavHtml() + '<div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="iw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
@@ -869,21 +881,32 @@
 
   function publicLandingHtml() {
     var concepts = [
-      ['모듈 / 카드', '업무를 구성하는 기본 단위'],
-      ['연결 / 워크플로우', '업무 흐름과 단계의 유기적 연결'],
-      ['정리 / 시스템', '체계적인 데이터 관리와 업무 정리']
+      ['상담관리', '예약에서 청약완료까지 흐름을 놓치지 않습니다.'],
+      ['고객관리', '계약일과 보험나이 기준으로 다음 케어가 이어집니다.'],
+      ['자료·도구', '소식지, 스크립트, 결제정보를 상담 중 바로 꺼냅니다.']
     ];
-    var keywords = ['정리된 구조', '연결성', '업무 도구', '효율성', '신뢰감'];
+    var keywords = ['상담 흐름', '고객 케어', '자료 재사용', '일정 연결', '현장 도구'];
+    var flow = [
+      ['01', '상담 등록', '예약', '상담 전 고객 정보를 정리합니다.'],
+      ['02', '진행 단계', '클로징', '제안서와 후속 연락을 놓치지 않습니다.'],
+      ['03', '고객 전환', '청약완료', '계약 후 관리 대상으로 이어집니다.'],
+      ['04', '케어 일정', '31·91·181·365', '사후관리와 상령일이 캘린더에 남습니다.']
+    ];
     return '<section class="iw-public-landing" aria-labelledby="iw-public-title">'
       + '<div class="iw-public-hero">'
       + '<div class="iw-public-copy">'
       + '<p class="iw-public-kicker">WORKFLOW / SYSTEM IDENTITY</p>'
       + '<h1 id="iw-public-title">체계적인 워크플로우로<br>보험 업무를 연결하다</h1>'
-      + '<p>업무 도구와 모듈이 유기적으로 연결되어 효율적인 보험 업무 프로세스를 완성하는 스마트 플랫폼입니다.</p>'
+      + '<p>보험워크는 흩어진 상담, 고객, 일정, 자료를 하나의 업무 흐름으로 묶어 오늘 해야 할 일과 다음 케어를 놓치지 않게 하는 스마트 보험 업무 플랫폼입니다.</p>'
       + '<ul class="iw-public-keywords" aria-label="보험워크 핵심 키워드">' + keywords.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>'
       + '<div class="iw-public-actions"><button class="iw-public-primary" type="button" data-ib-login>로그인</button><button class="iw-public-secondary" type="button" data-ib-signup>회원가입</button></div>'
       + '</div>'
-      + '<figure class="iw-public-brand"><img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크 Insurance Work 로고"><figcaption>SMART WORKFLOW. ORGANIZED PROCESS. TRUSTED PARTNER.</figcaption></figure>'
+      + '<figure class="iw-public-brand iw-public-story" aria-label="보험워크 업무 흐름 미리보기">'
+      + '<div class="iw-story-logo"><img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크 Insurance Work 로고"></div>'
+      + '<div class="iw-story-board" aria-hidden="true"><div class="iw-story-line"><span></span></div>'
+      + flow.map(function (item, index) { return '<article class="iw-story-step s' + (index + 1) + '"><span>' + item[0] + '</span><strong>' + item[1] + '</strong><b>' + item[2] + '</b><p>' + item[3] + '</p></article>'; }).join('')
+      + '<div class="iw-story-output"><strong>오늘의 업무판</strong><span>일정 · 고객 · 자료 · 도구가 한 화면으로 연결됩니다.</span></div></div>'
+      + '<figcaption>보험 업무를 기억이 아니라 워크플로우로.</figcaption></figure>'
       + '</div>'
       + '<div class="iw-public-concepts" aria-label="보험워크 구성 개념">' + concepts.map(function (item, index) { return '<article><span>' + String(index + 1).padStart(2, '0') + '</span><strong>' + item[0] + '</strong><p>' + item[1] + '</p></article>'; }).join('') + '</div>'
       + '</section>';
