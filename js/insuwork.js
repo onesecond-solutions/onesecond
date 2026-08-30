@@ -1078,7 +1078,7 @@
       + contractDatesField('iwd-customer', contractDatesOf(item), 'customerDetail')
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="iwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-customer-birth" type="date" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'customerDetail\')"><span id="iwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age">' + dateMaskInputHtml('iwd-customer-birth', profile.birth_date || '', 'customerDetail') + '<span id="iwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -1124,10 +1124,10 @@
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectConsultation()">‹ 목록</button>'
       + '<div class="iw-inline-form-block">'
-      + '<div class="iw-inline-form-row">' + inlineField('등록일자', '<input id="iwd-consult-date" type="date" value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')">') + '</div>'
+      + '<div class="iw-inline-form-row">' + inlineField('등록일자', dateMaskInputHtml('iwd-consult-date', date, 'detail')) + '</div>'
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<input id="iwd-consult-name" value="' + esc(customer.name || '') + '" aria-label="이름">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'detail\')"><span id="iwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age">' + dateMaskInputHtml('iwd-consult-birth', profile.birth_date || '', 'detail') + '<span id="iwd-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwd-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwd-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -2461,9 +2461,12 @@
   function formField(label, input) { return '<label class="iw-field"><span>' + label + '</span>' + input + '</label>'; }
   /* 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()는 다른 화면(자료실 등)에서도 쓰여서 그대로 두고, 여기서만 별도 헬퍼로 분리 */
   function inlineField(label, input) { return '<label class="iw-inline-field"><span>' + label + '</span>' + input + '</label>'; }
+  function dateMaskInputHtml(id, value, context, extraAttrs) {
+    return '<input' + (id ? ' id="' + id + '"' : '') + ' type="text" inputmode="numeric" maxlength="10" pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="YYYY-MM-DD" autocomplete="off" value="' + esc(value || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + esc(context || '') + '\')"' + (extraAttrs ? ' ' + extraAttrs : '') + '>';
+  }
   /* 청약일자 다중 입력행(고객관리 전용, 2026-08-20) — DOM에서 직접 값을 수집/추가/삭제(별도 JS 배열 보관 없음). 좁은 폭(fit-content)으로 렌더되도록 CSS(.iw-contract-dates-*)가 잡아준다. */
   function contractDateRowHtml(date, ageContext) {
-    return '<div class="iw-contract-date-row"><input type="date" class="iw-contract-date-input" value="' + esc(date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + (ageContext || '') + '\')"><button type="button" class="iw-contract-date-del" aria-label="청약일자 삭제" onclick="OSInsuwork.removeContractDateRow(this)">×</button></div>';
+    return '<div class="iw-contract-date-row">' + dateMaskInputHtml('', date, ageContext, 'class="iw-contract-date-input" aria-label="청약일자"') + '<button type="button" class="iw-contract-date-del" aria-label="청약일자 삭제" onclick="OSInsuwork.removeContractDateRow(this)">×</button></div>';
   }
   function contractDatesField(prefix, dates, ageContext) {
     var list = dates && dates.length ? dates : [ymd(new Date())];
@@ -2791,7 +2794,7 @@
       + contractDatesField('iwf-customer', [ymd(new Date())], 'customer')
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', '<input id="iwf-customer-name" required autocomplete="name">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-customer-birth" type="date" oninput="OSInsuwork.formatBirthInput(this,\'customer\')"><span id="iwf-customer-insurance-age">보험나이 -</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age">' + dateMaskInputHtml('iwf-customer-birth', '', 'customer') + '<span id="iwf-customer-insurance-age">보험나이 -</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwf-customer-gender" value="남">남</label><label><input type="radio" name="iwf-customer-gender" value="여">여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -2868,10 +2871,10 @@
     item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<div class="iw-consult-registration"><div class="iw-inline-form-block">'
-      + '<div class="iw-inline-form-row">' + inlineField('등록일자', '<input id="iwf-consult-date" type="date" required value="' + esc(date) + '" oninput="OSInsuwork.formatBirthInput(this)">') + '</div>'
+      + '<div class="iw-inline-form-row">' + inlineField('등록일자', dateMaskInputHtml('iwf-consult-date', date, '', 'required')) + '</div>'
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', '<input id="iwf-consult-name" required autocomplete="name" value="' + esc(customer.name || '') + '">')
-      + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-consult-birth" type="date" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'form\')"><span id="iwf-insurance-age">보험나이 -</span></div>')
+      + inlineField('생년월일', '<div class="iw-birth-age">' + dateMaskInputHtml('iwf-consult-birth', profile.birth_date || '', 'form') + '<span id="iwf-insurance-age">보험나이 -</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwf-consult-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwf-consult-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
@@ -2927,7 +2930,24 @@
     if (old) { old.addEventListener('load', showPostcode, { once: true }); return; }
     var script = document.createElement('script'); script.id = 'daum-postcode-sdk'; script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'; script.onload = showPostcode; script.onerror = function () { if (typeof window.toast === 'function') window.toast('주소검색을 불러오지 못했습니다.'); }; document.head.appendChild(script);
   }
-  function formatBirthInput(input, context) { if (!input) return; var raw = String(input.value || '').replace(/\D/g, '').slice(0, 8), formatted = raw; if (raw.length > 4) formatted = raw.slice(0, 4) + '-' + raw.slice(4); if (raw.length > 6) formatted = raw.slice(0, 4) + '-' + raw.slice(4, 6) + '-' + raw.slice(6); input.value = formatted; if (context === 'detail') refreshDetailInsuranceAge(); else if (context === 'customerDetail') refreshCustomerDetailInsuranceAge(); else if (context === 'customer') refreshCustomerInsuranceAge(); else if (context === 'tool') calcToolInsuranceAge(); else refreshInsuranceAge(); }
+  function formatBirthInput(input, context) {
+    if (!input) return;
+    var before = String(input.value || ''), cursor = typeof input.selectionStart === 'number' ? input.selectionStart : before.length;
+    var digitsBeforeCursor = before.slice(0, cursor).replace(/\D/g, '').length;
+    var raw = before.replace(/\D/g, '').slice(0, 8), formatted = raw;
+    if (raw.length > 4) formatted = raw.slice(0, 4) + '-' + raw.slice(4);
+    if (raw.length > 6) formatted = raw.slice(0, 4) + '-' + raw.slice(4, 6) + '-' + raw.slice(6);
+    input.value = formatted;
+    if (document.activeElement === input && typeof input.setSelectionRange === 'function') {
+      var nextCursor = 0, seen = 0;
+      while (nextCursor < formatted.length && seen < digitsBeforeCursor) {
+        if (/\d/.test(formatted.charAt(nextCursor))) seen++;
+        nextCursor++;
+      }
+      try { input.setSelectionRange(nextCursor, nextCursor); } catch (_) {}
+    }
+    if (context === 'detail') refreshDetailInsuranceAge(); else if (context === 'customerDetail') refreshCustomerDetailInsuranceAge(); else if (context === 'customer') refreshCustomerInsuranceAge(); else if (context === 'tool') calcToolInsuranceAge(); else refreshInsuranceAge();
+  }
   function formatConsultPhone(input) { if (input) input.value = phoneText(input.value); }
   function timeOptionsHtml(selected) {
     var out = ['<option value="">시간 선택</option>'];
