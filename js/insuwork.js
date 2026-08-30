@@ -32,7 +32,7 @@
     try { var p = new URLSearchParams(location.search); return p.has('view') || p.has('section'); }
     catch (_) { return !!location.search; }
   })();
-  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'public-library', 'admin-users'];
+  var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users'];
   /* 2026-08-30 대표 확정 — 보험워크는 원세컨드와 별도 사이트다. 비로그인 첫 진입은 내부 업무 셸
      일부를 잠가 보여주는 방식이 아니라 보험워크 CI 기반 공개 랜딩만 렌더링한다. 로그인 후에는 기존
      업무 홈과 메뉴를 그대로 유지한다. */
@@ -474,6 +474,16 @@
       + steps.map(function (step) { return '<li><span>' + step[0] + '</span><b>' + step[1] + '</b><em>' + step[2] + '</em></li>'; }).join('')
       + '</ol></div></details>';
   }
+  function supportGroupHtml() {
+    var entries = [
+      ['notice-updates', '!', '공지·업데이트'],
+      ['user-guide', '?', '사용자 가이드'],
+      ['feedback', '✎', '의견 보내기']
+    ];
+    return '<details class="iw-nav-group iw-nav-group-support" open><summary>지원</summary>' + entries.map(function (entry) {
+      return '<button type="button" class="iw-nav-link' + (state.section === entry[0] ? ' on' : '') + '" onclick="OSInsuwork.go(\'' + entry[0] + '\')"><span>' + entry[1] + '</span>' + entry[2] + '</button>';
+    }).join('') + '</details>';
+  }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
     var briefingGroup = [['◫', '보험이슈', 'section:briefing']];
@@ -482,7 +492,7 @@
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       var locked = PROTECTED_SECTIONS.indexOf(item[0]) >= 0 && !allowed();
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + (locked ? ' iw-nav-locked' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"' + (locked ? ' aria-label="' + esc(item[2]) + ' (로그인 필요)"' : '') + '><span>' + item[1] + '</span>' + item[2] + (locked ? '<span class="iw-nav-lock" aria-hidden="true">🔒</span>' : '') + '</button>';
-    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + '</div>' + userGuideNavHtml() + '<div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
+    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + supportGroupHtml() + '</div>' + '<div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="iw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
@@ -1783,6 +1793,9 @@
     if (state.section === 'trash') return trashHtml();
     if (state.section === 'archive') return archiveHtml();
     if (state.section === 'public-library') return publicLibraryHtml();
+    if (state.section === 'notice-updates') return noticeUpdatesHtml();
+    if (state.section === 'user-guide') return userGuidePageHtml();
+    if (state.section === 'feedback') return feedbackHtml();
     if (state.section === 'briefing') return briefingHtml();
     if (state.section === 'admin-users') return adminUsersHtml();
     return homeHtml();
@@ -1842,6 +1855,69 @@
     input.addEventListener('compositionend', function () { state.adminUserComposing = false; scheduleAdminUserSearch(input.value); });
     input.addEventListener('input', function () { if (!state.adminUserComposing) scheduleAdminUserSearch(input.value); });
     input.addEventListener('search', function () { if (!state.adminUserComposing) scheduleAdminUserSearch(input.value); });
+  }
+  function supportHeroHtml(title, copy) {
+    return '<div class="iw-support-page"><div class="iw-support-head"><p>SUPPORT</p><h2>' + esc(title) + '</h2><span>' + esc(copy) + '</span></div>';
+  }
+  function noticeUpdatesHtml() {
+    var updates = [
+      ['2026. 8. 30.', '모바일 고객·상담 리스트 PC 기준 통일', '고객관리와 상담관리의 포함 기준, 정렬 기준, 캐시 버전을 PC 화면과 맞췄습니다.'],
+      ['2026. 8. 30.', '모바일 상단 헤더 정리', '보험워크 CI, 검색창, 햄버거 메뉴가 한 줄에 들어오도록 모바일 헤더 높이를 줄였습니다.'],
+      ['2026. 8. 30.', '보험워크 CI 적용', '비로그인 랜딩, 로그인 팝업, 다크모드 화면에 보험워크 CI를 반영했습니다.']
+    ];
+    return supportHeroHtml('공지·업데이트', '보험워크의 주요 변경사항과 운영 안내를 확인합니다.')
+      + '<div class="iw-support-list">' + updates.map(function (item) {
+        return '<article class="iw-support-card"><time>' + esc(item[0]) + '</time><h3>' + esc(item[1]) + '</h3><p>' + esc(item[2]) + '</p></article>';
+      }).join('') + '</div></div>';
+  }
+  function userGuidePageHtml() {
+    var guides = [
+      ['홈', '오늘 일정, 즐겨찾기, 최근 자료, 최근 고객을 먼저 확인합니다. 하루 업무를 시작하는 첫 화면입니다.'],
+      ['상담관리', '예약, 진행중, 제안서발송, 클로징, 청약완료까지 상담 흐름을 단계별로 관리합니다.'],
+      ['고객관리', '청약이 완료된 고객을 계약일과 보험나이 기준으로 관리하고 다음 케어 일정을 이어갑니다.'],
+      ['캘린더', '상담 일정, 고객 케어, 보험상령일을 한 화면에서 확인합니다.'],
+      ['자료', '업무노트, 자료실, 메모를 상담 중 바로 꺼내 쓸 수 있게 정리합니다.'],
+      ['보험브리핑·참고자료·영업도구', '보험 이슈, 소식지, 영업방향, 스크립트, 원전산 바로가기를 업무 흐름 안에서 사용합니다.']
+    ];
+    return supportHeroHtml('사용자 가이드', '보험워크를 업무 흐름대로 사용하는 방법입니다.')
+      + '<div class="iw-guide-grid">' + guides.map(function (item, index) {
+        return '<article class="iw-support-card"><span class="iw-guide-step">' + String(index + 1).padStart(2, '0') + '</span><h3>' + esc(item[0]) + '</h3><p>' + esc(item[1]) + '</p></article>';
+      }).join('') + '</div></div>';
+  }
+  function feedbackHtml() {
+    if (!allowed()) return statusHtml();
+    var types = ['불편사항', '기능건의', '오류제보', '자료요청', '기타'];
+    return supportHeroHtml('의견 보내기', '사용 중 불편한 점이나 필요한 기능을 비공개로 전달합니다.')
+      + '<form class="iw-support-form" onsubmit="event.preventDefault();OSInsuwork.saveFeedback()">'
+      + formField('유형', '<select id="iwf-feedback-type">' + types.map(function (type) { return '<option value="' + esc(type) + '">' + esc(type) + '</option>'; }).join('') + '</select>')
+      + formField('제목', '<input id="iwf-feedback-title" required autocomplete="off" placeholder="예: 모바일 고객 검색 개선 요청">')
+      + formField('내용', '<textarea id="iwf-feedback-body" rows="8" required placeholder="어떤 화면에서 어떤 불편이 있었는지 적어주세요."></textarea>')
+      + formField('연락 필요 여부', '<select id="iwf-feedback-contact"><option value="no">답변 없이 참고해 주세요</option><option value="yes">확인이 필요하면 연락 주세요</option></select>')
+      + '<p class="iw-support-note">현재 화면 주소와 로그인 계정 기준으로 비공개 저장됩니다.</p>'
+      + '<div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.go(\'home\')">취소</button><button type="submit" class="iw-btn primary">의견 보내기</button></div>'
+      + '</form></div>';
+  }
+  function saveFeedback() {
+    if (!allowed()) { promptLoginRequired(); return; }
+    var type = value('iwf-feedback-type') || '기타', title = value('iwf-feedback-title'), body = value('iwf-feedback-body'), contact = value('iwf-feedback-contact') || 'no';
+    if (!title || !body) { briefingAlert('제목과 내용을 입력해 주세요.', '의견 보내기'); return; }
+    var html = '<p><strong>유형:</strong> ' + esc(type) + '</p><p><strong>연락 필요:</strong> ' + (contact === 'yes' ? '예' : '아니오') + '</p><p><strong>화면:</strong> ' + esc(location.href) + '</p><hr><p>' + esc(body).replace(/\n/g, '<br>') + '</p>';
+    writeOne('insuwork_items', {
+      owner_id: currentUserId(),
+      parent_id: null,
+      item_type: 'memo',
+      title: '[의견] ' + type + ' · ' + title,
+      body: sanitizeRich(html),
+      visibility: 'private',
+      legacy_payload: { workspace_category: 'feedback', feedback_type: type, contact_requested: contact === 'yes', page_url: location.href },
+      created_at: new Date().toISOString()
+    }).then(function (saved) {
+      upsertWorkspaceItem(saved);
+      state.section = 'notice-updates';
+      setUrl(true);
+      renderShell();
+      if (typeof window.toast === 'function') window.toast('의견을 저장했습니다.');
+    }).catch(saveError);
   }
   /* 2026-08-25 — 소식지·캘린더(보험브리핑) 섹션. insuwork/insubriefing/leaflets.js의 리플렛
      캘린더 엔진을 그대로 이식해 사이드바를 유지한 채 #iw-main 안에서 렌더한다(작업지시서
@@ -3888,7 +3964,7 @@
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
-    closeDialog: closeDialog, openHelp: openHelp, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
+    closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,

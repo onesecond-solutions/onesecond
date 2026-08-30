@@ -308,6 +308,8 @@ body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide summary,
 body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide b{color:var(--tp)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide p,
 body.iw-page.iw-bg-dark #v-insuwork .iw-nav-guide em{color:var(--ts)}
+body.iw-page.iw-bg-dark #v-insuwork .iw-support-card,
+body.iw-page.iw-bg-dark #v-insuwork .iw-support-form{background:var(--s1);border-color:var(--bd)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search{background:var(--s2)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search:focus-within{background:var(--s1)}
 body.iw-page.iw-bg-dark #v-insuwork .iw-consult-name-search span{color:var(--ts)}
@@ -516,6 +518,21 @@ body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-more{color:var(--ts)}
 .iw-mobile-banner a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);color:var(--ac);text-decoration:none;font-weight:var(--fw-medium);white-space:nowrap}
 .iw-mobile-banner button{width:32px;height:32px;flex-shrink:0;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:var(--fs-body);cursor:pointer}
 @media(max-width:680px){.iw-brand-logo{height:38px;max-width:240px}}
+
+.iw-support-page{display:grid;gap:18px;max-width:980px;margin:0 auto;padding:6px 0 48px}
+.iw-support-head{padding:26px 0 12px;border-bottom:1px solid var(--bd)}
+.iw-support-head p{margin:0 0 8px;color:var(--ac);font-size:12px;font-weight:800;letter-spacing:.08em}
+.iw-support-head h2{margin:0;color:var(--tp);font-size:28px;line-height:1.25}
+.iw-support-head span{display:block;max-width:640px;margin-top:10px;color:var(--ts);font-size:14px;line-height:1.7}
+.iw-support-list,.iw-guide-grid{display:grid;gap:10px}
+.iw-guide-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.iw-support-card{display:grid;gap:7px;padding:18px 20px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 10px 24px color-mix(in srgb,var(--tp) 6%,transparent)}
+.iw-support-card time,.iw-guide-step{color:var(--ac);font-size:12px;font-weight:800}
+.iw-support-card h3{margin:0;color:var(--tp);font-size:17px;line-height:1.4}
+.iw-support-card p{margin:0;color:var(--ts);font-size:14px;line-height:1.7}
+.iw-support-form{display:grid;gap:14px;max-width:680px;padding:22px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 10px 24px color-mix(in srgb,var(--tp) 6%,transparent)}
+.iw-support-form textarea{resize:vertical}
+.iw-support-note{margin:0;color:var(--ts);font-size:12px;line-height:1.6}
 
 /* 2026-08-30 — 보험워크 CI 기반 비로그인 랜딩. 로그인 업무 홈은 기존 셸을 유지하고,
    비로그인 첫 진입에서만 내부 메뉴/업무 패널 대신 독립 브랜드 설명 화면을 보여준다. */
