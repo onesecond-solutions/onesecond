@@ -215,11 +215,6 @@
     return consultText || stripHtml(profile.note || '');
   }
   function customerConsultationStatus(customer) { return consultationStatus(latestConsultationForCustomer(customer && customer.id), customer); }
-  function customerStateLabel(customer, consultStatus) {
-    if (!imTaesungPilot()) return customerDisplayStatus(customer);
-    if (isRealCustomerStage(customer && customer.status)) return customer.status;
-    return (consultStatus || customerConsultationStatus(customer)) === '청약완료' ? '청약완료' : '관리중';
-  }
   function isRealCustomerStage(status) { return CUSTOMER_STAGES.some(function (stage) { return stage.key === status; }); }
   function isManagedCustomer(customer) { var profile = customerProfile(customer); return !!customer && (profile.customer_managed === true || isRealCustomerStage(customer.status) || customer.legacy_source === 'sales_customers'); }
   function customerNeedsStatusReview(customer) { return !!customer && !isRealCustomerStage(customer.status); }
@@ -286,7 +281,6 @@
   }
   function upsertConsultation(consultation) {
     if (!consultation || !consultation.id) return;
-    consultation = Object.assign({}, consultation, { memo: consultation.memo || consultation.content || '' });
     state.data.consultations = [consultation].concat(state.data.consultations.filter(function (entry) { return String(entry.id) !== String(consultation.id); }));
   }
   function upsertTask(task) {
@@ -1095,26 +1089,26 @@
     if (selected && rows.indexOf(selected) >= state.customersRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.customersRenderLimit - 1));
     else rows = rows.slice(0, state.customersRenderLimit);
     var header = '<div class="iw-consult-columns' + (pilot ? ' iw-customer-consult-pilot-columns' : '') + '" style="' + gridStyle + '">' + columns.map(function (column) { return '<span>' + column.label + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
-    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', latestConsult = latestConsultationForCustomer(item.id), consultStatus = customerConsultationStatus(item), status = pilot ? customerStateLabel(item, consultStatus) : customerDisplayStatus(item), consultText = consultationTextForCustomer(item, latestConsult); var values = { date: date, consultDate: latestConsult ? String(latestConsult.consulted_at || latestConsult.created_at || '').slice(0, 10) : '', name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), consultSummary: consultText, status: status }; var hoverText = pilot ? (consultText || '상담내용이 없습니다.') : stripHtml(note || '상담내용이 없습니다.'); return '<button type="button" role="listitem" class="iw-consult-row iw-customer-row' + (pilot ? ' iw-customer-consult-pilot' : '') + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(hoverText) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
+    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item), latestConsult = latestConsultationForCustomer(item.id), consultText = consultationTextForCustomer(item, latestConsult); var values = { date: date, consultDate: latestConsult ? String(latestConsult.consulted_at || latestConsult.created_at || '').slice(0, 10) : '', name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), consultSummary: consultText, status: status }; var hoverText = pilot ? (consultText || '상담내용이 없습니다.') : stripHtml(note || '상담내용이 없습니다.'); return '<button type="button" role="listitem" class="iw-consult-row iw-customer-row' + (pilot ? ' iw-customer-consult-pilot' : '') + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(hoverText) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span></strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
-    var stats = statFilterBarHtml({ kind: 'customer', stages: pilot ? CONSULT_STAGES : CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: activeFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: pilot ? 'OSInsuwork.filterCustomerConsultStatus' : 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ ' + (pilot ? '신규 상담' : '고객 등록') + '</button>' });
+    var stats = statFilterBarHtml({ kind: 'customer', stages: pilot ? CONSULT_STAGES : CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: activeFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: pilot ? 'OSInsuwork.filterCustomerConsultStatus' : 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
     return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>고객관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function customerDetailHtml(item) {
-    var pilot = imTaesungPilot(), profile = customerProfile(item), latestConsult = latestConsultationForCustomer(item.id), consultDate = latestConsult ? String(latestConsult.consulted_at || latestConsult.created_at || '').slice(0, 10) : ymd(new Date()), consultStatus = customerConsultationStatus(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), needsReview = customerNeedsStatusReview(item), status = needsReview ? '' : item.status;
+    var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), needsReview = customerNeedsStatusReview(item), status = needsReview ? '' : item.status;
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectCustomerDetail()">‹ 목록</button>'
       + '<div class="iw-inline-form-block">'
-      + (pilot ? '<div class="iw-inline-form-row">' + inlineField('상담일자', '<input id="iwd-customer-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(consultDate) + '" oninput="OSInsuwork.formatBirthInput(this,\'customerDetail\')">') + inlineField('상담상태', '<select id="iwd-customer-consult-status">' + CONSULT_STAGES.map(function (stage) { return '<option value="' + stage.key + '"' + (stage.key === consultStatus ? ' selected' : '') + '>' + stage.key + '</option>'; }).join('') + '</select>') + '</div>' + optionalContractDatesField('iwd-customer', contractDatesOf(item), 'customerDetail') : contractDatesField('iwd-customer', contractDatesOf(item), 'customerDetail'))
+      + contractDatesField('iwd-customer', contractDatesOf(item), 'customerDetail')
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', favoriteButton('customer', item.id, item.name || '고객', status + ' · ' + date) + '<input id="iwd-customer-name" value="' + esc(item.name || '') + '" aria-label="이름">')
       + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwd-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" value="' + esc(profile.birth_date || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'customerDetail\')"><span id="iwd-customer-insurance-age">' + (age === '' ? '-' : age + '세') + '</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwd-customer-gender" value="남"' + (profile.gender === '남' ? ' checked' : '') + '>남</label><label><input type="radio" name="iwd-customer-gender" value="여"' + (profile.gender === '여' ? ' checked' : '') + '>여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
-      + (pilot ? '<input id="iwd-customer-status" type="hidden" value="' + esc(item.status || '') + '">' : inlineField('고객상태', '<select id="iwd-customer-status">' + (needsReview ? '<option value="" selected>상태를 선택하세요</option>' : '') + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>'))
+      + inlineField('고객상태', '<select id="iwd-customer-status">' + (needsReview ? '<option value="" selected>상태를 선택하세요</option>' : '') + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', pilot ? consultationTextForCustomer(item, latestConsult) : profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + (pilot ? (latestConsult ? consultationExistingAttachments(latestConsult.id) : '') : customerExistingAttachments(item.id)) + '</section><div class="iw-consult-save"><button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview && !pilot ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview && !pilot ? '고객상태 저장' : '저장') + '</button></div></article>';
+      + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="iw-consult-save"><button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -2500,11 +2494,6 @@
     var rows = list.map(function (date) { return contractDateRowHtml(date, ageContext); }).join('');
     return '<div class="iw-inline-row iw-contract-dates-field"><span class="iw-inline-row-label">청약일자</span><div class="iw-contract-dates-wrap"><div class="iw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="iw-link-btn iw-contract-date-add" onclick="OSInsuwork.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
   }
-  function optionalContractDatesField(prefix, dates, ageContext) {
-    var list = dates && dates.length ? dates : [''];
-    var rows = list.map(function (date) { return contractDateRowHtml(date, ageContext); }).join('');
-    return '<div class="iw-inline-row iw-contract-dates-field"><span class="iw-inline-row-label">청약일자</span><div class="iw-contract-dates-wrap"><div class="iw-contract-dates-list" id="' + prefix + '-appl-list" data-age-context="' + esc(ageContext || '') + '">' + rows + '</div><button type="button" class="iw-link-btn iw-contract-date-add" onclick="OSInsuwork.addContractDateRow(\'' + prefix + '\')">+ 청약추가</button></div></div>';
-  }
   function addContractDateRow(prefix) {
     var box = document.getElementById(prefix + '-appl-list'); if (!box) return;
     box.insertAdjacentHTML('beforeend', contractDateRowHtml(ymd(new Date()), box.getAttribute('data-age-context'))); scheduleWorkDraft(box.closest('[data-work-draft-key]'));
@@ -2819,22 +2808,22 @@
     })).then(function (rows) { rows.forEach(upsertWorkspaceItem); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + list.length + '개를 추가했습니다.'); }).catch(saveError);
   }
   function addCustomer() {
-    var pilot = imTaesungPilot(), statuses = (pilot ? CONSULT_STAGES : CUSTOMER_STAGES).map(function (stage) { return stage.key; });
+    var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
     var form = '<div class="iw-consult-registration iw-customer-registration">'
       + customerOcrHtml()
       + '<div class="iw-inline-form-block">'
-      + (pilot ? '<div class="iw-inline-form-row">' + inlineField('상담일자', '<input id="iwf-customer-consult-date" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" required value="' + esc(ymd(new Date())) + '" oninput="OSInsuwork.formatBirthInput(this,\'customer\')">') + inlineField('상담상태', '<select id="iwf-customer-status">' + statuses.map(function (entry) { return '<option value="' + entry + '">' + entry + '</option>'; }).join('') + '</select>') + '</div>' + optionalContractDatesField('iwf-customer', [], 'customer') : contractDatesField('iwf-customer', [ymd(new Date())], 'customer'))
+      + contractDatesField('iwf-customer', [ymd(new Date())], 'customer')
       + '<div class="iw-inline-form-row">'
       + inlineField('이름', '<input id="iwf-customer-name" required autocomplete="name">')
       + inlineField('생년월일', '<div class="iw-birth-age"><input id="iwf-customer-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY-MM-DD" oninput="OSInsuwork.formatBirthInput(this,\'customer\')"><span id="iwf-customer-insurance-age">보험나이 -</span></div>')
       + '<div class="iw-gender" role="radiogroup" aria-label="성별"><label><input type="radio" name="iwf-customer-gender" value="남">남</label><label><input type="radio" name="iwf-customer-gender" value="여">여</label></div>'
       + '</div><div class="iw-inline-form-row">'
       + inlineField('전화번호', '<input id="iwf-customer-phone" inputmode="numeric" autocomplete="tel" oninput="OSInsuwork.formatConsultPhone(this)">')
-      + (pilot ? '' : inlineField('고객상태', '<select id="iwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>'))
+      + inlineField('고객상태', '<select id="iwf-customer-status">' + statuses.map(function (entry) { return '<option>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
       + customerExtraFieldsHtml({}, 'iwf-customer')
       + '<div class="iw-consult-editor">' + formField('상담내용', richEditorField('iwf-customer-note', '')) + '</div></div>';
-    resetRichPending(); dialog(formShell(pilot ? '신규 상담 등록' : '고객 등록', form, 'OSInsuwork.saveCustomer()')); refreshCustomerInsuranceAge(); bindCustomerOcr(); bindWorkDraft(document.querySelector('#iw-dialog .iw-form'), workDraftKey(pilot ? 'customer-consultation' : 'customer', 'new')); refreshCustomerInsuranceAge();
+    resetRichPending(); dialog(formShell('고객 등록', form, 'OSInsuwork.saveCustomer()')); refreshCustomerInsuranceAge(); bindCustomerOcr(); bindWorkDraft(document.querySelector('#iw-dialog .iw-form'), workDraftKey('customer', 'new')); refreshCustomerInsuranceAge();
   }
   var customerOcrPending = { base64: '', mime: '' };
   function customerOcrHtml() {
@@ -2930,7 +2919,7 @@
   function addConsultation(customerId) { resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId || ''); }) || {}; dialog(formShell('상담 등록', consultationForm(null, customer), 'OSInsuwork.saveConsultation()')); refreshInsuranceAge(); bindWorkDraft(document.querySelector('#iw-dialog .iw-form'), workDraftKey('consultation', 'new-' + (customer.id || 'blank'))); refreshInsuranceAge(); }
   function editConsultation(id) { var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return; resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }) || {}; dialog(formShell('상담 수정', consultationForm(item, customer), 'OSInsuwork.saveConsultation()')); refreshInsuranceAge(); hydrateRichStorage(); bindWorkDraft(document.querySelector('#iw-dialog .iw-form'), workDraftKey('consultation', 'edit-' + id)); refreshInsuranceAge(); }
   function refreshInsuranceAge() { var target = document.getElementById('iwf-insurance-age'); if (!target) return; var age = insuranceAge(value('iwf-consult-birth'), value('iwf-consult-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
-  function refreshCustomerInsuranceAge() { var target = document.getElementById('iwf-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('iwf-customer-birth'), earliestContractDateValue('iwf-customer') || value('iwf-customer-consult-date') || ymd(new Date())); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
+  function refreshCustomerInsuranceAge() { var target = document.getElementById('iwf-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('iwf-customer-birth'), earliestContractDateValue('iwf-customer')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
   function closeCustomerAddress(idPrefix) {
     var wrap = document.getElementById((idPrefix || 'iwf-customer') + '-postcode-wrap');
     if (wrap) wrap.hidden = true;
@@ -3631,25 +3620,7 @@
       return write('insuwork_items', row).then(function () { return saveRichChildren(prepared.rows); }).then(function () { return row; });
     }).then(function (row) { state.assetFilter = category; state.assetFolder = parent; upsertWorkspaceItem(row); resetRichPending(); finishSave('자료를 저장했습니다.'); }).catch(saveError);
   }
-  function customerContractStatusFromConsult(status, contractDates) { return status === '청약완료' || (contractDates || []).length ? '청약완료' : '관리중'; }
-  function saveCustomerFromConsultationFlow() {
-    var name = value('iwf-customer-name'), consultDate = value('iwf-customer-consult-date'), phone = phoneText(value('iwf-customer-phone')), consultStatus = value('iwf-customer-status') || '예약', note = richValue('iwf-customer-note'), contractDates = gatherContractDates('iwf-customer'), birth = value('iwf-customer-birth');
-    var genderInput = document.querySelector('input[name="iwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : '';
-    if (!name || !consultDate) return;
-    if (consultStatus === '청약완료' && !contractDates.length) { briefingAlert('청약완료 상담은 청약일자를 입력해 주세요.', '청약일자 확인'); return; }
-    var customerStatus = customerContractStatusFromConsult(consultStatus, contractDates);
-    var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0] || null, birth_date: birth || null, gender: gender || null, zip: value('iwf-customer-zip') || null, address: value('iwf-customer-address') || null, address_detail: value('iwf-customer-address-detail') || null, job: value('iwf-customer-job') || null, driving_status: drivingStatusValues('iwf-customer'), medication: value('iwf-customer-medication') || null, medical_history: value('iwf-customer-history') || null, diagnosis_date: value('iwf-customer-diagnosis') || null, current_condition: value('iwf-customer-current-status') || null, note: sanitizeRich(note) };
-    writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: customerStatus, profile: profile }).then(function (customer) {
-      upsertCustomer(customer);
-      var content = richHasText(note) ? '<p><strong>[' + esc(writtenAt()) + ']</strong></p>' + note : '';
-      var consultationBody = { customer_id: customer.id, owner_id: currentUserId(), consulted_at: consultDate + 'T00:00:00+09:00', channel: consultStatus, content: content };
-      return writeOne('insuwork_consultations', consultationBody).then(function (consultation) { return saveConsultationRich(consultation, content).then(function (resolvedContent) { if (resolvedContent === consultation.content) return { customer: customer, consultation: consultation }; return updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(consultation.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: resolvedContent }).then(function (savedConsultation) { return { customer: customer, consultation: savedConsultation }; }); }); });
-    }).then(function (result) {
-      upsertConsultation(result.consultation); state.selectedCustomerDetail = result.customer.id; resetRichPending();
-      return isRealCustomerStage(result.customer.status) ? syncCareTasksForCustomer(result.customer) : Promise.resolve();
-    }).then(function () { finishSave('신규 상담을 등록했습니다.'); }).catch(saveError);
-  }
-  function saveCustomer() { if (imTaesungPilot()) { saveCustomerFromConsultationFlow(); return; } var name = value('iwf-customer-name'), phone = phoneText(value('iwf-customer-phone')), note = richValue('iwf-customer-note'), contractDates = gatherContractDates('iwf-customer'), birth = value('iwf-customer-birth'), genderInput = document.querySelector('input[name="iwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('iwf-customer-zip') || null, address: value('iwf-customer-address') || null, address_detail: value('iwf-customer-address-detail') || null, job: value('iwf-customer-job') || null, driving_status: drivingStatusValues('iwf-customer'), medication: value('iwf-customer-medication') || null, medical_history: value('iwf-customer-history') || null, diagnosis_date: value('iwf-customer-diagnosis') || null, current_condition: value('iwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('iwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
+  function saveCustomer() { var name = value('iwf-customer-name'), phone = phoneText(value('iwf-customer-phone')), note = richValue('iwf-customer-note'), contractDates = gatherContractDates('iwf-customer'), birth = value('iwf-customer-birth'), genderInput = document.querySelector('input[name="iwf-customer-gender"]:checked'), gender = genderInput ? genderInput.value : ''; if (!name || !contractDates.length) return; var profile = { customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0], birth_date: birth || null, gender: gender || null, zip: value('iwf-customer-zip') || null, address: value('iwf-customer-address') || null, address_detail: value('iwf-customer-address-detail') || null, job: value('iwf-customer-job') || null, driving_status: drivingStatusValues('iwf-customer'), medication: value('iwf-customer-medication') || null, medical_history: value('iwf-customer-history') || null, diagnosis_date: value('iwf-customer-diagnosis') || null, current_condition: value('iwf-customer-current-status') || null, note: sanitizeRich(note) }; writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: value('iwf-customer-status') || '청약완료', profile: profile }).then(function (customer) { return saveCustomerRich(customer, profile, note); }).then(function (customer) { upsertCustomer(customer); resetRichPending(); return syncCareTasksForCustomer(customer); }).then(function () { finishSave('고객을 등록했습니다.'); }).catch(saveError); }
   function saveCustomerRich(customer, profile, body) { var root = customerAttachmentRoot(customer.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(customer); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '고객 첨부 · ' + customer.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customer.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('insuwork_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'customer'); }).then(function (prepared) { return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { var updatedProfile = Object.assign({}, profile, { note: prepared.body }); return updateOne('insuwork_customers?id=eq.' + encodeURIComponent(customer.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { profile: updatedProfile }); }); }); }
   function saveConsultation() {
     var customerId = value('iwf-consult-customer-id'), consultationId = value('iwf-consult-id'), name = value('iwf-consult-name'), birth = value('iwf-consult-birth'), date = value('iwf-consult-date'), phone = phoneText(value('iwf-consult-phone')), status = value('iwf-consult-status'), memo = richValue('iwf-consult-memo');
@@ -3718,38 +3689,8 @@
     });
   }
   function refreshDetailInsuranceAge() { var target = document.getElementById('iwd-insurance-age'); if (!target) return; var age = insuranceAge(value('iwd-consult-birth'), value('iwd-consult-date')); target.textContent = age === '' ? '-' : age + '세'; }
-  function refreshCustomerDetailInsuranceAge() { var target = document.getElementById('iwd-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('iwd-customer-birth'), earliestContractDateValue('iwd-customer') || value('iwd-customer-consult-date') || ymd(new Date())); target.textContent = age === '' ? '-' : age + '세'; }
-  function saveCustomerDetailFromConsultationFlow(id) {
-    var item = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
-    var name = value('iwd-customer-name'), birth = value('iwd-customer-birth'), consultDate = value('iwd-customer-consult-date'), consultStatus = value('iwd-customer-consult-status') || '예약', contractDates = gatherContractDates('iwd-customer'), phone = phoneText(value('iwd-customer-phone')), note = sanitizeRich(richValue('iwd-customer-new'));
-    var genderInput = document.querySelector('input[name="iwd-customer-gender"]:checked'), gender = genderInput ? genderInput.value : '';
-    if (!name || !consultDate) return;
-    if (consultStatus === '청약완료' && !contractDates.length) { briefingAlert('청약완료 상담은 청약일자를 입력해 주세요.', '청약일자 확인'); return; }
-    var latestConsult = latestConsultationForCustomer(item.id), customerStatus = customerContractStatusFromConsult(consultStatus, contractDates), existingProfile = customerProfile(item);
-    var profile = Object.assign({}, existingProfile, {
-      customer_managed: true, contract_dates: contractDates, contract_date: contractDates[0] || null, birth_date: birth || null, gender: gender || null,
-      zip: value('iwd-customer-zip') || null, address: value('iwd-customer-address') || null, address_detail: value('iwd-customer-address-detail') || null,
-      job: value('iwd-customer-job') || null, driving_status: drivingStatusValues('iwd-customer'), medication: value('iwd-customer-medication') || null, medical_history: value('iwd-customer-history') || null,
-      diagnosis_date: value('iwd-customer-diagnosis') || null, current_condition: value('iwd-customer-current-status') || null, note: note
-    });
-    updateOne('insuwork_customers?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { name: name, phone: phone || null, status: customerStatus, profile: profile })
-      .then(function (savedCustomer) {
-        upsertCustomer(savedCustomer);
-        var body = { customer_id: savedCustomer.id, owner_id: currentUserId(), consulted_at: consultDate + 'T00:00:00+09:00', channel: consultStatus, content: note };
-        return latestConsult ? updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(latestConsult.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_consultations', body);
-      }).then(function (savedConsultation) {
-        return saveConsultationRich(savedConsultation, savedConsultation.content || note).then(function (resolvedContent) {
-          if (resolvedContent === savedConsultation.content) return savedConsultation;
-          return updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(savedConsultation.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: resolvedContent });
-        });
-      }).then(function (savedConsultation) {
-        upsertConsultation(savedConsultation); resetRichPending();
-        var savedCustomer = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }) || item;
-        return isRealCustomerStage(savedCustomer.status) ? syncCareTasksForCustomer(savedCustomer) : Promise.resolve();
-      }).then(function () { finishSave('고객과 상담을 저장했습니다.'); }).catch(saveError);
-  }
+  function refreshCustomerDetailInsuranceAge() { var target = document.getElementById('iwd-customer-insurance-age'); if (!target) return; var age = insuranceAge(value('iwd-customer-birth'), ymd(new Date())); target.textContent = age === '' ? '-' : age + '세'; }
   function saveCustomerDetail(id) {
-    if (imTaesungPilot()) { saveCustomerDetailFromConsultationFlow(id); return; }
     var item = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
     var name = value('iwd-customer-name'), birth = value('iwd-customer-birth'), contractDates = gatherContractDates('iwd-customer'), phone = phoneText(value('iwd-customer-phone')), status = value('iwd-customer-status'), note = sanitizeRich(richValue('iwd-customer-new'));
     var genderInput = document.querySelector('input[name="iwd-customer-gender"]:checked'), gender = genderInput ? genderInput.value : '';
