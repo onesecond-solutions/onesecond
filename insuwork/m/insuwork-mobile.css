@@ -1,10 +1,23 @@
 /* insuwork/m/insuwork-mobile.css
    보험워크 모바일 "오늘" 화면 전용 (Phase 1 MVP, 2026-08-22, feat/workstation-mobile-today).
-   톤(대표 확정) = 얇은 테두리 + 텍스트만. backdrop-filter/블러·무거운 box-shadow 금지.
-   색·크기는 css/tokens-v2.css·css/app-core.css의 커스텀 프로퍼티만 사용(하드코딩 금지). */
+   2026-08-30: 보험워크 CI 기준 네이비/블루/오렌지를 모바일 전용 토큰으로 재정의한다.
+   홈 화면은 중첩 스크롤 박스 느낌을 줄이고, 다른 모바일 화면은 기존 단순 구조를 유지한다. */
 
-html, body.iwm-page { background: var(--bg); }
-body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
+html, body.iwm-page { background: #F4F7FC; }
+body.iwm-page {
+  --bg:#F4F7FC;
+  --s1:#FFFFFF;
+  --s2:#EEF4FF;
+  --bd:#D1DCEB;
+  --tp:#0D1B33;
+  --ts:#52627A;
+  --tf:#7A879A;
+  --ac:#2563EB;
+  --ach:#FFB020;
+  min-height: 100vh;
+  overflow-y: auto;
+  color: var(--tp);
+}
 
 #iwm-root {
   max-width: 640px;
@@ -129,6 +142,22 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   gap: 22px;
 }
 
+.iwm-home-page .iwm-header {
+  background: linear-gradient(135deg,#0D1B33 0%,#173E78 62%,#2563EB 100%);
+  border-bottom-color: rgba(255,255,255,.16);
+  box-shadow: 0 10px 28px rgba(13,27,51,.18);
+}
+.iwm-home-page .iwm-header strong {
+  color: #fff;
+  font-weight: 800;
+}
+.iwm-home-page .iwm-main {
+  gap: 18px;
+  background:
+    radial-gradient(circle at 18% 0,rgba(255,176,32,.14),transparent 30%),
+    linear-gradient(180deg,#F8FAFF 0%,#FFFFFF 44%,#F7FAFF 100%);
+}
+
 /* feat/workstation-mobile-bottom-nav (2026-08-22) — 상단 텍스트 탭 링크(오늘/캘린더/고객/자료)를
    하단 고정 아이콘 탭바로 전환(대표 직접 요청). 톤은 기존과 동일 — 얇은 테두리 + 텍스트만, blur 금지.
    4개 화면(index/calendar/customers/library.html)이 insuwork-mobile-nav.js의 render()가 그려주는
@@ -142,8 +171,9 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   display: flex;
   max-width: 640px;
   margin: 0 auto;
-  background: var(--bg);
-  border-top: 1px solid var(--bd);
+  background: #0D1B33;
+  border-top: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 -12px 28px rgba(13,27,51,.22);
   /* 아이폰 하단 홈 인디케이터와 겹치지 않도록 safe-area만큼 아래 여백을 더한다.
      대표 지시(2026-08-22) — 노치 없는 기기/뷰포트에서는 env(safe-area-inset-bottom)이 0이라 여백이
      아예 없어 보일 수 있다. max()로 노치 유무와 무관하게 최소 8px는 항상 확보한다. */
@@ -159,13 +189,16 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   justify-content: center;
   gap: 2px;
   padding: 6px 4px;
-  color: var(--ts);
+  color: #D8E0EA;
   text-decoration: none;
 }
-.iwm-bottom-nav-item:active { color: var(--ac); }
-.iwm-bottom-nav-item.is-active { color: var(--ac); font-weight: 600; }
+.iwm-bottom-nav-item:active { color: #FFB020; }
+.iwm-bottom-nav-item.is-active {
+  color: #FFB020;
+  font-weight: 700;
+}
 
-.iwm-bottom-nav-item.is-home { color: var(--ac); }
+.iwm-bottom-nav-item.is-home { color: #FFB020; }
 .iwm-bottom-nav-item.is-home .iwm-bottom-nav-icon { width: 28px; height: 28px; }
 .iwm-bottom-nav-item.is-home .iwm-bottom-nav-label { font-weight: 700; }
 
@@ -192,9 +225,9 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
 
 .iwm-section-title {
   margin: 0 0 10px 2px;
-  font-size: var(--fs-meta, 13px);
-  font-weight: 600;
-  color: var(--ts);
+  font-size: var(--fs-body, 14px);
+  font-weight: 800;
+  color: #0D1B33;
 }
 
 .iwm-list {
@@ -208,13 +241,13 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
    이어서 보이게 한다(아젠다가 페이지 전체를 삼키지 않음). 톤은 기존과 동일 — 얇은 테두리 + 텍스트만,
    blur/그림자 금지. */
 .iwm-agenda-scroll {
-  max-height: 58vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-sm);
-  padding: 2px 12px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
 }
 .iwm-agenda-sentinel {
   height: 1px;
@@ -224,8 +257,8 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   flex-direction: column;
 }
 .iwm-agenda-day {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--bd);
+  padding: 0 0 10px;
+  border-bottom: 0;
 }
 .iwm-agenda-day:last-child {
   border-bottom: none;
@@ -233,11 +266,11 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
 .iwm-agenda-date {
   margin: 0 0 8px 2px;
   font-size: var(--fs-meta, 13px);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ts);
 }
 .iwm-agenda-date.is-today {
-  color: var(--ac);
+  color: #2563EB;
 }
 .iwm-agenda-limit {
   padding: 10px 0;
@@ -249,9 +282,10 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
 .iwm-card {
   min-height: 44px;
   padding: 12px 14px;
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-sm);
+  border: 1px solid #CBD7EA;
+  border-radius: 12px;
   background: var(--s1);
+  box-shadow: 0 10px 24px rgba(13,27,51,.08);
 }
 .iwm-card-title {
   font-size: var(--fs-body, 14px);
@@ -280,9 +314,11 @@ body.iwm-page { min-height: 100vh; overflow-y: auto; color: var(--tp); }
   padding: 16px 14px;
   text-align: center;
   font-size: var(--fs-meta, 13px);
-  color: var(--tf);
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-sm);
+  color: var(--ts);
+  border: 1px solid #CBD7EA;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(13,27,51,.06);
 }
 
 .iwm-gate {

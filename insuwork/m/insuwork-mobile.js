@@ -32,10 +32,13 @@
   /* 게이트 = 기존 js/insuwork.js의 allowed()/authenticated()/currentUserId() 패턴을 그대로 복제.
      게이트를 그대로 상속하되 고정 허용목록은 2026-08-23 폐지됐다(인증된 사용자 전체 허용). */
   function allowed() {
-    return isLocalHost() || (authenticated() && !!currentUserId());
+    return localPreviewAllowed() || isLocalHost() || (authenticated() && !!currentUserId());
   }
   function authenticated() {
-    return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
+    return localPreviewAllowed() || !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId());
+  }
+  function localPreviewAllowed() {
+    return isLocalHost() && new URLSearchParams(location.search).get('pwtest') === '1';
   }
   /* fix/workstation-mobile-bugs 버그6 대응 — 모바일 화면에 로그아웃 진입 경로가 없던 문제.
      새 로직을 만들지 않고 insubriefing/hub.js의 logoutAdvisor()·insuwork/insuwork.js의
@@ -288,8 +291,8 @@
   function teardownAgendaObserver() {
     if (agendaObserver) { agendaObserver.disconnect(); agendaObserver = null; }
   }
-  /* IntersectionObserver root = 아젠다 내부 스크롤 박스(페이지 전체가 아님) — 위/아래 sentinel이
-     이 박스 안에서 보이기 직전(rootMargin)에 각각 과거/미래 로드를 트리거한다. */
+  /* 홈 화면의 중첩 컨테이너 느낌을 없애기 위해 아젠다 내부 스크롤 박스를 풀었다.
+     그래서 IntersectionObserver도 페이지 뷰포트 기준(root:null)으로 감지한다. */
   function setupAgendaObserver() {
     teardownAgendaObserver();
     if (typeof IntersectionObserver !== 'function') return;
@@ -303,7 +306,7 @@
         if (entry.target === topSentinel) loadAgendaPast();
         else if (entry.target === bottomSentinel) loadAgendaFuture();
       });
-    }, { root: scrollBox, rootMargin: '160px 0px', threshold: 0 });
+    }, { root: null, rootMargin: '160px 0px', threshold: 0 });
     agendaObserver.observe(topSentinel);
     agendaObserver.observe(bottomSentinel);
   }
@@ -311,6 +314,11 @@
   function scrollAgendaToToday(scrollBox) {
     var todayEl = scrollBox.querySelector('.iwm-agenda-day[data-date="' + todayStr() + '"]');
     if (!todayEl) return;
+    if (getComputedStyle(scrollBox).overflowY === 'visible') {
+      todayEl.scrollIntoView({ block: 'start' });
+      window.scrollBy(0, -72);
+      return;
+    }
     var offset = todayEl.getBoundingClientRect().top - scrollBox.getBoundingClientRect().top + scrollBox.scrollTop;
     scrollBox.scrollTop = offset;
   }
@@ -395,7 +403,7 @@
     /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(캘린더/고객/자료)은 하단 고정 탭바로 옮겼다.
        feat/workstation-mobile-header-consistency — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고,
        보험브리핑 홈으로 돌아가는 링크를 새로 추가했다(이전에는 "오늘" 화면에 이 진입로가 아예 없었다). */
-    view.innerHTML = '<header class="iwm-header"><strong>오늘</strong></header>'
+    view.innerHTML = '<header class="iwm-header iwm-home-header"><strong>보험워크</strong></header>'
       + '<main class="iwm-main">'
       + agendaSectionHtml(excludeIds)
       + careSectionHtml(summary.care)
