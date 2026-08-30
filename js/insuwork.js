@@ -903,9 +903,9 @@
       + '</div>'
       + '<figure class="iw-public-brand iw-public-story" aria-label="보험워크 업무 흐름 미리보기">'
       + '<div class="iw-story-logo"><img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크 Insurance Work 로고"></div>'
-      + '<div class="iw-story-board" aria-hidden="true"><div class="iw-story-line"><span></span></div>'
+      + '<div class="iw-story-board" aria-hidden="true"><div class="iw-story-flash"></div><div class="iw-story-line"><span></span></div>'
       + flow.map(function (item, index) { return '<article class="iw-story-step s' + (index + 1) + '"><span>' + item[0] + '</span><strong>' + item[1] + '</strong><b>' + item[2] + '</b><p>' + item[3] + '</p></article>'; }).join('')
-      + '<div class="iw-story-output"><strong>오늘의 업무판</strong><span>일정 · 고객 · 자료 · 도구가 한 화면으로 연결됩니다.</span></div></div>'
+      + '<div class="iw-story-output"><strong>오늘의 업무판</strong><span>일정 · 고객 · 자료 · 도구가 한 화면으로 연결됩니다.</span></div><div class="iw-story-signal a"></div><div class="iw-story-signal b"></div></div>'
       + '<figcaption>보험 업무를 기억이 아니라 워크플로우로.</figcaption></figure>'
       + '</div>'
       + '<div class="iw-public-concepts" aria-label="보험워크 구성 개념">' + concepts.map(function (item, index) { return '<article><span>' + String(index + 1).padStart(2, '0') + '</span><strong>' + item[0] + '</strong><p>' + item[1] + '</p></article>'; }).join('') + '</div>'
