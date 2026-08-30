@@ -239,7 +239,7 @@
     dialog.innerHTML = ''
       + '<form class="ib-auth-card" method="dialog" id="ib-auth-form" novalidate>'
       + '<div class="ib-auth-head"><div>'
-      + '<img src="/insuwork/insubriefing/assets/brand/insurance-briefing-logo-original.webp?v=20260824webp" alt="보험워크">'
+      + '<img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크">'
       + '<h2 id="ib-auth-title">보험워크 시작하기</h2>'
       + '<p id="ib-auth-desc"></p></div>'
       + '<button type="button" class="ib-auth-close" aria-label="닫기">×</button></div>'

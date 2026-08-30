@@ -1,4 +1,9 @@
 .ib-auth-dialog {
+  --iw-ci-navy: #0D1B33;
+  --iw-ci-slate: #5B687F;
+  --iw-ci-blue: #2563EB;
+  --iw-ci-accent: #FFB020;
+  --iw-ci-gray: #E6EBF1;
   position: fixed;
   inset: 50% auto auto 50%;
   transform: translate(-50%, -50%);
@@ -7,15 +12,15 @@
   margin: 0;
   padding: 0;
   overflow: auto;
-  border: 1px solid color-mix(in srgb, var(--bd, #d7deea) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 86%, transparent);
   border-radius: 18px;
   background: var(--s1, #fff);
-  color: var(--tp, #152033);
-  box-shadow: 0 22px 70px color-mix(in srgb, #10233f 24%, transparent);
+  color: var(--iw-ci-navy);
+  box-shadow: 0 22px 70px color-mix(in srgb, var(--iw-ci-navy) 24%, transparent);
 }
 
 .ib-auth-dialog::backdrop {
-  background: color-mix(in srgb, #16233a 54%, transparent);
+  background: color-mix(in srgb, var(--iw-ci-navy) 52%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -35,14 +40,14 @@
 
 .ib-auth-head img {
   display: block;
-  width: 172px;
+  width: 196px;
   height: auto;
   margin-bottom: 14px;
 }
 
 .ib-auth-head h2 {
   margin: 0;
-  color: var(--tp, #152033);
+  color: var(--iw-ci-navy);
   font-size: 22px;
   font-weight: 800;
   line-height: 1.25;
@@ -51,7 +56,7 @@
 
 .ib-auth-head p {
   margin: 7px 0 0;
-  color: var(--ts, #687386);
+  color: var(--iw-ci-slate);
   font-size: 14px;
   line-height: 1.55;
 }
@@ -61,18 +66,18 @@
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid var(--bd, #d7deea);
+  border: 1px solid var(--iw-ci-gray);
   border-radius: 999px;
   background: var(--s1, #fff);
-  color: var(--ts, #687386);
+  color: var(--iw-ci-slate);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
 }
 
 .ib-auth-close:hover {
-  border-color: var(--ac, #3867f6);
-  color: var(--ac, #3867f6);
+  border-color: var(--iw-ci-accent);
+  color: var(--iw-ci-navy);
 }
 
 .ib-auth-tabs {
@@ -80,9 +85,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 4px;
   padding: 4px;
-  border: 1px solid var(--bd, #d7deea);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 86%, var(--iw-ci-slate));
   border-radius: 12px;
-  background: var(--s2, #f4f7fb);
+  background: color-mix(in srgb, var(--iw-ci-gray) 58%, #fff);
 }
 
 .ib-auth-tabs button {
@@ -90,7 +95,7 @@
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: var(--ts, #687386);
+  color: var(--iw-ci-slate);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -98,8 +103,8 @@
 
 .ib-auth-tabs button.on {
   background: var(--s1, #fff);
-  color: var(--ac, #3867f6);
-  box-shadow: 0 2px 9px color-mix(in srgb, #0f2545 10%, transparent);
+  color: var(--iw-ci-blue);
+  box-shadow: 0 2px 9px color-mix(in srgb, var(--iw-ci-navy) 10%, transparent);
 }
 
 .ib-auth-form {
@@ -110,7 +115,7 @@
 .ib-auth-field {
   display: grid;
   gap: 7px;
-  color: var(--tp, #152033);
+  color: var(--iw-ci-navy);
   font-size: 13px;
   font-weight: 700;
 }
@@ -120,10 +125,10 @@
   min-height: 46px;
   box-sizing: border-box;
   padding: 0 14px;
-  border: 1px solid var(--bd, #d7deea);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 82%, var(--iw-ci-slate));
   border-radius: 10px;
   background: var(--s1, #fff);
-  color: var(--tp, #152033);
+  color: var(--iw-ci-navy);
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -131,8 +136,8 @@
 }
 
 .ib-auth-field input:focus {
-  border-color: var(--ac, #3867f6);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac, #3867f6) 15%, transparent);
+  border-color: var(--iw-ci-blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--iw-ci-blue) 15%, transparent);
 }
 
 .ib-auth-company-wrap {
@@ -147,10 +152,10 @@
   right: 0;
   max-height: 220px;
   overflow: auto;
-  border: 1px solid var(--bd, #d7deea);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 82%, var(--iw-ci-slate));
   border-radius: 12px;
   background: var(--s1, #fff);
-  box-shadow: 0 12px 32px color-mix(in srgb, #10233f 14%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--iw-ci-navy) 14%, transparent);
 }
 
 .ib-auth-company-list[hidden] {
@@ -165,7 +170,7 @@
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--bd, #d7deea) 72%, transparent);
   background: var(--s1, #fff);
-  color: var(--tp, #152033);
+  color: var(--iw-ci-navy);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
@@ -179,8 +184,8 @@
 
 .ib-auth-company-item:hover,
 .ib-auth-company-item.active {
-  background: color-mix(in srgb, var(--ac, #3867f6) 10%, #fff);
-  color: var(--ac, #3867f6);
+  background: color-mix(in srgb, var(--iw-ci-blue) 10%, #fff);
+  color: var(--iw-ci-blue);
 }
 
 .ib-auth-otp {
@@ -200,7 +205,7 @@
   padding: 12px;
   border: 1px solid var(--bd, #d7deea);
   border-radius: var(--radius-sm, 8px);
-  background: var(--s2, #f6f8fb);
+  background: color-mix(in srgb, var(--iw-ci-gray) 54%, #fff);
 }
 
 .ib-auth-agreements label {
@@ -219,7 +224,7 @@
   min-height: 17px;
   flex: 0 0 17px;
   margin: 0;
-  accent-color: var(--ac, #3867f6);
+  accent-color: var(--iw-ci-blue);
 }
 
 .ib-auth-agree-all {
@@ -248,7 +253,7 @@
 
 .ib-auth-agree-items a:hover,
 .ib-auth-agree-items a:focus-visible {
-  color: var(--ac, #3867f6);
+  color: var(--iw-ci-blue);
 }
 
 .ib-auth-primary,
@@ -299,8 +304,8 @@
 }
 
 .ib-auth-google:hover {
-  border-color: var(--ac, #3867f6);
-  box-shadow: 0 8px 22px color-mix(in srgb, #10233f 7%, transparent);
+  border-color: var(--iw-ci-blue);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--iw-ci-navy) 7%, transparent);
 }
 
 .ib-auth-divider {
@@ -323,9 +328,9 @@
 }
 
 .ib-auth-primary {
-  border: 1px solid var(--ac, #3867f6);
-  background: var(--ac, #3867f6);
-  color: #fff;
+  border: 1px solid var(--iw-ci-accent);
+  background: var(--iw-ci-accent);
+  color: var(--iw-ci-navy);
 }
 
 .ib-auth-primary:disabled,
@@ -338,7 +343,7 @@
 .ib-auth-secondary {
   border: 1px solid var(--bd, #d7deea);
   background: var(--s1, #fff);
-  color: var(--ac, #3867f6);
+  color: var(--iw-ci-blue);
 }
 
 .ib-auth-status {
@@ -366,21 +371,26 @@
 }
 
 .ib-notice-dialog {
+  --iw-ci-navy: #0D1B33;
+  --iw-ci-slate: #5B687F;
+  --iw-ci-blue: #2563EB;
+  --iw-ci-accent: #FFB020;
+  --iw-ci-gray: #E6EBF1;
   position: fixed;
   inset: 50% auto auto 50%;
   transform: translate(-50%, -50%);
   width: min(450px, calc(100vw - 28px));
   margin: 0;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--bd, #d7deea) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 86%, transparent);
   border-radius: 16px;
   background: var(--s1, #fff);
-  color: var(--tp, #152033);
-  box-shadow: 0 22px 70px color-mix(in srgb, #10233f 22%, transparent);
+  color: var(--iw-ci-navy);
+  box-shadow: 0 22px 70px color-mix(in srgb, var(--iw-ci-navy) 22%, transparent);
 }
 
 .ib-notice-dialog::backdrop {
-  background: color-mix(in srgb, #16233a 52%, transparent);
+  background: color-mix(in srgb, var(--iw-ci-navy) 52%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -392,7 +402,7 @@
 }
 
 .ib-notice-brand {
-  color: var(--ac, #3867f6);
+  color: var(--iw-ci-blue);
   font-size: 13px;
   font-weight: 800;
   line-height: 1.3;
@@ -400,7 +410,7 @@
 
 .ib-notice-card h2 {
   margin: 0;
-  color: var(--tp, #152033);
+  color: var(--iw-ci-navy);
   font-size: 20px;
   font-weight: 850;
   line-height: 1.3;
@@ -409,7 +419,7 @@
 
 .ib-notice-card p {
   margin: 0;
-  color: var(--ts, #687386);
+  color: var(--iw-ci-slate);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.65;
@@ -421,10 +431,10 @@
   min-height: 46px;
   box-sizing: border-box;
   padding: 0 14px;
-  border: 1px solid var(--bd, #d7deea);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 82%, var(--iw-ci-slate));
   border-radius: 10px;
   background: var(--s1, #fff);
-  color: var(--tp, #152033);
+  color: var(--iw-ci-navy);
   font: inherit;
   font-size: 15px;
   font-weight: 700;
@@ -432,8 +442,8 @@
 }
 
 .ib-notice-input:focus {
-  border-color: var(--ac, #3867f6);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac, #3867f6) 15%, transparent);
+  border-color: var(--iw-ci-blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--iw-ci-blue) 15%, transparent);
 }
 
 .ib-notice-actions {
@@ -454,15 +464,15 @@
 }
 
 .ib-notice-secondary {
-  border: 1px solid var(--bd, #d7deea);
+  border: 1px solid color-mix(in srgb, var(--iw-ci-gray) 82%, var(--iw-ci-slate));
   background: var(--s1, #fff);
-  color: var(--ts, #687386);
+  color: var(--iw-ci-slate);
 }
 
 .ib-notice-primary {
-  border: 1px solid var(--ac, #3867f6);
-  background: var(--ac, #3867f6);
-  color: #fff;
+  border: 1px solid var(--iw-ci-accent);
+  background: var(--iw-ci-accent);
+  color: var(--iw-ci-navy);
 }
 
 .ib-notice-dialog.is-danger .ib-notice-primary {
@@ -486,7 +496,7 @@
   }
 
   .ib-auth-head img {
-    width: 150px;
+    width: 174px;
   }
 
   .ib-auth-head h2 {
