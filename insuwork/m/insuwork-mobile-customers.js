@@ -159,6 +159,9 @@
     if (parts.length !== 3) return '';
     return Number(parts[1]) + '/' + Number(parts[2]);
   }
+  function searchNorm(value) {
+    return String(value || '').toLocaleLowerCase('ko-KR').replace(/[\s·ㆍ\.\-_/(){}\[\],:;'"`~!@#$%^&*+=?<>|\\]/g, '');
+  }
 
   /* 표시용 전화번호(고객 원본 값, 하이픈 등 서식 포함 가능)와 tel: 링크용 값(숫자만)을 분리한다.
      phoneText()류 서식 함수는 insuwork.js 비공개 클로저 안이라 재사용할 수 없어, 여기서는
@@ -221,24 +224,36 @@
   }
 
   function filteredDirectory() {
-    var list = state.directory.slice().sort(function (a, b) {
-      var ad = (a.consultations[0] && a.consultations[0].date) || '';
-      var bd = (b.consultations[0] && b.consultations[0].date) || '';
-      return bd.localeCompare(ad) || String(a.name || '').localeCompare(String(b.name || ''), 'ko');
-    });
+    var list = state.directory.slice();
     var q = state.query.trim();
     if (!q) return list;
-    return list.filter(function (customer) { return String(customer.name || '').indexOf(q) >= 0; });
+    var needle = searchNorm(q);
+    return list.filter(function (customer) {
+      var hay = [
+        customer.name || '',
+        customer.phone || '',
+        customer.birthDate || '',
+        customer.note || '',
+        customer.displayStatus || customer.status || ''
+      ].join(' ');
+      hay = searchNorm(hay);
+      return hay.indexOf(needle) >= 0;
+    });
   }
 
   function customerCardHtml(customer) {
     var last = customer.consultations && customer.consultations[0];
-    var sub = last ? ('최근 상담 ' + shortDate(last.date)) : '최근 상담 없음';
-    var meta = customer.nextCareDate ? ('다음 케어 ' + shortDate(customer.nextCareDate) + (customer.nextCareTitle ? ' · ' + customer.nextCareTitle : '')) : '';
+    var subBits = [];
+    if (customer.phone) subBits.push(customer.phone);
+    if (customer.displayStatus || customer.status) subBits.push(customer.displayStatus || customer.status);
+    var metaBits = [];
+    if (customer.contractDate) metaBits.push('청약일 ' + customer.contractDate);
+    if (last) metaBits.push('최근 상담 ' + shortDate(last.date));
+    if (customer.nextCareDate) metaBits.push('다음 케어 ' + shortDate(customer.nextCareDate));
     return '<button type="button" class="iwm-card iwm-cust-card" data-id="' + esc(customer.id) + '">'
       + '<div class="iwm-card-title">' + esc(customer.name || '(이름 없음)') + '</div>'
-      + '<div class="iwm-card-sub">' + esc(sub) + '</div>'
-      + (meta ? '<div class="iwm-card-meta">' + esc(meta) + '</div>' : '')
+      + (subBits.length ? '<div class="iwm-card-sub">' + esc(subBits.join(' · ')) + '</div>' : '')
+      + (metaBits.length ? '<div class="iwm-card-meta">' + esc(metaBits.join(' · ')) + '</div>' : '')
       + '</button>';
   }
 
@@ -263,7 +278,7 @@
     view.innerHTML = headerHtml()
       + '<main class="iwm-main">'
       + '<div class="iwm-cust-search-wrap">'
-      + '<input type="search" id="iwm-cust-search" class="iwm-cust-search" placeholder="이름으로 검색" autocomplete="off" inputmode="search">'
+      + '<input type="search" id="iwm-cust-search" class="iwm-cust-search" placeholder="고객명·전화번호 검색" autocomplete="off" inputmode="search">'
       + '</div>'
       + '<div class="iwm-list iwm-cust-list" id="iwm-cust-list"></div>'
       + '</main>'

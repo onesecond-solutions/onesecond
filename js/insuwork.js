@@ -3724,9 +3724,8 @@
         || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
     });
   }
-  /* 모바일 "고객관리" 화면 전용 읽기 전용 조회 함수 1종 (2026-08-22, Phase 3 — feat/workstation-mobile-customers).
-     위 함수들과 같은 원칙(순수 함수, state.data 읽기만, 반환값은 얕은 복사/신규 배열만 넘김, 새 API 호출 없음).
-     리스트 화면과 상세 화면이 같은 결과를 공유 — 고객별 최근 상담(최대 5건, 최신순)과 다음 케어 예정(오늘 이후 가장 이른 care_auto 일정)을 함께 계산한다. */
+  /* 모바일 고객 목록도 PC 고객관리와 같은 기준을 쓴다: 관리 고객만, 청약일 최신순.
+     모바일 화면은 카드 UI만 다르고 목록의 포함/정렬 기준은 PC와 맞춘다. */
   function customersDirectory() {
     var today = ymd(new Date());
     var consultsByCustomer = {};
@@ -3744,11 +3743,20 @@
       if (date < today) return;
       if (!careByCustomer[key] || date < careByCustomer[key].date) careByCustomer[key] = { date: date, title: event.title || '' };
     });
-    return state.data.customers.filter(isManagedCustomer).map(function (customer) {
+    return state.data.customers.filter(isManagedCustomer).sort(function (a, b) {
+      var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10);
+      var bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10);
+      return bd.localeCompare(ad);
+    }).map(function (customer) {
       var key = String(customer.id);
       var care = careByCustomer[key];
+      var profile = customerProfile(customer);
       return {
         id: customer.id, name: customer.name || '', phone: customer.phone || customer.phone_raw || '', status: customer.status || '',
+        contractDate: String(profile.contract_date || customer.created_at || '').slice(0, 10),
+        birthDate: profile.birth_date || '',
+        displayStatus: customerDisplayStatus(customer),
+        note: stripHtml(profile.note || ''),
         consultations: (consultsByCustomer[key] || []).slice(0, 5),
         nextCareDate: care ? care.date : '', nextCareTitle: care ? care.title : ''
       };
@@ -3762,14 +3770,21 @@
   function consultationsDirectory() {
     var customersById = {};
     state.data.customers.forEach(function (customer) { customersById[String(customer.id)] = customer; });
-    return state.data.consultations.map(function (item) {
+    return state.data.consultations.filter(function (item) {
+      return !!customersById[String(item.customer_id)];
+    }).map(function (item) {
       var customer = customersById[String(item.customer_id)] || {};
+      var profile = customerProfile(customer);
+      var status = consultationStatus(item, customer);
       return {
         id: item.id,
         customerId: item.customer_id,
         customerName: customer.name || '(이름 없음)',
+        customerPhone: customer.phone || customer.phone_raw || '',
+        customerBirth: profile.birth_date || '',
         date: String(item.consulted_at || item.created_at || '').slice(0, 10),
         channel: item.channel || '',
+        status: status,
         memo: stripHtml(item.memo || item.content || '')
       };
     }).sort(function (a, b) { return b.date.localeCompare(a.date); });

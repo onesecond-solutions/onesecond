@@ -184,13 +184,12 @@
     return Number(parts[1]) + '/' + Number(parts[2]);
   }
 
-  /* 상태(channel) 필터 칩 — 대표 지시대로 과하게 복잡한 필터 UI를 만들지 않는다. "전체" +
-     현재 목록에 실제로 존재하는 channel 값만 등장 순서(최신 상담 기준)대로 칩으로 보여준다. */
+  /* PC 상담관리 기준과 맞춰 상담상태를 기준으로 필터링한다. */
   function channelOptions(list) {
     var seen = {};
     var ordered = [];
     list.forEach(function (entry) {
-      var ch = entry.channel || '';
+      var ch = entry.status || entry.channel || '';
       if (!ch || seen[ch]) return;
       seen[ch] = true;
       ordered.push(ch);
@@ -210,7 +209,7 @@
 
   function filteredList() {
     if (state.channel === 'all') return state.directory;
-    return state.directory.filter(function (entry) { return entry.channel === state.channel; });
+    return state.directory.filter(function (entry) { return (entry.status || entry.channel || '') === state.channel; });
   }
 
   /* feat/workstation-mobile-header-consistency (2026-08-22) — 카드는 목록 화면에서 미리보기만 보여주고,
@@ -219,7 +218,7 @@
     var memo = entry.memo || '';
     var preview = memo.length > PREVIEW_LEN ? memo.slice(0, PREVIEW_LEN) + '…' : memo;
     var metaBits = [shortDate(entry.date) || '날짜 없음'];
-    if (entry.channel) metaBits.push(entry.channel);
+    if (entry.status || entry.channel) metaBits.push(entry.status || entry.channel);
     return '<button type="button" class="iwm-card iwm-consult-card" data-id="' + esc(entry.id) + '">'
       + '<div class="iwm-card-title">' + esc(entry.customerName) + '</div>'
       + '<div class="iwm-card-sub">' + esc(metaBits.join(' · ')) + '</div>'
@@ -302,7 +301,7 @@
 
     var memo = entry.memo || '';
     var metaBits = [shortDate(entry.date) || '날짜 없음'];
-    if (entry.channel) metaBits.push(entry.channel);
+    if (entry.status || entry.channel) metaBits.push(entry.status || entry.channel);
 
     view.innerHTML = headerHtml()
       + '<main class="iwm-main">'
