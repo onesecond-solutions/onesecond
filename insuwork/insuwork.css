@@ -384,6 +384,131 @@ body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-more{color:var(--ts)}
 @media(max-width:860px){.iw-global-search{width:min(400px,38vw)}}
 @media(max-width:680px){body.iw-page{grid-template-rows:106px minmax(0,1fr)}body.iw-page:before{background-position:58% center}.iw-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:58px 48px;gap:0 12px;padding:0 14px}.iw-identity{gap:9px}.iw-brand{gap:7px}.iw-brand span{width:32px;height:32px}.iw-brand strong,.iw-product{font-size:var(--fs-meta)}.iw-divider{height:16px}.iw-global-search{position:static;grid-column:1/-1;grid-row:2;width:100%;height:40px;transform:none}.iw-header-actions{grid-column:2;grid-row:1;gap:6px}.iw-mobile-link{height:30px;padding:0 8px;font-size:11px}.iw-account-trigger{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.iw-main{padding:6px 0 0}#v-insuwork{border-right:0;border-left:0;border-radius:var(--radius-md) var(--radius-md) 0 0}}
 
+@media(max-width:860px){
+  body.iw-page:not(.is-insuwork-public){
+    --bg:#F4F7FC;
+    --s2:#EEF4FF;
+    --bd:#D1DCEB;
+    --tp:#0D1B33;
+    --ts:#52627A;
+    --ac:#2563EB;
+    --ach:#FFB020;
+    background:#F4F7FC;
+  }
+  body.iw-page:not(.is-insuwork-public):after{
+    display:block;
+    background:
+      radial-gradient(circle at 18% 8%,rgba(255,176,32,.18),transparent 28%),
+      linear-gradient(180deg,rgba(13,27,51,.08),rgba(244,247,252,.94) 36%,#F4F7FC 100%);
+  }
+  body.iw-page:not(.is-insuwork-public) .iw-header{
+    border-bottom-color:rgba(255,255,255,.16);
+    background:linear-gradient(135deg,#0D1B33 0%,#173E78 62%,#2563EB 100%);
+    box-shadow:0 10px 28px rgba(13,27,51,.18);
+  }
+  body.iw-page:not(.is-insuwork-public) .iw-brand-logo-only{
+    padding:2px 7px;
+    border:1px solid rgba(255,255,255,.72);
+    border-radius:10px;
+    background:#fff;
+  }
+  body.iw-page:not(.is-insuwork-public) .iw-global-search{
+    border-color:rgba(255,176,32,.38);
+    background:#fff;
+    color:#5B687F;
+    box-shadow:0 8px 20px rgba(13,27,51,.12);
+  }
+  body.iw-page:not(.is-insuwork-public) .iw-account-trigger{
+    border-color:#FFB020;
+    background:#FFB020;
+    color:#0D1B33;
+    font-weight:800;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork{
+    border-color:rgba(13,27,51,.12);
+    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(244,247,252,.94));
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-main:has(.iw-home-grid){
+    background:linear-gradient(180deg,#F8FAFF 0%,#FFFFFF 44%,#F7FAFF 100%);
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-home-grid{
+    gap:12px;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-panel{
+    border-color:#CBD7EA;
+    background:#fff;
+    box-shadow:0 12px 30px rgba(13,27,51,.09);
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-panel-head{
+    border-bottom:0;
+    background:linear-gradient(90deg,#0D1B33,#173E78);
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-panel-head strong{
+    color:#fff;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-panel-head button{
+    color:#FFB020;
+    font-weight:800;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-panel .iw-row{
+    border-bottom-color:#E0E8F2;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-row:hover{
+    background:#F2F6FF;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-row b{
+    color:#0D1B33;
+    font-weight:700;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-row small{
+    color:#5B687F;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-row>span:last-child{
+    color:#2563EB;
+    font-weight:800;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-empty{
+    color:#5B687F;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-nav{
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:4px;
+    padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+    border-top-color:rgba(255,255,255,.16);
+    background:#0D1B33;
+    box-shadow:0 -12px 28px rgba(13,27,51,.22);
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-nav button{
+    display:flex;
+    min-width:0;
+    min-height:54px;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:4px;
+    padding:6px 2px;
+    border-radius:12px;
+    color:#D8E0EA;
+    font-size:11px;
+    line-height:1.1;
+    text-align:center;
+    white-space:nowrap;
+    word-break:keep-all;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-nav button span{
+    font-size:16px;
+    line-height:1;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-nav button.on{
+    background:#FFB020;
+    color:#0D1B33;
+    font-weight:900;
+  }
+  body.iw-page:not(.is-insuwork-public) #v-insuwork .iw-nav .archive{
+    display:none;
+  }
+}
+
 /* 모바일 유도 배너 (2026-08-22, Phase 1 — feat/workstation-mobile-today, 애디티브).
    톤 = 얇은 테두리 + 텍스트만(대표 확정 톤). backdrop-filter/블러·무거운 box-shadow 금지. */
 .iw-mobile-banner{position:fixed;left:12px;right:12px;bottom:12px;z-index:200;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp)}
