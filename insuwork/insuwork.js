@@ -125,6 +125,10 @@
   function dismissed() {
     try { return localStorage.getItem(FLAG_KEY) === '1'; } catch (_e) { return false; }
   }
+  function hasSignedInSession() {
+    var user = storedUser();
+    return !!(user.id && window.db && window.db.getToken && window.db.getToken());
+  }
   function dismiss() {
     var banner = document.getElementById('iw-mobile-banner');
     if (banner) banner.remove();
@@ -143,6 +147,7 @@
   }
   function run() {
     if (window.innerWidth >= 768) return;
+    if (!hasSignedInSession()) return;
     if (cameFromMobile()) { showBanner(); return; } // PC로 보기를 직접 선택한 로드 — 자동 이동 건너뜀
     window.location.replace(MOBILE_PATH); // 히스토리 안 쌓고 즉시 이동
   }

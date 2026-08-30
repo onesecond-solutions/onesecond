@@ -293,3 +293,201 @@ body.iw-page.iw-bg-dark #v-insuwork .iw-calendar-month .iw-more{color:var(--ts)}
 .iw-mobile-banner a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid var(--ac);border-radius:var(--radius-sm);color:var(--ac);text-decoration:none;font-weight:var(--fw-medium);white-space:nowrap}
 .iw-mobile-banner button{width:32px;height:32px;flex-shrink:0;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:var(--fs-body);cursor:pointer}
 @media(max-width:680px){.iw-brand-logo{height:38px;max-width:240px}}
+
+/* 2026-08-30 — 보험워크 CI 기반 비로그인 랜딩. 로그인 업무 홈은 기존 셸을 유지하고,
+   비로그인 첫 진입에서만 내부 메뉴/업무 패널 대신 독립 브랜드 설명 화면을 보여준다. */
+html[data-theme="light"] body.iw-page.is-insuwork-public,
+body.iw-page.is-insuwork-public{
+  --bg:#FFFFFF;
+  --s1:#FFFFFF;
+  --s2:#F6F8FB;
+  --sh:#E6EBF1;
+  --bd:#D8E0EA;
+  --tp:#0D1B33;
+  --ts:#5B687F;
+  --tf:#8A96A8;
+  --bodytx:#26354C;
+  --ac:#2563EB;
+  --ach:#FFB020;
+  min-height:100%;
+  overflow:auto;
+  background:var(--bg);
+}
+body.iw-page.is-insuwork-public:before,
+body.iw-page.is-insuwork-public:after{display:none}
+body.iw-page.is-insuwork-public .iw-header{
+  border-bottom:1px solid var(--bd);
+  background:rgba(255,255,255,.92);
+  box-shadow:none;
+}
+body.iw-page.is-insuwork-public .iw-global-search{display:none}
+body.iw-page.is-insuwork-public .iw-main{
+  overflow:visible;
+  padding:0;
+}
+body.iw-page.is-insuwork-public #v-insuwork{
+  min-height:calc(100dvh - 64px);
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:#fff;
+}
+body.iw-page.is-insuwork-public .iw-account-trigger{
+  border-color:color-mix(in srgb,var(--ach) 44%,var(--bd));
+  background:#fff;
+  color:var(--tp);
+}
+.iw-public-landing{
+  width:min(100%,1500px);
+  margin:0 auto;
+  padding:68px 64px 38px;
+  color:var(--tp);
+}
+.iw-public-hero{
+  display:grid;
+  grid-template-columns:minmax(470px,.78fr) minmax(480px,1.22fr);
+  align-items:center;
+  gap:72px;
+  min-height:min(620px,calc(100dvh - 170px));
+  padding-bottom:60px;
+}
+.iw-public-kicker{
+  margin:0 0 28px;
+  color:#173E78;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.iw-public-copy h1{
+  margin:0;
+  color:#0D1B33;
+  font-size:44px;
+  line-height:1.18;
+  letter-spacing:0;
+}
+.iw-public-copy>p{
+  max-width:560px;
+  margin:26px 0 0;
+  color:#5B687F;
+  font-size:17px;
+  line-height:1.78;
+}
+.iw-public-keywords{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 14px;
+  margin:28px 0 0;
+  padding:0;
+  list-style:none;
+}
+.iw-public-keywords li{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  color:var(--tp);
+  font-size:14px;
+  font-weight:700;
+}
+.iw-public-keywords li+li:before{
+  content:"";
+  width:3px;
+  height:3px;
+  border-radius:50%;
+  background:var(--ach);
+}
+.iw-public-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:34px;
+}
+.iw-public-primary,
+.iw-public-secondary{
+  min-height:46px;
+  padding:0 20px;
+  border:1px solid var(--bd);
+  border-radius:var(--radius-sm);
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+}
+.iw-public-primary{
+  border-color:var(--ach);
+  background:var(--ach);
+  color:#0D1B33;
+}
+.iw-public-secondary{
+  background:#fff;
+  color:var(--tp);
+}
+.iw-public-brand{
+  display:grid;
+  justify-items:center;
+  margin:0;
+}
+.iw-public-brand img{
+  display:block;
+  width:min(100%,760px);
+  height:auto;
+}
+.iw-public-brand figcaption{
+  margin-top:26px;
+  color:var(--ts);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.18em;
+  text-align:center;
+}
+.iw-public-concepts{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  border-top:1px solid var(--bd);
+  border-bottom:1px solid var(--bd);
+}
+.iw-public-concepts article{
+  display:grid;
+  gap:8px;
+  min-height:164px;
+  padding:30px 38px;
+  border-right:1px solid var(--bd);
+}
+.iw-public-concepts article:last-child{border-right:0}
+.iw-public-concepts article span{
+  color:#173E78;
+  font-size:12px;
+  font-weight:900;
+}
+.iw-public-concepts article strong{
+  color:var(--tp);
+  font-size:19px;
+}
+.iw-public-concepts article p{
+  max-width:260px;
+  margin:0;
+  color:var(--ts);
+  font-size:14px;
+  line-height:1.7;
+}
+@media(max-width:960px){
+  .iw-public-hero{grid-template-columns:1fr;min-height:auto}
+  .iw-public-brand{justify-items:start}
+  .iw-public-brand figcaption{text-align:left}
+  .iw-public-concepts{grid-template-columns:1fr}
+  .iw-public-concepts article{min-height:0;border-right:0;border-bottom:1px solid var(--bd)}
+  .iw-public-concepts article:last-child{border-bottom:0}
+}
+@media(max-width:680px){
+  body.iw-page.is-insuwork-public{grid-template-rows:64px minmax(0,1fr)}
+  body.iw-page.is-insuwork-public .iw-header{
+    display:flex;
+    gap:12px;
+    padding:0 14px;
+  }
+  body.iw-page.is-insuwork-public .iw-brand-logo{height:34px;max-width:210px}
+  .iw-public-landing{padding:36px 18px 28px}
+  .iw-public-copy h1{font-size:34px}
+  .iw-public-copy>p{font-size:15px}
+  .iw-public-brand img{width:min(100%,520px)}
+  .iw-public-brand figcaption{font-size:10px;line-height:1.7}
+}

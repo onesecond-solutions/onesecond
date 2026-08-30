@@ -33,9 +33,9 @@
     catch (_) { return !!location.search; }
   })();
   var SECTIONS = ['home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'public-library', 'admin-users'];
-  /* 2026-08-25 대표 승인 — 보험워크 공개 구조 전환: 셸(사이드바 포함)은 항상 렌더링하고, 아래 4개
-     메뉴(캘린더/고객관리/상담관리/자료)만 비로그인 클릭 시 진입을 막는다. 홈·보험브리핑·참고자료·
-     영업도구는 비로그인도 접근 가능. canEnterSection()이 go()/openWorkspace() 진입 직전에 확인한다. */
+  /* 2026-08-30 대표 확정 — 보험워크는 원세컨드와 별도 사이트다. 비로그인 첫 진입은 내부 업무 셸
+     일부를 잠가 보여주는 방식이 아니라 보험워크 CI 기반 공개 랜딩만 렌더링한다. 로그인 후에는 기존
+     업무 홈과 메뉴를 그대로 유지한다. */
   var PROTECTED_SECTIONS = ['calendar', 'customers', 'consultations', 'assets', 'public-library'];
   var LIST_PAGE_SIZE = 200;
   var state = {
@@ -143,19 +143,25 @@
     return "&or=(legacy_source.is.null,and(legacy_source.in.(library,scripts,myspace_folders,myspace_files,scripts_attachment),or(legacy_payload->>scope.is.null,legacy_payload->>scope.eq.personal)))";
   }
   function isLocal() { return location.hostname === '127.0.0.1' || location.hostname === 'localhost'; }
-  function allowed() { return isLocal() || (authenticated() && !!currentUserId()) || currentUserEmail() === TEST_EMAIL; }
+  function localPreviewAllowed() { return isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; }
+  function allowed() { return localPreviewAllowed() || (authenticated() && !!currentUserId()) || currentUserEmail() === TEST_EMAIL; }
   function authenticated() { return !!(window.db && window.db.fetch && window.db.getToken && window.db.getToken() && currentUserId()); }
-  function canEnterSection(section) { if (section === 'admin-users') return isLocal() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  function openBriefingAuth(mode, redirect) {
+    var target = redirect || (location.pathname + location.search);
+    if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') {
+      window.InsuranceBriefingAuth.open(mode, { redirect: target });
+      return;
+    }
+    window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=' + encodeURIComponent(target);
+  }
+  function canEnterSection(section) { if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
   /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
      로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
      그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
   function promptLoginRequired() {
     var message = '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.';
     var redirect = location.pathname + location.search;
-    function startLogin() {
-      if (window.InsuranceBriefingAuth && typeof window.InsuranceBriefingAuth.open === 'function') window.InsuranceBriefingAuth.open('login', { redirect: redirect });
-      else window.location.href = '/pages/landing.html?auth=login&redirect=' + encodeURIComponent(redirect);
-    }
+    function startLogin() { openBriefingAuth('login', redirect); }
     if (window.InsuranceBriefingNotice && typeof window.InsuranceBriefingNotice.confirm === 'function') {
       window.InsuranceBriefingNotice.confirm({ title: '보험워크', message: message, confirmLabel: '로그인' }).then(function (confirmed) { if (confirmed) startLogin(); });
       return;
@@ -266,11 +272,6 @@
     state.data.events = [task].concat(state.data.events.filter(function (entry) { return String(entry.id) !== String(task.id); }));
   }
 
-  /* 2026-08-25 대표 승인 — 셸(사이드바 포함)은 로그인 여부와 무관하게 항상 렌더링한다. 과거에는
-     allowed()가 false면 여기서 renderStandaloneGate('login'/'denied')를 호출해 앱 진입 자체를
-     전면 차단했으나, 이제 홈·보험브리핑·참고자료·영업도구는 비로그인도 접근 가능해야 하므로 그
-     차단을 제거했다. 보호 메뉴(캘린더/고객관리/상담관리/자료) 개별 진입 차단은 go()/openWorkspace()의
-     canEnterSection() 가드가 담당한다. */
   function ensureShell() {
     document.body.classList.add('is-insuwork');
     if (STANDALONE) return !!document.getElementById('v-insuwork');
@@ -865,6 +866,28 @@
     return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year)); }, []);
   }
   function allEvents() { return state.data.events.concat(builtInEventsAroundCalendar()); }
+
+  function publicLandingHtml() {
+    var concepts = [
+      ['모듈 / 카드', '업무를 구성하는 기본 단위'],
+      ['연결 / 워크플로우', '업무 흐름과 단계의 유기적 연결'],
+      ['정리 / 시스템', '체계적인 데이터 관리와 업무 정리']
+    ];
+    var keywords = ['정리된 구조', '연결성', '업무 도구', '효율성', '신뢰감'];
+    return '<section class="iw-public-landing" aria-labelledby="iw-public-title">'
+      + '<div class="iw-public-hero">'
+      + '<div class="iw-public-copy">'
+      + '<p class="iw-public-kicker">WORKFLOW / SYSTEM IDENTITY</p>'
+      + '<h1 id="iw-public-title">체계적인 워크플로우로<br>보험 업무를 연결하다</h1>'
+      + '<p>업무 도구와 모듈이 유기적으로 연결되어 효율적인 보험 업무 프로세스를 완성하는 스마트 플랫폼입니다.</p>'
+      + '<ul class="iw-public-keywords" aria-label="보험워크 핵심 키워드">' + keywords.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>'
+      + '<div class="iw-public-actions"><button class="iw-public-primary" type="button" data-ib-login>로그인</button><button class="iw-public-secondary" type="button" data-ib-signup>회원가입</button></div>'
+      + '</div>'
+      + '<figure class="iw-public-brand"><img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크 Insurance Work 로고"><figcaption>SMART WORKFLOW. ORGANIZED PROCESS. TRUSTED PARTNER.</figcaption></figure>'
+      + '</div>'
+      + '<div class="iw-public-concepts" aria-label="보험워크 구성 개념">' + concepts.map(function (item, index) { return '<article><span>' + String(index + 1).padStart(2, '0') + '</span><strong>' + item[0] + '</strong><p>' + item[1] + '</p></article>'; }).join('') + '</div>'
+      + '</section>';
+  }
 
   function homeHtml() {
     var today = ymd(new Date());
@@ -1839,6 +1862,15 @@
 
   function renderShell() {
     var view = document.getElementById('v-insuwork'); if (!view) return;
+    document.body.classList.toggle('is-insuwork-public', STANDALONE && !allowed());
+    if (STANDALONE && !allowed()) {
+      view.innerHTML = publicLandingHtml();
+      var loginBtn = view.querySelector('[data-ib-login]');
+      var signupBtn = view.querySelector('[data-ib-signup]');
+      if (loginBtn) loginBtn.addEventListener('click', function () { openBriefingAuth('login'); });
+      if (signupBtn) signupBtn.addEventListener('click', function () { openBriefingAuth('signup'); });
+      return;
+    }
     loadCarrierDirectory();
     var head = STANDALONE ? '' : '<header class="iw-head"><div class="iw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="iw-search">⌕<input id="iw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
     view.innerHTML = '<div class="iw-shell' + (STANDALONE ? ' iw-shell-compact' : '') + '">' + head + '<div class="iw-body">' + navHtml() + '<main class="iw-main" id="iw-main"></main></div></div><dialog class="iw-dialog" id="iw-dialog"><button class="iw-dialog-close" onclick="OSInsuwork.closeDialog()" aria-label="닫기">×</button><div id="iw-dialog-body"></div></dialog>'
