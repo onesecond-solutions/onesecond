@@ -139,7 +139,7 @@
      (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는
      링크를 추가했다(다른 화면들과 동일한 구조). */
   function headerHtml() {
-    return '<header class="iwm-header"><strong>상담관리</strong></header>';
+    return window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('상담', 'consultations') : '<header class="iwm-header"><strong>상담</strong></header>';
   }
 
   /* 바깥 클릭 닫기 리스너는 document에 한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로,
@@ -288,6 +288,7 @@
     view.innerHTML = headerHtml()
       + '<main class="iwm-main"><div id="iwm-consult-body"></div></main>'
       + bottomNavHtml();
+    if (window.OSInsuworkMobileNav && window.OSInsuworkMobileNav.bindHeader) window.OSInsuworkMobileNav.bindHeader();
     renderListBody();
   }
 
@@ -316,6 +317,7 @@
       + '</div>'
       + '</main>'
       + bottomNavHtml();
+    if (window.OSInsuworkMobileNav && window.OSInsuworkMobileNav.bindHeader) window.OSInsuworkMobileNav.bindHeader();
 
     var back = document.getElementById('iwm-consult-back');
     if (back) back.addEventListener('click', function () {

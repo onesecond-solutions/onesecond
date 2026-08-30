@@ -249,13 +249,14 @@
     /* feat/workstation-mobile-bottom-nav — 화면 이동 탭(오늘/고객/자료)은 하단 고정 탭바로 옮겼다.
        feat/workstation-mobile-header-consistency — PC로 보기/로그아웃은 "⋯" 메뉴 안으로 숨기고,
        보험브리핑 홈으로 돌아가는 링크를 추가했다. */
-    view.innerHTML = '<header class="iwm-header"><strong>캘린더</strong></header>'
+    view.innerHTML = (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('일정', 'calendar') : '<header class="iwm-header"><strong>일정</strong></header>')
       + '<main class="iwm-main">'
       + todaySectionHtml(todayDate)
       + weekSectionHtml(todayDate)
       + upcomingSectionHtml(todayDate)
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('calendar') : '');
+    if (window.OSInsuworkMobileNav && window.OSInsuworkMobileNav.bindHeader) window.OSInsuworkMobileNav.bindHeader();
 
     var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });

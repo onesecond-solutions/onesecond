@@ -14,6 +14,67 @@
   function icon(path) {
     return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' + path + '"></path></svg>';
   }
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+  function header(title, activeKey, opts) {
+    opts = opts || {};
+    var searchValue = opts.searchValue || '';
+    var searchAction = opts.searchAction || './search.html';
+    return '<header class="iwm-header">'
+      + '<div class="iwm-header-row">'
+      + '<a class="iwm-mobile-brand" href="./index.html" aria-label="보험워크 홈">'
+      + '<img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크">'
+      + '</a>'
+      + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-label="메뉴 열기" aria-haspopup="menu" aria-expanded="false">'
+      + '<span></span><span></span><span></span>'
+      + '</button>'
+      + '<div class="iwm-menu-panel" id="iwm-menu-panel" role="menu" hidden>'
+      + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=briefing" role="menuitem">보험브리핑</a>'
+      + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=newsletters" role="menuitem">참고자료</a>'
+      + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=sales-strategy" role="menuitem">영업자료</a>'
+      + '</div>'
+      + '</div>'
+      + '<form class="iwm-global-search" action="' + esc(searchAction) + '" method="get" role="search">'
+      + '<span aria-hidden="true">⌕</span>'
+      + '<input type="search" name="q" value="' + esc(searchValue) + '" placeholder="자료·고객 검색" autocomplete="off" inputmode="search" aria-label="자료·고객 검색">'
+      + '</form>'
+      + '<strong class="iwm-screen-title">' + esc(title) + '</strong>'
+      + '</header>';
+  }
+  var headerOutsideBound = false;
+  function bindHeader() {
+    var form = document.querySelector('.iwm-global-search');
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        var input = form.querySelector('input[name="q"]');
+        if (!input || !input.value.trim()) event.preventDefault();
+      });
+    }
+    var menuBtn = document.getElementById('iwm-menu-btn');
+    var menuPanel = document.getElementById('iwm-menu-panel');
+    if (menuBtn && menuPanel) {
+      menuBtn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        var willOpen = menuPanel.hidden;
+        menuPanel.hidden = !willOpen;
+        menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
+    if (!headerOutsideBound) {
+      headerOutsideBound = true;
+      document.addEventListener('click', function (event) {
+        var panel = document.getElementById('iwm-menu-panel');
+        var btn = document.getElementById('iwm-menu-btn');
+        if (!panel || panel.hidden) return;
+        if (panel.contains(event.target) || (btn && btn.contains(event.target))) return;
+        panel.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    }
+  }
   var ITEMS = [
     { key: 'customers', href: './customers.html', label: '고객', icon: icon('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75') },
     { key: 'consultations', href: './consultations.html', label: '상담', icon: icon('M21 15a4 4 0 0 1-4 4H8l-5 3v-3a4 4 0 0 1-2-3.46V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z M6 8h10 M6 12h7') },
@@ -36,5 +97,5 @@
     return '<nav class="iwm-bottom-nav" aria-label="보험워크 하단 메뉴">' + itemsHtml + '</nav>';
   }
 
-  window.OSInsuworkMobileNav = { render: render };
+  window.OSInsuworkMobileNav = { render: render, header: header, bindHeader: bindHeader };
 })();

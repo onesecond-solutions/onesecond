@@ -32,21 +32,68 @@ body.iwm-page {
   top: 0;
   z-index: 5;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 10px 16px 12px;
   background: var(--bg);
   border-bottom: 1px solid var(--bd);
 }
-.iwm-header strong {
-  font-size: var(--fs-title, 18px);
-  font-weight: 700;
-  /* fix/workstation-mobile-bugs 버그2 — 탭 전환 직후 헤더 폭 계산 타이밍에 제목이 한 글자씩 줄바꿈되던 문제.
-     .iwm-tab-link/.iwm-pc-link는 이미 white-space:nowrap이 있었는데 제목 <strong>에는 빠져 있었다.
-     flex-shrink:0도 함께 줘서 header-actions가 넓어져도 제목 쪽이 눌려 줄바꿈되지 않게 한다. */
+.iwm-header-row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+}
+.iwm-mobile-brand {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  text-decoration: none;
+}
+.iwm-mobile-brand img {
+  display: block;
+  width: 132px;
+  max-width: 46vw;
+  height: auto;
+}
+.iwm-screen-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
   white-space: nowrap;
-  flex-shrink: 0;
+  border: 0;
+}
+.iwm-global-search {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border: 1px solid #CBD7EA;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ts);
+  box-shadow: 0 8px 20px rgba(13,27,51,.06);
+}
+.iwm-global-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tp);
+  font: inherit;
+}
+.iwm-global-search input::placeholder {
+  color: #7A879A;
 }
 .iwm-header-actions {
   display: flex;
@@ -89,33 +136,42 @@ body.iwm-page {
    패널은 .iwm-header-actions(overflow-x:auto, 버그3 대응) 밖의 .iwm-header 직계 자식으로 둬서 그 스크롤
    컨테이너에 잘리지 않는다 — .iwm-header가 이미 position:sticky라 절대배치 기준(containing block)이 된다. */
 .iwm-menu-btn {
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-flex;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 5px;
   border: 1px solid var(--bd);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   background: var(--s1);
   color: var(--tp);
-  font-size: 20px;
-  line-height: 1;
   cursor: pointer;
+}
+.iwm-menu-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
 }
 .iwm-menu-btn:active,
 .iwm-menu-btn[aria-expanded="true"] { color: var(--ac); border-color: var(--ac); }
 
 .iwm-menu-panel {
   position: absolute;
-  top: calc(100% + 6px);
-  right: 16px;
+  top: calc(100% + 8px);
+  right: 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
-  min-width: 176px;
-  border: 1px solid var(--bd);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
+  min-width: 152px;
+  border: 1px solid #CBD7EA;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 38px rgba(13,27,51,.16);
   overflow: hidden;
 }
 .iwm-menu-item {
@@ -126,7 +182,7 @@ body.iwm-page {
   font-size: var(--fs-body, 14px);
   color: var(--tp);
   text-decoration: none;
-  border-bottom: 1px solid var(--bd);
+  border-bottom: 1px solid #E4EAF3;
 }
 .iwm-menu-item:last-child { border-bottom: none; }
 .iwm-menu-item:active { color: var(--ac); background: var(--s1); }
@@ -147,9 +203,18 @@ body.iwm-page {
   border-bottom-color: rgba(255,255,255,.16);
   box-shadow: 0 10px 28px rgba(13,27,51,.18);
 }
-.iwm-home-page .iwm-header strong {
+.iwm-home-page .iwm-menu-btn {
+  border-color: rgba(255,255,255,.28);
+  background: rgba(255,255,255,.1);
   color: #fff;
-  font-weight: 800;
+}
+.iwm-home-page .iwm-mobile-brand {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+.iwm-home-page .iwm-mobile-brand img {
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.18));
 }
 .iwm-home-page .iwm-main {
   gap: 18px;
@@ -286,6 +351,10 @@ body.iwm-page {
   border-radius: 12px;
   background: var(--s1);
   box-shadow: 0 10px 24px rgba(13,27,51,.08);
+}
+.iwm-card[href] {
+  display: block;
+  text-decoration: none;
 }
 .iwm-card-title {
   font-size: var(--fs-body, 14px);

@@ -5,8 +5,8 @@
    렌더/저장 함수 본문은 호출하지 않는다. 이번 Phase 5도 조회 전용이다(쓰기 기능 없음).
    네임스페이스 = OSInsuworkMobileLibrary (다른 OSInsuworkMobile* 네임스페이스와 충돌 없음).
 
-   코상무 확정 방향: 모바일 자료실은 "정리"보다 "찾아서 보여주기"가 핵심 — 소식지·상품라인업·업무노트(구 "스크립트"
-   표시명)·영업방향을 빠르게 검색·미리보기.
+   코상무 확정 방향: 모바일 자료실은 "정리"보다 "찾아서 보여주기"가 핵심 — 업무노트·자료실·메모를
+   빠르게 검색·미리보기.
 
    실제 조사 결과(코드 확인, 2026-08-22) — 4개 자료가 데이터 구조상 완전히 다르다:
    1) 자료실(state.data.library, item_type=memo/file/link, 폴더 제외) · 업무노트(state.data.scripts,
@@ -45,7 +45,7 @@
      자체는 전혀 손대지 않는다 — 그 안전한 HTML을 어느 화면(카드 안 vs 풀스크린)에 꽂을지만 바뀐다. */
   var state = {
     view: 'list', query: '', selectedKey: null,
-    libraryLimit: RECENT_PAGE_SIZE, scriptsLimit: RECENT_PAGE_SIZE, newsLimit: RECENT_PAGE_SIZE, strategyLimit: RECENT_PAGE_SIZE,
+    libraryLimit: RECENT_PAGE_SIZE, scriptsLimit: RECENT_PAGE_SIZE, memoLimit: RECENT_PAGE_SIZE,
     directory: [], feed: { newsletters: [], strategies: [], newsletterLoading: false, strategyLoading: false }
   };
   var lastRenderedJson = '';
@@ -162,7 +162,7 @@
      feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은
      "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는 링크를 추가했다. */
   function headerHtml() {
-    return '<header class="iwm-header"><strong>자료</strong></header>';
+    return window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('자료', 'library', { searchValue: state.query, searchAction: './library.html' }) : '<header class="iwm-header"><strong>자료</strong></header>';
   }
 
   /* 바깥 클릭 닫기 리스너는 document에 한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로,
@@ -243,7 +243,7 @@
   function searchResultsHtml(query) {
     var q = query.toLowerCase();
     var matches = state.directory.filter(function (entry) { return entry.searchText.indexOf(q) >= 0; }).sort(byCreatedDesc);
-    if (!matches.length) return sectionHtml('검색 결과', emptyHtml(isDataReady() ? '일치하는 자료·업무노트가 없습니다.' : '자료를 불러오는 중입니다…'));
+    if (!matches.length) return sectionHtml('검색 결과', emptyHtml(isDataReady() ? '일치하는 업무노트·자료실·메모가 없습니다.' : '자료를 불러오는 중입니다…'));
     return sectionHtml('검색 결과 ' + matches.length + '건', '<div class="iwm-list">' + matches.map(entryCardHtml).join('') + '</div>');
   }
 
@@ -299,13 +299,12 @@
 
   function browseHtml() {
     var ready = isDataReady();
-    var library = state.directory.filter(function (entry) { return entry.source === 'library'; });
+    var library = state.directory.filter(function (entry) { return entry.source === 'library' && entry.type !== 'memo'; });
     var scripts = state.directory.filter(function (entry) { return entry.source === 'scripts'; });
-    return recentSectionHtml('최근 자료실', library, state.libraryLimit, 'iwm-lib-more-library', '저장된 자료가 없습니다.', ready)
-      + recentSectionHtml('최근 업무노트', scripts, state.scriptsLimit, 'iwm-lib-more-scripts', '작성된 업무노트가 없습니다.', ready)
-      + feedSectionHtml('소식지', state.feed.newsletters || [], state.feed.newsletterLoading, state.newsLimit, 'iwm-lib-more-news', PC_LINKS.newsletters, '소식지가 없습니다.')
-      + feedSectionHtml('영업방향', state.feed.strategies || [], state.feed.strategyLoading, state.strategyLimit, 'iwm-lib-more-strategy', PC_LINKS.strategy, '영업방향 자료가 없습니다.')
-      + productLineupSectionHtml();
+    var memos = state.directory.filter(function (entry) { return entry.source === 'library' && entry.type === 'memo'; });
+    return recentSectionHtml('업무노트', scripts, state.scriptsLimit, 'iwm-lib-more-scripts', '작성된 업무노트가 없습니다.', ready)
+      + recentSectionHtml('자료실', library, state.libraryLimit, 'iwm-lib-more-library', '저장된 자료가 없습니다.', ready)
+      + recentSectionHtml('메모', memos, state.memoLimit, 'iwm-lib-more-memo', '작성된 메모가 없습니다.', ready);
   }
 
   function bodyHtml() {
@@ -330,8 +329,7 @@
     });
     bindMoreButton(container, 'iwm-lib-more-library', function () { state.libraryLimit += RECENT_PAGE_SIZE; });
     bindMoreButton(container, 'iwm-lib-more-scripts', function () { state.scriptsLimit += RECENT_PAGE_SIZE; });
-    bindMoreButton(container, 'iwm-lib-more-news', function () { state.newsLimit += RECENT_PAGE_SIZE; });
-    bindMoreButton(container, 'iwm-lib-more-strategy', function () { state.strategyLimit += RECENT_PAGE_SIZE; });
+    bindMoreButton(container, 'iwm-lib-more-memo', function () { state.memoLimit += RECENT_PAGE_SIZE; });
   }
 
   function bindMoreButton(container, id, apply) {
@@ -353,11 +351,11 @@
     var view = root(); if (!view) return;
     view.innerHTML = headerHtml()
       + '<main class="iwm-main">'
-      + '<div class="iwm-lib-search-wrap"><input type="search" id="iwm-lib-search" class="iwm-lib-search" placeholder="소식지·업무노트·영업방향 통합 검색" autocomplete="off" inputmode="search"></div>'
       + '<div id="iwm-lib-body"></div>'
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
-    var input = document.getElementById('iwm-lib-search');
+    if (window.OSInsuworkMobileNav && window.OSInsuworkMobileNav.bindHeader) window.OSInsuworkMobileNav.bindHeader();
+    var input = document.querySelector('.iwm-global-search input[name="q"]');
     if (input) {
       input.value = state.query;
       input.addEventListener('input', function () {
@@ -391,6 +389,7 @@
       + '<div class="iwm-lib-detail-full">' + expandBodyHtml(entry) + '</div>'
       + '</main>'
       + (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.render('library') : '');
+    if (window.OSInsuworkMobileNav && window.OSInsuworkMobileNav.bindHeader) window.OSInsuworkMobileNav.bindHeader();
 
     var back = document.getElementById('iwm-lib-back');
     if (back) back.addEventListener('click', function () {
@@ -402,7 +401,7 @@
   function snapshotJson() {
     return JSON.stringify({
       view: state.view, key: state.selectedKey, q: state.query,
-      ll: state.libraryLimit, sl: state.scriptsLimit, nl: state.newsLimit, stl: state.strategyLimit,
+      ll: state.libraryLimit, sl: state.scriptsLimit, ml: state.memoLimit,
       dir: state.directory, feed: state.feed
     });
   }
@@ -430,6 +429,9 @@
   }
 
   function startDataFlow() {
+    try {
+      state.query = new URLSearchParams(location.search || '').get('q') || state.query || '';
+    } catch (_e) {}
     renderLoading();
     if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
       window.OSInsuwork.reload();
