@@ -664,6 +664,11 @@
   function row(title, subtitle, right, action) {
     return '<button type="button" class="iw-row" onclick="' + action + '"><span><b>' + esc(title || '(제목 없음)') + '</b><small>' + esc(subtitle || '') + '</small></span><span>' + right + '</span></button>';
   }
+  function todayTaskRow(item) {
+    var done = item.type === 'event' && item.raw && item.raw.completed_at;
+    var check = item.type === 'event' && item.id ? '<button type="button" class="iw-task-check' + (done ? ' done' : '') + '" aria-label="' + (done ? '완료 취소' : '완료 처리') + '" onclick="event.stopPropagation();OSInsuwork.toggleEventComplete(\'' + esc(item.id) + '\')">' + (done ? '✓' : '') + '</button>' : '<span class="iw-task-check passive"></span>';
+    return '<button type="button" class="iw-row iw-task-row" onclick="' + item.action + '">' + check + '<span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.subtitle || '') + '</small></span><em>' + esc(item.badge || '') + '</em></button>';
+  }
   function favoriteKey(type, id) { return String(type) + ':' + String(id); }
   function isFavorited(type, id) { var key = favoriteKey(type, id); return state.favorites.some(function (entry) { return favoriteKey(entry.target_type, entry.target_id) === key; }); }
   function favoriteButton(type, id, title, subtitle) {
@@ -931,6 +936,21 @@
        구분해 준다(2차, UX 방어일 뿐 데이터 노출 방어는 loadData/RLS가 담당). */
     var loginHint = !allowed();
     var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
+    var customersById = {}; state.data.customers.forEach(function (item) { customersById[String(item.id)] = item; });
+    var careToday = todayEvents.filter(isCareTask);
+    var activeConsults = state.data.consultations.filter(function (item) {
+      var customer = customersById[String(item.customer_id)];
+      var status = consultationStatus(item, customer);
+      return customer && ['예약', '진행중', '제안서발송', '클로징'].indexOf(status) >= 0;
+    }).sort(function (a, b) { return String(b.consulted_at || b.created_at || '').localeCompare(String(a.consulted_at || a.created_at || '')); });
+    var closingCount = activeConsults.filter(function (item) { return consultationStatus(item, customersById[String(item.customer_id)]) === '클로징'; }).length;
+    var taskItems = todayEvents.map(function (event) {
+      var time = String(event.event_time || '').slice(0, 5);
+      return { type: 'event', raw: event, id: event.id, title: eventTitleLabel(event), subtitle: event.description || (isCareTask(event) ? '고객 케어 알림' : '오늘 일정'), badge: time || (isCareTask(event) ? '케어' : '일정'), action: 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')' };
+    }).concat(activeConsults.slice(0, 4).map(function (item) {
+      var customer = customersById[String(item.customer_id)] || {}, status = consultationStatus(item, customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10);
+      return { type: 'consultation', id: item.id, title: customer.name || '고객 상담', subtitle: stripHtml(item.memo || '상담내용 확인'), badge: status, action: 'OSInsuwork.go(\'consultations\');OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')' };
+    })).slice(0, 8);
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
       .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
@@ -944,7 +964,8 @@
     var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
     var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
     var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
-    var todayPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>오늘 일정</strong><button onclick="OSInsuwork.go(\'calendar\')">전체 보기</button></div><div class="iw-list">' + (todayEvents.length ? todayEvents.slice(0, 6).map(function (event) { return row(eventTitleLabel(event), event.description || '일정', esc(String(event.event_time || '').slice(0, 5)), 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')'); }).join('') : '<div class="iw-empty">' + todayEmptyText + '</div>') + '</div></section>';
+    var todayStats = '<div class="iw-task-stats"><button type="button" onclick="OSInsuwork.go(\'calendar\')"><strong>' + todayEvents.length + '</strong><span>오늘 일정</span></button><button type="button" onclick="OSInsuwork.go(\'calendar\')"><strong>' + careToday.length + '</strong><span>케어 알림</span></button><button type="button" onclick="OSInsuwork.go(\'consultations\');OSInsuwork.filterConsultationStatus(\'클로징\')"><strong>' + closingCount + '</strong><span>클로징 대기</span></button></div>';
+    var todayPanel = '<section class="iw-panel iw-today-work-panel"><div class="iw-panel-head"><strong>오늘의 업무판</strong><button onclick="OSInsuwork.go(\'calendar\')">캘린더 보기</button></div>' + todayStats + '<div class="iw-list">' + (taskItems.length ? taskItems.map(todayTaskRow).join('') : '<div class="iw-empty">' + todayEmptyText + '</div>') + '</div></section>';
     var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
     var customersEmptyText = loginHint ? '로그인 후 고객 정보를 확인할 수 있습니다.' : '등록된 고객이 없습니다.';
@@ -953,7 +974,7 @@
        진행 중인 게 아니라 애초에 로그인을 안 한 것) statusHtml()을 얹으면 "로그인 정보를 확인하고
        있습니다" 문구가 계속 떠 있는 것처럼 오해를 준다. 로그인된 사용자의 실제 개인 데이터 로딩
        중에는 기존처럼 문구를 유지한다. */
-    return (allowed() ? statusHtml() : '') + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-top">' + favoritesPanel + todayPanel + '</div><div class="iw-home-row iw-home-row-bottom">' + assetsPanel + customersPanel + '</div></div>';
+    return (allowed() ? statusHtml() : '') + '<div class="iw-home-grid"><div class="iw-home-row iw-home-row-focus">' + todayPanel + '</div><div class="iw-home-row iw-home-row-quick">' + favoritesPanel + assetsPanel + customersPanel + '</div></div>';
   }
 
   function assetCategory(item) {
