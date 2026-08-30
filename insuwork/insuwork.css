@@ -587,6 +587,11 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   font-size:44px;
   line-height:1.18;
   letter-spacing:0;
+  word-break:keep-all;
+  overflow-wrap:normal;
+}
+.iw-public-copy h1 span{
+  display:block;
 }
 .iw-public-copy>p{
   max-width:560px;
@@ -925,7 +930,14 @@ body.iw-page.is-insuwork-public .iw-account-trigger{
   }
   body.iw-page.is-insuwork-public .iw-brand-logo{height:34px;max-width:210px}
   .iw-public-landing{padding:36px 18px 28px}
-  .iw-public-copy h1{font-size:34px}
+  .iw-public-copy h1{
+    max-width:100%;
+    font-size:32px;
+    line-height:1.2;
+  }
+  .iw-public-copy h1 span:first-child{
+    font-size:28px;
+  }
   .iw-public-copy>p{font-size:15px}
   .iw-public-brand img{width:min(100%,520px)}
   .iw-story-logo{min-height:74px}

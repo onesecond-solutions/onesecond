@@ -896,7 +896,7 @@
       + '<div class="iw-public-hero">'
       + '<div class="iw-public-copy">'
       + '<p class="iw-public-kicker">WORKFLOW / SYSTEM IDENTITY</p>'
-      + '<h1 id="iw-public-title">체계적인 워크플로우로<br>보험 업무를 연결하다</h1>'
+      + '<h1 id="iw-public-title"><span>체계적인 워크플로우로</span><span>보험 업무를 연결하다</span></h1>'
       + '<p>보험워크는 흩어진 상담, 고객, 일정, 자료를 하나의 업무 흐름으로 묶어 오늘 해야 할 일과 다음 케어를 놓치지 않게 하는 스마트 보험 업무 플랫폼입니다.</p>'
       + '<ul class="iw-public-keywords" aria-label="보험워크 핵심 키워드">' + keywords.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>'
       + '<div class="iw-public-actions"><button class="iw-public-primary" type="button" data-ib-login>로그인</button><button class="iw-public-secondary" type="button" data-ib-signup>회원가입</button></div>'
