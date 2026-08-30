@@ -28,6 +28,10 @@
       + '<a class="iwm-mobile-brand" href="./index.html" aria-label="보험워크 홈">'
       + '<img src="/insuwork/assets/brand/insurance-work-logo-ci.png?v=20260830ci" alt="보험워크">'
       + '</a>'
+      + '<form class="iwm-global-search" action="' + esc(searchAction) + '" method="get" role="search">'
+      + '<span aria-hidden="true">⌕</span>'
+      + '<input type="search" name="q" value="' + esc(searchValue) + '" placeholder="검색" autocomplete="off" inputmode="search" aria-label="자료·고객 검색">'
+      + '</form>'
       + '<button type="button" class="iwm-menu-btn" id="iwm-menu-btn" aria-label="메뉴 열기" aria-haspopup="menu" aria-expanded="false">'
       + '<span></span><span></span><span></span>'
       + '</button>'
@@ -37,10 +41,6 @@
       + '<a class="iwm-menu-item" href="/insuwork/?view=insuwork&section=sales-strategy" role="menuitem">영업자료</a>'
       + '</div>'
       + '</div>'
-      + '<form class="iwm-global-search" action="' + esc(searchAction) + '" method="get" role="search">'
-      + '<span aria-hidden="true">⌕</span>'
-      + '<input type="search" name="q" value="' + esc(searchValue) + '" placeholder="자료·고객 검색" autocomplete="off" inputmode="search" aria-label="자료·고객 검색">'
-      + '</form>'
       + '<strong class="iwm-screen-title">' + esc(title) + '</strong>'
       + '</header>';
   }
