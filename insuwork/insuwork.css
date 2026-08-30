@@ -22,12 +22,12 @@ html[data-theme="dark"] body.iw-page{
 body.iw-page,#v-insuwork,#v-insuwork .iw-panel,#v-insuwork .iw-main,#v-insuwork .iw-stat{transition:background-color .22s ease-out,border-color .22s ease-out,color .22s ease-out}
 @media(prefers-reduced-motion:reduce){body.iw-page,#v-insuwork,#v-insuwork .iw-panel,#v-insuwork .iw-main,#v-insuwork .iw-stat{transition:none}}
 
-html,body.iw-page{min-height:100%;height:100%;overflow:hidden}
-body.iw-page{position:relative;display:grid;grid-template-rows:64px minmax(0,1fr);background:var(--bg)}
+html,body.iw-page{min-height:100%;height:100%;overflow:hidden;overflow-x:hidden}
+body.iw-page{position:relative;display:grid;grid-template-rows:64px minmax(0,1fr);max-width:100vw;background:var(--bg)}
 body.iw-page:before{content:"";position:fixed;z-index:-2;inset:0;background-image:url("../assets/generated/briefing-toss-hero.webp");background-position:center;background-size:cover;transform:scale(1.01)}
 body.iw-page.iw-bg-namsan:before{background-image:url("../assets/generated/namsan-sunny.webp")}
 body.iw-page:after{content:"";position:fixed;z-index:-1;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--s1) 12%,transparent),color-mix(in srgb,var(--s1) 4%,transparent))}
-.iw-header{position:relative;z-index:100;display:flex;overflow:visible;align-items:center;justify-content:space-between;gap:28px;padding:0 clamp(16px,3vw,32px);border-bottom:1px solid color-mix(in srgb,var(--s1) 58%,transparent);background:color-mix(in srgb,var(--s1) 62%,transparent);box-shadow:0 1px 18px color-mix(in srgb,var(--tp) 8%,transparent);backdrop-filter:blur(14px) saturate(112%);-webkit-backdrop-filter:blur(14px) saturate(112%)}
+.iw-header{position:relative;z-index:100;display:flex;overflow:visible;box-sizing:border-box;max-width:100vw;align-items:center;justify-content:space-between;gap:28px;padding:0 clamp(16px,3vw,32px);border-bottom:1px solid color-mix(in srgb,var(--s1) 58%,transparent);background:color-mix(in srgb,var(--s1) 62%,transparent);box-shadow:0 1px 18px color-mix(in srgb,var(--tp) 8%,transparent);backdrop-filter:blur(14px) saturate(112%);-webkit-backdrop-filter:blur(14px) saturate(112%)}
 .iw-identity{display:flex;align-items:center;gap:14px;min-width:0}
 .iw-brand{display:flex;align-items:center;gap:10px;color:var(--tp);text-decoration:none}
 .iw-brand span{display:grid;width:34px;height:34px;place-items:center;border-radius:var(--radius-sm);background:var(--ac);color:var(--s1);font-weight:800}
@@ -82,11 +82,12 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 .iw-page #v-insuwork .iw-driving-row.one .iw-driving-option{justify-content:flex-start;text-align:left}
 .iw-page #v-insuwork .iw-driving-sep{padding:0 6px;color:var(--ts);font-size:12px;text-align:center}
 .iw-page #v-insuwork .iw-driving-option span{min-width:0;overflow:visible;white-space:normal;word-break:keep-all}
-.iw-main{position:relative;z-index:1;min-height:0;overflow:hidden;padding:14px}
-.iw-main #v-insuwork{height:100%}
-#v-insuwork{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--s1) 55%,transparent);border-radius:var(--radius-lg);background:transparent;box-shadow:none}
+.iw-main{position:relative;z-index:1;box-sizing:border-box;min-width:0;min-height:0;max-width:100vw;overflow:hidden;overflow-x:hidden;padding:14px}
+.iw-main #v-insuwork{width:100%;max-width:100%;height:100%;overflow-x:hidden}
+#v-insuwork{position:relative;box-sizing:border-box;max-width:100%;overflow:hidden;overflow-x:hidden;border:1px solid color-mix(in srgb,var(--s1) 55%,transparent);border-radius:var(--radius-lg);background:transparent;box-shadow:none}
 #v-insuwork .iw-head{border-bottom:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
 #v-insuwork .iw-search{border-color:color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
+#v-insuwork .iw-shell,#v-insuwork .iw-body,#v-insuwork .iw-main{box-sizing:border-box;min-width:0;max-width:100%;overflow-x:hidden}
 #v-insuwork .iw-shell-compact{grid-template-rows:1fr}
 #v-insuwork .iw-assets-controls{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
 #v-insuwork .iw-assets-controls .iw-tabs{min-width:0;overflow:visible;margin-bottom:0}
