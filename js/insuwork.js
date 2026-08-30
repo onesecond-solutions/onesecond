@@ -3676,6 +3676,7 @@
   document.addEventListener('click', function (event) { var menu = document.getElementById('iw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.iw-preview-ddak')) closeDdakMenu(); });
   document.addEventListener('click', function (event) { var open = document.querySelectorAll('.iw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });
   document.addEventListener('click', function (event) { var panel = document.getElementById('iw-fav-panel'); if (panel && !panel.hidden && !panel.contains(event.target) && !event.target.closest('.iw-fav-toggle')) closeFavoritesPanel(); });
+  document.addEventListener('click', function (event) { document.querySelectorAll('.iw-nav-guide[open]').forEach(function (guide) { if (!guide.contains(event.target)) guide.open = false; }); });
   document.addEventListener('click', function (event) { document.querySelectorAll('.iw-driving-panel').forEach(function (panel) { if (!panel.hidden && !panel.contains(event.target) && !event.target.closest('.iw-driving-toggle')) panel.hidden = true; }); });
   window.addEventListener('load', function () { window.setTimeout(boot, 350); });
   /* 모바일 "오늘" 화면 전용 읽기 전용 조회 함수 2종 (2026-08-22, Phase 1 — feat/workstation-mobile-today).
