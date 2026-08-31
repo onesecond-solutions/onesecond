@@ -108,9 +108,9 @@
   function renderMigrationPendingGate() {
     var view = root(); if (!view) return;
     view.innerHTML = '<div class="iwm-gate">'
-      + '<strong>PC에서 먼저 설정해 주세요</strong>'
-      + '<p>PC(보험워크)에서 먼저 한 번 설정을 완료해 주세요.</p>'
-      + '<a class="iwm-link" href="/insuwork/">PC(보험워크) 열기</a>'
+      + '<strong>처음 설정을 완료해 주세요</strong>'
+      + '<p>보험워크를 처음 이용할 때 한 번 설정이 필요합니다.</p>'
+      + '<a class="iwm-link" href="./section.html?view=insuwork&section=user-guide">처음 설정하기</a>'
       + '</div>';
   }
   function checkMigrationChoiceThenStart() {
