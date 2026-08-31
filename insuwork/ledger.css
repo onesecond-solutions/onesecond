@@ -38,8 +38,8 @@
 #v-insuwork .iws-toolbar [data-iws-save]{background:var(--ac);color:var(--s1)}
 #v-insuwork .iws-help{color:var(--ts);font-size:var(--fs-caption);margin-bottom:12px}
 #v-insuwork .iws-scroll{max-width:100%;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-sm)}
-#v-insuwork .iws-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:1296px}
-#v-insuwork .iws-table th,#v-insuwork .iws-table td{padding:6px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);vertical-align:top;text-align:left}
+#v-insuwork .iws-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:1362px}
+#v-insuwork .iws-table th,#v-insuwork .iws-table td{padding:6px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);vertical-align:middle;text-align:left}
 #v-insuwork .iws-table thead th,#v-insuwork .iws-table tfoot{background:var(--s2);white-space:nowrap}
 #v-insuwork .iws-table input[type=text]{width:100%;min-width:0}
 #v-insuwork .iws-amount-control{display:flex;align-items:center;gap:4px;min-width:0;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);padding-right:10px}
@@ -113,19 +113,22 @@
 
 /* Content-sized columns; memo receives all remaining space. */
 #v-insuwork .iws-col-row{width:76px}
-#v-insuwork .iws-col-name{width:210px}
+#v-insuwork .iws-col-name{width:190px}
 #v-insuwork .iws-col-date{width:190px}
 #v-insuwork .iws-col-amount{width:150px}
 #v-insuwork .iws-col-paid{width:90px}
-#v-insuwork .iws-col-actions{width:230px}
+#v-insuwork .iws-col-actions{width:220px}
 #v-insuwork .iws-row-actions{display:flex;align-items:center;gap:4px}
 #v-insuwork .iws-row-actions button{flex:none}
 #v-insuwork .iws-table .iws-row-actions small{margin:0 0 0 4px;white-space:nowrap}
 #v-insuwork .iws-table .iws-row-actions small.iws-error{white-space:normal;min-width:0}
 
-#v-insuwork .iws-table .iws-repeat-label{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:var(--fs-caption);color:var(--ts)}
-#v-insuwork .iws-table .iws-repeat-label input{width:16px;height:16px;min-height:16px;margin:0}
 #v-insuwork .iws-entry-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 #v-insuwork .iws-entry-head label{display:flex;align-items:center;gap:6px;font-size:var(--fs-caption)}
 #v-insuwork .iws-entry-head input{min-height:20px;width:20px;height:20px}
 #v-insuwork .iws-help summary{cursor:pointer}
+
+#v-insuwork .iws-col-repeat{width:96px}
+#v-insuwork .iws-table .iws-repeat-cell,#v-insuwork .iws-table td:has(>[data-iws-field=paid]),#v-insuwork .iws-table thead th:nth-child(7){text-align:center;white-space:nowrap}
+#v-insuwork .iws-repeat-cell span{font-size:var(--fs-caption);color:var(--ts)}
+#v-insuwork .iws-table .iws-amount-control input{min-height:42px}
