@@ -2,6 +2,7 @@
   'use strict';
   var LIMIT=500, MAX=999999999999;
   function validDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s)&&!isNaN(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;}
+  function normalizeDate(value){var raw=String(value),digits=raw.trim();if(!/^\d{8}$/.test(digits))return raw;var formatted=digits.slice(0,4)+'-'+digits.slice(4,6)+'-'+digits.slice(6,8);return validDate(formatted)?formatted:raw;}
   function valid(sheet){return !!(sheet&&sheet.version===1&&Array.isArray(sheet.rows)&&sheet.rows.length<=LIMIT&&new Set(sheet.rows.map(function(r){return r&&r.id;})).size===sheet.rows.length&&sheet.rows.every(function(r){return r&&typeof r.id==='string'&&r.id.length<=80&&['expense','total'].includes(r.kind)&&['name','date','estimate','actual','memo'].every(function(k){return typeof r[k]==='string'&&r[k].length<=(k==='memo'?300:200);})&&typeof r.paid==='boolean';}));}
   function blank(r){return !r.name&&!r.date&&!r.estimate&&!r.actual&&!r.memo&&!r.paid;}
   function calculate(rows){
@@ -16,7 +17,7 @@
       function expression(){var v=product();while(tokens[at]==='+'||tokens[at]==='-'){var op=pop(),n=product();v=number(op==='+'?v+n:v-n);}return v;}
       var value=expression();if(at!==tokens.length)throw Error('#FORMULA!');return value;
     }
-    var results=rows.map(function(r,i){var c,d;try{c={value:cell('C',i+2)};}catch(e){c={error:e.message};}try{d={value:cell('D',i+2)};}catch(e){d={error:e.message};}var error=c.error||d.error;if(!blank(r)&&r.kind!=='total'){if(!r.name.trim()||!validDate(r.date)||!r.estimate.trim())error=error||'항목·납입기한·예정 금액 확인';if(c.value<0||d.value<0)error=error||'금액은 0원 이상';if(r.paid&&!r.actual.trim())error=error||'실제 납부액 입력';}return {estimate:c,actual:d,error:error,empty:blank(r)};});
+    var results=rows.map(function(r,i){var c,d;try{c={value:cell('C',i+2)};}catch(e){c={error:e.message};}try{d={value:cell('D',i+2)};}catch(e){d={error:e.message};}var error=c.error||d.error;if(!blank(r)&&r.kind!=='total'){if(r.date&&!validDate(r.date))error=error||'납입기한 확인: 연월일 8자리(YYYYMMDD)와 실제 날짜를 입력하세요.';if(!r.name.trim()||!validDate(r.date)||!r.estimate.trim())error=error||'항목·납입기한·예정 금액 확인';if(c.value<0||d.value<0)error=error||'금액은 0원 이상';if(r.paid&&!r.actual.trim())error=error||'실제 납부액 입력';}return {estimate:c,actual:d,error:error,empty:blank(r)};});
     return {rows:results,error:results.some(function(r){return !!r.error;})};
   }
   function summary(rows,calc,month){var s={estimate:0,paid:0,remaining:0,expected:0,error:calc.error};rows.forEach(function(r,i){if(r.kind==='total'||calc.rows[i].empty||calc.rows[i].error||(month&&r.date.slice(0,7)!==month))return;var v=calc.rows[i];s.estimate+=v.estimate.value;if(r.paid)s.paid+=v.actual.value;else s.remaining+=v.estimate.value;});s.expected=s.paid+s.remaining;return s;}
@@ -24,5 +25,5 @@
   function rewrite(formula,deleted,delta){if(!formula.startsWith('='))return formula;return formula.replace(/(\$?[A-Z]+)(\$?)([1-9]\d*)(?::(\$?[A-Z]+)(\$?)([1-9]\d*))?/gi,function(all,c,abs,n,c2,abs2,n2){n=Number(n);if(deleted!=null){if(c2){n2=Number(n2);if(n===n2&&n===deleted)return '#REF!';if(n>deleted)n--;if(n2>=deleted)n2--;return c+abs+n+':'+c2+abs2+n2;}if(n===deleted)return '#REF!';return c+abs+(n>deleted?n-1:n);}var a=n+(abs?0:delta),b=c2?Number(n2)+(abs2?0:delta):null;return a<2||(b!=null&&b<2)?'#REF!':c+abs+a+(c2?':'+c2+abs2+b:'');});}
   function remove(rows,index){return rows.filter(function(_,i){return i!==index;}).map(function(r){return Object.assign({},r,{estimate:rewrite(r.estimate,index+2),actual:rewrite(r.actual,index+2)});});}
   function copy(rows,index,id){var r=rows[index],delta=rows.length-index;return Object.assign({},r,{id:id,estimate:rewrite(r.estimate,null,delta),actual:r.kind==='total'?rewrite(r.actual,null,delta):'',paid:false});}
-  host.OSLedgerSheetCore={valid:valid,calculate:calculate,summary:summary,remove:remove,copy:copy,limit:LIMIT};
+  host.OSLedgerSheetCore={valid:valid,calculate:calculate,summary:summary,remove:remove,copy:copy,normalizeDate:normalizeDate,limit:LIMIT};
 })(typeof window==='undefined'?globalThis:window);
