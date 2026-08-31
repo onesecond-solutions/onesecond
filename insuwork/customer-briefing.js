@@ -26,7 +26,7 @@
     if(/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)&&selectedDate!==data?.date){try{shown=await read('daily/'+selectedDate+'.json');}catch(_){shown=null;}}
     if(!root.isConnected)return;
     var dates=archive.dates||[],items=shown&&shown.items||[],detail=items.find(function(i){return i.id===article;});
-    root.innerHTML='<header class="iwb-page-head"><h2>오늘의 고객 브리핑</h2><p class="iwb-note">'+esc(stamp())+'</p><p class="iwb-note">최근 72시간의 주요 소식입니다. 법령·의료 보도는 시행 여부, 적용 대상과 원문을 확인해 주세요.</p></header>'+
+    root.innerHTML='<header class="iwb-page-head"><h2>오늘의 고객 브리핑</h2><p class="iwb-note">'+esc(stamp())+'</p><p class="iwb-note">'+(data&&data.collectionMode==='editorial-bootstrap'?'공식 출처를 직접 확인한 초기 게시 자료입니다. 자동 수집 결과와 구분합니다.':'최근 72시간의 주요 소식입니다.')+' 법령·의료 보도는 시행 여부, 적용 대상과 원문을 확인해 주세요.</p></header>'+
       '<div class="iwb-filters"><label>날짜 <select data-iwb-date>'+dates.map(function(d){return '<option'+(d===(selectedDate||data?.date)?' selected':'')+'>'+esc(d)+'</option>';}).join('')+'</select></label><label>분야 <select data-iwb-filter><option value="">전체</option>'+((shown&&shown.categories)||[]).map(function(c){return '<option'+(filter===c?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'</select></label><button type="button" data-iwb-retry>새로고침</button></div>'+
       (detail?'<article class="iwb-detail"><a href="'+route('',shown.date)+'">목록으로</a>'+card(detail,true)+'</article>':article?'<p>해당 날짜의 기사를 찾지 못했습니다. 아래 목록에서 확인해 주세요.</p>':'')+
       '<div class="iwb-list">'+(items.filter(function(i){return !filter||i.category===filter;}).map(function(i){return '<article class="iwb-card"><a href="'+route(i.id,shown.date)+'"><span class="iwb-category">'+esc(i.category)+'</span><h3>'+esc(i.title)+'</h3></a><p class="iwb-note">'+esc(i.sourceType)+' · '+esc(i.source)+' · '+esc(i.publishedAt.slice(0,10))+'</p></article>';}).join('')||'<p class="iwb-note">'+(shown?'표시할 기사가 없습니다.':'자료를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.')+'</p>')+'</div>';
@@ -34,7 +34,7 @@
     root.querySelector('[data-iwb-filter]').addEventListener('change',function(e){filter=e.target.value;mountSection();});
     root.querySelector('[data-iwb-retry]').addEventListener('click',function(){lastCheck=0;archive=null;mountSection();});
   }
-  function card(i,detail){return '<span class="iwb-category">'+esc(i.category)+'</span><h3>'+esc(i.title)+'</h3><p class="iwb-note">'+esc(i.sourceType)+' · '+esc(i.source)+' · '+esc(i.publishedAt.slice(0,10))+'</p>'+(i.description?'<p>'+esc(i.description)+'</p><small>검색 서비스가 제공한 기사 소개문입니다.</small>':'<p>제목만으로 법령의 시행 여부나 치료 효과를 확정하지 않습니다. 원문에서 적용 대상·날짜·조건을 확인해 주세요.</p>')+'<p><a class="iwb-original" href="'+esc(safe(i.url))+'" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a></p>';}
+  function card(i,detail){return '<span class="iwb-category">'+esc(i.category)+'</span><h3>'+esc(i.title)+'</h3><p class="iwb-note">'+esc(i.sourceType)+' · '+esc(i.source)+' · '+esc(i.publishedAt.slice(0,10))+'</p>'+(i.description?'<p>'+esc(i.description)+'</p><small>검색 서비스가 제공한 기사 소개문입니다.</small>':'<p>적용 대상·날짜·조건과 자세한 내용은 원문에서 확인해 주세요.</p>')+'<p><a class="iwb-original" href="'+esc(safe(i.url))+'" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a></p>';}
   document.addEventListener('visibilitychange',function(){if(!document.hidden)mountBanners();});
   window.OSCustomerBriefing={bannerHtml:bannerHtml,sectionHtml:sectionHtml,mount:function(){mountBanners();mountSection();}};
 })();

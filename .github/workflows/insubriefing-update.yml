@@ -27,23 +27,24 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import {kstDay} from './insuwork/insubriefing/scripts/briefing-core.mjs';
-          let current = false;
+          let current = false, collected = false;
           try {
             const local=JSON.parse(fs.readFileSync('insuwork/insubriefing/data/briefing-latest.json','utf8'));
+            collected=local.date===kstDay() && local.items?.length>0;
             const r=await fetch('https://onesecond.solutions/insuwork/insubriefing/data/briefing-latest.json?check='+Date.now(),{signal:AbortSignal.timeout(15000)});
             const live=await r.json();
             current=r.ok && local.date===kstDay() && local.updatedAt===live.updatedAt && live.items?.length>0;
           } catch {}
-          fs.appendFileSync(process.env.GITHUB_OUTPUT,`current=${current}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,`current=${current}\ncollected=${collected}\n`);
           NODE
       - name: Collect customer briefing
-        if: steps.freshness.outputs.current != 'true'
+        if: steps.freshness.outputs.collected != 'true'
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: node insuwork/insubriefing/scripts/update-content.mjs
       - name: Update legacy briefing references
-        if: steps.freshness.outputs.current != 'true'
+        if: steps.freshness.outputs.collected != 'true'
         run: node insuwork/insubriefing/scripts/update-library.mjs
       - name: Save briefing and daily archive
         if: steps.freshness.outputs.current != 'true'

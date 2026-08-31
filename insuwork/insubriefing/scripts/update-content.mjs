@@ -21,7 +21,9 @@ async function request(query) {
 }
 await mkdir(resolve(root, 'daily'), {recursive:true});
 const candidates = [], errors = []; let successes = 0;
-for (const topic of topics) for (const query of topic.queries) {
+const rotation = Math.floor(Date.parse(day) / 86400000) % 3;
+for (const topic of topics) {
+  const query = topic.queries[rotation];
   await new Promise(r => setTimeout(r, 7000));
   try { const data = await request(query); if (!Array.isArray(data.items)) throw new Error('검색 결과 형식 오류'); successes++;
     candidates.push(...data.items.map(a => normalize(a, topic, now)).filter(Boolean));
