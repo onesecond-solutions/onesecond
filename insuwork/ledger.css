@@ -38,15 +38,15 @@
 #v-insuwork .iws-toolbar [data-iws-save]{background:var(--ac);color:var(--s1)}
 #v-insuwork .iws-help{color:var(--ts);font-size:var(--fs-caption);margin-bottom:12px}
 #v-insuwork .iws-scroll{max-width:100%;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-sm)}
-#v-insuwork .iws-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:auto}
+#v-insuwork .iws-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:1296px}
 #v-insuwork .iws-table th,#v-insuwork .iws-table td{padding:6px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);vertical-align:top;text-align:left}
 #v-insuwork .iws-table thead th,#v-insuwork .iws-table tfoot{background:var(--s2);white-space:nowrap}
-#v-insuwork .iws-table input[type=text]{width:100%;min-width:140px}
-#v-insuwork .iws-amount-control{display:flex;align-items:center;gap:4px;min-width:140px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);padding-right:10px}
+#v-insuwork .iws-table input[type=text]{width:100%;min-width:0}
+#v-insuwork .iws-amount-control{display:flex;align-items:center;gap:4px;min-width:0;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);padding-right:10px}
 #v-insuwork .iws-table .iws-amount-control input{min-width:0;border:0;background:transparent;flex:1;width:100%}
 #v-insuwork .iws-amount-control>span{white-space:nowrap;color:var(--ts)}
 #v-insuwork .iws-amount-control:focus-within{outline:2px solid var(--ac);outline-offset:1px}
-#v-insuwork .iws-table input[data-iws-field=date]{min-width:145px}
+#v-insuwork .iws-table input[data-iws-field=date]{min-width:0;flex:1}
 #v-insuwork .iws-date-control{display:flex;align-items:center;gap:4px}
 #v-insuwork .iws-date-picker{position:relative;display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);cursor:pointer}
 #v-insuwork .iws-date-picker svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;pointer-events:none}
@@ -55,7 +55,7 @@
 #v-insuwork .iws-date-picker:focus-within{outline:2px solid var(--ac);outline-offset:2px}
 #v-insuwork .iws-total-row .iws-date-picker{opacity:.5;cursor:default}
 #v-insuwork .iws-table input[type=checkbox]{min-height:24px;width:24px;margin:10px}
-#v-insuwork .iws-table td:last-child{min-width:125px}
+
 #v-insuwork .iws-table output,#v-insuwork .iws-table small{display:block;font-size:var(--fs-caption);margin-top:4px;overflow-wrap:anywhere}
 #v-insuwork .iws-total-row{background:var(--s2)}
 #v-insuwork .iws-error{color:var(--ac);font-weight:var(--fw-medium)}
@@ -110,3 +110,15 @@
 #v-insuwork .iws-month-card .iws-details tbody tr:last-child td{border-bottom:0}
 
 #v-insuwork .iws-month-card .iws-details thead th{background:var(--s1)}
+
+/* Content-sized columns; memo receives all remaining space. */
+#v-insuwork .iws-col-row{width:76px}
+#v-insuwork .iws-col-name{width:210px}
+#v-insuwork .iws-col-date{width:190px}
+#v-insuwork .iws-col-amount{width:150px}
+#v-insuwork .iws-col-paid{width:90px}
+#v-insuwork .iws-col-actions{width:230px}
+#v-insuwork .iws-row-actions{display:flex;align-items:center;gap:4px}
+#v-insuwork .iws-row-actions button{flex:none}
+#v-insuwork .iws-table .iws-row-actions small{margin:0 0 0 4px;white-space:nowrap}
+#v-insuwork .iws-table .iws-row-actions small.iws-error{white-space:normal;min-width:0}
