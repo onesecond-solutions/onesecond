@@ -1,6 +1,11 @@
 name: InsuBriefing daily update
 on:
   workflow_dispatch:
+    inputs:
+      verify_deployment:
+        description: Recheck explicit Pages deployment without recollecting today
+        type: boolean
+        default: false
   schedule:
     # KST 05:17 / 06:17 / 07:17. 성공 후 중복 수집을 건너뛰고 실패 때 재시도.
     - cron: '17 20,21,22 * * *'
@@ -58,12 +63,12 @@ jobs:
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
       - name: Request Pages deployment explicitly
-        if: steps.freshness.outputs.current != 'true' && github.ref_name == 'main'
+        if: (steps.freshness.outputs.current != 'true' || inputs.verify_deployment) && github.ref_name == 'main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status'
       - name: Verify live briefing
-        if: steps.freshness.outputs.current != 'true' && github.ref_name == 'main'
+        if: (steps.freshness.outputs.current != 'true' || inputs.verify_deployment) && github.ref_name == 'main'
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
