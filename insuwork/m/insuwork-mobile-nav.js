@@ -40,6 +40,7 @@
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=briefing" role="menuitem">보험브리핑</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=newsletters" role="menuitem">참고자료</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=sales-strategy" role="menuitem">영업자료</a>'
+      + (window._canSeeInsuworkLedger && window._canSeeInsuworkLedger() ? '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=ledger" role="menuitem">가계부</a>' : '')
       + '<span class="iwm-menu-label" role="presentation">지원</span>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=notice-updates" role="menuitem">공지·업데이트</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=user-guide" role="menuitem">사용자 가이드</a>'
