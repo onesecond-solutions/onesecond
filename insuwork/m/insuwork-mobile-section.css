@@ -1,0 +1,25 @@
+body.iwm-section-page { margin: 0; height: auto; overflow: auto; }
+.iwm-section-page #v-insuwork { display: block; padding: 0; min-height: 100dvh; }
+.iwm-section-page #v-insuwork .iw-shell { display: block; padding: 0; background: var(--bg); min-height: 100dvh; }
+.iwm-section-page #v-insuwork .iw-body { display: block; padding: 0; border: 0; background: transparent; }
+.iwm-section-page #v-insuwork .iw-main { width: 100%; min-width: 0; padding: 16px 12px calc(88px + env(safe-area-inset-bottom)); overflow-x: auto; }
+.iwm-section-page #v-insuwork .iwm-header { z-index: 30; }
+.iwm-section-page #v-insuwork .iwm-bottom-nav { z-index: 40; }
+.iwm-section-page #v-insuwork .iw-toolbar { flex-wrap: wrap; }
+.iwm-section-page #v-insuwork .iw-toolbar input { min-width: 0; max-width: 100%; }
+
+/* 기존 지원 화면 스타일 재사용, 모바일 페이지에 한정. */
+.iwm-section-page #v-insuwork .iw-support-page{display:grid;gap:18px;max-width:980px;margin:0 auto;padding:6px 0 48px}
+.iwm-section-page #v-insuwork .iw-support-head{padding:26px 0 12px;border-bottom:1px solid var(--bd)}
+.iwm-section-page #v-insuwork .iw-support-head p{margin:0 0 8px;color:var(--ac);font-size:12px;font-weight:800;letter-spacing:.08em}
+.iwm-section-page #v-insuwork .iw-support-head h2{margin:0;color:var(--tp);font-size:28px;line-height:1.25}
+.iwm-section-page #v-insuwork .iw-support-head span{display:block;max-width:640px;margin-top:10px;color:var(--ts);font-size:14px;line-height:1.7}
+.iwm-section-page #v-insuwork .iw-support-list,.iwm-section-page #v-insuwork .iw-guide-grid{display:grid;gap:10px}
+.iwm-section-page #v-insuwork .iw-guide-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.iwm-section-page #v-insuwork .iw-support-card{display:grid;gap:7px;padding:18px 20px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 10px 24px color-mix(in srgb,var(--tp) 6%,transparent)}
+.iwm-section-page #v-insuwork .iw-support-card time,.iwm-section-page #v-insuwork .iw-guide-step{color:var(--ac);font-size:12px;font-weight:800}
+.iwm-section-page #v-insuwork .iw-support-card h3{margin:0;color:var(--tp);font-size:17px;line-height:1.4}
+.iwm-section-page #v-insuwork .iw-support-card p{margin:0;color:var(--ts);font-size:14px;line-height:1.7}
+.iwm-section-page #v-insuwork .iw-support-form{display:grid;gap:14px;max-width:680px;padding:22px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 10px 24px color-mix(in srgb,var(--tp) 6%,transparent)}
+.iwm-section-page #v-insuwork .iw-support-form textarea{resize:vertical}
+.iwm-section-page #v-insuwork .iw-support-note{margin:0;color:var(--ts);font-size:12px;line-height:1.6}
