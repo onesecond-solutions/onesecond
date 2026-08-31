@@ -25,5 +25,7 @@
   function rewrite(formula,deleted,delta){if(!formula.startsWith('='))return formula;return formula.replace(/(\$?[A-Z]+)(\$?)([1-9]\d*)(?::(\$?[A-Z]+)(\$?)([1-9]\d*))?/gi,function(all,c,abs,n,c2,abs2,n2){n=Number(n);if(deleted!=null){if(c2){n2=Number(n2);if(n===n2&&n===deleted)return '#REF!';if(n>deleted)n--;if(n2>=deleted)n2--;return c+abs+n+':'+c2+abs2+n2;}if(n===deleted)return '#REF!';return c+abs+(n>deleted?n-1:n);}var a=n+(abs?0:delta),b=c2?Number(n2)+(abs2?0:delta):null;return a<2||(b!=null&&b<2)?'#REF!':c+abs+a+(c2?':'+c2+abs2+b:'');});}
   function remove(rows,index){return rows.filter(function(_,i){return i!==index;}).map(function(r){return Object.assign({},r,{estimate:rewrite(r.estimate,index+2),actual:rewrite(r.actual,index+2)});});}
   function copy(rows,index,id){var r=rows[index],delta=rows.length-index;return Object.assign({},r,{id:id,estimate:rewrite(r.estimate,null,delta),actual:r.kind==='total'?rewrite(r.actual,null,delta):'',paid:false});}
-  host.OSLedgerSheetCore={valid:valid,calculate:calculate,summary:summary,remove:remove,copy:copy,normalizeDate:normalizeDate,limit:LIMIT};
+  // UI numbers begin at 1; persisted formulas retain their original row-2 convention.
+  function addresses(value,delta){if(!value.trim().startsWith('='))return value;return value.replace(/(\$?[A-Z]+\$?)([1-9]\d*)/gi,function(all,col,n){var row=Number(n)+delta;return row<1?'#REF!':col+row;});}
+  host.OSLedgerSheetCore={valid:valid,calculate:calculate,summary:summary,remove:remove,copy:copy,normalizeDate:normalizeDate,addresses:addresses,limit:LIMIT};
 })(typeof window==='undefined'?globalThis:window);
