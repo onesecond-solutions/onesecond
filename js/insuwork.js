@@ -523,7 +523,7 @@
       ['user-guide', '?', '사용자 가이드'],
       ['feedback', '✎', '의견 보내기']
     ];
-    return '<details class="iw-nav-group iw-nav-group-support" open><summary>지원</summary>' + entries.map(function (entry) {
+    return '<details class="iw-nav-group iw-nav-group-support"><summary>지원</summary>' + entries.map(function (entry) {
       return '<button type="button" class="iw-nav-link' + (state.section === entry[0] ? ' on' : '') + '" onclick="OSInsuwork.go(\'' + entry[0] + '\')"><span>' + entry[1] + '</span>' + entry[2] + '</button>';
     }).join('') + '</details>';
   }
