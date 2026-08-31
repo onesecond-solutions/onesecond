@@ -344,6 +344,8 @@
   document.addEventListener('insuwork:data-ready', function () { if (authenticated()) renderCurrent(); });
 
   function startDataFlow() {
+    var detailId = new URLSearchParams(location.search).get("id");
+    if (detailId) { state.view = "detail"; state.selectedId = detailId; }
     renderLoading();
     if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
       window.OSInsuwork.reload();

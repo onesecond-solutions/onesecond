@@ -170,9 +170,10 @@
 
   function todaySectionHtml(todayDate) {
     var events = typeof window.OSInsuwork.eventsFor === 'function' ? window.OSInsuwork.eventsFor(todayDate) : [];
-    if (!events.length) return sectionHtml('오늘', emptyHtml('오늘 일정이 없습니다.'));
+    var label = todayDate === ymd(new Date()) ? '오늘' : todayDate;
+    if (!events.length) return sectionHtml(label, emptyHtml('일정이 없습니다.'));
     var body = '<div class="iwm-list">' + events.map(dayEventCardHtml).join('') + '</div>';
-    return sectionHtml('오늘', body);
+    return sectionHtml(label, body);
   }
 
   function weekSectionHtml(todayDate) {
@@ -188,7 +189,7 @@
         + inner
         + '</div>';
     }).join('') + '</div>';
-    return sectionHtml('이번 주', body);
+    return sectionHtml(todayDate === ymd(new Date()) ? '이번 주' : '선택일부터 7일', body);
   }
 
   function upcomingSectionHtml(todayDate) {
@@ -235,7 +236,8 @@
   var lastRenderedJson = '';
   function renderCalendar() {
     if (!window.OSInsuwork) return;
-    var todayDate = ymd(new Date());
+    var requestedDate = new URLSearchParams(location.search).get('date');
+    var todayDate = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate || '') && ymd(parseDate(requestedDate)) === requestedDate ? requestedDate : ymd(new Date());
     /* 렌더 스킵 판정용 스냅샷: 오늘~+37일 범위 이벤트를 통째 직렬화(페이지네이션 상태는 별도 비교) */
     var snapshotEvents = typeof window.OSInsuwork.eventsInRange === 'function'
       ? window.OSInsuwork.eventsInRange(todayDate, addDays(todayDate, WEEK_DAYS + LIST_RANGE_DAYS)) : [];
