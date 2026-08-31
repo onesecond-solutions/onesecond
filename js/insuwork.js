@@ -41,7 +41,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
-    calendarMode: 'month', selectedDate: ymd(new Date()), selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
+    calendarMode: 'month', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
@@ -368,23 +368,23 @@
     if (declineBtn) declineBtn.addEventListener('click', function () { runChoice('decline_legacy_migration', '설정을 저장하는 중입니다.', '저장하지 못했습니다.'); });
   }
 
-  function loadData(force) {
+  function loadData(force, homeRefresh) {
     var userId = currentUserId();
     if (!authenticated()) {
       state.status = 'waiting-auth'; state.loadedFor = ''; renderContent();
       return Promise.resolve(false);
     }
     var full = !!force;
-    if (state.loadPromise && (!full || state.loadFull)) return state.loadPromise;
-    if (!force && state.fullLoaded && state.loadedFor === userId) return Promise.resolve(true);
-    if (!force && state.status === 'ready' && state.loadedFor === userId) return Promise.resolve(true);
+    if (!homeRefresh && state.loadPromise && (!full || state.loadFull)) return state.loadPromise;
+    if (!homeRefresh && !force && state.fullLoaded && state.loadedFor === userId) return Promise.resolve(true);
+    if (!homeRefresh && !force && state.status === 'ready' && state.loadedFor === userId) return Promise.resolve(true);
     var hasVisibleData = !!(state.data.items.length || state.data.events.length || state.data.customers.length || state.data.consultations.length);
     state.status = hasVisibleData ? 'refreshing' : 'loading'; state.error = ''; renderContent();
     var requestId = ++state.requestId;
     var id = encodeURIComponent(userId);
     var itemScope = personalItemScope();
     state.loadFull = full;
-    var today = ymd(new Date());
+    var today = state.homeDate;
     var itemSelect = 'id,owner_id,parent_id,item_type,title,body,url,storage_path,mime_type,extension,file_size,visibility,legacy_payload,created_at,updated_at,deleted_at';
     var requests = full ? [
       api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=' + itemSelect),
@@ -394,7 +394,7 @@
       api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=not.is.null&order=deleted_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,created_at,updated_at,deleted_at')
     ] : [
       api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=30&select=' + itemSelect),
-      api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=20&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
+      api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&or=(and(task_date.lte.' + today + ',end_date.gte.' + today + '),and(task_date.eq.' + today + ',end_date.is.null))&order=task_time.asc&limit=2000&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
       api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null&legacy_payload->>setting_key=eq.favorites&limit=1&select=' + itemSelect),
       api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,insuwork_customers(id,name,phone,status)'),
       api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,legacy_source,created_at,updated_at,deleted_at')
@@ -685,7 +685,7 @@
     return '<button type="button" class="iw-agenda-chip iw-home-today-chip ' + cls + done + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>';
   }
   function homeTodayBoard(todayEvents, emptyText) {
-    var labels = ['오늘일정', '고객케어', '상령일'];
+    var labels = [state.homeDate === ymd(new Date()) ? '오늘일정' : '일정', '고객케어', '상령일'];
     var columns = [[], [], []];
     todayEvents.slice().sort(function (a, b) {
       return (a.completed_at ? 1 : 0) - (b.completed_at ? 1 : 0) || eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
@@ -916,6 +916,7 @@
   }
   function builtInEventsAroundCalendar() {
     var years = {}, selected = parseDate(state.selectedDate), cursor = state.cursor || selected;
+    years[parseDate(state.homeDate).getFullYear()] = true;
     [selected.getFullYear() - 1, selected.getFullYear(), selected.getFullYear() + 1, cursor.getFullYear() - 1, cursor.getFullYear(), cursor.getFullYear() + 1].forEach(function (year) { years[year] = true; });
     return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year)); }, []);
   }
@@ -956,13 +957,15 @@
 
   function homeHtml() {
     var today = ymd(new Date());
+    var date = state.homeDate, isToday = date === today, day = parseDate(date);
+    var dateLabel = (day.getFullYear() !== new Date().getFullYear() ? day.getFullYear() + '년 ' : '') + (day.getMonth() + 1) + '월 ' + day.getDate() + '일 (' + '일월화수목금토'.charAt(day.getDay()) + ')';
     /* 2026-08-25 — 비로그인 방문자에게도 홈은 열려 있지만, 즐겨찾기/오늘 일정/최근 자료/최근 상담
        위젯은 임태성 실장 개인 고객 데이터(PII)를 담는다. loadData()가 이미 !authenticated()일 때
        fetch 자체를 시도하지 않아 state.data는 항상 비어있는 상태로 유지되지만(1차 방어), 여기서도
        loginHint로 안내 문구를 로그인 유도로 바꿔 "정말 자료가 없는 것"과 "로그인 안 해서 안 보이는 것"을
        구분해 준다(2차, UX 방어일 뿐 데이터 노출 방어는 loadData/RLS가 담당). */
     var loginHint = !allowed();
-    var todayEvents = allEvents().filter(function (event) { return String(event.event_date || '').slice(0, 10) === today; });
+    var todayEvents = allEvents().filter(function (event) { var start = String(event.event_date || '').slice(0, 10), end = String(event.event_end_date || start).slice(0, 10); return start <= date && end >= date; });
     var recent = state.data.scripts.map(function (item) { return { kind: '업무노트', item: item }; })
       .concat(state.data.library.map(function (item) { return { kind: item.memo_text ? '메모' : '자료실', item: item }; }))
       .sort(function (a, b) { return String(b.item.created_at).localeCompare(String(a.item.created_at)); }).slice(0, 5);
@@ -975,8 +978,8 @@
       .sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); }).slice(0, 5);
     var favoritesEmpty = loginHint ? '<div class="iw-empty"><strong>로그인 후 확인할 수 있습니다.</strong><span>즐겨찾기는 로그인한 계정에만 저장됩니다.</span></div>' : favoriteRows();
     var favoritesPanel = '<section class="iw-panel iw-favorites-panel"><div class="iw-panel-head"><strong>즐겨찾기</strong></div><div class="iw-list">' + favoritesEmpty + '</div></section>';
-    var todayEmptyText = loginHint ? '로그인 후 오늘 일정을 확인할 수 있습니다.' : '오늘 일정이 없습니다.';
-    var todayPanel = '<section class="iw-panel iw-today-work-panel"><div class="iw-panel-head"><strong>오늘 할 일</strong><button onclick="OSInsuwork.go(\'calendar\')">캘린더 보기</button></div>' + homeTodayBoard(todayEvents, todayEmptyText) + '</section>';
+    var todayEmptyText = loginHint ? '로그인 후 일정을 확인할 수 있습니다.' : (state.status === 'loading' || state.status === 'refreshing') ? '일정을 불러오는 중입니다.' : state.status === 'partial' ? '일정을 모두 불러오지 못했습니다. 다시 확인해 주세요.' : isToday ? '오늘 일정이 없습니다.' : '선택한 날짜에 일정이 없습니다.';
+    var todayPanel = '<section class="iw-panel iw-today-work-panel"><div class="iw-panel-head"><div class="iw-home-date-nav" role="group" aria-label="할 일 날짜 이동"><button type="button" class="iw-btn iw-home-date-today" aria-label="오늘로 이동" onclick="OSInsuwork.homeToday()">오늘</button><span class="iw-month-switcher"><button type="button" aria-label="이전 날짜" onclick="OSInsuwork.moveHomeDate(-1)">‹</button><button type="button" aria-label="다음 날짜" onclick="OSInsuwork.moveHomeDate(1)">›</button></span><strong aria-live="polite">' + esc(dateLabel) + ' · ' + (isToday ? '오늘 할 일' : '할 일') + '</strong></div><button type="button" onclick="OSInsuwork.openHomeCalendar()">캘린더 보기</button></div>' + homeTodayBoard(todayEvents, todayEmptyText) + '</section>';
     var assetsEmptyText = loginHint ? '로그인 후 자료를 확인할 수 있습니다.' : '저장된 자료가 없습니다.';
     var assetsPanel = '<section class="iw-panel"><div class="iw-panel-head"><strong>최근 자료</strong><button onclick="OSInsuwork.go(\'assets\')">전체 보기</button></div><div class="iw-list">' + (recent.length ? recent.map(function (entry) { return row(entry.item.title, entry.kind + ' · ' + formatDate(entry.item.created_at), '›', 'OSInsuwork.showAsset(\'' + (entry.kind === '업무노트' ? 'scripts' : 'library') + '\',\'' + esc(entry.item.id) + '\')'); }).join('') : '<div class="iw-empty">' + assetsEmptyText + '</div>') + '</div></section>';
     var customersEmptyText = loginHint ? '로그인 후 고객 정보를 확인할 수 있습니다.' : '등록된 고객이 없습니다.';
@@ -2020,7 +2023,7 @@
     input.addEventListener('input', function () { if (!state.composing) scheduleSearch(input.value); });
   }
   function scheduleSearch(value) { window.clearTimeout(state.searchTimer); state.searchTimer = window.setTimeout(function () { state.query = value; if (state.query.trim() && !state.fullLoaded) loadData(true); else renderContent(); }, 180); }
-  function setUrl(push) { var url = '?view=insuwork&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; if (state.section === 'tools') url += '&tool=' + encodeURIComponent(state.toolMode || 'calculator'); try { history[push ? 'pushState' : 'replaceState']({ view: 'insuwork', section: state.section }, '', url); } catch (_) {} }
+  function setUrl(push) { var url = '?view=insuwork&section=' + encodeURIComponent(state.section); if (state.section === 'calendar') url += '&mode=' + state.calendarMode + '&date=' + state.selectedDate; if (state.section === 'home') url += '&date=' + state.homeDate; if (state.section === 'tools') url += '&tool=' + encodeURIComponent(state.toolMode || 'calculator'); try { history[push ? 'pushState' : 'replaceState']({ view: 'insuwork', section: state.section }, '', url); } catch (_) {} }
 
   function openWorkspace(section, push) {
     if (!ensureShell()) { if (!STANDALONE && window.showView) window.showView('home'); return; }
@@ -3782,6 +3785,18 @@
     var promise = id ? updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_tasks', Object.assign({}, body, { owner_id: currentUserId() }));
     promise.then(function (saved) { upsertTask(saved); state.selectedDate = date; state.cursor = parseDate(date); finishSave(id ? '일정을 수정했습니다.' : '일정을 추가했습니다.'); }).catch(saveError);
   }
+  function setHomeDate(date, focusLabel) {
+    state.homeDate = date;
+    renderContent();
+    setUrl(false);
+    var button = document.querySelector('#v-insuwork .iw-home-date-nav [aria-label="' + focusLabel + '"]');
+    if (button) button.focus();
+    // 날짜 조회는 읽기 전용 홈 로드만 사용한다. 전체 로드의 고객케어 자동 동기화는 실행하지 않는다.
+    if (authenticated()) loadData(false, true);
+  }
+  function moveHomeDate(direction) { setHomeDate(addDays(state.homeDate, direction), direction < 0 ? '이전 날짜' : '다음 날짜'); }
+  function homeToday() { setHomeDate(ymd(new Date()), '오늘로 이동'); }
+  function openHomeCalendar() { state.selectedDate = state.homeDate; state.cursor = parseDate(state.homeDate); go('calendar'); }
   function moveCalendar(direction) {
     if (state.calendarMode === 'month') state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + direction, 1);
     else { var step = state.calendarMode === 'day' ? 1 : state.calendarMode === 'week' ? 7 : 365; state.selectedDate = addDays(state.selectedDate, direction * step); state.cursor = parseDate(state.selectedDate); }
@@ -3789,7 +3804,7 @@
   }
   function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
   function openCalendarDay(date) { state.selectedDate = date; state.cursor = parseDate(date); state.calendarMode = 'day'; renderContent(); setUrl(false); }
-  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); } return true; }
+  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); if (['calculator', 'bmi', 'image'].indexOf(tool) >= 0) state.toolMode = tool; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); if (state.section === 'home') state.homeDate = date; } else if (state.section === 'home') state.homeDate = ymd(new Date()); return true; }
   /* 최초 진입(boot()/appstate:ready) 전용 — 원래 쿼리스트링에 view/section이 전혀 없었고 결과 섹션도
      기본값인 home이면, 이번 openWorkspace() 호출은 setUrl()을 아예 건너뛰어 깨끗한 /insuwork 주소를
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
@@ -4024,6 +4039,7 @@
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
+    moveHomeDate: moveHomeDate, homeToday: homeToday, openHomeCalendar: openHomeCalendar,
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
     todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, consultationsDirectory: consultationsDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
     libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
