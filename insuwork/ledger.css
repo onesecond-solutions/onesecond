@@ -57,5 +57,17 @@
 #v-insuwork .iws-total-row{background:var(--s2)}
 #v-insuwork .iws-error{color:var(--ac);font-weight:var(--fw-medium)}
 #v-insuwork .iws-totals{margin-top:16px}
+#v-insuwork .iws-monthly{margin:16px 0;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:12px;min-width:0}
+#v-insuwork .iws-monthly-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#v-insuwork .iws-monthly-head button{min-width:44px;margin-left:4px}
+#v-insuwork .iws-monthly p{font-size:var(--fs-caption);color:var(--ts);margin:8px 0}
+#v-insuwork .iws-monthly-scroll{overflow:auto;max-height:330px;border-radius:var(--radius-sm)}
+#v-insuwork .iws-monthly table{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--fs-caption);white-space:nowrap}
+#v-insuwork .iws-monthly th,#v-insuwork .iws-monthly td{padding:8px;text-align:right;border-bottom:1px solid var(--bd)}
+#v-insuwork .iws-monthly th:first-child{text-align:left}
+#v-insuwork .iws-monthly thead th{position:sticky;top:0;background:var(--s2);z-index:1}
+#v-insuwork .iws-monthly tfoot{background:var(--s2);font-weight:var(--fw-medium)}
+#v-insuwork .iws-month-selected{background:var(--s2)}
+#v-insuwork .iws-month-selected button{border-color:var(--ac)}
 #v-insuwork [data-iws-status]{min-height:24px;margin-top:12px}
 @media(max-width:600px){#v-insuwork .iwl-page{padding:12px}#v-insuwork .iwl-totals{gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,90px),1fr))}#v-insuwork .iwl-totals strong{font-size:var(--fs-title-sm)}#v-insuwork .iwl-form{grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr))}#v-insuwork .iwl-totals article{padding:12px}#v-insuwork .iwl-row{gap:10px}}
