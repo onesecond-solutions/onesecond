@@ -49,11 +49,10 @@
     dashboard.querySelectorAll('[data-iwl-plan-stop]').forEach(function(b){b.onclick=function(){stopPlan(b.dataset.iwlPlanStop);};});
     dashboard.querySelectorAll('[data-iwl-pay]').forEach(function(b){b.onclick=function(){paymentForm(b.dataset.iwlPay);};});
     if(window.OSLedgerSheet){
-      var legacy=document.createElement('details');legacy.className='iwl-records';legacy.innerHTML='<summary>기존 반복 예정 지출 관리</summary><p>기존 등록 내역은 보존되며, 위 월별 요약에 함께 포함됩니다.</p>';
-      root.insertBefore(legacy,dashboard);legacy.appendChild(dashboard);
-      var sheetRoot=document.createElement('section');sheetRoot.className='iws-page';root.insertBefore(sheetRoot,legacy);
+      dashboard.remove();if(!rows.some(function(r){return r.legacy_payload.entry;}))records.remove();else records.querySelector('summary').textContent='이전 수입·지출 기록 보관함';
+      var sheetRoot=document.createElement('section');sheetRoot.className='iws-page';root.prepend(sheetRoot);
       var savedSheet=rows.find(function(r){return r.legacy_payload.sheet;});
-      window.OSLedgerSheet.mount(sheetRoot,{sheet:savedSheet?savedSheet.legacy_payload.sheet:null,revision:savedSheet?savedSheet.legacy_payload.sheet_revision:null,legacy:function(m){return projections(rows,m);},openLegacy:openLegacy, reload:load,save:saveSheet});
+      window.OSLedgerSheet.mount(sheetRoot,{sheet:savedSheet?savedSheet.legacy_payload.sheet:null,revision:savedSheet?savedSheet.legacy_payload.sheet_revision:null,plans:rows.filter(function(r){return r.legacy_payload.plan;}).map(function(r){return {id:r.id,plan:r.legacy_payload.plan};}),legacy:function(){return [];},reload:load,save:saveSheet});
     }
   }
   function openLegacy(id,m){if(busy||!canSee())return false;month=m;paint();var button=Array.from(root.querySelectorAll('[data-iwl-pay]')).find(function(el){return el.dataset.iwlPay===id;});if(!button)return false;button.closest('details').open=true;var row=button.closest('.iwl-row');row.classList.add('iws-row-highlight');button.focus({preventScroll:true});row.scrollIntoView({block:'center'});return true;}
