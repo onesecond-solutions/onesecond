@@ -9,9 +9,7 @@
   // 2026-08-23 대표 승인 — 고정 17인 파일럿 허용목록 게이트 폐지, 인증된 사용자 전체로 오픈
   // (이관 동의 여부는 checkMigrationChoiceThenStart()가 별도로 확인한다).
   var ROOT_SELECTOR = '#iwm-root';
-  /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
-     대신 짧은 간격으로 재조회 → 직전 렌더와 동일하면 스킵하는 폴링으로 최종 일관성을 맞춘다(추가 API 호출 아님, 순수 재조회). */
-  var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
+  // 데이터 로드/케어 갱신 완료 이벤트로 즉시 렌더한다.
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -424,18 +422,14 @@
     }
   }
 
-  function pollAndRender(index) {
-    renderToday();
-    if (index >= POLL_DELAYS_MS.length) return;
-    window.setTimeout(function () { pollAndRender(index + 1); }, POLL_DELAYS_MS[index]);
-  }
+  document.addEventListener('insuwork:data-ready', function () { if (authenticated()) renderToday(); });
 
   function startDataFlow() {
     renderLoading();
     if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
       window.OSInsuwork.reload();
     }
-    pollAndRender(0);
+
   }
 
   function boot() {

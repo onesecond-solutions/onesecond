@@ -41,7 +41,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
-    calendarMode: 'month', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
+    calendarMode: 'month', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
@@ -49,7 +49,7 @@
     strategyCoNameQuery: '', strategyCoNameComposing: false, strategyCoNameTimer: 0, toolMode: 'calculator', toolFile: null, toolResult: null, toolPages: null,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
-    migrationDecided: false, draftTimer: 0, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
+    migrationDecided: false, migrationCheck: null, draftTimer: 0, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
     adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all', adminUserComposing: false, adminUserTimer: 0,
     publicLibraryData: null, publicLibraryLoading: false, publicLibNameQuery: '', publicLibNameComposing: false, publicLibNameTimer: 0, publicLibView: 'list',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -330,7 +330,8 @@
     if (state.migrationDecided) { next(); return; }
     var id = currentUserId();
     if (!id) { next(); return; }
-    api('insuwork_migration_choices?user_id=eq.' + encodeURIComponent(id) + '&select=choice&limit=1').then(function (rows) {
+    if (!state.migrationCheck) state.migrationCheck = api('insuwork_migration_choices?user_id=eq.' + encodeURIComponent(id) + '&select=choice&limit=1').finally(function () { state.migrationCheck = null; });
+    state.migrationCheck.then(function (rows) {
       if (Array.isArray(rows) && rows.length) { state.migrationDecided = true; next(); return; }
       renderStandaloneGate('migrate-choice', next);
     }).catch(function (error) {
@@ -368,14 +369,54 @@
     if (declineBtn) declineBtn.addEventListener('click', function () { runChoice('decline_legacy_migration', '설정을 저장하는 중입니다.', '저장하지 못했습니다.'); });
   }
 
-  function loadData(force, homeRefresh) {
+  function needsFullItems() {
+    return !!state.query.trim() || ['assets', 'customers', 'consultations', 'trash'].indexOf(state.section) >= 0 || /\/m\/(library|search|customers|consultations)\.html$/.test(location.pathname);
+  }
+  function dataReadyForSection() { return state.coreLoaded && (!needsFullItems() || state.fullLoaded); }
+  function loadHomeDate() {
+    if (!authenticated()) return Promise.resolve(false);
+    var date = state.homeDate, userId = currentUserId(), requestId = ++state.homeRequestId;
+    state.homeLoadingDate = date; state.homeErrorDate = '';
+    if (state.section === 'home') renderContent();
+    // 초기/전체 조회와 경쟁하지 않는다. 완료 후 최신 선택 날짜만 갱신한다.
+    var pending = state.loadPromise || Promise.resolve();
+    return pending.then(function () {
+      if (requestId !== state.homeRequestId || userId !== currentUserId()) return false;
+      return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(userId) + '&deleted_at=is.null&or=(and(task_date.lte.' + date + ',end_date.gte.' + date + '),and(task_date.eq.' + date + ',end_date.is.null))&order=task_time.asc&limit=2000&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at').then(function (rows) {
+        if (requestId !== state.homeRequestId || userId !== currentUserId()) return false;
+        var ids = {}; rows.forEach(function (row) { ids[row.id] = true; });
+        state.data.events = state.data.events.filter(function (event) {
+          var start = String(event.task_date || event.event_date || '').slice(0, 10), end = String(event.end_date || event.event_end_date || start).slice(0, 10);
+          return !ids[event.id] && !(start <= date && end >= date);
+        }).concat(rows);
+        rebuildWorkspaceDerived();
+        state.homeLoadingDate = '';
+        if (state.section === 'home') renderContent();
+        return true;
+      });
+    }).catch(function () {
+      if (requestId === state.homeRequestId && userId === currentUserId()) {
+        state.homeLoadingDate = ''; state.homeErrorDate = date;
+        if (state.section === 'home') renderContent();
+      }
+      return false;
+    });
+  }
+  function loadData(force, homeRefresh, allItems) {
+    if (homeRefresh) return loadHomeDate();
     var userId = currentUserId();
     if (!authenticated()) {
       state.status = 'waiting-auth'; state.loadedFor = ''; renderContent();
       return Promise.resolve(false);
     }
     var full = !!force;
-    if (!homeRefresh && state.loadPromise && (!full || state.loadFull)) return state.loadPromise;
+    var includeItems = full && (allItems || needsFullItems());
+    if (state.loadPromise) {
+      return state.loadPromise.then(function (ok) {
+        if (full && (!state.coreLoaded || (includeItems && !state.fullLoaded))) return loadData(force, false, allItems);
+        return ok;
+      });
+    }
     if (!homeRefresh && !force && state.fullLoaded && state.loadedFor === userId) return Promise.resolve(true);
     if (!homeRefresh && !force && state.status === 'ready' && state.loadedFor === userId) return Promise.resolve(true);
     var hasVisibleData = !!(state.data.items.length || state.data.events.length || state.data.customers.length || state.data.consultations.length);
@@ -387,7 +428,7 @@
     var today = state.homeDate;
     var itemSelect = 'id,owner_id,parent_id,item_type,title,body,url,storage_path,mime_type,extension,file_size,visibility,legacy_payload,created_at,updated_at,deleted_at';
     var requests = full ? [
-      api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=' + itemSelect),
+      includeItems ? api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=2000&select=' + itemSelect) : (state.data.items.length ? Promise.resolve(state.data.items) : api('insuwork_items?owner_id=eq.' + id + '&deleted_at=is.null' + itemScope + '&order=created_at.desc&limit=30&select=' + itemSelect)),
       api('insuwork_tasks?owner_id=eq.' + id + '&deleted_at=is.null&order=task_date.desc&limit=2000&select=id,owner_id,customer_id,title,description,task_date,task_time,end_date,end_time,completed_at,legacy_source,legacy_id,created_at,deleted_at'),
       api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=created_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,legacy_source,created_at,updated_at,deleted_at'),
       api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=2000&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at'),
@@ -411,11 +452,13 @@
         else failed.push(names[index]);
       });
       state.loadedFor = userId;
-      state.fullLoaded = full;
+      state.coreLoaded = full && failed.indexOf('events') < 0 && failed.indexOf('customers') < 0 && failed.indexOf('consultations') < 0 && failed.indexOf('trashCustomers') < 0;
+      state.fullLoaded = state.coreLoaded && (includeItems ? failed.indexOf('items') < 0 : state.fullLoaded);
       rebuildWorkspaceDerived();
       state.status = failed.length ? 'partial' : 'ready';
       state.error = failed.length ? failed.join(', ') + ' 자료를 불러오지 못했습니다.' : '';
       renderContent();
+      document.dispatchEvent(new CustomEvent('insuwork:data-ready'));
       if (failed.indexOf('customers') < 0) window.setTimeout(maybeShowCustomerStatusNotice, 0);
       if (full && failed.indexOf('customers') < 0) syncCareTasksForAll();
       return failed.length === 0;
@@ -685,6 +728,8 @@
     return '<button type="button" class="iw-agenda-chip iw-home-today-chip ' + cls + done + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>';
   }
   function homeTodayBoard(todayEvents, emptyText) {
+    if (state.homeLoadingDate === state.homeDate) return '<div class="iw-empty iw-home-today-empty" role="status">일정을 불러오는 중입니다.</div>';
+    if (state.homeErrorDate === state.homeDate) return '<div class="iw-empty iw-home-today-empty" role="alert">일정을 불러오지 못했습니다. 날짜를 다시 선택해 주세요.</div>';
     var labels = [state.homeDate === ymd(new Date()) ? '오늘일정' : '일정', '고객케어', '상령일'];
     var columns = [[], [], []];
     todayEvents.slice().sort(function (a, b) {
@@ -776,7 +821,7 @@
     closeFavoritesPanel();
     var resolved = resolveFavorite(type, id);
     if (resolved) { resolved.action(); return; }
-    loadData(true).then(function () { var next = resolveFavorite(type, id); if (next) next.action(); else if (typeof window.toast === 'function') window.toast('즐겨찾기 대상을 찾지 못했습니다.'); });
+    loadData(true, false, true).then(function () { var next = resolveFavorite(type, id); if (next) next.action(); else if (typeof window.toast === 'function') window.toast('즐겨찾기 대상을 찾지 못했습니다.'); });
   }
   function toggleFavorite(type, id, title, subtitle) {
     var key = favoriteKey(type, id), index = state.favorites.findIndex(function (entry) { return favoriteKey(entry.target_type, entry.target_id) === key; });
@@ -827,26 +872,48 @@
     }
     return targets;
   }
-  function syncCareTasksForCustomer(customer) {
+  function syncCareTasksForCustomer(customer, knownRows) {
     var bases = contractDatesOf(customer).filter(function (base) { return /^\d{4}-\d{2}-\d{2}$/.test(base); });
-    if (!bases.length || !customer || !customer.id) return Promise.resolve();
+    if (!bases.length || !customer || !customer.id) return Promise.resolve(true);
     var targets = bases.reduce(function (all, base) { return all.concat(careTaskTargets(customer, base)); }, []);
-    return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,task_date,description').then(function (existing) {
+    var existingRows = Array.isArray(knownRows) ? Promise.resolve(knownRows) : api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,task_date,description');
+    return existingRows.then(function (existing) {
       var have = {}; (existing || []).forEach(function (row) { have[row.legacy_id] = row; });
       var toCreate = targets.filter(function (t) { return !have[t.legacyId]; });
       var toUpdate = targets.filter(function (t) { var row = have[t.legacyId]; return row && (row.task_date !== t.date || row.description !== t.description); });
       var creates = toCreate.map(function (t) {
-        return writeOne('insuwork_tasks', { owner_id: currentUserId(), customer_id: customer.id, title: t.title, description: t.description, task_date: t.date, legacy_source: 'care_auto', legacy_id: t.legacyId }).then(upsertTask).catch(function () {});
+        return writeOne('insuwork_tasks', { owner_id: currentUserId(), customer_id: customer.id, title: t.title, description: t.description, task_date: t.date, legacy_source: 'care_auto', legacy_id: t.legacyId }).then(function (task) { upsertTask(task); return true; }).catch(function () { return false; });
       });
       var updates = toUpdate.map(function (t) {
-        return updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(have[t.legacyId].id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { task_date: t.date, description: t.description }).then(upsertTask).catch(function () {});
+        return updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(have[t.legacyId].id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { task_date: t.date, description: t.description }).then(function (task) { upsertTask(task); return true; }).catch(function () { return false; });
       });
-      return Promise.all(creates.concat(updates));
-    }).catch(function () {});
+      return Promise.all(creates.concat(updates)).then(function (results) { return results.every(function (ok) { return ok; }); });
+    }).catch(function () { return false; });
   }
   function syncCareTasksForAll() {
+    var userId = currentUserId(), key = userId + ':' + new Date().getFullYear();
+    if (state.careSyncKey === key) return Promise.resolve();
+    if (state.careSyncPromise) return state.careSyncPromise;
     var customers = state.data.customers.filter(function (c) { return isRealCustomerStage(c.status); });
-    return Promise.all(customers.map(syncCareTasksForCustomer)).then(function () { rebuildWorkspaceDerived(); renderContent(); }).catch(function () {});
+    if (!customers.length) return Promise.resolve();
+    var rows = [], pageSize = 1000;
+    function readPage(offset) {
+      return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(userId) + '&legacy_source=eq.care_auto&order=id.asc&limit=' + pageSize + '&offset=' + offset + '&select=id,customer_id,legacy_id,task_date,description').then(function (page) {
+        rows = rows.concat(page);
+        if (page.length === pageSize) return readPage(offset + pageSize);
+      });
+    }
+    state.careSyncPromise = readPage(0).then(function () {
+      if (userId !== currentUserId()) return;
+      var byCustomer = {}; rows.forEach(function (row) { (byCustomer[row.customer_id] || (byCustomer[row.customer_id] = [])).push(row); });
+      return Promise.all(customers.map(function (customer) { return syncCareTasksForCustomer(customer, byCustomer[customer.id] || []); })).then(function (results) {
+        if (userId !== currentUserId()) return;
+        if (results.every(function (ok) { return ok; })) state.careSyncKey = key;
+        rebuildWorkspaceDerived(); renderContent();
+        document.dispatchEvent(new CustomEvent('insuwork:data-ready'));
+      });
+    }).catch(function () {}).finally(function () { state.careSyncPromise = null; });
+    return state.careSyncPromise;
   }
   var LUNAR_HOLIDAYS = [[2020, '2020-01-25', '2020-04-30', '2020-10-01'], [2021, '2021-02-12', '2021-05-19', '2021-09-21'], [2022, '2022-02-01', '2022-05-08', '2022-09-10'], [2023, '2023-01-22', '2023-05-26', '2023-09-29'], [2024, '2024-02-10', '2024-05-15', '2024-09-17'], [2025, '2025-01-29', '2025-05-05', '2025-10-06'], [2026, '2026-02-17', '2026-05-24', '2026-09-25'], [2027, '2027-02-06', '2027-05-13', '2027-09-15'], [2028, '2028-01-26', '2028-05-02', '2028-10-03'], [2029, '2029-02-13', '2029-05-20', '2029-09-22'], [2030, '2030-02-03', '2030-05-09', '2030-09-12'], [2031, '2031-01-23', '2031-05-28', '2031-10-01'], [2032, '2032-02-11', '2032-05-16', '2032-09-19'], [2033, '2033-01-31', '2033-05-06', '2033-09-08'], [2034, '2034-02-19', '2034-05-25', '2034-09-27'], [2035, '2035-02-08', '2035-05-15', '2035-09-16']];
   var SOLAR_TERM_NAMES = ['소한', '대한', '입춘', '우수', '경칩', '춘분', '청명', '곡우', '입하', '소만', '망종', '하지', '소서', '대서', '입추', '처서', '백로', '추분', '한로', '상강', '입동', '소설', '대설', '동지'];
@@ -2035,9 +2102,9 @@
     state.section = target;
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-insuwork').classList.add('on');
-    renderShell(); if (push !== 'skip-url') setUrl(push !== false); loadData(state.section !== 'home');
+    renderShell(); if (push !== 'skip-url') setUrl(push !== false); if (!dataReadyForSection()) loadData(state.section !== 'home');
   }
-  function go(section) { if (!canEnterSection(section)) { if (section === 'admin-users') { if (typeof window.toast === 'function') window.toast('관리자 전용 화면입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !state.fullLoaded) loadData(true); }
+  function go(section) { if (!canEnterSection(section)) { if (section === 'admin-users') { if (typeof window.toast === 'function') window.toast('관리자 전용 화면입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && !dataReadyForSection()) loadData(true); }
   function dialog(html) { var box = document.getElementById('iw-dialog'), body = document.getElementById('iw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function forceCloseDialog() { var box = document.getElementById('iw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function closeDialog() { var box = document.getElementById('iw-dialog'), root = box && box.querySelector('[data-work-draft-key]'), key = root && root.dataset.workDraftKey, hasDraft = key && (readWorkDraft(key) || root.dataset.workDraftDirty === '1'); if (!hasDraft) { forceCloseDialog(); return; } saveBoundWorkDraft(root); briefingConfirm('작성 중인 임시 내용을 삭제하고 닫을까요?', '작성 취소', '삭제', true).then(function (ok) { if (!ok) return; clearWorkDraft(key); forceCloseDialog(); }); }
@@ -3810,7 +3877,7 @@
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
      'skip-url'이 아닌 false(=replaceState)를 써서 지금까지의 동작을 유지한다. */
   function initialOpenPush() { return (!INITIAL_URL_HAD_VIEW_PARAMS && state.section === 'home') ? 'skip-url' : false; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: 'u1', name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: 'u2', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: 'u1', name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: 'u2', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); }
 
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
@@ -4016,11 +4083,11 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    boot: boot, go: go, legacy: legacy, reload: function () { loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
+    boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
-       새 로직 없음 — 기존 state.fullLoaded 값을 그대로 boolean으로 노출한다. loadData(true) 완료 후에만
+       화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
-    isDataReady: function () { return !!state.fullLoaded; },
+    isDataReady: function () { return dataReadyForSection(); },
     syncSavedWorkspaceItem: function (item) { upsertWorkspaceItem(item); if (state.section === 'assets') renderContent(); },
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreCustomers: function () { state.customersRenderLimit += LIST_PAGE_SIZE; renderContent(); },
@@ -4043,6 +4110,6 @@
     moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
     todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, consultationsDirectory: consultationsDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
     libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
-    __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
+    __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
 })();

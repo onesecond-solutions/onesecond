@@ -4,7 +4,6 @@
   'use strict';
 
   var ROOT_SELECTOR = '#iwm-root';
-  var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
   var state = { query: '', rendered: '' };
 
   function esc(value) {
@@ -102,17 +101,13 @@
       input.addEventListener('input', function () { state.query = input.value; state.rendered = ''; renderSearch(); });
     }
   }
-  function poll(index) {
-    renderSearch();
-    if (index >= POLL_DELAYS_MS.length) return;
-    window.setTimeout(function () { poll(index + 1); }, POLL_DELAYS_MS[index]);
-  }
+  document.addEventListener('insuwork:data-ready', function () { if (authenticated()) renderSearch(); });
   function boot() {
     try { state.query = new URLSearchParams(location.search || '').get('q') || ''; } catch (_e) {}
     if (!authenticated()) { renderLoginGate(); return; }
     renderLoading();
     if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') window.OSInsuwork.reload();
-    poll(0);
+
   }
 
   window.OSInsuworkMobileSearch = { boot: boot };
