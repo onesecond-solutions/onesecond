@@ -53,9 +53,10 @@
       root.insertBefore(legacy,dashboard);legacy.appendChild(dashboard);
       var sheetRoot=document.createElement('section');sheetRoot.className='iws-page';root.insertBefore(sheetRoot,legacy);
       var savedSheet=rows.find(function(r){return r.legacy_payload.sheet;});
-      window.OSLedgerSheet.mount(sheetRoot,{sheet:savedSheet?savedSheet.legacy_payload.sheet:null,revision:savedSheet?savedSheet.legacy_payload.sheet_revision:null,legacy:function(m){return projections(rows,m);},reload:load,save:saveSheet});
+      window.OSLedgerSheet.mount(sheetRoot,{sheet:savedSheet?savedSheet.legacy_payload.sheet:null,revision:savedSheet?savedSheet.legacy_payload.sheet_revision:null,legacy:function(m){return projections(rows,m);},openLegacy:openLegacy, reload:load,save:saveSheet});
     }
   }
+  function openLegacy(id,m){if(busy||!canSee())return false;month=m;paint();var button=Array.from(root.querySelectorAll('[data-iwl-pay]')).find(function(el){return el.dataset.iwlPay===id;});if(!button)return false;button.closest('details').open=true;var row=button.closest('.iwl-row');row.classList.add('iws-row-highlight');button.focus({preventScroll:true});row.scrollIntoView({block:'center'});return true;}
   async function saveSheet(sheet,expectedRevision){
     if(busy||!canSee())throw Error('잠시 후 다시 시도해 주세요.');
     if(!window.OSLedgerSheetCore.valid(sheet))throw Error('표의 입력·수식 오류를 확인해 주세요.');
