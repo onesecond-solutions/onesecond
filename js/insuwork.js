@@ -2678,7 +2678,7 @@
     var item = workspaceItem(id); if (!item || item.item_type === 'folder') return;
     resetRichPending();
     var fileOnly = item.item_type === 'file';
-    var fields = formField('제목', '<input id="iwf-edit-title" required autocomplete="off" value="' + esc(item.title || '') + '" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){event.preventDefault();OSInsuwork.focusRich(\'iwf-edit-body\')}">');
+    var fields = formField('제목', '<input id="iwf-edit-title" required autocomplete="off" value="' + esc(item.title || '') + '" onkeydown="if(event.key===\'Enter\'||(event.key===\'Tab\'&&!event.shiftKey)){if(document.getElementById(\'iwf-edit-body\')){event.preventDefault();OSInsuwork.focusRich(\'iwf-edit-body\')}}">');
     if (fileOnly) fields += '<p class="iw-form-note">업로드 파일은 표시 이름을 수정할 수 있습니다.</p>'
       + formField('공개 범위', '<select id="iwf-edit-visibility"><option value="private"' + (item.visibility !== 'public' ? ' selected' : '') + '>나만 보기</option><option value="public"' + (item.visibility === 'public' ? ' selected' : '') + '>로그인 사용자 전체 공개</option></select>');
     else fields += formField('내용', richEditorField('iwf-edit-body', item.body || ''))
