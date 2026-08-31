@@ -1,7 +1,7 @@
 /* 보조 메뉴는 기존 콘텐츠/권한/데이터 로직을 재사용하고 모바일 공통 셸 안에서 렌더한다. */
 (function () {
   'use strict';
-  var titles = { briefing: '보험브리핑', newsletters: '참고자료', 'sales-strategy': '영업자료', 'notice-updates': '공지·업데이트', 'user-guide': '사용자 가이드', feedback: '의견 보내기' };
+  var titles = { 'daily-briefing': '오늘의 고객 브리핑', briefing: '보험브리핑', newsletters: '참고자료', 'sales-strategy': '영업자료', 'notice-updates': '공지·업데이트', 'user-guide': '사용자 가이드', feedback: '의견 보내기' };
   window.OSInsuworkMobileSection = {
     navigate: function (section) {
       var target = window.OSInsuworkMobileRouting.destination('?section=' + encodeURIComponent(section));

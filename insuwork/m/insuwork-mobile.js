@@ -404,6 +404,7 @@
     view.innerHTML = (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('홈', 'today') : '<header class="iwm-header"><strong>보험워크</strong></header>')
       + '<main class="iwm-main">'
       + agendaSectionHtml(excludeIds)
+      + (window.OSCustomerBriefing ? window.OSCustomerBriefing.bannerHtml() : '')
       + careSectionHtml(summary.care)
       + insuranceAgeSectionHtml(summary.insuranceAge)
       + consultPrepSectionHtml(prep)
@@ -414,6 +415,7 @@
     var logoutLink = document.getElementById('iwm-logout-link');
     if (logoutLink) logoutLink.addEventListener('click', function (event) { event.preventDefault(); logout(); });
 
+    if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount();
     setupAgendaObserver();
     var nextAgendaScrollBox = document.getElementById('iwm-agenda-scroll');
     if (nextAgendaScrollBox) {

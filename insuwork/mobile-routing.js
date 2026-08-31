@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var nativePages = { home: 'index.html', calendar: 'calendar.html', customers: 'customers.html', consultations: 'consultations.html', assets: 'library.html' };
-  var extraSections = ['briefing', 'newsletters', 'sales-strategy', 'notice-updates', 'user-guide', 'feedback', 'carriers', 'payments', 'scripts', 'insurance-age', 'tools', 'trash', 'archive', 'public-library', 'admin-users'];
+  var extraSections = ['briefing', 'daily-briefing', 'newsletters', 'sales-strategy', 'notice-updates', 'user-guide', 'feedback', 'carriers', 'payments', 'scripts', 'insurance-age', 'tools', 'trash', 'archive', 'public-library', 'admin-users'];
   function isPhone() {
     var ua = navigator.userAgent || '';
     return /iPhone|iPod|Android.*Mobile|Windows Phone/i.test(ua) ||

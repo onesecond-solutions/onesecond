@@ -36,6 +36,7 @@
       + '<span></span><span></span><span></span>'
       + '</button>'
       + '<div class="iwm-menu-panel" id="iwm-menu-panel" role="menu" hidden>'
+      + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=daily-briefing" role="menuitem">오늘의 고객 브리핑</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=briefing" role="menuitem">보험브리핑</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=newsletters" role="menuitem">참고자료</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=sales-strategy" role="menuitem">영업자료</a>'

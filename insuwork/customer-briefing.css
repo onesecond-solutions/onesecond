@@ -1,0 +1,17 @@
+/* 고객 브리핑 전용 스코프. 기존 홈 패널과 모바일 메뉴에는 영향 없음. */
+.iwb-banner{display:flex;align-items:center;gap:12px;width:100%;min-width:0;padding:10px 14px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp)}
+.iwb-banner a{color:inherit;text-decoration:none}.iwb-banner .iwb-brand{flex:none;font-weight:700;font-size:13px;color:var(--ac)}
+.iwb-banner .iwb-current{flex:1;min-width:0}.iwb-banner .iwb-headline{display:flex;align-items:center;gap:10px;min-width:0;animation:iwb-reveal .25s ease-out}.iwb-banner .iwb-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.iwb-banner .iwb-controls{display:flex;align-items:center;flex:none;gap:3px}.iwb-banner button{color:var(--ts);background:transparent;border:1px solid transparent;border-radius:var(--radius-sm);min-width:32px;min-height:32px;cursor:pointer}
+.iwb-banner a:focus-visible,.iwb-banner button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}.iwb-banner .iwb-count{font-size:12px;color:var(--ts);min-width:34px;text-align:center}
+.iwb-banner .iwb-category,.iwb-page .iwb-category{font-size:12px;color:var(--ac);flex:none}.iwb-banner .iwb-note,.iwb-page .iwb-note{font-size:12px;color:var(--ts)}
+.iwb-page{color:var(--tp);min-width:0}.iwb-page h2{font-size:var(--font-xl,22px);margin:0 0 8px}.iwb-page .iwb-page-head{margin-bottom:18px}.iwb-page .iwb-filters{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.iwb-page select,.iwb-page button{padding:8px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);min-height:40px}
+.iwb-page .iwb-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}.iwb-page .iwb-card,.iwb-page .iwb-detail{padding:18px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1)}.iwb-page .iwb-detail{margin-bottom:20px}.iwb-page h3{font-size:17px;line-height:1.5;margin:8px 0;overflow-wrap:anywhere}.iwb-page p{line-height:1.7}.iwb-page a{color:var(--tp);text-decoration:none}.iwb-page .iwb-original,.iwb-page .iwb-detail>a{color:var(--ac);text-decoration:underline}.iwb-page small{color:var(--ts)}
+@keyframes iwb-reveal{from{opacity:.35;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.iwb-banner{gap:6px;padding:4px 8px}.iwb-banner .iwb-brand{font-size:11px}.iwb-banner .iwb-category,.iwb-banner .iwb-count{display:none}.iwb-banner .iwb-title{font-size:13px}.iwb-banner .iwb-controls{gap:0}.iwb-banner button{min-width:36px;min-height:44px}.iwb-page .iwb-filters{gap:8px}.iwb-page label{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.iwb-banner .iwb-headline{animation:none}}
+
+#v-insuwork .iw-home-grid:has(>.iwb-banner){grid-template-rows:minmax(220px,1.05fr) auto minmax(180px,.95fr)}
+@media(max-width:860px){#v-insuwork .iw-home-grid:has(>.iwb-banner){grid-template-rows:auto auto auto;height:auto}}
+
+.iwb-page .iwb-detail>a{display:block;margin-bottom:14px;width:fit-content}
