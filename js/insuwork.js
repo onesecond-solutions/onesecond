@@ -530,7 +530,7 @@
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
     if (window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()) items.push(['ledger', '₩', '가계부']);
-    var briefingGroup = [['◫', '오늘의 고객 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
+    var briefingGroup = [['◫', '뉴스 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
