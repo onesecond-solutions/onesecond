@@ -14,3 +14,26 @@ test('cycles, zero division, bad references and executable text fail closed',()=
 test('deletion adjusts range and references; missing referenced cell becomes visible REF error',()=>{let rows=[row(10),row(20),row(30),row('=SUM(C2:C4)',{kind:'total'})];let next=core.remove(rows,1);assert.equal(next[2].estimate,'=SUM(C2:C3)');assert.equal(core.calculate(next).rows[2].estimate.value,40);next=core.remove([row(10),row('=C2')],0);assert.equal(next[0].estimate,'=#REF!');assert.equal(core.calculate(next).error,true);});
 test('row copy shifts relative references and resets paid state',()=>{const rows=[row(10),row('=C2*3',{paid:true,actual:'30'})];const copy=core.copy(rows,1,'copy');assert.equal(copy.estimate,'=C3*3');assert.equal(copy.actual,'');assert.equal(copy.paid,false);assert.equal(core.copy([row('=$C$2')],0,'copy').estimate,'=$C$2');});
 test('monthly totals use deadlines and actual payment, incomplete rows never report false zero',()=>{const rows=[row(81930),row(229760,{date:'2026-10-25',paid:true,actual:'220000'}),row('=SUM(C2:C3)',{kind:'total',date:''})],calc=core.calculate(rows);assert.equal(core.summary(rows,calc,'2026-09').remaining,81930);assert.equal(core.summary(rows,calc,'2026-10').expected,220000);assert.equal(core.calculate([row(1,{date:'2026-02-30'})]).error,true);assert.equal(core.calculate([row(1,{paid:true})]).error,true);assert.equal(core.valid({version:1,rows:rows}),true);assert.equal(core.valid({version:1,rows:[rows[0],rows[0]]}),false);});
+
+test('recurring payments project into future months with month end clamp and independent overrides',()=>{
+ const r=row(100,{date:'2026-01-31'});core.enableRepeat(r);const rows=[r];
+ assert.equal(core.project(rows,'2026-02')[0].date,'2026-02-28');assert.equal(core.project(rows,'2028-02')[0].date,'2028-02-29');assert.equal(core.summary(rows,core.calculate(rows),'2025-12').expected,0);
+ const feb=core.project(rows,'2026-02')[0];core.editMonth(r,'2026-02','estimate','250',feb);core.editMonth(r,'2026-02','actual','240',feb);core.editMonth(r,'2026-02','paid',true,feb);
+ assert.equal(core.summary(rows,core.calculate(rows),'2026-02').expected,240);assert.equal(core.summary(rows,core.calculate(rows),'2026-03').expected,100);assert.equal(core.summary(rows,core.calculate(rows),'2026-01').expected,100);
+ assert.equal(core.project(rows,'2026-03')[0].paid,false);assert.equal(core.monthDetails(rows,core.calculate(rows),'2026-02',[])[0].amount,240);
+ assert.equal(core.valid({version:1,rows}),true);r.recurrence.end='2026-02';assert.equal(core.summary(rows,core.calculate(rows),'2026-03').expected,0);assert.equal(core.summary(rows,core.calculate(rows),'2026-02').expected,240);
+});
+test('recurring incomplete month affects only its month and formula edits survive structural deletion',()=>{
+ const a=row(10),r=row(20);core.enableRepeat(r);let rows=[a,r];core.editMonth(r,'2026-10','estimate','=C2*3',core.project(rows,'2026-10')[1]);
+ assert.equal(core.summary(rows,core.calculate(rows),'2026-10').expected,30);let next=core.remove(rows,0);assert.equal(next[0].recurrence.overrides['2026-10'].estimate,'=#REF!*3');assert.equal(core.summary(next,core.calculate(next),'2026-10').error,true);assert.equal(core.summary(next,core.calculate(next),'2026-11').expected,20);
+ const clone=core.copy(core.project(rows,'2026-10'),1,'copy');assert.equal(clone.recurrence,undefined);assert.equal(clone.paid,false);
+});
+test('legacy import preserves versions, paid history, deduplication and deleted plan tombstones without mutating source',()=>{
+ const plan={id:'old',plan:{name:'보험료',amount:100,day:31,frequency:'monthly',start:'2026-01',end:'',versions:[{from:'2026-03',name:'보험료',amount:200,day:10}],paid:{'2026-02':{amount:90,date:'2026-02-27'}}}};
+ const source={version:1,rows:[row('=1+2')]},before=JSON.stringify([source,plan]);let sheet=core.importPlans(source,[plan]);assert.equal(JSON.stringify([source,plan]),before);assert.equal(sheet.rows.length,2);assert.equal(core.valid(sheet),true);
+ const calc=core.calculate(sheet.rows);assert.equal(core.summary(sheet.rows,calc,'2026-02').expected,90);assert.equal(core.summary(sheet.rows,calc,'2026-04').expected,200);assert.equal(core.project(sheet.rows,'2026-03')[1].date,'2026-03-10');
+ sheet=core.importPlans(JSON.parse(JSON.stringify(sheet)),[plan]);assert.equal(sheet.rows.length,2);sheet.rows=core.remove(sheet.rows,1);assert.equal(core.importPlans(sheet,[plan]).rows.length,1);
+});
+test('recurrence validation rejects malformed schedules and overrides',()=>{
+ const r=row(100);core.enableRepeat(r);r.recurrence.day=32;assert.equal(core.valid({version:1,rows:[r]}),false);r.recurrence.day=25;r.recurrence.overrides['2026-13']={};assert.equal(core.valid({version:1,rows:[r]}),false);
+});
