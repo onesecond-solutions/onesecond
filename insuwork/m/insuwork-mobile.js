@@ -403,8 +403,8 @@
        보험브리핑 홈으로 돌아가는 링크를 새로 추가했다(이전에는 "오늘" 화면에 이 진입로가 아예 없었다). */
     view.innerHTML = (window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('홈', 'today') : '<header class="iwm-header"><strong>보험워크</strong></header>')
       + '<main class="iwm-main">'
-      + agendaSectionHtml(excludeIds)
       + (window.OSCustomerBriefing ? window.OSCustomerBriefing.bannerHtml() : '')
+      + agendaSectionHtml(excludeIds)
       + careSectionHtml(summary.care)
       + insuranceAgeSectionHtml(summary.insuranceAge)
       + consultPrepSectionHtml(prep)
