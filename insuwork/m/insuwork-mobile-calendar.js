@@ -14,9 +14,7 @@
   var LIST_RANGE_DAYS = 30;
   var LIST_PAGE_SIZE = 20;
   var WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-  /* reload()가 Promise를 반환하지 않아(기존 export 시그니처 변경 없음) 완료 신호를 직접 받을 수 없다.
-     대신 짧은 간격으로 재조회 → 직전 렌더와 동일하면 스킵하는 폴링으로 최종 일관성을 맞춘다(추가 API 호출 아님, 순수 재조회). */
-  var POLL_DELAYS_MS = [400, 900, 1600, 2600, 4000];
+  // 데이터 로드/케어 갱신 완료 이벤트로 즉시 렌더한다.
 
   var state = { listRenderLimit: LIST_PAGE_SIZE };
 
@@ -269,18 +267,14 @@
     });
   }
 
-  function pollAndRender(index) {
-    renderCalendar();
-    if (index >= POLL_DELAYS_MS.length) return;
-    window.setTimeout(function () { pollAndRender(index + 1); }, POLL_DELAYS_MS[index]);
-  }
+  document.addEventListener('insuwork:data-ready', function () { if (authenticated()) renderCalendar(); });
 
   function startDataFlow() {
     renderLoading();
     if (window.OSInsuwork && typeof window.OSInsuwork.reload === 'function') {
       window.OSInsuwork.reload();
     }
-    pollAndRender(0);
+
   }
 
   function boot() {
