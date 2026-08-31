@@ -20,4 +20,4 @@
 #v-insuwork .iwl-row>div:first-child{display:grid;gap:4px;flex:1;min-width:120px;overflow-wrap:anywhere}
 #v-insuwork .iwl-row-actions{display:flex;gap:6px}
 #v-insuwork .iwl-empty{padding:32px 16px;text-align:center;color:var(--ts);background:var(--s2);border-radius:var(--radius-sm)}
-@media(max-width:600px){#v-insuwork .iwl-page{padding:12px}#v-insuwork .iwl-totals{gap:8px}#v-insuwork .iwl-totals article{padding:12px}#v-insuwork .iwl-row{gap:10px}}
+@media(max-width:600px){#v-insuwork .iwl-page{padding:12px}#v-insuwork .iwl-totals{gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,90px),1fr))}#v-insuwork .iwl-totals strong{font-size:var(--fs-title-sm)}#v-insuwork .iwl-form{grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr))}#v-insuwork .iwl-totals article{padding:12px}#v-insuwork .iwl-row{gap:10px}}
