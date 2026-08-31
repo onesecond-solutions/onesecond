@@ -12,6 +12,7 @@ async function request(query) {
   for (let attempt = 0; attempt < 3; attempt++) {
     const response = await fetch(endpoint, {signal: AbortSignal.timeout(20000), headers: {'X-NCP-APIGW-API-KEY-ID':clientId,'X-NCP-APIGW-API-KEY':clientSecret}});
     if (response.ok) return response.json();
+    if (response.status === 429) { let detail; try { detail=await response.json(); } catch {} const err=new Error('뉴스 API 호출 제한 HTTP 429, code='+String(detail?.error?.errorCode || detail?.errorCode || detail?.code || 'unknown')); err.rateLimited=true; throw err; }
     console.warn(`검색 재시도 ${attempt+1}: HTTP ${response.status}, 대기 ${response.headers.get('retry-after') || '30'}초`);
     if (response.status !== 429 && response.status < 500) throw new Error(`뉴스 API 응답 ${response.status}`);
     await new Promise(r => setTimeout(r, Math.min(60000, Math.max(30000, Number(response.headers.get('retry-after') || 0) * 1000))));
@@ -24,7 +25,7 @@ for (const topic of topics) for (const query of topic.queries) {
   await new Promise(r => setTimeout(r, 7000));
   try { const data = await request(query); if (!Array.isArray(data.items)) throw new Error('검색 결과 형식 오류'); successes++;
     candidates.push(...data.items.map(a => normalize(a, topic, now)).filter(Boolean));
-  } catch (e) { errors.push({category:topic.category, query, error:e.message}); }
+  } catch (e) { errors.push({category:topic.category, query, error:e.message}); if(e.rateLimited) throw new Error(e.message+' (추가 호출 중단, 기존 게시 유지)'); }
 }
 const items = selectItems(candidates);
 // 일부 실패로 완전한 기존 자료를 덮어쓰지 않는다. 다음 예약 실행에서 재시도한다.
