@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {normalize,selectItems,topics,kstDay,canonicalUrl} from '../insuwork/insubriefing/scripts/briefing-core.mjs';
+const now=new Date('2026-08-31T00:00:00Z');
+const article=(title,url='https://news.example/a')=>({title,originallink:url,pubDate:'Mon, 31 Aug 2026 08:00:00 +0900',description:'<b>기사 소개</b>'});
+test('KST day crosses UTC midnight correctly',()=>assert.equal(kstDay(new Date('2026-08-30T21:00:00Z')),'2026-08-31'));
+test('reject invalid URLs, dates, old content and financial PR',()=>{assert.equal(canonicalUrl('javascript:alert(1)'),null);assert.equal(normalize({...article('실손보험 개편'),pubDate:'invalid'},topics[0],now),null);assert.equal(normalize({...article('실손보험 개편'),pubDate:'2026-08-01'},topics[0],now),null);assert.equal(normalize(article('보험사 영업이익 증가'),topics[0],now),null);});
+test('sensitive reports do not synthesize legal or medical summaries',()=>{const a=normalize(article('주차장법 개정 안내'),topics[3],now);assert.equal(a.description,'');assert.equal(a.verification,'원문 확인 필요');const b=normalize(article('암 치료제 승인'),topics[1],now);assert.equal(b.description,'');assert.equal(b.sourceType,'언론 보도');});
+test('official source domain cannot be spoofed by suffix',()=>{assert.equal(normalize(article('건강보험 급여 확대','https://mohw.go.kr/article'),topics[1],now).sourceType,'공식기관 자료');assert.equal(normalize(article('건강보험 급여 확대','https://mohw.go.kr.evil.com/article'),topics[1],now).sourceType,'언론 보도');});
+test('deduplicate across categories by URL and near-identical title',()=>{const a=normalize(article('실손보험 개편 가입자 보장 범위 변경'),topics[0],now);const b={...a,id:'b',url:a.url+'2',title:'실손보험 개편 가입자 보장 범위 변경 안내'};assert.equal(selectItems([a,b,{...a,category:topics[1].category}]).length,1);});
+test('balanced first batch across six topics',()=>{const rows=topics.flatMap((t,n)=>[0,1].map(i=>({category:t.category,title:`주제${n} 항목${i}`,url:`https://news.example/${n}/${i}`,publishedAt:now.toISOString(),priority:1})));assert.equal(new Set(selectItems(rows).slice(0,6).map(x=>x.category)).size,6);});
