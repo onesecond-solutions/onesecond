@@ -27,5 +27,6 @@
   function copy(rows,index,id){var r=rows[index],delta=rows.length-index;return Object.assign({},r,{id:id,estimate:rewrite(r.estimate,null,delta),actual:r.kind==='total'?rewrite(r.actual,null,delta):'',paid:false});}
   // UI numbers begin at 1; persisted formulas retain their original row-2 convention.
   function addresses(value,delta){if(!value.trim().startsWith('='))return value;return value.replace(/(\$?[A-Z]+\$?)([1-9]\d*)/gi,function(all,col,n){var row=Number(n)+delta;return row<1?'#REF!':col+row;});}
-  host.OSLedgerSheetCore={valid:valid,calculate:calculate,summary:summary,remove:remove,copy:copy,normalizeDate:normalizeDate,addresses:addresses,limit:LIMIT};
+  function sortedIndices(rows,key,direction){var indices=rows.map(function(_,i){return i;});if(!['name','date'].includes(key))return indices;return indices.sort(function(a,b){var x=rows[a],y=rows[b];if(x.kind!==y.kind)return x.kind==='total'?1:-1;if(x.kind==='total')return a-b;var av=x[key].trim(),bv=y[key].trim();if(!av||!bv)return av? -1:bv?1:a-b;var cmp=av.localeCompare(bv,'ko',{numeric:true,sensitivity:'base'});return (direction==='desc'?-cmp:cmp)||a-b;});}
+  host.OSLedgerSheetCore={valid:valid,calculate:calculate,summary:summary,remove:remove,copy:copy,normalizeDate:normalizeDate,addresses:addresses,sortedIndices:sortedIndices,limit:LIMIT};
 })(typeof window==='undefined'?globalThis:window);
