@@ -3077,29 +3077,43 @@
     if (context === 'detail') refreshDetailInsuranceAge(); else if (context === 'customerDetail') refreshCustomerDetailInsuranceAge(); else if (context === 'customer') refreshCustomerInsuranceAge(); else if (context === 'tool') calcToolInsuranceAge(); else refreshInsuranceAge();
   }
   function formatConsultPhone(input) { if (input) input.value = phoneText(input.value); }
-  function timeOptionsHtml(selected) {
-    var out = ['<option value="">시간 선택</option>'];
-    for (var h = 0; h < 24; h++) {
-      for (var m = 0; m < 60; m += 15) {
-        var value = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'), period = h < 12 ? '오전' : '오후', h12 = h % 12 === 0 ? 12 : h % 12;
-        out.push('<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + period + ' ' + h12 + ':' + String(m).padStart(2, '0') + '</option>');
-      }
-    }
-    return out.join('');
+  function eventDefaultTime(offsetMinutes) {
+    var d = new Date(), mins = Math.ceil(d.getMinutes() / 10) * 10 + (offsetMinutes || 0);
+    d.setMinutes(mins, 0, 0);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  function timePartsHtml(prefix, selected, label) {
+    var parts = String(selected || '09:00').split(':'), h24 = Number(parts[0]) || 0, minute = Number(parts[1]) || 0;
+    var period = h24 < 12 ? 'am' : 'pm', hour = h24 % 12 || 12;
+    var periodHtml = '<select id="' + prefix + '-period" aria-label="' + label + ' 오전 오후" onchange="OSInsuwork.syncEventTime(\'' + prefix + '\')"><option value="am"' + (period === 'am' ? ' selected' : '') + '>오전</option><option value="pm"' + (period === 'pm' ? ' selected' : '') + '>오후</option></select>';
+    var hourHtml = '<select id="' + prefix + '-hour" aria-label="' + label + ' 시간" onchange="OSInsuwork.syncEventTime(\'' + prefix + '\')">' + Array.from({length:12}, function (_, i) { var n = i + 1; return '<option value="' + n + '"' + (n === hour ? ' selected' : '') + '>' + n + '시</option>'; }).join('') + '</select>';
+    var minutes = [0,10,20,30,40,50]; if (minutes.indexOf(minute) < 0) minutes.push(minute); minutes.sort(function (a,b) { return a-b; });
+    var minuteHtml = '<select id="' + prefix + '-minute" aria-label="' + label + ' 분" onchange="OSInsuwork.syncEventTime(\'' + prefix + '\')">' + minutes.map(function (n) { return '<option value="' + n + '"' + (n === minute ? ' selected' : '') + '>' + String(n).padStart(2, '0') + '분</option>'; }).join('') + '</select>';
+    return '<span class="iw-event-timegroup">' + periodHtml + hourHtml + minuteHtml + '<input id="' + prefix + '" type="hidden" value="' + esc(selected) + '"></span>';
+  }
+  function syncEventTime(prefix) {
+    var hidden = document.getElementById(prefix); if (hidden) hidden.value = eventTimeValue(prefix);
+  }
+  function eventTimeValue(prefix) {
+    var period = value(prefix + '-period'), hour = Number(value(prefix + '-hour')), minute = Number(value(prefix + '-minute'));
+    var h24 = (hour % 12) + (period === 'pm' ? 12 : 0);
+    return String(h24).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
   }
   function toggleEventTime() {
     var row = document.getElementById('iwf-event-timerow'), toggle = document.getElementById('iwf-event-time-toggle');
     if (!row || !row.hasAttribute('hidden')) return;
     row.removeAttribute('hidden'); if (toggle) toggle.style.display = 'none';
-    var select = document.getElementById('iwf-event-time'); if (select) select.focus();
+    var select = document.getElementById('iwf-event-time-period'); if (select) select.focus();
   }
   function eventFormHtml(event, customerId) {
     var hasTime = !!(event && event.task_time);
+    var startTime = hasTime ? String(event.task_time).slice(0, 5) : eventDefaultTime(0);
+    var endTime = event && event.end_time ? String(event.end_time).slice(0, 5) : eventDefaultTime(60);
     var startDate = event ? String(event.task_date || '').slice(0, 10) : state.selectedDate;
     var endDate = event ? String(event.end_date || event.task_date || '').slice(0, 10) : state.selectedDate;
     return '<input id="iwf-event-title" class="iw-event-title-input" required autocomplete="off" placeholder="제목 추가" value="' + esc(event ? event.title || '' : '') + '">'
       + '<div class="iw-event-datebar"><input id="iwf-event-date" type="date" required value="' + esc(startDate) + '"><span class="iw-event-sep">–</span><input id="iwf-event-end-date" type="date" required value="' + esc(endDate) + '">' + (hasTime ? '' : '<button type="button" class="iw-event-time-toggle" id="iwf-event-time-toggle" onclick="OSInsuwork.toggleEventTime()">+ 시간 추가</button>') + '</div>'
-      + '<div class="iw-event-timerow" id="iwf-event-timerow"' + (hasTime ? '' : ' hidden') + '><select id="iwf-event-time">' + timeOptionsHtml(hasTime ? String(event.task_time).slice(0, 5) : '') + '</select><span class="iw-event-sep">–</span><select id="iwf-event-end-time">' + timeOptionsHtml(event && event.end_time ? String(event.end_time).slice(0, 5) : '') + '</select></div>'
+      + '<div class="iw-event-timerow" id="iwf-event-timerow"' + (hasTime ? '' : ' hidden') + '>' + timePartsHtml('iwf-event-time', startTime, '시작') + '<span class="iw-event-sep">–</span>' + timePartsHtml('iwf-event-end-time', endTime, '종료') + '</div>'
       + '<textarea id="iwf-event-desc" rows="4" class="iw-event-desc" placeholder="설명 추가">' + esc(event ? event.description || '' : '') + '</textarea>'
       + (event ? '<input id="iwf-event-id" type="hidden" value="' + esc(event.id) + '">' : '')
       + '<input id="iwf-event-customer" type="hidden" value="' + esc((event && event.customer_id) || customerId || '') + '">';
@@ -3873,8 +3887,11 @@
   function saveEvent() {
     var date = value('iwf-event-date'), title = value('iwf-event-title'), id = value('iwf-event-id'); if (!date || !title) return;
     var endDate = value('iwf-event-end-date') || date; if (endDate < date) endDate = date;
-    var endTime = value('iwf-event-end-time');
-    var body = { task_date: date, task_time: value('iwf-event-time') || null, end_date: endDate, end_time: endTime || null, title: title, description: value('iwf-event-desc') || null, customer_id: value('iwf-event-customer') || null };
+    var timeRow = document.getElementById('iwf-event-timerow'), hasTime = timeRow && !timeRow.hasAttribute('hidden');
+    var endTime = hasTime ? eventTimeValue('iwf-event-end-time') : '';
+    var startTime = hasTime ? eventTimeValue('iwf-event-time') : '';
+    if (hasTime && endDate === date && endTime && startTime && endTime <= startTime) { if (typeof window.toast === 'function') window.toast('종료 시간은 시작 시간보다 뒤로 선택해 주세요.'); return; }
+    var body = { task_date: date, task_time: startTime || null, end_date: endDate, end_time: endTime || null, title: title, description: value('iwf-event-desc') || null, customer_id: value('iwf-event-customer') || null };
     var promise = id ? updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_tasks', Object.assign({}, body, { owner_id: currentUserId() }));
     promise.then(function (saved) { upsertTask(saved); state.selectedDate = date; state.cursor = parseDate(date); finishSave(id ? '일정을 수정했습니다.' : '일정을 추가했습니다.'); }).catch(saveError);
   }
@@ -4126,7 +4143,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,

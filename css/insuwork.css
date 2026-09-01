@@ -91,11 +91,13 @@ body.is-insuwork:not(.is-admin) .side #nav-insuwork{display:flex!important}
 #v-insuwork .iw-event-title-input::placeholder{color:var(--ts);font-weight:400}
 #v-insuwork .iw-event-datebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 #v-insuwork .iw-event-timerow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#v-insuwork .iw-event-timegroup{display:inline-flex;align-items:center;gap:6px}
 #v-insuwork .iw-event-sep{color:var(--ts)}
 #v-insuwork .iw-event-datebar input[type=date]{padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--tp);font:inherit}
 #v-insuwork .iw-event-time-toggle{border:0;background:transparent;color:var(--ac);font:inherit;font-weight:600;font-size:13px;cursor:pointer;padding:4px 2px}
 #v-insuwork .iw-event-time-toggle:hover{text-decoration:underline}
 #v-insuwork .iw-event-timerow select{padding:9px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--tp);font:inherit;cursor:pointer}
+@media(max-width:560px){#v-insuwork .iw-event-timerow{align-items:flex-start;flex-direction:column;gap:8px}#v-insuwork .iw-event-timerow>.iw-event-sep{display:none}#v-insuwork .iw-event-timegroup{width:100%}#v-insuwork .iw-event-timegroup select{flex:1;min-width:0}}
 #v-insuwork .iw-event-desc{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--tp);font:inherit;resize:vertical}
 #v-insuwork .iw-event-desc:focus,#v-insuwork .iw-event-datebar input:focus,#v-insuwork .iw-event-timerow select:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 13%,transparent)}
 #v-insuwork .iw-rich{overflow:hidden;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg)}
