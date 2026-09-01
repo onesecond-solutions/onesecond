@@ -1190,7 +1190,7 @@
     return counts;
   }
   function customersHtml() {
-    var columns = [{ key: 'date', label: '청약일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '고객내용', width: 360, flex: true }, { key: 'status', label: '고객상태', width: 102 }];
+    var columns = [{ key: 'date', label: '청약일자', width: 86 }, { key: 'name', label: '이름', width: 140 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '고객내용', width: 308, flex: true }, { key: 'status', label: '고객상태', width: 102 }];
     var gridStyle = '--iw-consult-template:' + consultGridTemplate(columns);
     var nameQ = searchNorm(state.customerNameQuery);
     var customerMatches = nameQ ? familyExpandedMatches(function (item) { return isManagedCustomer(item) && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) >= 0; }) : null;
