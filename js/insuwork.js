@@ -1193,10 +1193,16 @@
   function familyCandidates(customer) {
     var note = stripHtml(customerProfile(customer).note || ''), kin = /(배우자|남편|아내|부모|아버지|어머니|엄마|아빠|아들|딸|자녀|형제|자매)/;
     if (!kin.test(note)) return [];
+    function hasNearbyKin(text, name) {
+      text = String(text || ''); name = String(name || ''); if (!name) return false;
+      var start = 0, index;
+      while ((index = text.indexOf(name, start)) >= 0) { if (kin.test(text.slice(Math.max(0, index - 12), index + name.length + 12))) return true; start = index + name.length; }
+      return false;
+    }
     return state.data.customers.filter(function (entry) {
       if (!isManagedCustomer(entry) || String(entry.id) === String(customer.id) || familyGroupId(entry) && familyGroupId(entry) === familyGroupId(customer)) return false;
       var reverse = stripHtml(customerProfile(entry).note || '');
-      return note.indexOf(entry.name || '\u0000') >= 0 || (reverse.indexOf(customer.name || '\u0000') >= 0 && kin.test(reverse));
+      return hasNearbyKin(note, entry.name) || hasNearbyKin(reverse, customer.name);
     }).slice(0, 5);
   }
   function familySectionHtml(customer) {
