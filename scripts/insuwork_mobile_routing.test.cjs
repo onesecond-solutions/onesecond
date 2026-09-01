@@ -26,7 +26,7 @@ test('calendar date and customer/consultation detail query survive routing', () 
 });
 test('auxiliary menus remain in mobile shell and unsafe sections cannot become external URLs', () => {
   const {route}=setup();
-  for(const section of ['briefing','newsletters','sales-strategy','notice-updates','user-guide','feedback']) assert.equal(route('?section='+section),'/insuwork/m/section.html?view=insuwork&section='+section);
+  for(const section of ['briefing','newsletters','product-lineups','sales-strategy','notice-updates','user-guide','feedback']) assert.equal(route('?section='+section),'/insuwork/m/section.html?view=insuwork&section='+section);
   assert.equal(route('?section=https://evil.example'),'/insuwork/m/index.html');
 });
 test('historical home date opens mobile schedule for same date', () => assert.equal(setup().route('?section=home&date=2020-01-01'),'/insuwork/m/calendar.html?date=2020-01-01'));
