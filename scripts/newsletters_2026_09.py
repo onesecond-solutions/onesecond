@@ -56,7 +56,9 @@ def main():
                 done += 1; print("UPLOAD " + r["title"]); continue
             if args.mode == "register":
                 if found: skip += 1; print("SKIP " + r["title"]); continue
-                body = dict(r); body.pop("filename"); body.pop("sha256"); body.pop("bytes")
+                body = dict(r)
+                for key_name in ("filename", "sha256", "bytes", "pages"):
+                    body.pop(key_name)
                 body.update({"source_filename":r["filename"], "file_hash":r["sha256"], "source_path":f"{PREFIX}/{r['sha256']}.pdf", "publish_year":2026, "publish_month":9, "status":"reviewing", "page_count":r["pages"]})
                 body["full_text"] = r["title"] + "\n" + r["company"] + "\n2026년 9월 " + r["category"]
                 body["char_length"] = len(body["full_text"]); body["text_quality"] = "최소등록"; body["ocr_needed"] = True; body["ocr_status"] = "pending"
