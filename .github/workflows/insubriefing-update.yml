@@ -56,7 +56,7 @@ jobs:
         if: steps.freshness.outputs.collected != 'true' || inputs.force_recollect
         run: node insuwork/insubriefing/scripts/update-library.mjs
       - name: Save briefing and daily archive
-        if: steps.freshness.outputs.current != 'true'
+        if: steps.freshness.outputs.current != 'true' || inputs.force_recollect
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -67,12 +67,12 @@ jobs:
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
       - name: Request Pages deployment explicitly
-        if: (steps.freshness.outputs.current != 'true' || inputs.verify_deployment) && github.ref_name == 'main'
+        if: (steps.freshness.outputs.current != 'true' || inputs.force_recollect || inputs.verify_deployment) && github.ref_name == 'main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status'
       - name: Verify live briefing
-        if: (steps.freshness.outputs.current != 'true' || inputs.verify_deployment) && github.ref_name == 'main'
+        if: (steps.freshness.outputs.current != 'true' || inputs.force_recollect || inputs.verify_deployment) && github.ref_name == 'main'
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
