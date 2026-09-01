@@ -2,6 +2,10 @@ name: InsuBriefing daily update
 on:
   workflow_dispatch:
     inputs:
+      force_recollect:
+        description: Recollect and replace today's briefing after editorial rule changes
+        type: boolean
+        default: false
       verify_deployment:
         description: Recheck explicit Pages deployment without recollecting today
         type: boolean
@@ -43,13 +47,13 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT,`current=${current}\ncollected=${collected}\n`);
           NODE
       - name: Collect customer briefing
-        if: steps.freshness.outputs.collected != 'true'
+        if: steps.freshness.outputs.collected != 'true' || inputs.force_recollect
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: node insuwork/insubriefing/scripts/update-content.mjs
       - name: Update legacy briefing references
-        if: steps.freshness.outputs.collected != 'true'
+        if: steps.freshness.outputs.collected != 'true' || inputs.force_recollect
         run: node insuwork/insubriefing/scripts/update-library.mjs
       - name: Save briefing and daily archive
         if: steps.freshness.outputs.current != 'true'
