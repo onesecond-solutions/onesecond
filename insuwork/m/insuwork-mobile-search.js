@@ -65,8 +65,14 @@
     var customers = typeof window.OSInsuwork.customersDirectory === 'function' ? window.OSInsuwork.customersDirectory() : [];
     var consultations = typeof window.OSInsuwork.consultationsDirectory === 'function' ? window.OSInsuwork.consultationsDirectory() : [];
     var library = typeof window.OSInsuwork.libraryDirectory === 'function' ? window.OSInsuwork.libraryDirectory() : [];
+    var directCustomerIds = {}, matchedFamilyGroups = {};
+    customers.forEach(function (item) {
+      if (norm([item.name, item.phone, item.status].join(' ')).indexOf(q) < 0) return;
+      directCustomerIds[String(item.id)] = true;
+      if (item.familyGroupId) matchedFamilyGroups[item.familyGroupId] = true;
+    });
     var customerRows = customers.filter(function (item) {
-      return norm([item.name, item.phone, item.status].join(' ')).indexOf(q) >= 0;
+      return directCustomerIds[String(item.id)] || !!matchedFamilyGroups[item.familyGroupId];
     }).slice(0, 10);
     var consultationRows = consultations.filter(function (item) {
       return norm([item.customerName, item.memo, item.channel].join(' ')).indexOf(q) >= 0;
