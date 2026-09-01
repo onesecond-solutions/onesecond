@@ -3998,7 +3998,7 @@
     }
     var sameAddress = !!(document.getElementById('iwd-family-address-same') && document.getElementById('iwd-family-address-same').checked), sourceProfile = customerProfile(customer);
     var profile = { customer_managed: true, birth_date: birth || null, gender: gender || null, note: note || '' };
-    if (sameAddress) { profile.zip = sourceProfile.zip || null; profile.address = sourceProfile.address || null; profile.address_detail = sourceProfile.address_detail || null; }
+    if (sameAddress) { profile.zip = value('iwd-customer-zip') || sourceProfile.zip || null; profile.address = value('iwd-customer-address') || sourceProfile.address || null; profile.address_detail = value('iwd-customer-address-detail') || sourceProfile.address_detail || null; }
     else { profile.zip = value('iwd-family-new-zip') || null; profile.address = value('iwd-family-new-address-main') || null; profile.address_detail = value('iwd-family-new-address-detail') || null; }
     writeOne('insuwork_customers', { owner_id: currentUserId(), name: name, phone: phone || null, status: status, profile: profile }).then(function (created) { upsertCustomer(created); return linkFamilyRecords(customer, created, relation).then(function () { return created; }); }).then(function (created) { renderContent(); if (typeof window.toast === 'function') window.toast(created.name + ' 고객을 등록하고 가족으로 연결했습니다.'); }).catch(saveError);
   }
