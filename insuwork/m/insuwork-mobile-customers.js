@@ -226,7 +226,9 @@
     var q = state.query.trim();
     if (!q) return list;
     var needle = searchNorm(q);
-    return list.filter(function (customer) {
+    var matchedGroups = {};
+    var directIds = {};
+    list.forEach(function (customer) {
       var hay = [
         customer.name || '',
         customer.phone || '',
@@ -235,7 +237,12 @@
         customer.displayStatus || customer.status || ''
       ].join(' ');
       hay = searchNorm(hay);
-      return hay.indexOf(needle) >= 0;
+      if (hay.indexOf(needle) < 0) return;
+      directIds[String(customer.id)] = true;
+      if (customer.familyGroupId) matchedGroups[customer.familyGroupId] = true;
+    });
+    return list.filter(function (customer) {
+      return directIds[String(customer.id)] || !!matchedGroups[customer.familyGroupId];
     });
   }
 

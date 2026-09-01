@@ -196,6 +196,19 @@
     var groupId = familyGroupId(customer); if (!groupId) return [];
     return state.data.customers.filter(function (entry) { return isManagedCustomer(entry) && familyGroupId(entry) === groupId; });
   }
+  function familyExpandedMatches(predicate) {
+    var direct = {}, groups = {}, expanded = {};
+    state.data.customers.forEach(function (customer) {
+      if (!predicate(customer)) return;
+      direct[String(customer.id)] = true;
+      expanded[String(customer.id)] = true;
+      var groupId = familyGroupId(customer); if (groupId) groups[groupId] = true;
+    });
+    state.data.customers.forEach(function (customer) {
+      if (groups[familyGroupId(customer)]) expanded[String(customer.id)] = true;
+    });
+    return { direct: direct, expanded: expanded };
+  }
   function familyRelation(customer, memberId) {
     var list = customerProfile(customer).family_relations;
     var found = Array.isArray(list) && list.find(function (entry) { return entry && String(entry.customer_id) === String(memberId); });
@@ -686,7 +699,12 @@
     loadPaymentInfo();
     state.data.scripts.forEach(function (item) { if (matches((item.title || '') + ' ' + stripHtml(item.script_text))) results.push({ icon: '📝', kind: '업무노트', title: item.title, sub: formatDate(item.created_at), action: "OSInsuwork.showAsset('scripts','" + esc(item.id) + "')" }); });
     state.data.library.forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || '') + ' ' + (item.memo_text || ''))) results.push({ icon: '📄', kind: item.memo_text ? '메모' : '자료', title: item.title, sub: formatDate(item.created_at), action: "OSInsuwork.showAsset('library','" + esc(item.id) + "')" }); });
-    state.data.customers.forEach(function (item) { if (matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || ''))) results.push({ icon: '👤', kind: '고객', title: item.name, sub: item.phone || item.phone_raw || '', action: "OSInsuwork.openCustomerFromEvent('" + esc(item.id) + "')" }); });
+    var customerMatches = familyExpandedMatches(function (item) { return matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (item.status || '')); });
+    state.data.customers.forEach(function (item) {
+      var id = String(item.id); if (!customerMatches.expanded[id]) return;
+      var linked = !customerMatches.direct[id];
+      results.push({ icon: '👤', kind: linked ? '가족 고객' : '고객', title: item.name, sub: (linked ? '가족 연결 · ' : '') + (item.phone || item.phone_raw || ''), action: "OSInsuwork.openCustomerFromEvent('" + esc(item.id) + "')" });
+    });
     state.data.consultations.forEach(function (item) { var customer = state.data.customers.find(function (c) { return String(c.id) === String(item.customer_id); }) || {}; if (matches((customer.name || '') + ' ' + (item.memo || '') + ' ' + (item.channel || ''))) results.push({ icon: '✎', kind: '상담', title: customer.name || '고객 상담', sub: item.memo || '', action: "OSInsuwork.showCustomer('" + esc(item.customer_id) + "')" }); });
     allEvents().forEach(function (item) { if (matches((item.title || '') + ' ' + (item.description || ''))) results.push({ icon: '▦', kind: '일정', title: item.title, sub: String(item.event_date || '').slice(0, 10), action: "OSInsuwork.showEvent('" + esc(item.id) + "')" }); });
     carrierDirectory().forEach(function (item) { if (matches(item.name)) results.push({ icon: '↗', kind: '보험사 원전산', title: item.name, sub: item.systemUrl ? '원전산 열기' : '연결 정보 확인 중', action: "OSInsuwork.openCarrierSystem('" + esc(jsString(item.name)) + "')" }); });
@@ -1175,7 +1193,8 @@
     var columns = [{ key: 'date', label: '청약일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '고객내용', width: 360, flex: true }, { key: 'status', label: '고객상태', width: 102 }];
     var gridStyle = '--iw-consult-template:' + consultGridTemplate(columns);
     var nameQ = searchNorm(state.customerNameQuery);
-    var baseRows = state.data.customers.filter(function (item) { if (!isManagedCustomer(item)) return false; if (nameQ && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
+    var customerMatches = nameQ ? familyExpandedMatches(function (item) { return isManagedCustomer(item) && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) >= 0; }) : null;
+    var baseRows = state.data.customers.filter(function (item) { if (!isManagedCustomer(item)) return false; if (customerMatches && !customerMatches.expanded[String(item.id)]) return false; return true; });
     baseRows.sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); });
     var counts = customerStageCounts(baseRows);
     var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = customerDisplayStatus(item); return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
@@ -4136,6 +4155,8 @@
         contractDate: String(profile.contract_date || customer.created_at || '').slice(0, 10),
         birthDate: profile.birth_date || '',
         displayStatus: customerDisplayStatus(customer),
+        familyGroupId: familyGroupId(customer),
+        familyCount: familyMembers(customer).length,
         note: stripHtml(profile.note || ''),
         consultations: (consultsByCustomer[key] || []).slice(0, 5),
         nextCareDate: care ? care.date : '', nextCareTitle: care ? care.title : ''
