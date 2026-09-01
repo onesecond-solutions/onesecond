@@ -23,16 +23,21 @@ await mkdir(resolve(root, 'daily'), {recursive:true});
 const candidates = [], errors = []; let successes = 0;
 const rotation = Math.floor(Date.parse(day) / 86400000) % 3;
 for (const topic of topics) {
-  const query = topic.queries[rotation];
-  await new Promise(r => setTimeout(r, 7000));
-  try { const data = await request(query); if (!Array.isArray(data.items)) throw new Error('검색 결과 형식 오류'); successes++;
-    candidates.push(...data.items.map(a => normalize(a, topic, now)).filter(Boolean));
-  } catch (e) { errors.push({category:topic.category, query, error:e.message}); if(e.rateLimited) throw new Error(e.message+' (추가 호출 중단, 기존 게시 유지)'); }
+  const queryCount = Math.min(topic.dailyQueries || 1, topic.queries.length);
+  const queries = queryCount === 1
+    ? [topic.queries[rotation % topic.queries.length]]
+    : topic.queries.slice(0, queryCount);
+  for (const query of queries) {
+    await new Promise(r => setTimeout(r, 7000));
+    try { const data = await request(query); if (!Array.isArray(data.items)) throw new Error('검색 결과 형식 오류'); successes++;
+      candidates.push(...data.items.map(a => normalize(a, topic, now)).filter(Boolean));
+    } catch (e) { errors.push({category:topic.category, query, error:e.message}); if(e.rateLimited) throw new Error(e.message+' (추가 호출 중단, 기존 게시 유지)'); }
+  }
 }
 const items = selectItems(candidates);
 // 일부 실패로 완전한 기존 자료를 덮어쓰지 않는다. 다음 예약 실행에서 재시도한다.
 if (errors.length || !items.length) throw new Error(`수집 미완료: 성공 ${successes}, 실패 ${errors.length}, 기사 ${items.length}. 기존 자료 유지. ${JSON.stringify(errors)}`);
-const payload = {updatedAt:now.toISOString(), date:day, source:'NAVER API HUB 뉴스 검색', categories:topics.map(t=>t.category), items};
+const payload = {updatedAt:now.toISOString(), date:day, source:'NAVER API HUB 뉴스 검색', categories:[...new Set(topics.map(t=>t.category))], items};
 async function atomic(name, value) {const target=resolve(root,name); await writeFile(target+'.tmp',JSON.stringify(value,null,2)+'\n'); await rename(target+'.tmp',target);}
 await atomic(`daily/${day}.json`,payload);
 await atomic('content.json',payload);
