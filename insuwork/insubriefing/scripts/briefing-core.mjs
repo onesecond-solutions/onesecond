@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 export const topics = [
   { category: '보험·보상', queries: ['실손보험 개편', '보험금 지급 분쟁', '보험료 보장 변경'], match: /보험|실손|보장|보험금/ },
-  { category: '질병·치료·의료비', queries: ['암 신약 치료비', '건강보험 급여 확대', '치료제 승인'], match: /치료|신약|의료비|건강보험|급여/ },
+  { category: '질병·치료·의료비', queries: ['암 신약 건강보험 급여', '뇌 심장 치료 건강보험', '치료제 승인 의료비'], match: /암|뇌혈관|뇌졸중|뇌출혈|심장|심혈관|심근|치료|신약|의료비|건강보험|급여/ },
   { category: '노후·연금·돌봄', queries: ['기초연금 변경', '장기요양 치매 지원', '간병 돌봄 제도'], match: /연금|요양|치매|간병|돌봄/ },
   { category: '교통·자동차·생활안전', queries: ['주차장법 개정', '도로교통법 시행', '자동차 화재 안전'], match: /주차|도로교통|운전자|자동차|화재|안전/ },
   { category: '생활법률·소비자보호', queries: ['생활 법령 개정', '소비자 피해 보상', '보이스피싱 예방'], match: /법령|개정|소비자|피해|보이스피싱/ },
@@ -15,10 +15,23 @@ export function canonicalUrl(value) {
     return u.href;
   } catch { return null; }
 }
-const exclude = /주가|목표주가|영업이익|순이익|배당|주식시장|연예|보험사기단|보험금 노린|살해|이벤트|협찬|특가|프로모션/;
+const exclude = /\[(사설|칼럼|기고)\]|주가|목표주가|영업이익|순이익|배당|주식시장|보험주|증시|시가총액|연예|보험사기단|보험금 노린|살해|이벤트|협찬|특가|프로모션|신간|출간|펴내|출판|특강|금융교육|캠페인|봉사활동|지역 축제/;
+const requiredByCategory = {
+  '보험·보상': /실손|보험금|보험료|보장|약관|보험업법|보험 개편|보험가입|보험소비자|금융감독원/,
+  '질병·치료·의료비': /암|뇌혈관|뇌졸중|뇌출혈|심장|심혈관|심근|질병|치료|신약|치료제|수술|건강보험|급여|의료비/,
+  '노후·연금·돌봄': /연금|장기요양|치매|간병|돌봄|노인 지원/,
+  '교통·자동차·생활안전': /도로교통|운전자|자동차|교통사고|화재|안전사고|과태료|벌금|견인|주차장법|주차.{0,12}(출입구|길막|방해)/,
+  '생활법률·소비자보호': /법령|법률|시행|개정|과태료|벌금|소비자.{0,12}(피해|보상|환불)|보이스피싱/,
+  '가계·세금·지원제도': /상속|증여|세액공제|소득공제|지원금|지원제도|신청.{0,12}(마감|대상|자격)|세법.{0,12}(개정|시행)/
+};
+export function isUsefulTitle(title, category) {
+  const text = strip(title);
+  if (!text || exclude.test(text)) return false;
+  return requiredByCategory[category]?.test(text) ?? false;
+}
 export function normalize(article, topic, now = new Date()) {
   const url = canonicalUrl(article.originallink || article.link), title = strip(article.title), time = Date.parse(article.pubDate);
-  if (!url || !title || !Number.isFinite(time) || time > +now + 3600000 || time < +now - 72 * 3600000 || exclude.test(title) || !topic.match.test(title)) return null;
+  if (!url || !title || !Number.isFinite(time) || time > +now + 3600000 || time < +now - 72 * 3600000 || !topic.match.test(title) || !isUsefulTitle(title, topic.category)) return null;
   const source = new URL(url).hostname.replace(/^www\./, '');
   const official = /(^|\.)(go\.kr|nhis\.or\.kr|hira\.or\.kr|nps\.or\.kr|fss\.or\.kr|kca\.go\.kr)$/.test(source);
   const sensitive = /법|개정|시행|과태료|벌금|신약|치료제|승인|임상|치료비|급여/.test(title) || topic.category === '질병·치료·의료비';
@@ -29,15 +42,22 @@ export function normalize(article, topic, now = new Date()) {
     priority: /시행|신청|마감|개편|급여|지원/.test(title) ? 2 : 1 };
 }
 function tokens(title) { return new Set(title.replace(/\[[^\]]*\]/g, '').replace(/[^가-힣a-zA-Z0-9\s]/g, ' ').toLowerCase().split(/\s+/).filter(w => w.length > 1)); }
-export function selectItems(candidates, perCategory = 8) {
+function eventKey(title) {
+  if (/주차/.test(title) && /(출입구|길막|막으|방해)/.test(title)) return 'parking-entrance-blocking';
+  if (/농지/.test(title) && /주차장/.test(title)) return 'farmland-parking';
+  if (/기초연금/.test(title) && /개편|소득|선정기준/.test(title)) return 'basic-pension-reform';
+  return '';
+}
+export function selectItems(candidates, perCategory = 2, totalLimit = 10) {
   const selected = [], seen = new Set(), counts = {};
   for (const item of candidates.sort((a, b) => b.priority - a.priority || Date.parse(b.publishedAt) - Date.parse(a.publishedAt))) {
-    if (seen.has(item.url) || (counts[item.category] || 0) >= perCategory) continue;
+    if (!isUsefulTitle(item.title, item.category) || seen.has(item.url) || (counts[item.category] || 0) >= perCategory) continue;
     const words = tokens(item.title);
-    const duplicate = selected.some(other => { const b = tokens(other.title), intersection = [...words].filter(w => b.has(w)).length; return item.title === other.title || (intersection >= 4 && intersection / Math.min(words.size, b.size) >= .8); });
+    const key = eventKey(item.title);
+    const duplicate = selected.some(other => { const b = tokens(other.title), intersection = [...words].filter(w => b.has(w)).length; return item.title === other.title || (key && key === eventKey(other.title)) || (intersection >= 3 && intersection / Math.min(words.size, b.size) >= .6); });
     if (duplicate) continue;
     selected.push(item); seen.add(item.url); counts[item.category] = (counts[item.category] || 0) + 1;
   }
   // 첫 화면/배너는 한 분야가 독점하지 않도록 분야별 첫 기사부터 배치한다.
-  return Array.from({length:perCategory}, (_, n) => topics.map(t => selected.filter(x => x.category === t.category)[n]).filter(Boolean)).flat();
+  return Array.from({length:perCategory}, (_, n) => topics.map(t => selected.filter(x => x.category === t.category)[n]).filter(Boolean)).flat().slice(0, totalLimit);
 }
