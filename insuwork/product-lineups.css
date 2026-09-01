@@ -17,3 +17,9 @@
 #v-insuwork .iwpl-source{font-size:12px;line-height:1.5}
 #v-insuwork .iwpl-result-head{font-size:14px}
 #v-insuwork .iwpl-result-company{font-size:13px;line-height:1.4}
+
+/* 검색 줄은 아래 회사목록(224px) + 상품영역 컬럼과 같은 기준으로 정렬 */
+#v-insuwork .iwpl-searchbar{display:grid;grid-template-columns:224px minmax(0,1fr);gap:24px;align-items:stretch}
+#v-insuwork .iwpl-searchbar .iw-nl-pool{width:100%;margin:0;box-sizing:border-box}
+#v-insuwork .iwpl-searchbar input{width:100%;box-sizing:border-box}
+@media(max-width:860px){#v-insuwork .iwpl-searchbar{grid-template-columns:1fr;gap:8px}}
