@@ -75,8 +75,9 @@
 ## 🚨 DB 규칙
 
 - **DB = 신버전 `pdnwgzneooyygfejrvbg`(onesecond-v1-restore-0420)만.** 구버전 `qursjteiovcylqiepmlo`는 삭제됨 — 참조 금지.
-- **코덱스는 DDL·마이그레이션·운영 데이터(users·posts·sales_customers 등) 쓰기를 하지 않는다.** DB 변경이 필요하면 **구현하지 말고 총괄팀장에게 보고**한다(운영 DB는 `.github/workflows/db-migrate.yml` CI 채널 + 대표 승인 전용).
-- 일반 구현 작업에는 **Supabase 키가 필요 없다.** 키를 요구하는 작업이면 범위를 벗어난 것이니 멈추고 보고한다.
+- **대표가 대상·범위·목적을 명시해 승인한 운영 작업은 코상무(Codex)가 직접 실행할 수 있다.** 실행 전 신버전 프로젝트 확인, 대상 고정, 중복·영향 범위 사전검사, 멱등성 또는 롤백 경로, 실행 후 검증 증거를 갖춘다. 대표 승인 없는 광범위 UPDATE/DELETE, 권한·RLS·결제·인증 비밀 변경은 계속 금지한다.
+- **DDL·마이그레이션은** `.github/workflows/db-migrate.yml` CI와 대표 승인 경로를 유지한다. 소식지처럼 대표가 명시 승인한 한정 운영 데이터 INSERT/PATCH 및 대응 Storage 작업은 검수 가능한 전용 스크립트로 실행·기록한다.
+- 일반 구현 작업에는 Supabase 키가 필요 없다. 대표 승인 운영 작업에서 키가 필요한 경우 값은 출력·커밋·브라우저 전송하지 않고 기존 로컬 비밀 저장소에서만 읽는다.
 
 ---
 

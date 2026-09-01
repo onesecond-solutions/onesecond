@@ -31,7 +31,7 @@ def req(method, path, data=None, headers=None, timeout=300):
 
 def list_rows():
     q = ("/rest/v1/newsletters?status=eq.published"
-         "&select=id,source_path,source_pdf_url&limit=3000")
+         "&select=id,source_path,source_pdf_url,publish_year,publish_month&limit=3000")
     with req("GET", q) as r: return json.load(r)
 
 def existing_thumbs():
@@ -42,7 +42,7 @@ def existing_thumbs():
                  headers={"Content-Type": "application/json"}) as r:
             batch = json.load(r)
         if not batch: break
-        for o in batch: out.add(o["name"])
+        for o in batch: out.add("thumbs/" + o["name"])
         if len(batch) < 1000: break
         off += 1000
     return out
@@ -61,19 +61,36 @@ def upload_jpg(name, data):
              headers={"Content-Type": "image/jpeg", "x-upsert": "true"}) as resp:
         return resp.status
 
-import fitz  # PyMuPDF
+try:
+    import fitz  # PyMuPDF
+except ModuleNotFoundError:
+    fitz = None
 
 def render_cover(pdf_bytes, target_w=320, quality=72):
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = doc[0]
-    scale = min(target_w / page.rect.width if page.rect.width else 1.0, 2.0)
-    pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
-    jpg = pix.tobytes(output="jpg", jpg_quality=quality)
-    doc.close(); return jpg
+    if fitz is not None:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        page = doc[0]
+        scale = min(target_w / page.rect.width if page.rect.width else 1.0, 2.0)
+        pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+        jpg = pix.tobytes(output="jpg", jpg_quality=quality)
+        doc.close(); return jpg
+    import shutil, subprocess, tempfile
+    exe = shutil.which("pdftoppm")
+    if not exe: raise RuntimeError("PyMuPDF와 pdftoppm 모두 없음")
+    with tempfile.TemporaryDirectory() as td:
+        src = os.path.join(td, "cover.pdf"); out = os.path.join(td, "cover")
+        with open(src, "wb") as f: f.write(pdf_bytes)
+        subprocess.run([exe, "-f", "1", "-l", "1", "-singlefile", "-jpeg", "-jpegopt", f"quality={quality}", "-scale-to-x", str(target_w), "-scale-to-y", "-1", src, out], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with open(out + ".jpg", "rb") as f: return f.read()
 
 def main():
     force = "--force" in sys.argv
     rows = list_rows()
+    if "--month" in sys.argv:
+        mi = sys.argv.index("--month")
+        wanted = sys.argv[mi + 1]
+        yy, mm = [int(x) for x in wanted.split("-", 1)]
+        rows = [r for r in rows if int(r.get("publish_year") or 0) == yy and int(r.get("publish_month") or 0) == mm]
     have = set() if force else existing_thumbs()
     todo = [r for r in rows if (r.get("source_path") or r.get("source_pdf_url"))]
     print(f"published {len(rows)} / PDF있음 {len(todo)} / 기존 thumbs {len(have)} / force={force}")

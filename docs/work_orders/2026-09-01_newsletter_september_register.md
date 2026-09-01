@@ -10,11 +10,13 @@
 기존 8월 파이프라인과 동일하게 Storage `newsletters/2026-09/<sha256>.pdf` 업로드 →
 `newsletters` reviewing 등록 → 중복·경로·열람 검수 → published 승격 → `thumbs/<id>.jpg` 생성 순서로 진행한다.
 
-## 현재 상태
+## 완료 상태
 - 운영 해시 중복 조회: 23건 전부 MISSING
 - Storage 업로드: 23/23 성공
-- DB reviewing 등록: 안전 승인 대기
-- published 승격·썸네일 생성: DB 등록 후 진행
+- DB reviewing 등록: 23/23 성공
+- published 승격: 23/23 성공, postverify 실패 0
+- 표지 썸네일: 23/23 생성, 실패 0
+- 8월 기준 9월 미확인 회사명 자동 표시 UI 배포
 
 ## 실행 파일
 - `scripts/data/newsletters_2026_09.json`: 회사명·보험유형·자료유형·해시·페이지 원장
