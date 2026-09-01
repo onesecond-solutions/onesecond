@@ -1890,7 +1890,9 @@
   }
   function openPublicLibraryFile(id) {
     var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item || !item.storage_path) return;
-    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, item.title || '파일', item.mime_type || ''); }).catch(function () { if (typeof window.toast === 'function') window.toast('파일을 열지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
+    var proxy = document.createElement('span');
+    proxy.setAttribute('data-storage-path', item.storage_path); proxy.setAttribute('data-file-title', item.title || '파일'); proxy.setAttribute('data-file-mime', item.mime_type || '');
+    openStoragePreview(proxy);
   }
   function sectionHtml() { if (state.section === 'ledger') return canEnterSection('ledger') && window.OSInsuworkLedger ? window.OSInsuworkLedger.html() : '<p>임태성 전용 화면입니다.</p>';
     if (state.section === 'daily-briefing' && window.OSCustomerBriefing) return window.OSCustomerBriefing.sectionHtml();
@@ -2351,7 +2353,38 @@
   function newslettersPublicUrl(path) {
     return window.db.url('/storage/v1/object/public/newsletters/' + String(path).split('/').map(encodeURIComponent).join('/'));
   }
-  function hydrateRichStorage() { var nodes = document.querySelectorAll('#v-insuwork [data-storage-path]'); Array.prototype.forEach.call(nodes, function (node) { var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || ''; signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') { node.src = url; node.classList.add('iw-previewable'); node.title = '클릭하면 크게 보기'; node.onclick = function () { openPreviewUrl(url, title, mime || 'image/*'); }; } else { node.href = url; node.onclick = function (event) { if (previewType({ title: title, mime_type: mime, storage_path: path })) { event.preventDefault(); openPreviewUrl(url, title, mime); } }; } }).catch(function () {}); }); }
+  function storagePreviewError(error) {
+    closePreview();
+    if (typeof window.toast === 'function') window.toast(error && error.message ? error.message : '첨부파일을 열지 못했습니다. 잠시 후 다시 시도해 주세요.');
+  }
+  function openStoragePreview(node, assetRef) {
+    if (!node) return;
+    var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || '';
+    if (!path) return;
+    var type = previewType({ title: title, mime_type: mime, storage_path: path }), popup = null;
+    if (type) {
+      if (previewUi(type, title, '', assetRef)) {
+        var stage = document.getElementById('iw-preview-stage');
+        if (stage) stage.innerHTML = '<div class="iw-preview-loading">첨부파일을 준비하는 중입니다.</div>';
+      }
+    } else popup = window.open('', '_blank');
+    node.setAttribute('aria-busy', 'true');
+    signStoragePath(path).then(function (url) {
+      node.removeAttribute('aria-busy'); prepareFileDrag(node, url);
+      if (type) openPreviewUrl(url, title, mime, assetRef);
+      else if (popup) popup.location.replace(url);
+      else window.location.href = url;
+    }).catch(function (error) { node.removeAttribute('aria-busy'); if (popup) popup.close(); storagePreviewError(error); });
+  }
+  function hydrateRichStorage() {
+    var nodes = document.querySelectorAll('#v-insuwork [data-storage-path]');
+    Array.prototype.forEach.call(nodes, function (node) {
+      var path = node.getAttribute('data-storage-path'); if (!path) return;
+      node.onclick = function (event) { if (event) event.preventDefault(); openStoragePreview(node); };
+      if (node.tagName === 'IMG') { node.classList.add('iw-previewable'); node.title = '클릭하면 크게 보기'; }
+      signStoragePath(path).then(function (url) { if (node.tagName === 'IMG') node.src = url; else node.href = url; prepareFileDrag(node, url); }).catch(function () {});
+    });
+  }
   function loadPdfJs() {
     if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
     if (state.pdfJsPromise) return state.pdfJsPromise;
@@ -2398,7 +2431,9 @@
   }
   function openFilePreview(id, assetRef) {
     var item = workspaceItem(id); if (!item || !item.storage_path) return;
-    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, item.title || '파일', item.mime_type || '', assetRef || { source: 'library', id: id }); }).catch(saveError);
+    var proxy = document.createElement('span');
+    proxy.setAttribute('data-storage-path', item.storage_path); proxy.setAttribute('data-file-title', item.title || '파일'); proxy.setAttribute('data-file-mime', item.mime_type || '');
+    openStoragePreview(proxy, assetRef || { source: 'library', id: id });
   }
   function openAssetPreview(source, id) {
     var list = source === 'scripts' ? state.data.scripts : state.data.library;
@@ -2543,7 +2578,7 @@
         return '<img class="iw-detail-thumb" src="' + esc(file.url) + '" alt="' + esc(file.title) + '" onclick="OSInsuwork.openUrlPreview(\'' + esc(jsString(file.url)) + '\',\'' + esc(jsString(file.title)) + '\',\'' + esc(jsString(file.mime_type || 'image/*')) + '\')">';
       }
       var href = file.storage_path ? '#' : esc(file.url || '#');
-      return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" target="_blank" rel="noopener"><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
+      return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '"' + (file.storage_path ? ' onclick="event.preventDefault();OSInsuwork.openStoragePreview(this)"' : ' target="_blank" rel="noopener"') + '><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
     }).join('') + '</div></div>' : '';
     var kind = source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실';
     dialog('<div class="iw-detail"><span class="iw-badge">' + kind + '</span><h2 class="iw-detail-title">' + favoriteButton('asset', id, item.title || '(제목 없음)', kind + ' · ' + formatDate(item.created_at)) + '<span>' + esc(item.title || '(제목 없음)') + '</span></h2><small>' + formatDate(item.created_at) + '</small><div class="iw-detail-body iw-rich-content">' + linkifyRich(body) + '</div>' + attachmentHtml + '<div class="iw-detail-actions">' + actions + '</div></div>');
@@ -3017,7 +3052,7 @@
      editAsset/deleteAsset(insuwork_items 공용 함수)를 그대로 재사용 — 첨부파일도 같은
      insuwork_items 테이블 행이라 새 함수 없이 그대로 동작. */
   function attachmentItemHtml(file) {
-    return '<span class="iw-att-item"><a href="#" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title || '첨부파일') + '" data-file-mime="' + esc(file.mime_type || '') + '">' + esc(file.title || '첨부파일') + '<small>' + formatBytes(file.file_size) + '</small></a>'
+    return '<span class="iw-att-item"><a href="#" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title || '첨부파일') + '" data-file-mime="' + esc(file.mime_type || '') + '" onclick="event.preventDefault();OSInsuwork.openStoragePreview(this)">' + esc(file.title || '첨부파일') + '<small>' + formatBytes(file.file_size) + '</small></a>'
       + '<button type="button" class="iw-att-edit" title="이름 수정" onclick="OSInsuwork.editAsset(\'' + esc(file.id) + '\')">✎</button>'
       + '<button type="button" class="iw-att-del" title="삭제" onclick="OSInsuwork.deleteAsset(\'' + esc(file.id) + '\')">×</button></span>';
   }
@@ -4154,7 +4189,7 @@
     setPublicLibView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.publicLibView = view; renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
