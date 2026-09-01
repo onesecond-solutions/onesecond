@@ -15,12 +15,19 @@ test('rejects today low-value investment, book, event and local parking noise',(
   assert.equal(isUsefulTitle('[사설] 기초연금 개편안 막판 진통','노후·연금·돌봄'),false);
   assert.equal(isUsefulTitle('가평 자라섬 장기 주차 차량 골치','교통·자동차·생활안전'),false);
   assert.equal(isUsefulTitle('농지에 신고만으로 화장실 주차장 설치 가능','교통·자동차·생활안전'),false);
+  assert.equal(isUsefulTitle('AI가 앞당긴 암 백신 치료비 낮출 수 있을까 전문가에게 묻다','질병·치료·의료비'),false);
 });
 test('keeps consultation-useful medical, pension and safety changes',()=>{
   assert.equal(isUsefulTitle('폴라이비 블린사이토 건강보험 급여 첫날','질병·치료·의료비'),true);
-  assert.equal(isUsefulTitle('암 백신 치료비 낮출 수 있을까','질병·치료·의료비'),true);
+  assert.equal(isUsefulTitle('암 치료제 건강보험 급여 승인과 본인부담 변경','질병·치료·의료비'),true);
   assert.equal(isUsefulTitle('월 468만원 벌어도 기초연금 개편안','노후·연금·돌봄'),true);
   assert.equal(isUsefulTitle('주차장 출입구 막으면 과태료 500만원 견인','교통·자동차·생활안전'),true);
+});
+test('requires a concrete customer cost, coverage, eligibility or action impact',()=>{
+  assert.equal(isUsefulTitle('암 연구 새로운 가능성 발표','질병·치료·의료비'),false);
+  assert.equal(isUsefulTitle('암 치료제 건강보험 급여 본인부담 변경','질병·치료·의료비'),true);
+  assert.equal(isUsefulTitle('장기요양 제도 소개','노후·연금·돌봄'),false);
+  assert.equal(isUsefulTitle('장기요양 본인부담 지원 대상 확대','노후·연금·돌봄'),true);
 });
 test('keeps one representative per event and caps categories',()=>{
   const base={category:topics[3].category,publishedAt:now.toISOString(),priority:2};
