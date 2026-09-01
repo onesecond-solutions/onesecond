@@ -1609,6 +1609,20 @@
     var grid = rows.length ? '<div class="iw-news-grid">' + rows.map(newsletterCardHtml).join('') + '</div>' : '<div class="iw-empty">소식지가 없습니다.</div>';
     return head + grid;
   }
+  function newsletterMissingCompaniesHtml() {
+    var now = new Date(), year = now.getFullYear(), month = now.getMonth() + 1;
+    var prev = new Date(year, month - 2, 1), py = prev.getFullYear(), pm = prev.getMonth() + 1;
+    var current = {}, baseline = {};
+    (state.newsData || []).forEach(function (r) {
+      var name = String(r.company || '').trim(); if (!name) return;
+      if (Number(r.publish_year) === year && Number(r.publish_month) === month) current[name] = true;
+      if (Number(r.publish_year) === py && Number(r.publish_month) === pm) baseline[name] = true;
+    });
+    if (!Object.keys(current).length || !Object.keys(baseline).length) return '';
+    var missing = Object.keys(baseline).filter(function (name) { return !current[name]; }).sort(function (a, b) { return a.localeCompare(b, 'ko-KR'); });
+    if (!missing.length) return '';
+    return '<div class="iw-nl-missing"><span>' + month + '월 미확인</span><div>' + missing.map(function (name) { return '<b>' + esc(name) + '</b>'; }).join('') + '</div></div>';
+  }
   function newslettersHtml() {
     if (!state.newsData && !state.newsLoading) loadNewsletterData();
     if (state.newsLoading || !state.newsData) {
@@ -1616,7 +1630,7 @@
     }
     var sidebar = '<aside class="iw-nl-side">' + newsPoolTabsHtml() + '<div class="iw-nl-search"><input id="iw-newsCo-name-input" type="text" placeholder="회사 검색" autocomplete="off" value="' + esc(state.newsCoNameQuery || '') + '"></div><div class="iw-nl-colist">' + newsSidebarHtml() + '</div></aside>';
     var main = '<div class="iw-nl-main"><div class="iw-nl-ctrl">' + newsScopeTabsHtml() + '</div>' + newsCountHtml() + (state.newsScope === 'all' ? newsAllViewHtml() : newsCoViewHtml()) + '</div>';
-    return '<div class="iw-toolbar"><h2>소식지</h2></div><div class="iw-nl-layout">' + sidebar + main + '</div>';
+    return '<div class="iw-toolbar"><h2>소식지</h2></div>' + newsletterMissingCompaniesHtml() + '<div class="iw-nl-layout">' + sidebar + main + '</div>';
   }
   function filterNewsPool(pool) {
     state.newsPool = pool;
