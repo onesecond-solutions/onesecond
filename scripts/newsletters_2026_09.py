@@ -28,9 +28,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=["preflight", "verify", "upload", "register", "promote", "postverify"])
     ap.add_argument("--source-dir", default=str(Path.home() / "Downloads"))
+    ap.add_argument("--manifest", default=str(MANIFEST))
     args = ap.parse_args()
-    rows = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    if len(rows) != 23 or len({r["sha256"] for r in rows}) != 23: sys.exit("STOP: manifest 23건/해시 유일성 실패")
+    rows = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
+    if not rows or len({r["sha256"] for r in rows}) != len(rows): sys.exit("STOP: manifest 비었음/해시 유일성 실패")
     source = Path(args.source_dir)
     if args.mode == "preflight":
         total = 0

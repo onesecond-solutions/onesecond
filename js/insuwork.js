@@ -1566,6 +1566,13 @@
     newsPoolCompanies().forEach(function (c) { wanted[c.name] = true; });
     return (state.newsData || []).filter(function (r) { return wanted[String(r.company || '').trim() || '(회사 미상)']; });
   }
+  function sortNewsletterRows(rows) {
+    return rows.sort(function (a, b) {
+      var sa = newsSecOf(a.company || ''), sb = newsSecOf(b.company || '');
+      if (sa !== sb) return sa === 'nonlife' ? -1 : 1;
+      return String(a.company || '').localeCompare(String(b.company || ''), 'ko-KR');
+    });
+  }
   function newsAllViewHtml() {
     var rows = newsPoolFilteredRows();
     if (!rows.length) return '<div class="iw-empty">소식지가 없습니다.</div>';
@@ -1576,6 +1583,7 @@
       if (!monthMap[key]) { monthMap[key] = { y: y, m: m, items: [] }; order.push(key); }
       monthMap[key].items.push(r);
     });
+    Object.keys(monthMap).forEach(function (key) { sortNewsletterRows(monthMap[key].items); });
     order.sort(function (a, b) { if (a === 'unknown') return 1; if (b === 'unknown') return -1; return (monthMap[b].y * 12 + monthMap[b].m) - (monthMap[a].y * 12 + monthMap[a].m); });
     var now = new Date(), curKey = now.getFullYear() + '|' + (now.getMonth() + 1);
     var first = order[0], g0 = monthMap[first];
