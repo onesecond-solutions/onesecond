@@ -175,7 +175,7 @@
     if(!evs.length){ toast('추가할 미래 케어 일정이 없습니다. 계약일/생년월일을 확인하세요.'); return; }
     if(!confirm('['+(c.name||'고객')+'] 케어 일정 '+evs.length+'건을 캘린더에 추가할까요?\n('+evs.map(function(e){return e[1];}).join(', ')+')')) return;
     window._cfBusy=true;
-    Promise.all(evs.map(function(e){ var body={ event_date:e[0], event_time:null, title:'[케어] '+(c.name||'고객')+' · '+e[1], description:'고객관리 케어 일정 (자동 생성)', event_type:'operation', source_type:'personal', audience_target:'personal', team_id:null, branch_id:null, author_id:me };
+    Promise.all(evs.map(function(e){ var body={ event_date:e[0], event_time:null, title:'[케어] '+(c.name||'고객')+' · '+e[1], description:'계약관리 케어 일정 (자동 생성)', event_type:'operation', source_type:'personal', audience_target:'personal', team_id:null, branch_id:null, author_id:me };
       return window.db.fetch('/rest/v1/calendar_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)}).then(function(r){ return r&&(r.ok||r.status===201); }); }))
       .then(function(res){ var okN=res.filter(Boolean).length; var p=prof(c); p.care_cal_added=true;
         return window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:p})}).then(function(){ return okN; }); })

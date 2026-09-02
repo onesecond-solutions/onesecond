@@ -170,7 +170,7 @@
      feat/workstation-mobile-header-consistency (2026-08-22, 대표 직접 요청) — PC로 보기/로그아웃은
      "⋯" 메뉴 안으로 숨기고, 보험브리핑 홈으로 돌아가는 링크를 추가했다. */
   function headerHtml() {
-    return window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('고객', 'customers', { searchValue: state.query, searchAction: './customers.html' }) : '<header class="iwm-header"><strong>고객</strong></header>';
+    return window.OSInsuworkMobileNav ? window.OSInsuworkMobileNav.header('계약관리', 'customers', { searchValue: state.query, searchAction: './customers.html' }) : '<header class="iwm-header"><strong>계약관리</strong></header>';
   }
 
   /* 바깥 클릭 닫기 리스너는 document에 한 번만 등록한다(매 재렌더마다 새로 붙이면 리스너가 누적되므로,
