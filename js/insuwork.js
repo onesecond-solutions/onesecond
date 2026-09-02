@@ -539,7 +539,7 @@
     var steps = [
       ['01', '홈', '오늘 일정과 최근 자료를 먼저 확인'],
       ['02', '상담관리', '예약부터 청약완료까지 단계 관리'],
-      ['03', '고객관리', '계약일과 보험나이로 케어 기준 생성'],
+      ['03', '계약관리', '계약일과 보험나이로 케어 기준 생성'],
       ['04', '자료', '업무노트와 파일을 상담 옆에 고정'],
       ['05', '도구', '소식지·스크립트·원전산을 현장에서 사용']
     ];
@@ -558,7 +558,7 @@
     }).join('') + '</details>';
   }
   function navHtml() {
-    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '고객관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
+    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '계약관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
     if (window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()) items.push(['ledger', '₩', '가계부']);
     var briefingGroup = [['◫', '뉴스 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업', 'section:product-lineups'], ['✎', '스크립트', 'section:scripts']];
@@ -652,7 +652,7 @@
   var HELP_CONTENT = {
     calendar: { title: '캘린더 보여주기', preview: '같은 종류 일정이 2개 이상이면 +n개 더보기로 모아 보여줘요.', body: '상담 일정, 고객 케어, 보험상령일 등 동일한 종류의 일정이 2개 이상인 경우 <strong>+n개 더보기</strong>로 보여지며, 마우스를 올려두면 미리보기, 클릭하면 하루 일정 보기로 화면 전환 됩니다.' },
     customers: { title: '케어일정 자동 생성', preview: '청약완료로 등록하면 케어 일정이 자동으로 만들어져요.', body: '청약완료로 등록하면 청약일 기준 <strong>31·91·181·365일 케어 일정</strong>과, 이후 매년 청약 기념일이 캘린더에 자동으로 만들어집니다.<br>별도 설정은 필요 없습니다.' },
-    consultations: { title: '상담 플로우 기능', preview: '상담상태별로 통계 카드에 자동 집계돼요.', body: '상담상태 결과값에 따라 통계 카드에 수치화되고, 카드 클릭하면 해당 고객리스트만 보여주며, 상담상태 결과값이 <strong>청약완료</strong>가 되면 고객관리 화면으로 자동 저장됩니다.' }
+    consultations: { title: '상담 플로우 기능', preview: '상담상태별로 통계 카드에 자동 집계돼요.', body: '상담상태 결과값에 따라 통계 카드에 수치화되고, 카드 클릭하면 해당 고객리스트만 보여주며, 상담상태 결과값이 <strong>청약완료</strong>가 되면 계약관리 화면으로 자동 저장됩니다.' }
   };
   function helpBadgeHtml(key) {
     var info = HELP_CONTENT[key]; if (!info) return '';
@@ -1028,7 +1028,7 @@
   function publicLandingHtml() {
     var concepts = [
       ['상담관리', '예약에서 청약완료까지 흐름을 놓치지 않습니다.'],
-      ['고객관리', '계약일과 보험나이 기준으로 다음 케어가 이어집니다.'],
+      ['계약관리', '계약일과 보험나이 기준으로 다음 케어가 이어집니다.'],
       ['자료·도구', '소식지, 스크립트, 결제정보를 상담 중 바로 꺼냅니다.']
     ];
     var keywords = ['상담 흐름', '고객 케어', '자료 재사용', '일정 연결', '현장 도구'];
@@ -1207,7 +1207,7 @@
     var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '고객내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span>' + familyBadgeHtml(item) + '</strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
     var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
-    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>고객관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
+    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>계약관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function familyCandidates(customer) {
     var note = stripHtml(customerProfile(customer).note || ''), kin = /(배우자|남편|아내|부모|아버지|어머니|엄마|아빠|아들|딸|자녀|형제|자매)/;
@@ -2073,7 +2073,7 @@
   }
   function noticeUpdatesHtml() {
     var updates = [
-      ['2026. 8. 30.', '모바일 고객·상담 리스트 PC 기준 통일', '고객관리와 상담관리의 포함 기준, 정렬 기준, 캐시 버전을 PC 화면과 맞췄습니다.'],
+      ['2026. 8. 30.', '모바일 고객·상담 리스트 PC 기준 통일', '계약관리와 상담관리의 포함 기준, 정렬 기준, 캐시 버전을 PC 화면과 맞췄습니다.'],
       ['2026. 8. 30.', '모바일 상단 헤더 정리', '보험워크 CI, 검색창, 햄버거 메뉴가 한 줄에 들어오도록 모바일 헤더 높이를 줄였습니다.'],
       ['2026. 8. 30.', '보험워크 CI 적용', '비로그인 랜딩, 로그인 팝업, 다크모드 화면에 보험워크 CI를 반영했습니다.']
     ];
@@ -2086,7 +2086,7 @@
     var guides = [
       ['홈', '오늘 일정, 즐겨찾기, 최근 자료, 최근 고객을 먼저 확인합니다. 하루 업무를 시작하는 첫 화면입니다.'],
       ['상담관리', '예약, 진행중, 제안서발송, 클로징, 청약완료까지 상담 흐름을 단계별로 관리합니다.'],
-      ['고객관리', '청약이 완료된 고객을 계약일과 보험나이 기준으로 관리하고 다음 케어 일정을 이어갑니다.'],
+      ['계약관리', '청약이 완료된 고객을 계약일과 보험나이 기준으로 관리하고 다음 케어 일정을 이어갑니다.'],
       ['캘린더', '상담 일정, 고객 케어, 보험상령일을 한 화면에서 확인합니다.'],
       ['자료', '업무노트, 자료실, 메모를 상담 중 바로 꺼내 쓸 수 있게 정리합니다.'],
       ['보험브리핑·참고자료·영업도구', '보험 이슈, 소식지, 영업방향, 스크립트, 원전산 바로가기를 업무 흐름 안에서 사용합니다.']
@@ -2685,7 +2685,7 @@
     var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return;
     if (event.event_type === 'insurance-age' && event.customer_id) { openCustomerFromEvent(event.customer_id); return; }
     var care = isCareTask(event);
-    var kind = care ? '고객관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
+    var kind = care ? '계약관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
     var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
     var editable = !event.builtin && !care;
     var done = !!event.completed_at;

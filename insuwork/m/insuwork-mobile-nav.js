@@ -82,7 +82,7 @@
     }
   }
   var ITEMS = [
-    { key: 'customers', href: './customers.html', label: '고객', icon: icon('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75') },
+    { key: 'customers', href: './customers.html', label: '계약관리', icon: icon('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75') },
     { key: 'consultations', href: './consultations.html', label: '상담', icon: icon('M21 15a4 4 0 0 1-4 4H8l-5 3v-3a4 4 0 0 1-2-3.46V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z M6 8h10 M6 12h7') },
     { key: 'today', href: './index.html', label: '홈', icon: icon('M3 11.5 12 4l9 7.5 M5 10v10h14V10 M9 20v-6h6v6'), home: true },
     { key: 'calendar', href: './calendar.html', label: '일정', icon: icon('M3 5h18v16H3z M16 3v4 M8 3v4 M3 10h18 M8 14h.01 M12 14h.01 M16 14h.01 M8 18h.01 M12 18h.01') },

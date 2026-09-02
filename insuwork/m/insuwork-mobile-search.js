@@ -82,7 +82,7 @@
     }).slice(0, 10);
     var html = '';
     html += sectionHtml('고객', customerRows.length ? '<div class="iwm-list">' + customerRows.map(function (item) {
-      return card(item.name, item.phone || item.status || '고객관리', './customers.html?q=' + encodeURIComponent(item.name || q));
+      return card(item.name, item.phone || item.status || '계약관리', './customers.html?q=' + encodeURIComponent(item.name || q));
     }).join('') + '</div>' : emptyHtml('일치하는 고객이 없습니다.'));
     html += sectionHtml('상담', consultationRows.length ? '<div class="iwm-list">' + consultationRows.map(function (item) {
       return card(item.customerName || '고객 상담', item.memo || item.channel || '상담관리', './consultations.html');
