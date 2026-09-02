@@ -749,25 +749,26 @@
     return '<div class="iw-task-row">' + check + '<button type="button" class="iw-task-open" onclick="' + item.action + '"><span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.subtitle || '') + '</small></span><em>' + esc(item.badge || '') + '</em></button></div>';
   }
   function homeTodayKind(event) {
+    if (event && event.event_type === 'birthday') return 'birthday';
     if (event && event.event_type === 'insurance-age') return 'age';
     if (isCareTask(event)) return 'care';
     return 'schedule';
   }
   function homeTodayColumnIndex(event) {
     var kind = homeTodayKind(event);
-    return kind === 'age' ? 2 : kind === 'care' ? 1 : 0;
+    return kind === 'birthday' ? 3 : kind === 'age' ? 2 : kind === 'care' ? 1 : 0;
   }
   function homeTodayChip(event) {
     var kind = homeTodayKind(event);
-    var cls = kind === 'age' ? 'insurance-age' : kind === 'care' ? 'customer' : 'schedule';
+    var cls = kind === 'birthday' ? 'birthday' : kind === 'age' ? 'insurance-age' : kind === 'care' ? 'customer' : 'schedule';
     var done = event.completed_at ? ' done' : '';
     return '<button type="button" class="iw-agenda-chip iw-home-today-chip ' + cls + done + '" onclick="OSInsuwork.showEvent(\'' + esc(event.id) + '\')"><small>' + esc(String(event.event_time || '종일').slice(0, 5)) + '</small><b>' + esc(eventTitleLabel(event)) + '</b></button>';
   }
   function homeTodayBoard(todayEvents, emptyText) {
     if (state.homeLoadingDate === state.homeDate) return '<div class="iw-empty iw-home-today-empty" role="status">일정을 불러오는 중입니다.</div>';
     if (state.homeErrorDate === state.homeDate) return '<div class="iw-empty iw-home-today-empty" role="alert">일정을 불러오지 못했습니다. 날짜를 다시 선택해 주세요.</div>';
-    var labels = [state.homeDate === ymd(new Date()) ? '오늘일정' : '일정', '고객케어', '상령일'];
-    var columns = [[], [], []];
+    var labels = [state.homeDate === ymd(new Date()) ? '오늘일정' : '일정', '고객케어', '상령일', '생일'];
+    var columns = [[], [], [], []];
     todayEvents.slice().sort(function (a, b) {
       return (a.completed_at ? 1 : 0) - (b.completed_at ? 1 : 0) || eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
     }).forEach(function (event) { columns[homeTodayColumnIndex(event)].push(event); });
@@ -979,6 +980,18 @@
     });
     return out;
   }
+  function birthdayCalendarEventsForYear(year) {
+    var out = [];
+    state.data.customers.forEach(function (customer) {
+      var profile = customerProfile(customer), birth = String(profile.birth_date || '').slice(0, 10), parts = birth.split('-').map(Number), born = parseDate(birth);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(birth) || parts.length !== 3 || born.getFullYear() !== parts[0] || born.getMonth() !== parts[1] - 1 || born.getDate() !== parts[2]) return;
+      var birthday = new Date(year, parts[1] - 1, parts[2]);
+      if (birthday.getMonth() !== parts[1] - 1) birthday = new Date(year, parts[1], 0);
+      var name = customer.name || '고객', phone = phoneText(customer.phone || customer.phone_raw || ''), date = ymd(birthday);
+      out.push({ id: 'birthday-' + customer.id + '-' + year, customer_id: customer.id, event_date: date, event_end_date: date, title: name + ' 생일', event_type: 'birthday', description: name + ' 고객 생일입니다. 생년월일 ' + birth + (phone ? ' · 연락처: ' + phone : ''), builtin: true });
+    });
+    return out;
+  }
   function utcKey(date) { return date.getUTCFullYear() + '-' + String(date.getUTCMonth() + 1).padStart(2, '0') + '-' + String(date.getUTCDate()).padStart(2, '0'); }
   function solarTermsForYear(year) {
     return SOLAR_TERM_NAMES.map(function (name, index) {
@@ -1021,7 +1034,7 @@
     var years = {}, selected = parseDate(state.selectedDate), cursor = state.cursor || selected;
     years[parseDate(state.homeDate).getFullYear()] = true;
     [selected.getFullYear() - 1, selected.getFullYear(), selected.getFullYear() + 1, cursor.getFullYear() - 1, cursor.getFullYear(), cursor.getFullYear() + 1].forEach(function (year) { years[year] = true; });
-    return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year)); }, []);
+    return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year), birthdayCalendarEventsForYear(year)); }, []);
   }
   function allEvents() { return state.data.events.concat(builtInEventsAroundCalendar()); }
 
@@ -1330,12 +1343,12 @@
     return state.cursor.getFullYear() + '년 ' + (state.cursor.getMonth() + 1) + '월';
   }
   function isCareTask(event) { return !!event && event.legacy_source === 'care_auto'; }
-  function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'insurance-age' ? 3 : isCareTask(event) ? 4 : 5; }
+  function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'birthday' ? 3 : event && event.event_type === 'insurance-age' ? 4 : isCareTask(event) ? 5 : 6; }
   function eventsFor(date) { return allEvents().filter(function (event) { var start = String(event.event_date || '').slice(0, 10); if (!start) return false; var end = String(event.event_end_date || event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); }); }
-  function calendarEventKind(event) { return isCareTask(event) ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : event && event.event_type === 'insurance-age' ? 'insurance-age' : 'schedule'; }
+  function calendarEventKind(event) { return isCareTask(event) ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : event && event.event_type === 'birthday' ? 'birthday' : event && event.event_type === 'insurance-age' ? 'insurance-age' : 'schedule'; }
   function calendarAllDay(event) { return !!(event && (event.builtin || !event.event_time || String(event.event_end_date || event.event_date || '').slice(0, 10) !== String(event.event_date || '').slice(0, 10))); }
   function builtinCalendarChip(event) {
-    var action = event && event.event_type === 'insurance-age' && event.customer_id ? ' onclick="event.stopPropagation(); OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
+    var action = event && (event.event_type === 'insurance-age' || event.event_type === 'birthday') && event.customer_id ? ' onclick="event.stopPropagation(); OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
     return '<i class="' + calendarEventKind(event) + '"' + action + '>' + esc(event.title) + '</i>';
   }
   function calendarSummaryPreview(events) {
@@ -1349,6 +1362,10 @@
   function insuranceAgeSummaryChip(events, date) {
     if (!events.length) return '';
     return '<i class="insurance-age insurance-age-more" role="button" tabindex="0" title="상령일 고객 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">상령일 ' + events.length + '명</i>';
+  }
+  function birthdaySummaryChip(events, date) {
+    if (!events.length) return '';
+    return '<i class="birthday birthday-more" role="button" tabindex="0" title="생일 고객 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">생일 ' + events.length + '명</i>';
   }
   function careCalendarChip(event) {
     return '<i class="customer" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(event.id) + '\')">' + esc(event.title || '케어 일정') + '</i>';
@@ -1372,7 +1389,8 @@
   function monthCalendarChips(events, date) {
     var builtIns = events.filter(function (event) { return event.builtin; });
     var insuranceAgeEvents = builtIns.filter(function (event) { return event.event_type === 'insurance-age'; });
-    var otherBuiltIns = builtIns.filter(function (event) { return event.event_type !== 'insurance-age'; });
+    var birthdayEvents = builtIns.filter(function (event) { return event.event_type === 'birthday'; });
+    var otherBuiltIns = builtIns.filter(function (event) { return event.event_type !== 'insurance-age' && event.event_type !== 'birthday'; });
     var careEvents = events.filter(isCareTask);
     var shortEvents = events.filter(function (event) {
       if (event.builtin || isCareTask(event)) return false;
@@ -1384,6 +1402,8 @@
     else if (otherBuiltIns.length > 1) chips.push('<i class="' + calendarEventKind(otherBuiltIns[0]) + '">' + otherBuiltIns.map(function (event) { return esc(event.title); }).join(', ') + '</i>');
     if (careEvents.length === 1) chips.push(careCalendarChip(careEvents[0]));
     else if (careEvents.length > 1) chips.push(careSummaryChip(careEvents, date));
+    if (birthdayEvents.length === 1) chips.push(builtinCalendarChip(birthdayEvents[0]));
+    else if (birthdayEvents.length > 1) chips.push(birthdaySummaryChip(birthdayEvents, date));
     if (insuranceAgeEvents.length === 1) chips.push(builtinCalendarChip(insuranceAgeEvents[0]));
     else if (insuranceAgeEvents.length > 1) chips.push(insuranceAgeSummaryChip(insuranceAgeEvents, date));
     if (shortEvents.length === 1) chips.push(scheduleCalendarChip(shortEvents[0]));
@@ -1460,20 +1480,20 @@
   function agendaView() {
     var start = state.selectedDate, end = addDays(start, 365);
     var rows = allEvents().filter(function (event) { var date = String(event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return String(a.event_date).localeCompare(String(b.event_date)) || String(a.event_time || '').localeCompare(String(b.event_time || '')); });
-    /* 2026-08-25 대표 확정 — 같은 날짜 일정을 날짜별로 한 번만 묶어서 보여주고, 종류별 4개 컬럼
-       (공휴일·절기·기념일 | 일정 | 케어 | 상령일)으로 나눠 나란히 배치. 일/주/월 화면과 같은
+    /* 같은 날짜 일정을 날짜별로 한 번만 묶어서 보여주고, 종류별 컬럼
+       (공휴일·절기·기념일 | 일정 | 케어 | 상령일 | 생일)로 나눠 나란히 배치. 일/주/월 화면과 같은
        calendarEventKind() 색상 클래스(.iw-agenda-chip.<kind>)를 그대로 재사용해 색을 통일한다.
        열 너비는 4등분이 아니라 내용 길이 기준으로 배분(일정만 사용자 자유 입력이라 더 길어질 수
        있어 1.6fr, 나머지 3개는 정형화된 짧은 문구라 1fr) — css/insuwork.css .iw-agenda-cols 참고. */
     var groups = [], byDate = {};
     rows.forEach(function (event) {
       var date = String(event.event_date).slice(0, 10);
-      if (!byDate[date]) { byDate[date] = { date: date, cols: [[], [], [], []] }; groups.push(byDate[date]); }
+      if (!byDate[date]) { byDate[date] = { date: date, cols: [[], [], [], [], []] }; groups.push(byDate[date]); }
       var kind = calendarEventKind(event);
-      var colIndex = (kind === 'holiday' || kind === 'term' || kind === 'memorial') ? 0 : kind === 'customer' ? 2 : kind === 'insurance-age' ? 3 : 1;
+      var colIndex = (kind === 'holiday' || kind === 'term' || kind === 'memorial') ? 0 : kind === 'customer' ? 2 : kind === 'insurance-age' ? 3 : kind === 'birthday' ? 4 : 1;
       byDate[date].cols[colIndex].push(event);
     });
-    var header = '<div class="iw-agenda-header"><span></span><div class="iw-agenda-cols"><span>공휴일·절기·기념일</span><span>일정</span><span>케어</span><span>상령일</span></div></div>';
+    var header = '<div class="iw-agenda-header"><span></span><div class="iw-agenda-cols"><span>공휴일·절기·기념일</span><span>일정</span><span>케어</span><span>상령일</span><span>생일</span></div></div>';
     var body = groups.length ? groups.map(agendaGroupHtml).join('') : '<div class="iw-empty">예정된 일정이 없습니다.</div>';
     return '<div class="iw-agenda">' + (groups.length ? header : '') + body + '</div>';
   }
@@ -2683,7 +2703,7 @@
   }
   function showEvent(id) {
     var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return;
-    if (event.event_type === 'insurance-age' && event.customer_id) { openCustomerFromEvent(event.customer_id); return; }
+    if ((event.event_type === 'insurance-age' || event.event_type === 'birthday') && event.customer_id) { openCustomerFromEvent(event.customer_id); return; }
     var care = isCareTask(event);
     var kind = care ? '계약관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
     var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
