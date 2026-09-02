@@ -16,6 +16,14 @@ export function canonicalUrl(value) {
     return u.href;
   } catch { return null; }
 }
+export function isReaderFriendlyUrl(value) {
+  const url = canonicalUrl(value);
+  if (!url) return false;
+  const parsed = new URL(url);
+  // 기관 사이트가 다른 화면에 삽입하려 만든 본문 조각·팝업은 직접 열면 메뉴와 반응형 틀이 없어 깨져 보인다.
+  if (/(?:^|\/)(?:static\/html|renewal_popup)(?:\/|$)/i.test(parsed.pathname)) return false;
+  return true;
+}
 const exclude = /\[(사설|칼럼|기고)\]|수 있을까|전문가에게 묻다|전망|가능성|주가|목표주가|영업이익|순이익|배당|주식시장|보험주|증시|시가총액|연예|배우|가수|투병\s*고백|보험사기단|보험금 노린|살해|이벤트|협찬|특가|프로모션|할인코드|세일|신간|출간|펴내|출판|특강|금융교육|캠페인|봉사활동|지역 축제|상조회사|선수금|먹었더니|이\s*(음식|반찬)|뭐길래|뜻밖의|충격|기적|완치|제품\s*추천|[‘'\"]?[^‘'\"]*보험[’'\"]?\s*(\d+호\s*)?가입|\d+호\s*가입|첫\s*가입|가입\s*행사|출시\s*기념/;
 const requiredByCategory = {
   '보험·보상': /실손|보험금|보험료|보장|약관|보험업법|보험 개편|보험가입|보험소비자|금융감독원/,
@@ -56,7 +64,7 @@ export function isUsefulTitle(title, category) {
 }
 export function normalize(article, topic, now = new Date()) {
   const url = canonicalUrl(article.originallink || article.link), title = strip(article.title), time = Date.parse(article.pubDate);
-  if (!url || !title || !Number.isFinite(time) || time > +now + 3600000 || time < +now - 72 * 3600000 || !topic.match.test(title) || !isUsefulTitle(title, topic.category)) return null;
+  if (!url || !isReaderFriendlyUrl(url) || !title || !Number.isFinite(time) || time > +now + 3600000 || time < +now - 72 * 3600000 || !topic.match.test(title) || !isUsefulTitle(title, topic.category)) return null;
   const source = new URL(url).hostname.replace(/^www\./, '');
   const official = /(^|\.)(go\.kr|nhis\.or\.kr|hira\.or\.kr|nps\.or\.kr|fss\.or\.kr|kca\.go\.kr)$/.test(source);
   const medicalEditorial = /(^|\.)(health\.chosun\.com|hidoc\.co\.kr|kormedi\.com|jhealthmedia\.joins\.com)$/.test(source);

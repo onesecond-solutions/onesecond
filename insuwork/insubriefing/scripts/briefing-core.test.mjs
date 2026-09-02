@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
-import { isUsefulTitle, topics } from './briefing-core.mjs';
+import { isReaderFriendlyUrl, isUsefulTitle, topics } from './briefing-core.mjs';
 
 assert.equal(topics.reduce((sum, topic) => sum + Math.min(topic.dailyQueries || 1, topic.queries.length), 0), 10, '일일 API 호출 수 10회 유지');
 assert.equal(new Set(topics.map(topic => topic.category)).size, 7, '화면 카테고리 7개 유지');
+assert.equal(isReaderFriendlyUrl('https://www.nhis.or.kr/static/html/wbda/h/wbdah0101.html'), false, '직접 보기용이 아닌 기관 본문 조각 차단');
+assert.equal(isReaderFriendlyUrl('https://www.nhis.or.kr/renewal_popup/poster/example.html'), false, '레거시 팝업 원문 차단');
+assert.equal(isReaderFriendlyUrl('https://www.nhis.or.kr/nhis/healthin/retrieveHealthinCheckUp.do'), true, '일반 기관 페이지 허용');
 
 const treatment = '질병·검사·치료';
 const medicine = '신약·건강보험·의료비';
