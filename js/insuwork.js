@@ -2104,7 +2104,7 @@
       + '<div class="iw-stats iw-admin-users-stats"><div class="iw-stat"><span>전체 사용자</span><strong>' + state.adminUsers.length + '</strong></div><div class="iw-stat"><span>오늘 가입</span><strong>' + todayCount + '</strong></div><div class="iw-stat"><span>검색 결과</span><strong>' + rows.length + '</strong></div></div>'
       + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
       + (state.adminUsersError ? '<div class="iw-error" role="alert"><span>' + esc(state.adminUsersError) + '</span></div>' : '')
-      + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>최근 로그인</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="8" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
+      + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>마지막 접속</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="8" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
   }
   function scheduleAdminUserSearch(value) {
     window.clearTimeout(state.adminUserTimer);
