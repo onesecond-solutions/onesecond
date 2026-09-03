@@ -2042,18 +2042,53 @@
     var value = String(status || 'active').toLowerCase();
     return { active: '정상', suspended: '정지', pending: '대기', inactive: '비활성', withdrawn: '탈퇴', deleted: '탈퇴' }[value] || status || '정상';
   }
+  var adminUsersRefreshTimer = 0, adminUsersEntryTimer = 0, adminUsersRefreshOwner = '', adminUsersUpdatedAt = '';
+  function adminUsersRefreshVisible() {
+    var view = document.getElementById('v-insuwork');
+    return state.section === 'admin-users' && !document.hidden && view && view.classList.contains('on') && canSeeAdminUsers() && authenticated();
+  }
+  function stopAdminUsersRefresh() {
+    window.clearInterval(adminUsersRefreshTimer); window.clearTimeout(adminUsersEntryTimer);
+    adminUsersRefreshTimer = 0; adminUsersEntryTimer = 0; adminUsersRefreshOwner = '';
+  }
+  function syncAdminUsersRefresh() {
+    if (!adminUsersRefreshVisible()) { stopAdminUsersRefresh(); return; }
+    var owner = currentUserId();
+    if (adminUsersRefreshTimer && adminUsersRefreshOwner === owner) return;
+    stopAdminUsersRefresh(); adminUsersRefreshOwner = owner;
+    adminUsersEntryTimer = window.setTimeout(function () { if (adminUsersRefreshVisible()) loadAdminUsers(true); }, 0);
+    adminUsersRefreshTimer = window.setInterval(function () {
+      if (!adminUsersRefreshVisible()) { stopAdminUsersRefresh(); return; }
+      loadAdminUsers(true);
+    }, 30000);
+  }
+  document.addEventListener('visibilitychange', syncAdminUsersRefresh);
+  window.addEventListener('pagehide', stopAdminUsersRefresh);
+  window.addEventListener('pageshow', syncAdminUsersRefresh);
   function loadAdminUsers(force) {
     if (!canSeeAdminUsers() || !authenticated() || state.adminUsersLoading || (!force && state.adminUsers)) return;
-    state.adminUsersLoading = true; state.adminUsersError = ''; renderContent();
-    window.db.fetch('/rest/v1/users?select=id,name,nickname,email,company,phone,status,created_at,last_seen_at&order=created_at.desc&limit=2000')
+    var owner = currentUserId();
+    state.adminUsersLoading = true; state.adminUsersError = '';
+    if (!state.adminUsers) renderContent();
+    return window.db.fetch('/rest/v1/users?select=id,name,nickname,email,company,phone,status,created_at,last_seen_at&order=created_at.desc&limit=2000', { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-      .then(function (rows) { state.adminUsers = Array.isArray(rows) ? rows : []; })
-      .catch(function () { state.adminUsers = []; state.adminUsersError = '사용자 목록을 불러오지 못했습니다. 관리자 조회 권한을 확인해 주세요.'; })
-      .finally(function () { state.adminUsersLoading = false; if (state.section === 'admin-users') renderContent(); });
+      .then(function (rows) { if (owner !== currentUserId() || !authenticated() || !canSeeAdminUsers()) return; if (!Array.isArray(rows)) throw new Error('Invalid user list'); state.adminUsers = rows; adminUsersUpdatedAt = new Date().toISOString(); })
+      .catch(function () { if (owner !== currentUserId() || !authenticated() || !canSeeAdminUsers()) return; if (!state.adminUsers) state.adminUsers = []; state.adminUsersError = '사용자 목록 갱신에 실패했습니다. 기존 목록을 유지하며 다음 갱신 때 재시도합니다.'; })
+      .finally(function () {
+        state.adminUsersLoading = false;
+        if (owner !== currentUserId() || !authenticated() || !canSeeAdminUsers()) { state.adminUsers = null; adminUsersUpdatedAt = ''; return; }
+        if (state.section !== 'admin-users' || document.hidden || state.adminUserComposing) return;
+        var input = document.getElementById('iw-admin-user-search'), main = document.getElementById('iw-main'), table = main && main.querySelector('.iw-admin-users-table');
+        var scrollTop = main ? main.scrollTop : 0, tableLeft = table ? table.scrollLeft : 0, tableTop = table ? table.scrollTop : 0;
+        if (input) { window.clearTimeout(state.adminUserTimer); state.adminUserQuery = input.value; }
+        if (document.activeElement && document.activeElement.tagName === 'SELECT' && main && main.contains(document.activeElement)) return;
+        renderContent();
+        if (main) { main.scrollTop = scrollTop; table = main.querySelector('.iw-admin-users-table'); if (table) { table.scrollLeft = tableLeft; table.scrollTop = tableTop; } }
+      });
   }
   function adminUsersHtml() {
     if (!canSeeAdminUsers()) return '<div class="iw-state"><strong>접근할 수 없는 화면입니다.</strong><span>보험워크 홈으로 이동합니다.</span></div>';
-    if (state.adminUsersLoading || !state.adminUsers) return '<div class="iw-loading">사용자 목록을 불러오는 중입니다.</div>';
+    if (!state.adminUsers) return '<div class="iw-loading">사용자 목록을 불러오는 중입니다.</div>';
     var query = searchNorm(state.adminUserQuery), status = state.adminUserStatus;
     var rows = state.adminUsers.filter(function (user) {
       var matchesQuery = !query || searchNorm([user.name, user.nickname, user.email, user.company, user.phone].join(' ')).indexOf(query) >= 0;
@@ -2065,7 +2100,7 @@
       var rawStatus = String(user.status || 'active').toLowerCase();
       return '<tr><td><strong>' + esc(user.name || '-') + '</strong></td><td>' + esc(user.nickname || '-') + '</td><td>' + esc(user.email || '-') + '</td><td>' + esc(user.company || '-') + '</td><td>' + esc(phoneText(user.phone || '') || '-') + '</td><td>' + esc(adminUserDateTime(user.created_at)) + '</td><td>' + esc(adminUserDateTime(user.last_seen_at)) + '</td><td><span class="iw-admin-status iw-admin-status-' + esc(rawStatus) + '">' + esc(adminUserStatusLabel(rawStatus)) + '</span></td></tr>';
     }).join('');
-    return '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">보험워크 가입자 정보를 조회합니다.</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
+    return '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">30초마다 자동 갱신 · 화면 복귀 시 갱신' + (adminUsersUpdatedAt ? ' · 최근 확인 ' + esc(adminUserDateTime(adminUsersUpdatedAt)) : '') + '</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
       + '<div class="iw-stats iw-admin-users-stats"><div class="iw-stat"><span>전체 사용자</span><strong>' + state.adminUsers.length + '</strong></div><div class="iw-stat"><span>오늘 가입</span><strong>' + todayCount + '</strong></div><div class="iw-stat"><span>검색 결과</span><strong>' + rows.length + '</strong></div></div>'
       + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
       + (state.adminUsersError ? '<div class="iw-error" role="alert"><span>' + esc(state.adminUsersError) + '</span></div>' : '')
@@ -2213,7 +2248,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); }, 0); hideRowHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); hydrateFileDrags(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { loadAdminUsers(false); bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
+  function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); }, 0); hideRowHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml(); hydrateFileDrags(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
