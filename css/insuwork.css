@@ -845,3 +845,14 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-asset-drop-overlay strong,#v-insuwork .iw-asset-drop-overlay span{display:block}
 #v-insuwork .iw-asset-drop-overlay strong{color:var(--tp);font-size:20px}
 #v-insuwork .iw-asset-drop-overlay span{margin-top:7px;color:var(--ts);font-size:14px}
+
+/* Registration dates: preserve numeric text input, place native calendar beside it. */
+#v-insuwork .iw-date-control{display:inline-flex;position:relative;align-items:center;width:150px;min-width:0;flex:0 0 150px;font:inherit;color:var(--tp)}
+#v-insuwork .iw-date-control>input[type="text"]{box-sizing:border-box;width:100%;min-width:0;flex:1;padding-right:32px}
+#v-insuwork .iw-date-control>.iw-date-picker-icon{position:absolute;right:0;top:0;bottom:0;width:30px;min-width:0;display:grid;place-items:center;pointer-events:none;font-size:var(--ts-body);color:var(--ts)}
+#v-insuwork .iw-date-control>input.iw-date-native{position:absolute;inset:0 0 0 auto;width:30px;min-width:0;height:100%;padding:0;border:0;opacity:0;cursor:pointer}
+#v-insuwork .iw-date-native::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;cursor:pointer}
+#v-insuwork .iw-date-control:has(.iw-date-native:focus-visible){outline:2px solid var(--ac);outline-offset:2px;border-radius:var(--radius-sm)}
+#v-insuwork .iw-birth-age>.iw-date-control{width:136px;flex:0 0 136px}
+#v-insuwork .iw-contract-date-row>.iw-date-control{flex:1;width:auto}
+#v-insuwork .iw-date-control>#iwf-consult-date,#v-insuwork .iw-date-control>#iwd-consult-date{width:100%;flex:1}
