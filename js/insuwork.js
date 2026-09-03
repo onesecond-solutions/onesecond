@@ -713,14 +713,29 @@
   }
 
   function carrierDirectory() { return Array.isArray(window.OS_INSUWORK_CARRIERS) ? window.OS_INSUWORK_CARRIERS : []; }
-  function normalizeCarrierName(value) { return String(value || '').toLocaleLowerCase('ko-KR').replace(/주식회사|보험|손해|생명|화재|라이프|[^0-9a-z가-힣]/g, ''); }
+  function normalizeCarrierName(value) { return String(value || '').toLocaleLowerCase('ko-KR').replace(/주식회사|\([^)]*\)|[^0-9a-z가-힣]/g, ''); }
+  function carrierLinkMatch(name, groupLabel) {
+    var key = normalizeCarrierName(name);
+    if (!key) return null;
+    var type = /손해/.test(groupLabel) ? 'nonlife' : /생명/.test(groupLabel) ? 'life' : '';
+    var aliases = COMPANY_SEARCH_TERMS.concat([['MetLife', '메트라이프', '메트라이프생명'], ['CHUBB 에이스손해보험', '에이스손해보험', '라이나손해보험', '라이나손보']]);
+    var candidates = carrierDirectory().filter(function (carrier) {
+      if (type && carrier.type !== type) return false;
+      var own = normalizeCarrierName(carrier.name);
+      return own === key || aliases.some(function (group) {
+        var names = group.map(normalizeCarrierName);
+        return names.indexOf(own) >= 0 && names.indexOf(key) >= 0;
+      });
+    });
+    return candidates.length === 1 ? candidates[0] : null;
+  }
   function loadCarrierDirectory() {
     if (state.carriersLoaded || state.carriersLoading || !window.db || !window.db.fetch) return;
     state.carriersLoading = true;
     window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent('원전산 설계 바로가기') + '&select=content_html&limit=1').then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); }).then(function (rows) {
       parseQuickLinks(rows && rows[0] && rows[0].content_html || '').forEach(function (group) { group.items.forEach(function (link) {
-        var key = normalizeCarrierName(link.name), found = carrierDirectory().find(function (carrier) { var own = normalizeCarrierName(carrier.name); return own === key || own.indexOf(key) >= 0 || key.indexOf(own) >= 0; });
-        if (found && link.href) found.systemUrl = link.href;
+        var found = carrierLinkMatch(link.name, group.label);
+        if (found && link.href && /^https?:\/\//i.test(link.href)) found.systemUrl = link.href;
       }); });
       state.carriersLoaded = true;
     }).catch(function () {}).finally(function () { state.carriersLoading = false; if (state.section === 'carriers' || state.query.trim()) renderContent(); });
