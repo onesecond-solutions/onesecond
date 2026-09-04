@@ -78,7 +78,7 @@ AS $$
 $$;
 
 REVOKE ALL ON FUNCTION public.search_briefing_leaflets(text, integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.search_briefing_leaflets(text, integer) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.search_briefing_leaflets(text, integer) TO authenticated;
 
 COMMIT;
 

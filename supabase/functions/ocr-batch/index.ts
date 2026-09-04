@@ -76,10 +76,6 @@ Deno.serve(async (req: Request) => {
     rows = await r.json();
   } catch (e) { return json({ error: "대상 조회 오류", detail: String(e) }, 500); }
 
-  if (!rows.length) {
-    return json({ picked: 0, ok: 0, empty: 0, failed: 0, remaining: 0, note: "미처리 없음(idle)" });
-  }
-
   let ok = 0, empty = 0, failed = 0;
   for (const nl of rows) {
     try {
@@ -151,14 +147,92 @@ Deno.serve(async (req: Request) => {
   //   멱등: 성공='done' / 빈추출='empty' / 비대상 타입='skip' 마킹 → 재선택 방지.
   const files = await processMyspaceFiles();
 
+  // 공개 보험이슈 캘린더 자료. 별도 비공개 색인에만 OCR 본문을 저장하고
+  // 로그인 사용자는 제한된 검색 RPC로 제목·회사·분류·짧은 문맥만 받는다.
+  // 기존 두 OCR 큐가 바쁠 때는 150초 제한을 위해 이번 틱을 건너뛴다.
+  const briefing = await processBriefingLeaflets((rows.length + (files.picked || 0)) < 4 ? 1 : 0);
+
   // ── B-2 정제 백필(refine) ──────────────────────────────────
   //   clean_text 비어있고 raw 있는 행을 3소스(소식지·자료실·지식)에서 꺼내 정제본 적재(raw 보존).
   //   OCR이 이번 틱에 무엇이든 처리했으면(busy) 정제는 적게, 아니면(idle) 많이 — 150초 한도 보호.
   const ocrBusy = (rows.length + (files.picked || 0)) > 0;
   const refine = await processRefine(ocrBusy ? BATCH_REFINE_BUSY : BATCH_REFINE_IDLE);
 
-  return json({ picked: rows.length, ok, empty, failed, remaining, files, refine });
+  return json({ picked: rows.length, ok, empty, failed, remaining, files, briefing, refine });
 });
+
+function decodeLeafletName(path: string): string {
+  const base = String(path || '').split('/').pop() || '';
+  const encoded = base.split('--b64_')[1];
+  if (!encoded) return base;
+  try {
+    const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(normalized + '='.repeat((4 - normalized.length % 4) % 4));
+    return new TextDecoder().decode(Uint8Array.from(binary, c => c.charCodeAt(0)));
+  } catch (_e) { return base; }
+}
+
+const BRIEFING_INSURERS: Array<[string, string[]]> = [
+  ['DB손해보험',['DB손보','DB화재','동부화재']], ['DB생명',[]], ['KB손해보험',['KB손보']], ['KB라이프',['KB생명']],
+  ['메리츠화재',['메리츠']], ['현대해상',[]], ['삼성화재',[]], ['삼성생명',[]], ['흥국화재',[]], ['흥국생명',[]],
+  ['롯데손해보험',['롯데손보']], ['한화손해보험',['한화손보']], ['한화생명',[]], ['라이나손해보험',['라이나손보']], ['라이나생명',[]],
+  ['하나손해보험',['하나손보']], ['하나생명',[]], ['NH농협손해보험',['농협손보','농협손해보험']], ['NH농협생명',['농협생명']],
+  ['AIG손해보험',[]], ['ABL생명',[]], ['AIA생명',[]], ['교보생명',[]], ['동양생명',[]], ['미래에셋생명',[]],
+  ['신한라이프',['신한생명']], ['메트라이프',[]], ['KDB생명',[]], ['iM라이프',['DGB생명']], ['처브라이프',[]]
+];
+const BRIEFING_TAGS = ['암','뇌','심장','치매','간병','실손','수술','입원','통원','치아','종신','연금','운전자','자동차','화재','배상책임','어린이','태아','유병자','건강체','갱신형','비갱신형','인수기준','보험료','면책','감액','고지','보상','청구','개정','판매중지','상품개정'];
+function briefingMetadata(text: string) {
+  const insurer = (BRIEFING_INSURERS.find(([name, aliases]) => [name, ...aliases].some(term => text.includes(term))) || ['', []])[0];
+  let category = '기타 보험이슈';
+  if (/인수기준|가입한도|심사|고지/.test(text)) category = '인수기준';
+  else if (/상품개정|개정|판매중지|판매종료|출시/.test(text)) category = '상품개정';
+  else if (/보상|보험금|청구|면책|분쟁/.test(text)) category = '보상·청구';
+  else if (/암|뇌|심장|질병|치료|수술|건강/.test(text)) category = '질병·건강';
+  else if (/영업|시상|프로모션|판매전략/.test(text)) category = '영업자료';
+  return { insurer, category, tags: BRIEFING_TAGS.filter(word => text.includes(word)).slice(0, 24) };
+}
+async function upsertBriefingIndex(leafletId: string, patch: Record<string, unknown>) {
+  return rest('briefing_leaflet_search?on_conflict=leaflet_id', {
+    method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ leaflet_id: leafletId, ...patch, updated_at: new Date().toISOString() })
+  });
+}
+async function processBriefingLeaflets(limit: number) {
+  const out = { picked: 0, ok: 0, empty: 0, failed: 0, oversize: 0, remaining: -1 };
+  if (!limit) return out;
+  try {
+    const [leafletResponse, indexResponse] = await Promise.all([
+      rest('briefing_leaflets?deleted_at=is.null&select=id,storage_path,mime_type,file_size,received_date&order=received_date.asc,sort_order.asc&limit=2000'),
+      rest('briefing_leaflet_search?select=leaflet_id,ocr_status&limit=2000')
+    ]);
+    if (!leafletResponse.ok || !indexResponse.ok) return { ...out, failed: 1 };
+    const leaflets = await leafletResponse.json();
+    const indexed = await indexResponse.json();
+    const statuses = new Map(indexed.map((row: { leaflet_id: string; ocr_status: string }) => [row.leaflet_id, row.ocr_status]));
+    const pending = leaflets.filter((row: { id: string }) => !statuses.has(row.id) || ['pending','error'].includes(String(statuses.get(row.id)))).slice(0, limit);
+    out.picked = pending.length;
+    out.remaining = Math.max(0, leaflets.length - indexed.filter((row: { ocr_status: string }) => ['done','empty','skip','oversize'].includes(row.ocr_status)).length - pending.length);
+    for (const row of pending) {
+      const title = decodeLeafletName(row.storage_path) || `${row.received_date} 보험이슈 자료`;
+      if (Number(row.file_size || 0) > MAX_FILE_BYTES) { await upsertBriefingIndex(row.id, { title, ocr_status:'oversize', indexed_at:new Date().toISOString() }); out.oversize++; continue; }
+      try {
+        await upsertBriefingIndex(row.id, { title, ocr_status:'processing', error_message:null });
+        const enc = row.storage_path.split('/').map(encodeURIComponent).join('/');
+        const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/briefing-leaflets/${enc}`;
+        const ex = await fetch(`${SUPABASE_URL}/functions/v1/ocr-extract`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${SERVICE_ROLE}` }, body:JSON.stringify({ fileUrl }) });
+        const result = await ex.json().catch(() => ({}));
+        if (!ex.ok) throw new Error(`ocr ${ex.status}: ${String(result.error || '').slice(0, 180)}`);
+        const text = String(result.text || '');
+        await upsertBriefingIndex(row.id, { title, ...briefingMetadata(`${title}\n${text}`), extracted_text:text, ocr_status:text.trim() ? 'done' : 'empty', indexed_at:new Date().toISOString(), error_message:null });
+        if (text.trim()) out.ok++; else out.empty++;
+      } catch (e) {
+        await upsertBriefingIndex(row.id, { title, ocr_status:'error', error_message:String(e).slice(0, 500) }).catch(() => {});
+        out.failed++;
+      }
+    }
+  } catch (e) { console.error('[ocr-batch/briefing] 오류', String(e)); out.failed++; }
+  return out;
+}
 
 // PDF/이미지 판별 (Gemini 직접 OCR 대상). office류는 후순위(skip).
 function isOcrTarget(mime: string, ext: string): boolean {
