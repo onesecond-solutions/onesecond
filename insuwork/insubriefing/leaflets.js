@@ -731,5 +731,15 @@
 
   // 2026-08-25 — 보험워크 SPA의 '소식지·캘린더' 섹션(js/insuwork.js briefingHtml/
   // initBriefingCalendar)이 섹션 재진입 시 이 캘린더를 다시 초기화할 수 있도록 외부 노출.
-  window.OSBriefingLeaflets = { init: init };
+  function openById(id) {
+    if (!id || !window.db || !window.db.fetchPublic) return;
+    window.db.fetchPublic('/rest/v1/briefing_leaflets?id=eq.' + encodeURIComponent(id) + '&deleted_at=is.null&select=id,file_type,storage_path,mime_type,file_size,received_date&limit=1')
+      .then(function (response) { return response.ok ? response.json() : []; })
+      .then(function (rows) {
+        var item = rows && rows[0]; if (!item) { showNotice('보험이슈 자료를 찾지 못했습니다.'); return; }
+        if (window.LeafletPreview) window.LeafletPreview.open(publicUrl(item.storage_path), originalName(item.storage_path), item.mime_type);
+      }).catch(function () { showNotice('보험이슈 자료를 열지 못했습니다.'); });
+  }
+
+  window.OSBriefingLeaflets = { init: init, openById: openById };
 })();
