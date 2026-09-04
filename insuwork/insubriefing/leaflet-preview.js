@@ -41,6 +41,8 @@
     div.innerHTML =
       '<div class="lfp-preview" id="leaflet-preview" aria-hidden="true" onclick="if(event.target===this)LeafletPreview.close()">'
       + '<button type="button" class="lfp-preview-close" onclick="LeafletPreview.close()" aria-label="미리보기 닫기">×</button>'
+      + '<button type="button" class="lfp-preview-nav lfp-preview-nav-prev" onclick="LeafletPreview.navigate(-1)" aria-label="이전 자료">‹</button>'
+      + '<button type="button" class="lfp-preview-nav lfp-preview-nav-next" onclick="LeafletPreview.navigate(1)" aria-label="다음 자료">›</button>'
       + '<div class="lfp-preview-thumbs" id="lfp-preview-thumbs"></div>'
       + '<div class="lfp-preview-stage" id="lfp-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'lfp-preview-page-wrap\')))LeafletPreview.close()"></div>'
       + '<div class="lfp-preview-bar">'
@@ -69,26 +71,29 @@
     return state.pdfJsPromise;
   }
 
-  function previewUi(type, name, url) {
+  function previewUi(type, name, url, navigation) {
     ensureOverlay();
     var overlay = document.getElementById('leaflet-preview'), page = document.getElementById('lfp-preview-page'), download = document.getElementById('lfp-preview-download'), ddakDownload = document.getElementById('lfp-preview-ddak-download');
+    var prev = document.querySelector('.lfp-preview-nav-prev'), next = document.querySelector('.lfp-preview-nav-next');
     var loggedIn = isLoggedIn();
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('is-authenticated', loggedIn);
     if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
     if (download) { download.href = url; download.download = name || ''; }
     if (ddakDownload) { ddakDownload.href = url; ddakDownload.download = name || ''; }
+    if (prev) { prev.hidden = !navigation; prev.disabled = !navigation || !navigation.previous; }
+    if (next) { next.hidden = !navigation; next.disabled = !navigation || !navigation.next; }
     document.body.classList.add('lfp-preview-open');
   }
 
-  function open(url, name, mime) {
+  function open(url, name, mime, navigation) {
     var type = previewType(name, mime);
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
-    previewUi(type, name, url);
+    previewUi(type, name, url, navigation);
     var stage = document.getElementById('lfp-preview-stage'), overlay = document.getElementById('leaflet-preview'), thumbs = document.getElementById('lfp-preview-thumbs');
     if (stage) { stage.onscroll = handleScroll; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
-    state.preview = { type: type, url: url, name: name || '파일', mime: mime || '', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null };
+    state.preview = { type: type, url: url, name: name || '파일', mime: mime || '', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, navigation: navigation || null };
     if (type === 'image') {
       stage.innerHTML = '<div class="lfp-preview-page-wrap lfp-preview-image-wrap"><img id="lfp-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';
       var previewImage = document.getElementById('lfp-preview-image');
@@ -213,6 +218,11 @@
   function zoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdf(); else renderImageTransform(); }
   function rotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdf(); else renderImageTransform(); }
   function page(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) scrollToPage(next); }
+  function navigate(direction) {
+    var navigation = state.preview && state.preview.navigation;
+    var action = direction < 0 ? navigation && navigation.previous : navigation && navigation.next;
+    if (typeof action === 'function') action();
+  }
 
   function canvasBlob(canvas) { return new Promise(function (resolve) { if (!canvas) resolve(null); else canvas.toBlob(resolve, 'image/png'); }); }
   function closeDdakMenu() {
@@ -365,5 +375,5 @@
 
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.preview && !document.querySelector('.lfp-folder-dialog')) close(); });
 
-  window.LeafletPreview = { open: open, close: close, zoom: zoom, rotate: rotate, page: page, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, copy: copy, saveToInsuwork: saveToInsuwork };
+  window.LeafletPreview = { open: open, close: close, zoom: zoom, rotate: rotate, page: page, navigate: navigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, copy: copy, saveToInsuwork: saveToInsuwork };
 })();
