@@ -729,7 +729,8 @@
 
   function openBriefingSearchResult(id) {
     // 검색 화면 위에서 원문만 연다. 미리보기를 닫으면 검색어와 결과 목록이 그대로 보여야 한다.
-    if (window.OSBriefingLeaflets && window.OSBriefingLeaflets.openById) window.OSBriefingLeaflets.openById(id);
+    var orderedIds = state.briefingSearchRows.map(function (item) { return String(item.id); });
+    if (window.OSBriefingLeaflets && window.OSBriefingLeaflets.openById) window.OSBriefingLeaflets.openById(id, orderedIds);
   }
 
   function carrierDirectory() { return Array.isArray(window.OS_INSUWORK_CARRIERS) ? window.OS_INSUWORK_CARRIERS : []; }
