@@ -186,6 +186,10 @@ body.is-insuwork:not(.is-admin) .side #nav-insuwork{display:flex!important}
 #v-insuwork .iw-preview-loading{padding:24px;border-radius:var(--radius-md);background:var(--s1);color:var(--tp)}
 #v-insuwork .iw-preview-close{position:absolute;z-index:4;top:16px;right:16px;width:44px;height:44px;border:0;border-radius:var(--radius-full);background:#1f2430;color:#fff;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35)}
 #v-insuwork .iw-preview-close:hover{background:#31384a}
+#v-insuwork .iw-preview-nav{position:absolute;z-index:4;top:50%;display:flex;align-items:center;justify-content:center;width:48px;height:64px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-size:38px;line-height:1;cursor:pointer;box-shadow:var(--elevation-4);transform:translateY(-50%)}
+#v-insuwork .iw-preview-nav-prev{left:20px}#v-insuwork .iw-preview-nav-next{right:20px}
+#v-insuwork .iw-preview-nav:hover:not(:disabled){border-color:var(--ac);background:var(--ac);color:var(--s1)}
+#v-insuwork .iw-preview-nav:disabled{opacity:.28;cursor:default}#v-insuwork .iw-preview-nav[hidden]{display:none}
 #v-insuwork .iw-preview-bar{position:absolute;z-index:2;bottom:18px;left:50%;display:flex;align-items:center;gap:3px;max-width:calc(100vw - 24px);padding:6px 8px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);box-shadow:var(--elevation-4);transform:translateX(-50%);white-space:nowrap}
 #v-insuwork .iw-preview-bar button,#v-insuwork .iw-preview-bar a{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 9px;border:0;border-radius:var(--radius-full);background:transparent;color:var(--tp);font:inherit;font-size:13px;text-decoration:none;cursor:pointer}
 #v-insuwork .iw-preview-bar button:hover,#v-insuwork .iw-preview-bar a:hover{background:var(--s2);color:var(--ac)}
@@ -199,7 +203,7 @@ body.is-insuwork:not(.is-admin) .side #nav-insuwork{display:flex!important}
 #v-insuwork .iw-preview-bar .iw-preview-delete{color:var(--danger)}
 #v-insuwork .iw-preview:not(.is-pdf) .iw-preview-pdf-only{display:none}
 body.iw-preview-open{overflow:hidden}
-@media(max-width:560px){#v-insuwork .iw-preview{padding:12px}#v-insuwork .iw-preview-stage{height:calc(100% - 64px)}#v-insuwork .iw-preview-bar{bottom:calc(10px + env(safe-area-inset-bottom));overflow-x:auto}}
+@media(max-width:560px){#v-insuwork .iw-preview{padding:12px}#v-insuwork .iw-preview-stage{height:calc(100% - 64px)}#v-insuwork .iw-preview-bar{bottom:calc(10px + env(safe-area-inset-bottom));overflow-x:auto}#v-insuwork .iw-preview-nav{width:40px;height:52px;font-size:30px}#v-insuwork .iw-preview-nav-prev{left:8px}#v-insuwork .iw-preview-nav-next{right:8px}}
 #v-insuwork .iw-consult-layout{display:grid;grid-template-columns:minmax(0,1fr);min-height:0;border:1px solid var(--bd);border-radius:var(--radius-md);background:color-mix(in srgb,var(--s1) 92%,transparent);overflow:hidden}
 #v-insuwork .iw-consult-layout.has-detail{grid-template-columns:minmax(300px,1fr) minmax(0,2fr)}
 #v-insuwork .iw-consult-master{min-width:0;overflow:hidden}#v-insuwork .iw-consult-list{display:flex;min-width:0;max-width:100%;height:100%;overflow:hidden;flex-direction:column}#v-insuwork .iw-consult-rows{min-height:0;overflow-x:hidden;overflow-y:auto}

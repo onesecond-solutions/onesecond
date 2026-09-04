@@ -338,6 +338,19 @@
 
   // ── 클릭 미리보기 + 호버 확대 ────────────────────────────────────────────
   var hoverEl = null;
+  function openLeafletNode(node) {
+    if (!node || !window.LeafletPreview) return;
+    var nodes = Array.prototype.filter.call(document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-thumb'), function (entry) {
+      var kind = entry.getAttribute('data-kind');
+      return kind !== 'document' && kind !== 'link' && kind !== 'text';
+    });
+    var index = nodes.indexOf(node);
+    var navigation = index < 0 ? null : {
+      previous: index > 0 ? function () { openLeafletNode(nodes[index - 1]); } : null,
+      next: index < nodes.length - 1 ? function () { openLeafletNode(nodes[index + 1]); } : null
+    };
+    window.LeafletPreview.open(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-mime'), navigation);
+  }
   function bindThumbEvents() {
     var nodes = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-thumb');
     Array.prototype.forEach.call(nodes, function (node) {
@@ -347,7 +360,7 @@
         if (kind === 'document') downloadFile(node.getAttribute('data-url'), node.getAttribute('data-name'));
         else if (kind === 'link') openStoredLink(node.getAttribute('data-url'));
         else if (kind === 'text') openTextPreview(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-id'), node.getAttribute('data-path'));
-        else if (window.LeafletPreview) window.LeafletPreview.open(node.getAttribute('data-url'), node.getAttribute('data-name'), node.getAttribute('data-mime'));
+        else openLeafletNode(node);
       });
       node.addEventListener('mouseenter', function () { showHover(node); });
       node.addEventListener('mouseleave', hideHover);

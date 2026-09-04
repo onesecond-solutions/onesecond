@@ -1817,12 +1817,26 @@
       img.src = newslettersPublicUrl(path);
     });
   }
+  function listPreviewNavigation(rows, id, opener) {
+    var ids = (rows || []).map(function (row) { return String(row.id); }), index = ids.indexOf(String(id));
+    if (index < 0) return null;
+    return {
+      previous: index > 0 ? function () { opener(ids[index - 1]); } : null,
+      next: index < ids.length - 1 ? function () { opener(ids[index + 1]); } : null
+    };
+  }
+  function visibleNewsletterRows() {
+    return (state.newsData || []).filter(function (row) {
+      if (state.newsPool !== 'all' && newsSecOf(row.company) !== state.newsPool) return false;
+      return state.newsScope !== 'co' || !state.newsCoSel || row.company === state.newsCoSel;
+    });
+  }
   function openNewsletter(id) {
     var row = (state.newsData || []).find(function (r) { return String(r.id) === String(id); }); if (!row) return;
     var name = (row.source_filename || (row.company || '소식지') + '_' + newsMonthLabel(row)) + '.pdf';
     var pdfUrl = String(row.source_pdf_url || '').trim();
     var ready = pdfUrl ? Promise.resolve(pdfUrl) : (row.source_path ? Promise.resolve(newslettersPublicUrl(row.source_path)) : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
-    ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'newsletter', id: id }); }).catch(saveError);
+    ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'newsletter', id: id }, listPreviewNavigation(visibleNewsletterRows(), id, openNewsletter)); }).catch(saveError);
   }
   function loadStrategyData() {
     if (state.strategyData || state.strategyLoading) return;
@@ -1963,13 +1977,19 @@
       img.src = newslettersPublicUrl(path);
     });
   }
+  function visibleStrategyRows() {
+    return (state.strategyData || []).filter(function (row) {
+      if (state.strategyPool !== 'all' && newsSecOf(row.company) !== state.strategyPool) return false;
+      return state.strategyScope !== 'co' || !state.strategyCoSel || row.company === state.strategyCoSel;
+    });
+  }
   function openStrategy(id) {
     var row = (state.strategyData || []).find(function (r) { return String(r.id) === String(id); }); if (!row) return;
     var name = row.source_filename || strategyLabel(row) || ((row.company || '영업방향') + '_' + newsMonthLabel(row) + '.pdf');
     var directUrl = String(row.source_file_url || '').trim();
     var previewPath = String(row.preview_pdf_path || row.source_path || '').trim();
     var ready = directUrl ? Promise.resolve(directUrl) : (previewPath ? Promise.resolve(newslettersPublicUrl(previewPath)) : Promise.reject(new Error('열람 가능한 파일이 없습니다.')));
-    ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'sales-strategy', id: id }); }).catch(saveError);
+    ready.then(function (url) { openPreviewUrl(url, name, 'application/pdf', { source: 'sales-strategy', id: id }, listPreviewNavigation(visibleStrategyRows(), id, openStrategy)); }).catch(saveError);
   }
   function archiveHtml() {
     var cards = [['home', '기존 원세컨드 홈', '보험 검색과 기존 홈 도구'], ['product-lineup', '상품 라인업', '원수사 상품 자료'], ['newsletters', '소식지', '원수사 GA 소식지'], ['bojang', '보장분석', '기존 보장분석 도구'], ['axis-medical', '보험 지식', '실손·암·뇌·심장 등'], ['namecard', '기타 도구', '명함과 기존 제작 도구']];
@@ -2048,9 +2068,13 @@
   }
   function openPublicLibraryFile(id) {
     var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item || !item.storage_path) return;
-    var proxy = document.createElement('span');
-    proxy.setAttribute('data-storage-path', item.storage_path); proxy.setAttribute('data-file-title', item.title || '파일'); proxy.setAttribute('data-file-mime', item.mime_type || '');
-    openStoragePreview(proxy);
+    var rows = (state.publicLibraryData || []).filter(publicLibraryMatches).filter(function (entry) { return !!previewType(entry) && !!entry.storage_path; });
+    var navigation = listPreviewNavigation(rows, id, openPublicLibraryFile);
+    var title = item.title || '파일', mime = item.mime_type || '', type = previewType(item);
+    if (type && previewUi(type, title, '', null, navigation)) {
+      var stage = document.getElementById('iw-preview-stage'); if (stage) stage.innerHTML = '<div class="iw-preview-loading">첨부파일을 준비하는 중입니다.</div>';
+    }
+    signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, title, mime, null, navigation); }).catch(storagePreviewError);
   }
   function sectionHtml() { if (state.section === 'ledger') return canEnterSection('ledger') && window.OSInsuworkLedger ? window.OSInsuworkLedger.html() : '<p>임태성 전용 화면입니다.</p>';
     if (state.section === 'daily-briefing' && window.OSCustomerBriefing) return window.OSCustomerBriefing.sectionHtml();
@@ -2296,7 +2320,7 @@
     var head = STANDALONE ? '' : '<header class="iw-head"><div class="iw-title"><h1>내 업무</h1><p>자료, 고객, 상담과 일정을 한곳에서 관리합니다.</p></div><label class="iw-search">⌕<input id="iw-search-input" type="search" value="' + esc(state.query) + '" placeholder="내 자료와 고객 검색" autocomplete="off"></label></header>';
     view.innerHTML = '<div class="iw-shell' + (STANDALONE ? ' iw-shell-compact' : '') + '">' + head + '<div class="iw-body">' + navHtml() + '<main class="iw-main" id="iw-main"></main></div></div><dialog class="iw-dialog" id="iw-dialog"><button class="iw-dialog-close" onclick="OSInsuwork.closeDialog()" aria-label="닫기">×</button><div id="iw-dialog-body"></div></dialog>'
       + '<dialog class="iw-dialog iw-reservation-dialog" id="iw-reservation-dialog"><button class="iw-dialog-close" onclick="OSInsuwork.closeReservationPopup()" aria-label="닫기">×</button><div id="iw-reservation-body"></div></dialog>'
-      + '<div class="iw-preview" id="iw-preview" aria-hidden="true" onclick="if(event.target===this)OSInsuwork.closePreview()"><button type="button" class="iw-preview-close" onclick="OSInsuwork.closePreview()" aria-label="미리보기 닫기">×</button><div class="iw-preview-thumbs" id="iw-preview-thumbs"></div><div class="iw-preview-stage" id="iw-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'iw-preview-page-wrap\')))OSInsuwork.closePreview()"></div><div class="iw-preview-bar"><button type="button" onclick="OSInsuwork.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSInsuwork.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSInsuwork.previewRotate()" title="회전">↻</button><button type="button" class="iw-preview-pdf-only" onclick="OSInsuwork.previewPage(-1)" title="이전 페이지">‹</button><span id="iw-preview-page"></span><button type="button" class="iw-preview-pdf-only" onclick="OSInsuwork.previewPage(1)" title="다음 페이지">›</button><div class="iw-ddak-wrap"><button type="button" class="iw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSInsuwork.toggleDdakMenu(event)">⚡ 딸깍</button><div class="iw-ddak-menu" id="iw-preview-ddak-menu" role="menu" hidden><a id="iw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSInsuwork.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSInsuwork.previewCopy()">📋 복사</button></div></div><button type="button" class="iw-preview-asset-only" onclick="OSInsuwork.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="iw-preview-asset-only iw-preview-delete" onclick="OSInsuwork.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
+      + '<div class="iw-preview" id="iw-preview" aria-hidden="true" onclick="if(event.target===this)OSInsuwork.closePreview()"><button type="button" class="iw-preview-close" onclick="OSInsuwork.closePreview()" aria-label="미리보기 닫기">×</button><button type="button" class="iw-preview-nav iw-preview-nav-prev" onclick="OSInsuwork.previewNavigate(-1)" aria-label="이전 자료">‹</button><button type="button" class="iw-preview-nav iw-preview-nav-next" onclick="OSInsuwork.previewNavigate(1)" aria-label="다음 자료">›</button><div class="iw-preview-thumbs" id="iw-preview-thumbs"></div><div class="iw-preview-stage" id="iw-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'iw-preview-page-wrap\')))OSInsuwork.closePreview()"></div><div class="iw-preview-bar"><button type="button" onclick="OSInsuwork.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSInsuwork.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSInsuwork.previewRotate()" title="회전">↻</button><button type="button" class="iw-preview-pdf-only" onclick="OSInsuwork.previewPage(-1)" title="이전 페이지">‹</button><span id="iw-preview-page"></span><button type="button" class="iw-preview-pdf-only" onclick="OSInsuwork.previewPage(1)" title="다음 페이지">›</button><div class="iw-ddak-wrap"><button type="button" class="iw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSInsuwork.toggleDdakMenu(event)">⚡ 딸깍</button><div class="iw-ddak-menu" id="iw-preview-ddak-menu" role="menu" hidden><a id="iw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSInsuwork.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSInsuwork.previewCopy()">📋 복사</button></div></div><button type="button" class="iw-preview-asset-only" onclick="OSInsuwork.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="iw-preview-asset-only iw-preview-delete" onclick="OSInsuwork.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
       + '<div class="iw-consult-hover" id="iw-row-hover" aria-hidden="true"></div><div class="iw-asset-drop-overlay" id="iw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 복사 저장합니다.</span></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('iw-search-input'); if (globalInput) globalInput.value = state.query; }
     if (window.OSInsuworkMobileSection) window.OSInsuworkMobileSection.mount(view, state.section);
@@ -2550,13 +2574,24 @@
     closePreview();
     if (typeof window.toast === 'function') window.toast(error && error.message ? error.message : '첨부파일을 열지 못했습니다. 잠시 후 다시 시도해 주세요.');
   }
+  function previewNavigationFromNode(node, opener) {
+    var group = node && node.closest('.iw-consult-existing,.iw-detail-files-grid,.iw-rich-content');
+    if (!group) return null;
+    var nodes = Array.prototype.filter.call(group.querySelectorAll('[data-storage-path]'), function (entry) {
+      return !!previewType({ title: entry.getAttribute('data-file-title') || entry.getAttribute('alt') || '', mime_type: entry.getAttribute('data-file-mime') || '', storage_path: entry.getAttribute('data-storage-path') || '' });
+    });
+    var index = nodes.indexOf(node);
+    if (index < 0) return null;
+    return { previous: index > 0 ? function () { opener(nodes[index - 1]); } : null, next: index < nodes.length - 1 ? function () { opener(nodes[index + 1]); } : null };
+  }
   function openStoragePreview(node, assetRef) {
     if (!node) return;
     var path = node.getAttribute('data-storage-path'), title = node.getAttribute('data-file-title') || node.getAttribute('alt') || '첨부파일', mime = node.getAttribute('data-file-mime') || '';
     if (!path) return;
     var type = previewType({ title: title, mime_type: mime, storage_path: path }), popup = null;
+    var navigation = previewNavigationFromNode(node, function (target) { openStoragePreview(target); });
     if (type) {
-      if (previewUi(type, title, '', assetRef)) {
+      if (previewUi(type, title, '', assetRef, navigation)) {
         var stage = document.getElementById('iw-preview-stage');
         if (stage) stage.innerHTML = '<div class="iw-preview-loading">첨부파일을 준비하는 중입니다.</div>';
       }
@@ -2564,7 +2599,7 @@
     node.setAttribute('aria-busy', 'true');
     signStoragePath(path).then(function (url) {
       node.removeAttribute('aria-busy'); prepareFileDrag(node, url);
-      if (type) openPreviewUrl(url, title, mime, assetRef);
+      if (type) openPreviewUrl(url, title, mime, assetRef, navigation);
       else if (popup) popup.location.replace(url);
       else window.location.href = url;
     }).catch(function (error) { node.removeAttribute('aria-busy'); if (popup) popup.close(); storagePreviewError(error); });
@@ -2590,25 +2625,28 @@
     });
     return state.pdfJsPromise;
   }
-  function previewUi(type, name, url, assetRef) {
+  function previewUi(type, name, url, assetRef, navigation) {
     var overlay = document.getElementById('iw-preview'), page = document.getElementById('iw-preview-page'), download = document.getElementById('iw-preview-download');
+    var prev = document.querySelector('#iw-preview .iw-preview-nav-prev'), next = document.querySelector('#iw-preview .iw-preview-nav-next');
     if (!overlay) return false;
     closeDialog();
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('has-asset', !!assetRef);
+    if (prev) { prev.hidden = !navigation; prev.disabled = !navigation || !navigation.previous; }
+    if (next) { next.hidden = !navigation; next.disabled = !navigation || !navigation.next; }
     if (page) page.textContent = type === 'pdf' ? '불러오는 중…' : name;
     if (download) { download.href = url; download.download = name || ''; }
     document.body.classList.add('iw-preview-open');
     return true;
   }
-  function openPreviewUrl(url, name, mime, assetRef) {
+  function openPreviewUrl(url, name, mime, assetRef, navigation) {
     var type = previewType({ title: name, mime_type: mime, storage_path: url });
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
-    if (!previewUi(type, name, url, assetRef)) return;
+    if (!previewUi(type, name, url, assetRef, navigation)) return;
     var stage = document.getElementById('iw-preview-stage'), overlay = document.getElementById('iw-preview'), thumbs = document.getElementById('iw-preview-thumbs');
     if (stage) { stage.onscroll = handlePreviewScroll; stage.onwheel = handlePreviewWheel; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
-    state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null };
+    state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null, navigation: navigation || null };
     if (type === 'image') {
       stage.innerHTML = '<div class="iw-preview-page-wrap iw-preview-image-wrap"><img id="iw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';
       var previewImage = document.getElementById('iw-preview-image');
@@ -2622,19 +2660,42 @@
       .then(function (doc) { if (!state.preview || state.preview.url !== url) return; state.preview.doc = doc; state.preview.pages = doc.numPages; renderPdfPreview(); renderPdfThumbs(); })
       .catch(function (error) { if (stage) stage.innerHTML = '<div class="iw-preview-loading">' + esc(error.message || 'PDF 미리보기를 불러오지 못했습니다.') + '</div>'; });
   }
-  function openFilePreview(id, assetRef) {
+  function openUrlPreviewNode(node) {
+    if (!node) return;
+    var group = node.closest('.iw-detail-files-grid,.iw-rich-content'), nodes = group ? Array.prototype.slice.call(group.querySelectorAll('[data-preview-url]')) : [node];
+    var index = nodes.indexOf(node), openNode = function (target) { openUrlPreviewNode(target); };
+    var navigation = index < 0 ? null : { previous: index > 0 ? function () { openNode(nodes[index - 1]); } : null, next: index < nodes.length - 1 ? function () { openNode(nodes[index + 1]); } : null };
+    openPreviewUrl(node.getAttribute('data-preview-url'), node.getAttribute('data-file-title') || node.getAttribute('alt') || '파일', node.getAttribute('data-file-mime') || '', null, navigation);
+  }
+  function openFilePreview(id, assetRef, navigation) {
     var item = workspaceItem(id); if (!item || !item.storage_path) return;
     var proxy = document.createElement('span');
     proxy.setAttribute('data-storage-path', item.storage_path); proxy.setAttribute('data-file-title', item.title || '파일'); proxy.setAttribute('data-file-mime', item.mime_type || '');
-    openStoragePreview(proxy, assetRef || { source: 'library', id: id });
+    var path = item.storage_path, title = item.title || '파일', mime = item.mime_type || '', type = previewType(item);
+    if (type && previewUi(type, title, '', assetRef || { source: 'library', id: id }, navigation)) {
+      var stage = document.getElementById('iw-preview-stage'); if (stage) stage.innerHTML = '<div class="iw-preview-loading">첨부파일을 준비하는 중입니다.</div>';
+    }
+    signStoragePath(path).then(function (url) { openPreviewUrl(url, title, mime, assetRef || { source: 'library', id: id }, navigation); }).catch(storagePreviewError);
+  }
+  function visibleAssetPreviewRows(source) {
+    var list = source === 'scripts' ? state.data.scripts : state.data.library;
+    return list.filter(function (item) {
+      if (!previewType(item) || !(item.storage_path || item.image_url || item.file_url || item.link_url)) return false;
+      if (source === 'library') {
+        if (String(item.parent_id || '') !== String(state.assetFolder || '')) return false;
+        if (state.assetFilter !== 'all' && assetCategory(item) !== state.assetFilter) return false;
+      }
+      return matches((item.title || '') + ' ' + (item.description || item.memo_text || item.script_text || ''));
+    });
   }
   function openAssetPreview(source, id) {
     var list = source === 'scripts' ? state.data.scripts : state.data.library;
     var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
     var assetRef = { source: source, id: id };
-    if (item.storage_path) { openFilePreview(id, assetRef); return; }
+    var navigation = listPreviewNavigation(visibleAssetPreviewRows(source), id, function (nextId) { openAssetPreview(source, nextId); });
+    if (item.storage_path) { openFilePreview(id, assetRef, navigation); return; }
     var url = item.image_url || item.file_url || item.link_url;
-    if (url) openPreviewUrl(url, item.title || '파일', item.mime_type || (item.image_url ? 'image/*' : ''), assetRef);
+    if (url) openPreviewUrl(url, item.title || '파일', item.mime_type || (item.image_url ? 'image/*' : ''), assetRef, navigation);
   }
   function renderPreviewTransform() {
     var p = state.preview, image = document.getElementById('iw-preview-image'), stage = document.getElementById('iw-preview-stage');
@@ -2739,6 +2800,11 @@
   function previewZoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewRotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) scrollToPreviewPage(next); }
+  function previewNavigate(direction) {
+    var navigation = state.preview && state.preview.navigation;
+    var action = direction < 0 ? navigation && navigation.previous : navigation && navigation.next;
+    if (typeof action === 'function') action();
+  }
   function canvasBlob(canvas) { return new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); }); }
   function closeDdakMenu() { var menu = document.getElementById('iw-preview-ddak-menu'), trigger = document.querySelector('.iw-ddak-wrap .iw-preview-ddak'); if (menu) menu.hidden = true; if (trigger) trigger.setAttribute('aria-expanded', 'false'); }
   function toggleDdakMenu(event) { if (event) event.stopPropagation(); var menu = document.getElementById('iw-preview-ddak-menu'), trigger = event && event.currentTarget; if (!menu) return; var open = menu.hidden; menu.hidden = !open; if (trigger) trigger.setAttribute('aria-expanded', String(open)); }
@@ -2768,7 +2834,7 @@
       var type = previewType(file);
       if (type === 'image') {
         if (file.storage_path) return '<img class="iw-detail-thumb" data-storage-path="' + esc(file.storage_path) + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '" alt="' + esc(file.title) + '">';
-        return '<img class="iw-detail-thumb" src="' + esc(file.url) + '" alt="' + esc(file.title) + '" onclick="OSInsuwork.openUrlPreview(\'' + esc(jsString(file.url)) + '\',\'' + esc(jsString(file.title)) + '\',\'' + esc(jsString(file.mime_type || 'image/*')) + '\')">';
+        return '<img class="iw-detail-thumb" src="' + esc(file.url) + '" data-preview-url="' + esc(file.url) + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || 'image/*') + '" alt="' + esc(file.title) + '" onclick="OSInsuwork.openUrlPreviewNode(this)">';
       }
       var href = file.storage_path ? '#' : esc(file.url || '#');
       return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '"' + (file.storage_path ? ' onclick="event.preventDefault();OSInsuwork.openStoragePreview(this)"' : ' target="_blank" rel="noopener"') + '><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
@@ -4235,7 +4301,7 @@
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
   window.addEventListener('popstate', function () { if (!restoreFromUrl()) return; openWorkspace(state.section, false); });
-  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && event.altKey && event.key === 'ArrowRight') previewNavigate(1); else if (state.preview && event.altKey && event.key === 'ArrowLeft') previewNavigate(-1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
   document.addEventListener('click', function (event) { var menu = document.getElementById('iw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.iw-preview-ddak')) closeDdakMenu(); });
   document.addEventListener('click', function (event) { var open = document.querySelectorAll('.iw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });
   document.addEventListener('click', function (event) { var panel = document.getElementById('iw-fav-panel'); if (panel && !panel.hidden && !panel.contains(event.target) && !event.target.closest('.iw-fav-toggle')) closeFavoritesPanel(); });
@@ -4452,7 +4518,7 @@
     setPublicLibView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.publicLibView = view; renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
