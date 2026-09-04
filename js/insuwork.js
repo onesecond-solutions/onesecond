@@ -718,9 +718,9 @@
 
   function loadBriefingSearch(value) {
     var normalized = searchNorm(value), requestId = ++state.briefingSearchRequestId;
-    if (!normalized || !window.db || !window.db.fetchPublic) { state.briefingSearchRows = []; state.briefingSearchQuery = normalized; state.briefingSearchLoading = false; return; }
+    if (!normalized || !window.db || !window.db.fetch) { state.briefingSearchRows = []; state.briefingSearchQuery = normalized; state.briefingSearchLoading = false; return; }
     state.briefingSearchLoading = true; state.briefingSearchQuery = normalized;
-    window.db.fetchPublic('/rest/v1/rpc/search_briefing_leaflets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ p_query: String(value || '').trim(), p_limit: 30 }) })
+    window.db.fetch('/rest/v1/rpc/search_briefing_leaflets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ p_query: String(value || '').trim(), p_limit: 30 }) })
       .then(function (response) { if (!response.ok) throw new Error('보험이슈 검색 실패'); return response.json(); })
       .then(function (rows) { if (requestId === state.briefingSearchRequestId) state.briefingSearchRows = Array.isArray(rows) ? rows : []; })
       .catch(function () { if (requestId === state.briefingSearchRequestId) state.briefingSearchRows = []; })
