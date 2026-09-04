@@ -787,6 +787,7 @@
   function homeTodayKind(event) {
     if (event && event.event_type === 'birthday') return 'birthday';
     if (event && event.event_type === 'insurance-age') return 'age';
+    if (event && event.event_type === 'application') return 'care';
     if (isCareTask(event)) return 'care';
     return 'schedule';
   }
@@ -1028,6 +1029,17 @@
     });
     return out;
   }
+  function applicationCalendarEventsForYear(year) {
+    var out = [];
+    state.data.customers.forEach(function (customer) {
+      contractDatesOf(customer).forEach(function (date) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date.slice(0, 4) !== String(year)) return;
+        var name = customer.name || '고객', phone = phoneText(customer.phone || customer.phone_raw || '');
+        out.push({ id: 'application-' + customer.id + '-' + date, customer_id: customer.id, event_date: date, event_end_date: date, title: name + ' 청약', event_type: 'application', description: name + ' 고객 청약일자입니다.' + (phone ? ' 연락처: ' + phone : ''), builtin: true });
+      });
+    });
+    return out;
+  }
   function utcKey(date) { return date.getUTCFullYear() + '-' + String(date.getUTCMonth() + 1).padStart(2, '0') + '-' + String(date.getUTCDate()).padStart(2, '0'); }
   function solarTermsForYear(year) {
     return SOLAR_TERM_NAMES.map(function (name, index) {
@@ -1070,7 +1082,7 @@
     var years = {}, selected = parseDate(state.selectedDate), cursor = state.cursor || selected;
     years[parseDate(state.homeDate).getFullYear()] = true;
     [selected.getFullYear() - 1, selected.getFullYear(), selected.getFullYear() + 1, cursor.getFullYear() - 1, cursor.getFullYear(), cursor.getFullYear() + 1].forEach(function (year) { years[year] = true; });
-    return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year), birthdayCalendarEventsForYear(year)); }, []);
+    return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year), birthdayCalendarEventsForYear(year), applicationCalendarEventsForYear(year)); }, []);
   }
   function allEvents() { return state.data.events.concat(builtInEventsAroundCalendar()); }
 
@@ -1379,12 +1391,12 @@
     return state.cursor.getFullYear() + '년 ' + (state.cursor.getMonth() + 1) + '월';
   }
   function isCareTask(event) { return !!event && event.legacy_source === 'care_auto'; }
-  function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'birthday' ? 3 : event && event.event_type === 'insurance-age' ? 4 : isCareTask(event) ? 5 : 6; }
+  function eventPriority(event) { return event && event.event_type === 'holiday' ? 0 : event && event.event_type === 'term' ? 1 : event && event.event_type === 'memorial' ? 2 : event && event.event_type === 'birthday' ? 3 : event && event.event_type === 'insurance-age' ? 4 : event && event.event_type === 'application' ? 5 : isCareTask(event) ? 6 : 7; }
   function eventsFor(date) { return allEvents().filter(function (event) { var start = String(event.event_date || '').slice(0, 10); if (!start) return false; var end = String(event.event_end_date || event.event_date || '').slice(0, 10); return date >= start && date <= end; }).sort(function (a, b) { return eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); }); }
-  function calendarEventKind(event) { return isCareTask(event) ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : event && event.event_type === 'birthday' ? 'birthday' : event && event.event_type === 'insurance-age' ? 'insurance-age' : 'schedule'; }
+  function calendarEventKind(event) { return isCareTask(event) || (event && event.event_type === 'application') ? 'customer' : event && event.event_type === 'holiday' ? 'holiday' : event && event.event_type === 'term' ? 'term' : event && event.event_type === 'memorial' ? 'memorial' : event && event.event_type === 'birthday' ? 'birthday' : event && event.event_type === 'insurance-age' ? 'insurance-age' : 'schedule'; }
   function calendarAllDay(event) { return !!(event && (event.builtin || !event.event_time || String(event.event_end_date || event.event_date || '').slice(0, 10) !== String(event.event_date || '').slice(0, 10))); }
   function builtinCalendarChip(event) {
-    var action = event && (event.event_type === 'insurance-age' || event.event_type === 'birthday') && event.customer_id ? ' onclick="event.stopPropagation(); OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
+    var action = event && (event.event_type === 'insurance-age' || event.event_type === 'birthday' || event.event_type === 'application') && event.customer_id ? ' onclick="event.stopPropagation(); OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')"' : '';
     return '<i class="' + calendarEventKind(event) + '"' + action + '>' + esc(event.title) + '</i>';
   }
   function calendarSummaryPreview(events) {
@@ -1410,6 +1422,10 @@
     if (!events.length) return '';
     return '<i class="customer customer-more" role="button" tabindex="0" title="케어 일정 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">케어 ' + events.length + '명</i>';
   }
+  function applicationSummaryChip(events, date) {
+    if (!events.length) return '';
+    return '<i class="customer customer-more" role="button" tabindex="0" title="청약 고객 전체 보기"' + calendarSummaryAttrs(events) + ' onclick="event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.openCalendarDay(\'' + esc(date) + '\')}">청약 ' + events.length + '명</i>';
+  }
   function scheduleCalendarChip(event) {
     return '<i class="schedule" onclick="event.stopPropagation();OSInsuwork.showEvent(\'' + esc(event.id) + '\')">' + esc(event.title || '일정') + '</i>';
   }
@@ -1426,7 +1442,8 @@
     var builtIns = events.filter(function (event) { return event.builtin; });
     var insuranceAgeEvents = builtIns.filter(function (event) { return event.event_type === 'insurance-age'; });
     var birthdayEvents = builtIns.filter(function (event) { return event.event_type === 'birthday'; });
-    var otherBuiltIns = builtIns.filter(function (event) { return event.event_type !== 'insurance-age' && event.event_type !== 'birthday'; });
+    var applicationEvents = builtIns.filter(function (event) { return event.event_type === 'application'; });
+    var otherBuiltIns = builtIns.filter(function (event) { return event.event_type !== 'insurance-age' && event.event_type !== 'birthday' && event.event_type !== 'application'; });
     var careEvents = events.filter(isCareTask);
     var shortEvents = events.filter(function (event) {
       if (event.builtin || isCareTask(event)) return false;
@@ -1438,6 +1455,8 @@
     else if (otherBuiltIns.length > 1) chips.push('<i class="' + calendarEventKind(otherBuiltIns[0]) + '">' + otherBuiltIns.map(function (event) { return esc(event.title); }).join(', ') + '</i>');
     if (careEvents.length === 1) chips.push(careCalendarChip(careEvents[0]));
     else if (careEvents.length > 1) chips.push(careSummaryChip(careEvents, date));
+    if (applicationEvents.length === 1) chips.push(careCalendarChip(applicationEvents[0]));
+    else if (applicationEvents.length > 1) chips.push(applicationSummaryChip(applicationEvents, date));
     if (birthdayEvents.length === 1) chips.push(builtinCalendarChip(birthdayEvents[0]));
     else if (birthdayEvents.length > 1) chips.push(birthdaySummaryChip(birthdayEvents, date));
     if (insuranceAgeEvents.length === 1) chips.push(builtinCalendarChip(insuranceAgeEvents[0]));
@@ -2774,7 +2793,7 @@
   }
   function showEvent(id) {
     var event = allEvents().find(function (entry) { return String(entry.id) === String(id); }); if (!event) return;
-    if ((event.event_type === 'insurance-age' || event.event_type === 'birthday') && event.customer_id) { openCustomerFromEvent(event.customer_id); return; }
+    if ((event.event_type === 'insurance-age' || event.event_type === 'birthday' || event.event_type === 'application') && event.customer_id) { openCustomerFromEvent(event.customer_id); return; }
     var care = isCareTask(event);
     var kind = care ? '계약관리' : event.event_type === 'holiday' ? '공휴일' : event.event_type === 'term' ? '절기' : event.event_type === 'memorial' ? '기념일' : '일정';
     var sub = eventDateLabel(event.event_date, event.builtin ? '' : event.event_time, event.builtin ? '' : event.event_end_date, event.builtin ? '' : event.event_end_time);
