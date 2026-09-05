@@ -92,7 +92,7 @@
     var stage = document.getElementById('lfp-preview-stage'), overlay = document.getElementById('leaflet-preview'), thumbs = document.getElementById('lfp-preview-thumbs');
     if (stage) { stage.onscroll = handleScroll; stage.onwheel = handleWheel; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
-    if (overlay) overlay.classList.remove('has-pages');
+    if (overlay) { overlay.onwheel = handleWheel; overlay.classList.remove('has-pages'); }
     state.preview = { type: type, url: url, name: name || '파일', mime: mime || '', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, navigation: navigation || null };
     if (type === 'image') {
       stage.innerHTML = '<div class="lfp-preview-page-wrap lfp-preview-image-wrap"><img id="lfp-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';

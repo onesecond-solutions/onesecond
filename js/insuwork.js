@@ -2645,7 +2645,7 @@
     var stage = document.getElementById('iw-preview-stage'), overlay = document.getElementById('iw-preview'), thumbs = document.getElementById('iw-preview-thumbs');
     if (stage) { stage.onscroll = handlePreviewScroll; stage.onwheel = handlePreviewWheel; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
-    if (overlay) overlay.classList.remove('has-pages');
+    if (overlay) { overlay.onwheel = handlePreviewWheel; overlay.classList.remove('has-pages'); }
     state.preview = { type: type, url: url, name: name || '파일', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, assetRef: assetRef || null, navigation: navigation || null };
     if (type === 'image') {
       stage.innerHTML = '<div class="iw-preview-page-wrap iw-preview-image-wrap"><img id="iw-preview-image" src="' + esc(url) + '" alt="' + esc(name || '') + '"></div>';
