@@ -4,6 +4,10 @@ const TARGETS = [
   'https://counselor.happytalk.io/*',
   'https://dplanner.bomapp.co.kr/*'
 ];
+const TARGET_BY_SITE = {
+  happytalk: 'https://counselor.happytalk.io/*',
+  bomapp: 'https://dplanner.bomapp.co.kr/*'
+};
 
 const CAPTURE_INTERVAL_MS = 650;
 let lastCaptureStartedAt = 0;
@@ -24,12 +28,13 @@ function captureVisibleThrottled(windowId) {
   return task;
 }
 
-function targetTabs() {
-  return chrome.tabs.query({ url: TARGETS }).then((tabs) => tabs.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0)));
+function targetTabs(site) {
+  const urls = TARGET_BY_SITE[site] ? [TARGET_BY_SITE[site]] : TARGETS;
+  return chrome.tabs.query({ url: urls }).then((tabs) => tabs.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0)));
 }
 
-async function startOnTarget() {
-  const tabs = await targetTabs();
+async function startOnTarget(site) {
+  const tabs = await targetTabs(site);
   if (!tabs.length) return { ok: false, code: 'NO_TARGET' };
   const target = tabs.find((tab) => tab.active) || tabs[0];
   await chrome.windows.update(target.windowId, { focused: true });
@@ -54,7 +59,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || !message.type) return false;
   if (message.type === 'INSUWORK_CAPTURE_FROM_SITE') {
-    startOnTarget().then(sendResponse).catch(() => sendResponse({ ok: false, code: 'ERROR' }));
+    startOnTarget(message.target).then(sendResponse).catch(() => sendResponse({ ok: false, code: 'ERROR' }));
     return true;
   }
   if (message.type === 'INSUWORK_CAPTURE_VISIBLE') {

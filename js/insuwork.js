@@ -3637,22 +3637,23 @@
     return (allowed() ? statusHtml() : '') + '<div class="iw-tools-page"><div class="iw-toolbar iw-tools-toolbar"><div><h2>계산기 · 변환기</h2><p class="iw-subtitle">자주 쓰는 계산과 이미지 변환을 보험워크 안에서 바로 처리합니다.</p></div></div><div class="iw-tool-cards">' + tabs + '</div>' + body + '</div>';
   }
   function toolsCaptureHtml() {
-    return '<section class="iw-tool-workspace iw-tool-capture-page"><div class="iw-tool-pane iw-capture-start"><h3>채팅창 스크롤 캡처</h3><p>해피톡 또는 보맵플래너 채팅창을 열어 둔 뒤 시작하세요. 해당 탭으로 이동하면 저장할 영역을 위에서 아래로 드래그합니다.</p><div class="iw-capture-sites"><span>해피톡</span><span>보맵플래너</span></div><button type="button" class="iw-btn primary iw-capture-button" id="iw-capture-start" onclick="OSInsuwork.startChatScrollCapture()">채팅창 캡처 시작</button><p class="iw-capture-status" id="iw-capture-status" aria-live="polite">캡처할 채팅 화면을 먼저 열어 주세요.</p></div><div class="iw-tool-pane iw-capture-install"><h3>처음 한 번만 설치</h3><ol><li><a class="iw-capture-download" href="/downloads/insurance-work-scroll-capture.zip?v=1.0.4" download>확장 프로그램 내려받기</a> 후 압축을 풉니다.</li><li>크롬 주소창에 <code>chrome://extensions</code>를 입력합니다.</li><li><strong>개발자 모드</strong>를 켜고 <strong>압축해제된 확장 프로그램을 로드합니다</strong>.</li><li>압축을 푼 폴더를 선택한 뒤 해피톡·보맵플래너 탭을 한 번 새로고침합니다.</li></ol><small>캡처 이미지는 서버에 전송하지 않고 사용자의 PC에 PNG로 저장합니다.</small></div></section>';
+    return '<section class="iw-tool-workspace iw-tool-capture-page"><div class="iw-tool-pane iw-capture-start"><h3>채팅창 스크롤 캡처</h3><p>캡처할 채팅 서비스를 선택하세요. 지정한 사이트의 채팅 탭으로 이동해 저장할 영역을 위에서 아래로 드래그합니다.</p><div class="iw-capture-sites"><button type="button" class="iw-btn primary iw-capture-button" onclick="OSInsuwork.startChatScrollCapture(\'happytalk\')">해피톡 캡처</button><button type="button" class="iw-btn primary iw-capture-button" onclick="OSInsuwork.startChatScrollCapture(\'bomapp\')">보맵 캡처</button></div><p class="iw-capture-status" id="iw-capture-status" aria-live="polite">캡처할 채팅 화면을 먼저 열어 주세요.</p></div><div class="iw-tool-pane iw-capture-install"><h3>처음 한 번만 설치</h3><ol><li><a class="iw-capture-download" href="/downloads/insurance-work-scroll-capture.zip?v=1.0.5" download>확장 프로그램 내려받기</a> 후 압축을 풉니다.</li><li>크롬 주소창에 <code>chrome://extensions</code>를 입력합니다.</li><li><strong>개발자 모드</strong>를 켜고 <strong>압축해제된 확장 프로그램을 로드합니다</strong>.</li><li>압축을 푼 폴더를 선택한 뒤 해피톡·보맵플래너 탭을 한 번 새로고침합니다.</li></ol><small>캡처 이미지는 서버에 전송하지 않고 사용자의 PC에 PNG로 저장합니다.</small></div></section>';
   }
   function setCaptureStatus(message, kind) {
     var status = document.getElementById('iw-capture-status');
-    var button = document.getElementById('iw-capture-start');
+    var buttons = document.querySelectorAll('.iw-capture-button');
     if (status) { status.textContent = message; status.className = 'iw-capture-status' + (kind ? ' ' + kind : ''); }
-    if (button) button.disabled = kind === 'working';
+    Array.prototype.forEach.call(buttons, function (button) { button.disabled = kind === 'working'; });
   }
-  function startChatScrollCapture() {
+  function startChatScrollCapture(target) {
     if (!canSeeScrollCapture()) return;
-    setCaptureStatus('확장 프로그램과 채팅 탭을 확인하고 있습니다…', 'working');
+    var siteName = target === 'happytalk' ? '해피톡' : '보맵';
+    setCaptureStatus(siteName + ' 채팅 탭을 확인하고 있습니다…', 'working');
     var settled = false;
     var events = {
       'insuwork-scroll-capture:started': ['채팅 화면으로 이동했습니다. 캡처할 영역을 드래그하세요.', 'ok'],
-      'insuwork-scroll-capture:no-target': ['열려 있는 해피톡 또는 보맵플래너 채팅 탭이 없습니다.', 'error'],
-      'insuwork-scroll-capture:reload-target': ['채팅 탭을 한 번 새로고침한 뒤 다시 시작해 주세요.', 'error'],
+      'insuwork-scroll-capture:no-target': ['열려 있는 ' + siteName + ' 채팅 탭이 없습니다.', 'error'],
+      'insuwork-scroll-capture:reload-target': [siteName + ' 채팅 탭을 한 번 새로고침한 뒤 다시 시작해 주세요.', 'error'],
       'insuwork-scroll-capture:error': ['확장 프로그램을 확인하지 못했습니다. 다시 설치하거나 새로고침해 주세요.', 'error']
     };
     var handlers = {};
@@ -3661,7 +3662,7 @@
       handlers[name] = function () { if (settled) return; settled = true; cleanup(); setCaptureStatus(events[name][0], events[name][1]); };
       window.addEventListener(name, handlers[name], { once: true });
     });
-    window.dispatchEvent(new Event('insuwork-scroll-capture:start'));
+    window.dispatchEvent(new CustomEvent('insuwork-scroll-capture:start', { detail: { target: target } }));
     window.setTimeout(function () { if (settled) return; settled = true; cleanup(); setCaptureStatus('확장 프로그램이 설치되지 않았습니다. 오른쪽 안내에 따라 설치해 주세요.', 'error'); }, 1800);
   }
   function toolsCalculatorHtml() {
