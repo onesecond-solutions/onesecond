@@ -99,7 +99,7 @@
     const ctx = canvas.getContext('2d'); let offset = 0, firstImage = first;
     while (offset < heightCss) {
       const desired = start + offset, targetScroll = clamp(desired, 0, maxScroll(node));
-      setScroll(node, targetScroll); await wait(160);
+      setScroll(node, targetScroll); await wait(180);
       const actual = scrollTop(node), sourceTopCss = rect.top + Math.max(0, desired - actual);
       const available = Math.max(1, rect.bottom - sourceTopCss), sliceCss = Math.min(heightCss - offset, available);
       const image = offset === 0 && Math.abs(actual - original) < 1 ? firstImage : await captureVisible();
