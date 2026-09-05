@@ -8,6 +8,7 @@
   function isDocumentScroller(node) { return node === document.scrollingElement || node === document.documentElement || node === document.body; }
   function isReverseScroller(node) { return !isDocumentScroller(node) && getComputedStyle(node).flexDirection === 'column-reverse'; }
   function maxScroll(node) { return isDocumentScroller(node) ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight) : Math.max(0, node.scrollHeight - node.clientHeight); }
+  function contentHeight(node) { return isDocumentScroller(node) ? document.documentElement.scrollHeight : node.scrollHeight; }
   function scrollTop(node) {
     if (isDocumentScroller(node)) return window.scrollY;
     const raw = node.scrollTop, max = maxScroll(node);
@@ -120,7 +121,8 @@
   }
   async function captureRange(spec) {
     const node = spec.scroller, rect = viewportRect(node), original = scrollTop(node);
-    const start = Math.min(spec.startContentY, spec.endContentY), end = Math.max(spec.startContentY, spec.endContentY);
+    const extent = contentHeight(node);
+    const start = clamp(Math.min(spec.startContentY, spec.endContentY), 0, extent), end = clamp(Math.max(spec.startContentY, spec.endContentY), 0, extent);
     const left = clamp(Math.min(spec.startX, spec.endX), rect.left, rect.right), right = clamp(Math.max(spec.startX, spec.endX), rect.left, rect.right);
     const widthCss = Math.round(right - left), heightCss = Math.round(end - start);
     if (widthCss < 40 || heightCss < 40) throw new Error('캡처 영역을 조금 더 크게 지정해 주세요.');
@@ -131,17 +133,25 @@
       const outWidth = Math.round(widthCss * scaleX), maxOutput = 30000;
       if (outWidth > maxOutput || Math.round(heightCss * scaleY) > maxOutput) throw new Error('선택 영역이 너무 큽니다. 두 번으로 나눠 캡처해 주세요.');
       const canvas = document.createElement('canvas'); canvas.width = outWidth; canvas.height = Math.round(heightCss * scaleY);
-      const ctx = canvas.getContext('2d'); let offset = 0, firstImage = first;
-      while (offset < heightCss) {
+      const ctx = canvas.getContext('2d'); let offset = 0, firstImage = first, previousActual = null, previousTarget = null, iterations = 0;
+      const maxIterations = Math.ceil(heightCss / Math.max(1, rect.height)) + 3;
+      while (offset < heightCss && iterations++ < maxIterations) {
         const desired = start + offset, targetScroll = clamp(desired, 0, maxScroll(node));
         setScroll(node, targetScroll); await wait(180);
-        const actual = scrollTop(node), sourceTopCss = rect.top + Math.max(0, desired - actual);
-        const available = Math.max(1, rect.bottom - sourceTopCss), sliceCss = Math.min(heightCss - offset, available);
+        const actual = scrollTop(node);
+        if (previousActual !== null && Math.abs(actual - previousActual) < 1 && Math.abs(targetScroll - previousTarget) >= 1) {
+          throw new Error('채팅 스크롤이 이동하지 않아 캡처를 중단했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.');
+        }
+        const sourceTopCss = rect.top + desired - actual;
+        const available = rect.bottom - sourceTopCss;
+        if (available <= .5 || sourceTopCss < rect.top - .5) break;
+        const sliceCss = Math.min(heightCss - offset, available);
         const image = offset === 0 && Math.abs(actual - original) < 1 ? firstImage : await captureVisible();
         ctx.drawImage(image, Math.round(left * scaleX), Math.round(sourceTopCss * scaleY), outWidth, Math.round(sliceCss * scaleY), 0, Math.round(offset * scaleY), outWidth, Math.round(sliceCss * scaleY));
         offset += sliceCss;
-        if (sliceCss < 1 || (targetScroll >= maxScroll(node) && offset < heightCss && desired - actual >= rect.height)) break;
+        previousActual = actual; previousTarget = targetScroll;
       }
+      if (offset < heightCss - .5) throw new Error('선택한 채팅 영역을 끝까지 읽지 못해 캡처를 중단했습니다. 다시 시도해 주세요.');
       const dataUrl = canvas.toDataURL('image/png');
       const result = await chrome.runtime.sendMessage({ type: 'INSUWORK_CAPTURE_DOWNLOAD', dataUrl, filename: fileName() });
       if (!result || !result.ok) throw new Error(result && result.error || '파일 저장을 시작하지 못했습니다.');
