@@ -45,6 +45,7 @@
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=notice-updates" role="menuitem">공지·업데이트</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=user-guide" role="menuitem">사용자 가이드</a>'
       + '<a class="iwm-menu-item" href="./section.html?view=insuwork&section=feedback" role="menuitem">의견 보내기</a>'
+      + (window._canSeeAzViewingRoom && window._canSeeAzViewingRoom() ? '<span class="iwm-menu-label" role="presentation">팀 전용</span><a class="iwm-menu-item" href="./section.html?view=insuwork&section=az-viewing-room" role="menuitem">에즈 시청방</a>' : '')
       + '</div>'
       + '</div>'
       + '<strong class="iwm-screen-title">' + esc(title) + '</strong>'
