@@ -6,7 +6,7 @@
   // proceedPastMigrationGate/renderMigrationChoiceGate 참고. 오늘 이미 이관된 17인은
   // insuwork_migration_choices에 accepted row가 백필되어 있어 팝업을 다시 보지 않는다.
   var TEST_EMAIL = 'bylts0428+codex-insuwork-20260815@gmail.com';
-  var AZ_VIEWING_ROOM_ALLOWED_USER_IDS = ['98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'];
+  var AZ_VIEWING_ROOM_OWNER_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
@@ -51,7 +51,7 @@
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
     migrationDecided: false, migrationCheck: null, draftTimer: 0, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
-    adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all', adminUserComposing: false, adminUserTimer: 0,
+    adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all', adminUserComposing: false, adminUserTimer: 0, adminAzRoomMembers: {}, azRoomPermissionSaving: {}, azViewingRoomAccess: null,
     publicLibraryData: null, publicLibraryLoading: false, publicLibNameQuery: '', publicLibNameComposing: false, publicLibNameTimer: 0, publicLibView: 'list',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
   };
@@ -67,7 +67,17 @@
     return String((window.AppState && (window.AppState.email || (window.AppState.user && window.AppState.user.email))) || storedUser().email || '').toLowerCase();
   }
   function canSeeAdminUsers() { return isLocal() || currentUserEmail() === 'bylts@naver.com'; }
-  function canSeeAzViewingRoom() { return localPreviewAllowed() || (authenticated() && AZ_VIEWING_ROOM_ALLOWED_USER_IDS.indexOf(currentUserId()) >= 0); }
+  function canSeeAzViewingRoom() { return localPreviewAllowed() || (authenticated() && (currentUserId() === AZ_VIEWING_ROOM_OWNER_ID || state.azViewingRoomAccess === true)); }
+  function loadAzViewingRoomAccess() {
+    if (localPreviewAllowed()) { state.azViewingRoomAccess = true; return Promise.resolve(true); }
+    if (!authenticated()) { state.azViewingRoomAccess = false; return Promise.resolve(false); }
+    if (currentUserId() === AZ_VIEWING_ROOM_OWNER_ID) { state.azViewingRoomAccess = true; return Promise.resolve(true); }
+    var owner = currentUserId();
+    return window.db.fetch('/rest/v1/rpc/can_access_insuwork_az_room', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+      .then(function (allowedRoom) { if (owner !== currentUserId()) return false; state.azViewingRoomAccess = allowedRoom === true; return state.azViewingRoomAccess; })
+      .catch(function () { if (owner === currentUserId()) state.azViewingRoomAccess = false; return false; });
+  }
   function consultColumnStorageKey() { return 'ws_consult_columns_' + (currentUserId() || currentUserEmail() || 'local'); }
   function favoriteStorageKey() { return 'ws_favorites_' + (currentUserId() || currentUserEmail() || 'local'); }
   function workDraftKey(kind, target) { return 'iw_work_draft_' + (currentUserId() || currentUserEmail() || 'local') + '_' + kind + '_' + (target || 'new'); }
@@ -2155,9 +2165,11 @@
     var owner = currentUserId();
     state.adminUsersLoading = true; state.adminUsersError = '';
     if (!state.adminUsers) renderContent();
-    return window.db.fetch('/rest/v1/users?select=id,name,nickname,email,company,phone,status,created_at,last_seen_at&order=created_at.desc&limit=2000', { cache: 'no-store' })
-      .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-      .then(function (rows) { if (owner !== currentUserId() || !authenticated() || !canSeeAdminUsers()) return; if (!Array.isArray(rows)) throw new Error('Invalid user list'); state.adminUsers = rows; adminUsersUpdatedAt = new Date().toISOString(); })
+    var usersRequest = window.db.fetch('/rest/v1/users?select=id,name,nickname,email,company,phone,status,created_at,last_seen_at&order=created_at.desc&limit=2000', { cache: 'no-store' });
+    var roomRequest = window.db.fetch('/rest/v1/insuwork_az_room_members?select=user_id,can_read,can_write&can_read=eq.true&can_write=eq.true', { cache: 'no-store' });
+    return Promise.all([usersRequest, roomRequest])
+      .then(function (responses) { if (!responses[0].ok) throw new Error('HTTP ' + responses[0].status); return Promise.all([responses[0].json(), responses[1].ok ? responses[1].json() : Promise.resolve([])]); })
+      .then(function (values) { if (owner !== currentUserId() || !authenticated() || !canSeeAdminUsers()) return; var rows = values[0], members = values[1]; if (!Array.isArray(rows) || !Array.isArray(members)) throw new Error('Invalid user list'); state.adminUsers = rows; state.adminAzRoomMembers = {}; members.forEach(function (member) { state.adminAzRoomMembers[String(member.user_id)] = true; }); adminUsersUpdatedAt = new Date().toISOString(); })
       .catch(function () { if (owner !== currentUserId() || !authenticated() || !canSeeAdminUsers()) return; if (!state.adminUsers) state.adminUsers = []; state.adminUsersError = '사용자 목록 갱신에 실패했습니다. 기존 목록을 유지하며 다음 갱신 때 재시도합니다.'; })
       .finally(function () {
         state.adminUsersLoading = false;
@@ -2183,13 +2195,24 @@
     var statusOptions = [['all', '전체 상태'], ['active', '정상'], ['pending', '대기'], ['suspended', '정지'], ['inactive', '비활성'], ['withdrawn', '탈퇴']];
     var body = rows.map(function (user) {
       var rawStatus = String(user.status || 'active').toLowerCase();
-      return '<tr><td><strong>' + esc(user.name || '-') + '</strong></td><td>' + esc(user.nickname || '-') + '</td><td>' + esc(user.email || '-') + '</td><td>' + esc(user.company || '-') + '</td><td>' + esc(phoneText(user.phone || '') || '-') + '</td><td>' + esc(adminUserDateTime(user.created_at)) + '</td><td>' + esc(adminUserDateTime(user.last_seen_at)) + '</td><td><span class="iw-admin-status iw-admin-status-' + esc(rawStatus) + '">' + esc(adminUserStatusLabel(rawStatus)) + '</span></td></tr>';
+      var userId = String(user.id || ''), ownerRoom = userId === AZ_VIEWING_ROOM_OWNER_ID, roomEnabled = ownerRoom || !!state.adminAzRoomMembers[userId], roomSaving = !!state.azRoomPermissionSaving[userId];
+      return '<tr><td><strong>' + esc(user.name || '-') + '</strong></td><td>' + esc(user.nickname || '-') + '</td><td>' + esc(user.email || '-') + '</td><td>' + esc(user.company || '-') + '</td><td>' + esc(phoneText(user.phone || '') || '-') + '</td><td>' + esc(adminUserDateTime(user.created_at)) + '</td><td>' + esc(adminUserDateTime(user.last_seen_at)) + '</td><td class="iw-admin-room-access"><input type="checkbox" aria-label="' + esc((user.name || user.email || '사용자') + ' 에즈 시청방 읽기·쓰기 권한') + '" onchange="OSInsuwork.setAzViewingRoomAccess(\'' + esc(userId) + '\',this.checked,this)"' + (roomEnabled ? ' checked' : '') + (ownerRoom || roomSaving ? ' disabled' : '') + '></td><td><span class="iw-admin-status iw-admin-status-' + esc(rawStatus) + '">' + esc(adminUserStatusLabel(rawStatus)) + '</span></td></tr>';
     }).join('');
     return '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">30초마다 자동 갱신 · 화면 복귀 시 갱신' + (adminUsersUpdatedAt ? ' · 최근 확인 ' + esc(adminUserDateTime(adminUsersUpdatedAt)) : '') + '</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
       + '<div class="iw-stats iw-admin-users-stats"><div class="iw-stat"><span>전체 사용자</span><strong>' + state.adminUsers.length + '</strong></div><div class="iw-stat"><span>오늘 가입</span><strong>' + todayCount + '</strong></div><div class="iw-stat"><span>검색 결과</span><strong>' + rows.length + '</strong></div></div>'
       + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
       + (state.adminUsersError ? '<div class="iw-error" role="alert"><span>' + esc(state.adminUsersError) + '</span></div>' : '')
-      + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>마지막 접속</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="8" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
+      + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>마지막 접속</th><th class="iw-admin-room-access">에즈 시청방</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="9" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
+  }
+  function setAzViewingRoomAccess(userId, enabled, checkbox) {
+    userId = String(userId || '');
+    if (!userId || userId === AZ_VIEWING_ROOM_OWNER_ID || !canSeeAdminUsers() || !authenticated() || state.azRoomPermissionSaving[userId]) return;
+    state.azRoomPermissionSaving[userId] = true; if (checkbox) checkbox.disabled = true;
+    return window.db.fetch('/rest/v1/rpc/set_insuwork_az_room_access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target_user_id: userId, enabled: !!enabled }) })
+      .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+      .then(function () { if (enabled) state.adminAzRoomMembers[userId] = true; else delete state.adminAzRoomMembers[userId]; if (typeof window.toast === 'function') window.toast(enabled ? '에즈 시청방 읽기·쓰기 권한을 허용했습니다.' : '에즈 시청방 권한을 해제했습니다.'); })
+      .catch(function () { if (checkbox) checkbox.checked = !enabled; if (typeof window.toast === 'function') window.toast('에즈 시청방 권한 변경에 실패했습니다.'); })
+      .finally(function () { delete state.azRoomPermissionSaving[userId]; if (state.section === 'admin-users') renderContent(); });
   }
   function scheduleAdminUserSearch(value) {
     window.clearTimeout(state.adminUserTimer);
@@ -4338,7 +4361,7 @@
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
      'skip-url'이 아닌 false(=replaceState)를 써서 지금까지의 동작을 유지한다. */
   function initialOpenPush() { return (!INITIAL_URL_HAD_VIEW_PARAMS && state.section === 'home') ? 'skip-url' : false; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: 'u1', name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: 'u2', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: AZ_VIEWING_ROOM_OWNER_ID, name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: '00000000-0000-0000-0000-000000000002', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; state.adminAzRoomMembers[AZ_VIEWING_ROOM_OWNER_ID] = true; state.azViewingRoomAccess = true; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { loadAzViewingRoomAccess().finally(function () { openWorkspace(state.section, initialOpenPush()); }); }); }
 
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
@@ -4546,7 +4569,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
+    boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
        true가 된다(위 277행). 모바일 고객/자료 화면이 "빈 상태" 문구와 "로딩 중" 문구를 구분하는 데 쓴다. */
