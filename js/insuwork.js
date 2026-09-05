@@ -2089,7 +2089,7 @@
     signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, title, mime, null, navigation); }).catch(storagePreviewError);
   }
   function azViewingRoomHtml() {
-    return '<div class="iw-az-room-page"><div class="iw-toolbar"><div><h2>에즈 시청방</h2><p class="iw-subtitle">허용된 멤버만 이용할 수 있는 팀 전용 공간입니다.</p></div></div><section class="iw-az-room-workspace" aria-label="에즈 시청방 작업 공간"></section></div>';
+    return '<div class="iw-az-room-page"><div class="iw-toolbar"><div><h2>에즈 시청방</h2><p class="iw-subtitle">허용된 멤버만 이용할 수 있는 팀 전용 공간입니다.</p></div></div><section class="iw-az-room-workspace" aria-label="에즈 시청방 작업 공간">' + toolsCaptureHtml() + '</section></div>';
   }
   function sectionHtml() { if (state.section === 'ledger') return canEnterSection('ledger') && window.OSInsuworkLedger ? window.OSInsuworkLedger.html() : '<p>임태성 전용 화면입니다.</p>';
     if (state.section === 'az-viewing-room') return canSeeAzViewingRoom() ? azViewingRoomHtml() : homeHtml();
@@ -3608,11 +3608,9 @@
       var slot = document.getElementById('iw-quick-tool-slot'); if (slot) slot.innerHTML = '<div class="iw-quick-tool-empty">불러오지 못했습니다. 다시 시도해 주세요.</div>';
     });
   }
-  var SCROLL_CAPTURE_OWNER_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
-  function canSeeScrollCapture() { return localPreviewAllowed() || String(currentUserId() || '') === SCROLL_CAPTURE_OWNER_ID; }
+  function canSeeScrollCapture() { return canSeeAzViewingRoom(); }
   function setToolMode(mode) {
     var modes = ['calculator', 'bmi', 'image', 'audio'];
-    if (canSeeScrollCapture()) modes.push('capture');
     state.toolMode = modes.indexOf(mode) >= 0 ? mode : 'calculator';
     renderContent(); setUrl(false);
   }
@@ -3623,9 +3621,8 @@
   function fmtBytes(bytes) { var n = Number(bytes) || 0, units = ['B', 'KB', 'MB', 'GB']; var i = 0; while (n >= 1024 && i < units.length - 1) { n /= 1024; i += 1; } return (i ? n.toFixed(n >= 10 ? 1 : 2) : Math.round(n)) + units[i]; }
   function toolsPageHtml() {
     var cards = [['calculator', '계산기', '사칙연산 · 키보드 입력'], ['bmi', 'BMI 계산기', '키·몸무게로 BMI 산출'], ['image', '이미지 변환', 'PNG·JPG·PDF → JPG'], ['audio', '오디오 변환', 'MP3·MP4 → WAV']];
-    if (canSeeScrollCapture()) cards.push(['capture', '스크롤 캡처', '해피톡·보맵플래너 채팅 저장']);
     var tabs = cards.map(function (card) { return '<button type="button" class="iw-tool-card' + (state.toolMode === card[0] ? ' on' : '') + '" onclick="OSInsuwork.setToolMode(\'' + card[0] + '\')"><strong>' + card[1] + '</strong><span>' + card[2] + '</span></button>'; }).join('');
-    var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : state.toolMode === 'audio' ? toolsAudioHtml() : state.toolMode === 'capture' && canSeeScrollCapture() ? toolsCaptureHtml() : toolsCalculatorHtml();
+    var body = state.toolMode === 'bmi' ? toolsBmiHtml() : state.toolMode === 'image' ? toolsImageHtml() : state.toolMode === 'audio' ? toolsAudioHtml() : toolsCalculatorHtml();
     /* 계산기·변환기는 비로그인도 열람 가능한 공개 섹션이라 homeHtml()과 동일하게 statusHtml()을
        로그인된 사용자의 실제 로딩 중에만 얹는다(2026-08-25 세션에서 새로 발견 — homeHtml만 지시됐으나
        같은 결함이 여기도 있었다). */
@@ -4355,7 +4352,7 @@
   }
   function selectDate(date) { state.selectedDate = date; renderContent(); setUrl(false); }
   function openCalendarDay(date) { state.selectedDate = date; state.cursor = parseDate(date); state.calendarMode = 'day'; renderContent(); setUrl(false); }
-  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); var tools = ['calculator', 'bmi', 'image', 'audio']; if (canSeeScrollCapture()) tools.push('capture'); if (tools.indexOf(tool) >= 0) state.toolMode = tool; else if (tool === 'capture') state.toolMode = 'calculator'; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); if (state.section === 'home') state.homeDate = date; } else if (state.section === 'home') state.homeDate = ymd(new Date()); return true; }
+  function restoreFromUrl() { var p = new URLSearchParams(location.search); if (p.get('view') !== 'insuwork') return false; var section = p.get('section'); if (SECTIONS.indexOf(section) >= 0) state.section = section; var mode = p.get('mode'); if (['day', 'week', 'month', 'agenda'].indexOf(mode) >= 0) state.calendarMode = mode; var tool = p.get('tool'); var tools = ['calculator', 'bmi', 'image', 'audio']; if (tools.indexOf(tool) >= 0) state.toolMode = tool; else if (tool === 'capture') state.toolMode = 'calculator'; var date = p.get('date'); if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) { state.selectedDate = date; state.cursor = parseDate(date); if (state.section === 'home') state.homeDate = date; } else if (state.section === 'home') state.homeDate = ymd(new Date()); return true; }
   /* 최초 진입(boot()/appstate:ready) 전용 — 원래 쿼리스트링에 view/section이 전혀 없었고 결과 섹션도
      기본값인 home이면, 이번 openWorkspace() 호출은 setUrl()을 아예 건너뛰어 깨끗한 /insuwork 주소를
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
