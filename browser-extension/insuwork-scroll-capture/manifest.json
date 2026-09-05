@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "보험워크 채팅 스크롤 캡처",
+  "version": "1.0.0",
+  "description": "해피톡과 보맵플래너 채팅 영역을 드래그로 지정해 긴 PNG로 저장합니다.",
+  "permissions": ["tabs", "downloads"],
+  "host_permissions": [
+    "https://onesecond.solutions/*",
+    "https://counselor.happytalk.io/*",
+    "https://dplanner.bomapp.co.kr/*"
+  ],
+  "background": { "service_worker": "service-worker.js" },
+  "action": { "default_title": "채팅 스크롤 캡처" },
+  "content_scripts": [
+    {
+      "matches": ["https://onesecond.solutions/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://counselor.happytalk.io/*", "https://dplanner.bomapp.co.kr/*"],
+      "js": ["capture.js"],
+      "css": ["capture.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

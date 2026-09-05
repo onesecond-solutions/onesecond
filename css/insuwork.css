@@ -750,7 +750,7 @@ body.iw-preview-open{overflow:hidden}
 /* 계산기 · 변환기 — 보험워크 본문형 도구 */
 #v-insuwork .iw-tools-page{display:grid;gap:16px;width:100%}
 #v-insuwork .iw-tools-toolbar{align-items:flex-end;padding-bottom:12px;border-bottom:1px solid var(--bd)}
-#v-insuwork .iw-tool-cards{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px}
+#v-insuwork .iw-tool-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 #v-insuwork .iw-tool-card{display:flex;min-height:76px;flex-direction:column;justify-content:center;gap:4px;padding:14px 16px;border:1px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--bodytx);text-align:left;cursor:pointer}
 #v-insuwork .iw-tool-card:hover{border-color:var(--ac);background:var(--s2)}
 #v-insuwork .iw-tool-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--s1));color:var(--ac)}
@@ -807,6 +807,17 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-audioconv-meta span.ok{color:var(--ok)}
 #v-insuwork .iw-audioconv-meta span.err{color:var(--danger)}
 #v-insuwork .iw-audioconv-actions{flex:0 0 auto}
+#v-insuwork .iw-capture-start p{margin:0 0 14px;color:var(--ts);font-size:14px;line-height:1.65}
+#v-insuwork .iw-capture-sites{display:flex;gap:8px;margin-bottom:16px}
+#v-insuwork .iw-capture-sites span{padding:6px 10px;border-radius:999px;background:var(--s2);color:var(--tp);font-size:13px;font-weight:700}
+#v-insuwork .iw-capture-button{width:100%;min-height:44px}
+#v-insuwork .iw-capture-status{min-height:22px;margin:10px 0 0!important;color:var(--ts)!important;font-size:13px!important;font-weight:600}
+#v-insuwork .iw-capture-status.ok{color:var(--ok)!important}
+#v-insuwork .iw-capture-status.error{color:var(--danger)!important}
+#v-insuwork .iw-capture-install ol{display:grid;gap:10px;margin:0 0 14px;padding-left:22px;color:var(--bodytx);font-size:14px;line-height:1.55}
+#v-insuwork .iw-capture-install code{padding:2px 5px;border-radius:var(--radius-sm);background:var(--s2);color:var(--tp);font-size:13px}
+#v-insuwork .iw-capture-download{color:var(--ac);font-weight:700}
+#v-insuwork .iw-capture-install>small{display:block;padding-top:12px;border-top:1px solid var(--bd);color:var(--ts);font-size:12px;line-height:1.5}
 #v-insuwork .iw-imgconv-filename>span{color:var(--ts);font-size:14px;font-weight:600}
 #v-insuwork .iw-folder-dialog-body{display:grid;gap:10px;padding:28px}
 #v-insuwork .iw-folder-dialog-body h2{margin:0 0 4px}
