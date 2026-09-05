@@ -25,6 +25,29 @@
     }
     return document.scrollingElement || document.documentElement;
   }
+  function findOccluders(node, left, right, overlay) {
+    if (isDocumentScroller(node)) return [];
+    const rect = viewportRect(node), found = new Set();
+    const xs = [left + 6, (left + right) / 2, right - 6].map((x) => clamp(x, rect.left + 1, rect.right - 1));
+    const previousPointerEvents = overlay.style.pointerEvents;
+    overlay.style.pointerEvents = 'none';
+    for (let y = rect.top + 12; y < rect.bottom; y += 28) {
+      for (const x of xs) {
+        const stack = document.elementsFromPoint(x, Math.min(y, rect.bottom - 2));
+        const contentIndex = stack.findIndex((element) => element === node || node.contains(element));
+        if (contentIndex <= 0) continue;
+        const blocker = stack.slice(0, contentIndex).filter((element) => element instanceof HTMLElement && !node.contains(element)).pop();
+        if (!blocker || blocker.contains(node)) continue;
+        const style = getComputedStyle(blocker), blockerRect = blocker.getBoundingClientRect();
+        if (!/(absolute|fixed|sticky)/.test(style.position)) continue;
+        if (blockerRect.width < 24 || blockerRect.height < 24) continue;
+        if (blockerRect.right <= left || blockerRect.left >= right || blockerRect.bottom <= rect.top || blockerRect.top >= rect.bottom) continue;
+        found.add(blocker);
+      }
+    }
+    overlay.style.pointerEvents = previousPointerEvents;
+    return Array.from(found);
+  }
   function contentY(node, clientY) { const rect = viewportRect(node); return scrollTop(node) + clientY - rect.top; }
 
   function removeOverlay() {
@@ -92,25 +115,31 @@
     const left = clamp(Math.min(spec.startX, spec.endX), rect.left, rect.right), right = clamp(Math.max(spec.startX, spec.endX), rect.left, rect.right);
     const widthCss = Math.round(right - left), heightCss = Math.round(end - start);
     if (widthCss < 40 || heightCss < 40) throw new Error('캡처 영역을 조금 더 크게 지정해 주세요.');
-    const first = await captureVisible(), scaleX = first.naturalWidth / window.innerWidth, scaleY = first.naturalHeight / window.innerHeight;
-    const outWidth = Math.round(widthCss * scaleX), maxOutput = 30000;
-    if (outWidth > maxOutput || Math.round(heightCss * scaleY) > maxOutput) throw new Error('선택 영역이 너무 큽니다. 두 번으로 나눠 캡처해 주세요.');
-    const canvas = document.createElement('canvas'); canvas.width = outWidth; canvas.height = Math.round(heightCss * scaleY);
-    const ctx = canvas.getContext('2d'); let offset = 0, firstImage = first;
-    while (offset < heightCss) {
-      const desired = start + offset, targetScroll = clamp(desired, 0, maxScroll(node));
-      setScroll(node, targetScroll); await wait(180);
-      const actual = scrollTop(node), sourceTopCss = rect.top + Math.max(0, desired - actual);
-      const available = Math.max(1, rect.bottom - sourceTopCss), sliceCss = Math.min(heightCss - offset, available);
-      const image = offset === 0 && Math.abs(actual - original) < 1 ? firstImage : await captureVisible();
-      ctx.drawImage(image, Math.round(left * scaleX), Math.round(sourceTopCss * scaleY), outWidth, Math.round(sliceCss * scaleY), 0, Math.round(offset * scaleY), outWidth, Math.round(sliceCss * scaleY));
-      offset += sliceCss;
-      if (sliceCss < 1 || (targetScroll >= maxScroll(node) && offset < heightCss && desired - actual >= rect.height)) break;
+    const hidden = (spec.occluders || []).map((element) => ({ element, visibility: element.style.visibility }));
+    hidden.forEach((entry) => { entry.element.style.visibility = 'hidden'; });
+    try {
+      const first = await captureVisible(), scaleX = first.naturalWidth / window.innerWidth, scaleY = first.naturalHeight / window.innerHeight;
+      const outWidth = Math.round(widthCss * scaleX), maxOutput = 30000;
+      if (outWidth > maxOutput || Math.round(heightCss * scaleY) > maxOutput) throw new Error('선택 영역이 너무 큽니다. 두 번으로 나눠 캡처해 주세요.');
+      const canvas = document.createElement('canvas'); canvas.width = outWidth; canvas.height = Math.round(heightCss * scaleY);
+      const ctx = canvas.getContext('2d'); let offset = 0, firstImage = first;
+      while (offset < heightCss) {
+        const desired = start + offset, targetScroll = clamp(desired, 0, maxScroll(node));
+        setScroll(node, targetScroll); await wait(180);
+        const actual = scrollTop(node), sourceTopCss = rect.top + Math.max(0, desired - actual);
+        const available = Math.max(1, rect.bottom - sourceTopCss), sliceCss = Math.min(heightCss - offset, available);
+        const image = offset === 0 && Math.abs(actual - original) < 1 ? firstImage : await captureVisible();
+        ctx.drawImage(image, Math.round(left * scaleX), Math.round(sourceTopCss * scaleY), outWidth, Math.round(sliceCss * scaleY), 0, Math.round(offset * scaleY), outWidth, Math.round(sliceCss * scaleY));
+        offset += sliceCss;
+        if (sliceCss < 1 || (targetScroll >= maxScroll(node) && offset < heightCss && desired - actual >= rect.height)) break;
+      }
+      const dataUrl = canvas.toDataURL('image/png');
+      const result = await chrome.runtime.sendMessage({ type: 'INSUWORK_CAPTURE_DOWNLOAD', dataUrl, filename: fileName() });
+      if (!result || !result.ok) throw new Error(result && result.error || '파일 저장을 시작하지 못했습니다.');
+    } finally {
+      setScroll(node, original);
+      hidden.forEach((entry) => { entry.element.style.visibility = entry.visibility; });
     }
-    setScroll(node, original);
-    const dataUrl = canvas.toDataURL('image/png');
-    const result = await chrome.runtime.sendMessage({ type: 'INSUWORK_CAPTURE_DOWNLOAD', dataUrl, filename: fileName() });
-    if (!result || !result.ok) throw new Error(result && result.error || '파일 저장을 시작하지 못했습니다.');
   }
 
   function begin() {
@@ -137,7 +166,8 @@
     root.addEventListener('mouseup', async (event) => {
       if (!session || !session.dragging) return;
       session.dragging = false; if (session.raf) cancelAnimationFrame(session.raf);
-      const spec = { scroller: session.scroller, startX: session.startX, endX: session.currentX, startContentY: session.startContentY, endContentY: session.currentContentY };
+      const left = Math.min(session.startX, session.currentX), right = Math.max(session.startX, session.currentX);
+      const spec = { scroller: session.scroller, startX: session.startX, endX: session.currentX, startContentY: session.startContentY, endContentY: session.currentContentY, occluders: findOccluders(session.scroller, left, right, root) };
       root.querySelector('#iwsc-guide').style.display = 'none'; session.selection.style.display = 'none'; root.querySelector('#iwsc-progress').style.display = 'block'; root.style.cursor = 'wait';
       try { await captureRange(spec); removeOverlay(); notify('채팅 캡처 저장 창을 열었습니다.'); }
       catch (error) { removeOverlay(); notify(error.message || '캡처하지 못했습니다.', true); }
