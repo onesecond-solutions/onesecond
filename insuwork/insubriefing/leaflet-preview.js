@@ -90,7 +90,7 @@
     if (!type) { window.open(url, '_blank', 'noopener'); return; }
     previewUi(type, name, url, navigation);
     var stage = document.getElementById('lfp-preview-stage'), overlay = document.getElementById('leaflet-preview'), thumbs = document.getElementById('lfp-preview-thumbs');
-    if (stage) { stage.onscroll = handleScroll; stage.scrollTop = 0; stage.scrollLeft = 0; }
+    if (stage) { stage.onscroll = handleScroll; stage.onwheel = handleWheel; stage.scrollTop = 0; stage.scrollLeft = 0; }
     if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); }
     if (overlay) overlay.classList.remove('has-pages');
     state.preview = { type: type, url: url, name: name || '파일', mime: mime || '', zoom: 1, rotate: 0, page: 1, pages: 1, doc: null, navigation: navigation || null };
@@ -173,6 +173,12 @@
     p.page = closest;
     var pageText = document.getElementById('lfp-preview-page'); if (pageText) pageText.textContent = p.page + ' / ' + p.pages;
     highlightThumb();
+  }
+
+  function handleWheel(event) {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    zoom(event.deltaY < 0 ? 1 : -1);
   }
 
   function renderThumbs() {
