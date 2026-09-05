@@ -6,6 +6,7 @@
   // proceedPastMigrationGate/renderMigrationChoiceGate 참고. 오늘 이미 이관된 17인은
   // insuwork_migration_choices에 accepted row가 백필되어 있어 팝업을 다시 보지 않는다.
   var TEST_EMAIL = 'bylts0428+codex-insuwork-20260815@gmail.com';
+  var AZ_VIEWING_ROOM_ALLOWED_USER_IDS = ['98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'];
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
@@ -32,7 +33,7 @@
     try { var p = new URLSearchParams(location.search); return p.has('view') || p.has('section'); }
     catch (_) { return !!location.search; }
   })();
-  var SECTIONS = ['ledger', 'home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'product-lineups', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'daily-briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users'];
+  var SECTIONS = ['ledger', 'az-viewing-room', 'home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'product-lineups', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'daily-briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users'];
   /* 2026-08-30 대표 확정 — 보험워크는 원세컨드와 별도 사이트다. 비로그인 첫 진입은 내부 업무 셸
      일부를 잠가 보여주는 방식이 아니라 보험워크 CI 기반 공개 랜딩만 렌더링한다. 로그인 후에는 기존
      업무 홈과 메뉴를 그대로 유지한다. */
@@ -66,6 +67,7 @@
     return String((window.AppState && (window.AppState.email || (window.AppState.user && window.AppState.user.email))) || storedUser().email || '').toLowerCase();
   }
   function canSeeAdminUsers() { return isLocal() || currentUserEmail() === 'bylts@naver.com'; }
+  function canSeeAzViewingRoom() { return localPreviewAllowed() || (authenticated() && AZ_VIEWING_ROOM_ALLOWED_USER_IDS.indexOf(currentUserId()) >= 0); }
   function consultColumnStorageKey() { return 'ws_consult_columns_' + (currentUserId() || currentUserEmail() || 'local'); }
   function favoriteStorageKey() { return 'ws_favorites_' + (currentUserId() || currentUserEmail() || 'local'); }
   function workDraftKey(kind, target) { return 'iw_work_draft_' + (currentUserId() || currentUserEmail() || 'local') + '_' + kind + '_' + (target || 'new'); }
@@ -154,7 +156,7 @@
     }
     window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=' + encodeURIComponent(target);
   }
-  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
   /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
      로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
      그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
@@ -566,7 +568,7 @@
     return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
       var locked = PROTECTED_SECTIONS.indexOf(item[0]) >= 0 && !allowed();
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + (locked ? ' iw-nav-locked' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"' + (locked ? ' aria-label="' + esc(item[2]) + ' (로그인 필요)"' : '') + '><span>' + item[1] + '</span>' + item[2] + (locked ? '<span class="iw-nav-lock" aria-hidden="true">🔒</span>' : '') + '</button>';
-    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + supportGroupHtml() + '</div>' + '<div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button></div></nav>';
+    }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + supportGroupHtml() + '</div>' + '<div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button>' + (canSeeAzViewingRoom() ? '<div class="iw-nav-private"><button type="button" class="' + (state.section === 'az-viewing-room' ? 'on' : '') + '" onclick="OSInsuwork.go(\'az-viewing-room\')"><span>▣</span>에즈 시청방</button></div>' : '') + '</div></nav>';
   }
   function statusHtml() {
     if (state.status === 'waiting-auth') return '<div class="iw-state"><strong>로그인 정보를 확인하고 있습니다.</strong><span>인증이 완료되면 자료를 자동으로 불러옵니다.</span></div>';
@@ -2076,7 +2078,11 @@
     }
     signStoragePath(item.storage_path).then(function (url) { openPreviewUrl(url, title, mime, null, navigation); }).catch(storagePreviewError);
   }
+  function azViewingRoomHtml() {
+    return '<div class="iw-az-room-page"><div class="iw-toolbar"><div><h2>에즈 시청방</h2><p class="iw-subtitle">허용된 멤버만 이용할 수 있는 팀 전용 공간입니다.</p></div></div><section class="iw-az-room-workspace" aria-label="에즈 시청방 작업 공간"></section></div>';
+  }
   function sectionHtml() { if (state.section === 'ledger') return canEnterSection('ledger') && window.OSInsuworkLedger ? window.OSInsuworkLedger.html() : '<p>임태성 전용 화면입니다.</p>';
+    if (state.section === 'az-viewing-room') return canSeeAzViewingRoom() ? azViewingRoomHtml() : homeHtml();
     if (state.section === 'daily-briefing' && window.OSCustomerBriefing) return window.OSCustomerBriefing.sectionHtml();
     /* 2026-08-25 회귀 수정 — 이 가드는 원래 모든 섹션에 걸려 있었고, 비로그인 사용자는
        authenticated()가 영원히 false라 state.status가 'waiting-auth'에서 못 벗어나
@@ -2343,13 +2349,13 @@
     /* 초기 로드/뒤로가기 등 비클릭 진입에서 보호 메뉴로 바로 들어오면(예: 로그아웃 상태로 딥링크
        또는 popstate) 조용히 홈으로 대체한다 — 클릭 흐름(go())의 로그인 유도 모달과 달리 여기는
        사용자가 방금 누른 액션이 아니라서 확인 모달로 막지 않고 가벼운 토스트만 남긴다. */
-    if (!canEnterSection(target)) { var deniedAdmin = target === 'admin-users'; target = 'home'; if (typeof window.toast === 'function') window.toast(deniedAdmin ? '관리자 전용 화면입니다.' : '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
+    if (!canEnterSection(target)) { var deniedAdmin = target === 'admin-users', deniedPrivate = target === 'az-viewing-room'; target = 'home'; if (typeof window.toast === 'function') window.toast(deniedAdmin ? '관리자 전용 화면입니다.' : deniedPrivate ? '접근 권한이 없는 메뉴입니다.' : '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
     state.section = target;
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-insuwork').classList.add('on');
     renderShell(); if (push !== 'skip-url') setUrl(push !== false); if (state.section !== 'daily-briefing' && state.section !== 'ledger' && !dataReadyForSection()) loadData(state.section !== 'home');
   }
-  function go(section) { if (window.OSInsuworkMobileSection && canEnterSection(section) && window.OSInsuworkMobileSection.navigate(section)) return; if (!canEnterSection(section)) { if (section === 'admin-users') { if (typeof window.toast === 'function') window.toast('관리자 전용 화면입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && section !== 'daily-briefing' && section !== 'ledger' && !dataReadyForSection()) loadData(true); }
+  function go(section) { if (window.OSInsuworkMobileSection && canEnterSection(section) && window.OSInsuworkMobileSection.navigate(section)) return; if (!canEnterSection(section)) { if (section === 'admin-users' || section === 'az-viewing-room') { if (typeof window.toast === 'function') window.toast(section === 'admin-users' ? '관리자 전용 화면입니다.' : '접근 권한이 없는 메뉴입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && section !== 'daily-briefing' && section !== 'ledger' && !dataReadyForSection()) loadData(true); }
   function dialog(html) { var box = document.getElementById('iw-dialog'), body = document.getElementById('iw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function forceCloseDialog() { var box = document.getElementById('iw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function closeDialog() { var box = document.getElementById('iw-dialog'), root = box && box.querySelector('[data-work-draft-key]'), key = root && root.dataset.workDraftKey, hasDraft = key && (readWorkDraft(key) || root.dataset.workDraftDirty === '1'); if (!hasDraft) { forceCloseDialog(); return; } saveBoundWorkDraft(root); briefingConfirm('작성 중인 임시 내용을 삭제하고 닫을까요?', '작성 취소', '삭제', true).then(function (ok) { if (!ok) return; clearWorkDraft(key); forceCloseDialog(); }); }
@@ -4569,4 +4575,5 @@
     libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
   };
+  window._canSeeAzViewingRoom = canSeeAzViewingRoom;
 })();
