@@ -5,6 +5,25 @@ const TARGETS = [
   'https://dplanner.bomapp.co.kr/*'
 ];
 
+const CAPTURE_INTERVAL_MS = 650;
+let lastCaptureStartedAt = 0;
+let captureQueue = Promise.resolve();
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function captureVisibleThrottled(windowId) {
+  const task = captureQueue.then(async () => {
+    const remaining = CAPTURE_INTERVAL_MS - (Date.now() - lastCaptureStartedAt);
+    if (remaining > 0) await wait(remaining);
+    lastCaptureStartedAt = Date.now();
+    return chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
+  });
+  captureQueue = task.catch(() => {});
+  return task;
+}
+
 function targetTabs() {
   return chrome.tabs.query({ url: TARGETS }).then((tabs) => tabs.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0)));
 }
@@ -40,9 +59,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.type === 'INSUWORK_CAPTURE_VISIBLE') {
     if (!sender.tab) { sendResponse({ ok: false }); return false; }
-    chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: 'png' })
+    captureVisibleThrottled(sender.tab.windowId)
       .then((dataUrl) => sendResponse({ ok: true, dataUrl }))
-      .catch((error) => sendResponse({ ok: false, error: error.message }));
+      .catch((error) => sendResponse({ ok: false, error: /MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND/.test(error.message || '') ? '화면 캡처 요청이 잠시 몰렸습니다. 다시 시도해 주세요.' : error.message }));
     return true;
   }
   if (message.type === 'INSUWORK_CAPTURE_DOWNLOAD') {
