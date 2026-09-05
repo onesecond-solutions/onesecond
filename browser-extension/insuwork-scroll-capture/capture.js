@@ -6,9 +6,18 @@
   function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function isDocumentScroller(node) { return node === document.scrollingElement || node === document.documentElement || node === document.body; }
-  function scrollTop(node) { return isDocumentScroller(node) ? window.scrollY : node.scrollTop; }
+  function isReverseScroller(node) { return !isDocumentScroller(node) && getComputedStyle(node).flexDirection === 'column-reverse'; }
   function maxScroll(node) { return isDocumentScroller(node) ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight) : Math.max(0, node.scrollHeight - node.clientHeight); }
-  function setScroll(node, value) { if (isDocumentScroller(node)) window.scrollTo(window.scrollX, value); else node.scrollTop = value; }
+  function scrollTop(node) {
+    if (isDocumentScroller(node)) return window.scrollY;
+    const raw = node.scrollTop, max = maxScroll(node);
+    return isReverseScroller(node) ? clamp(max + raw, 0, max) : clamp(raw, 0, max);
+  }
+  function setScroll(node, value) {
+    if (isDocumentScroller(node)) { window.scrollTo(window.scrollX, value); return; }
+    const max = maxScroll(node), normalized = clamp(value, 0, max);
+    node.scrollTop = isReverseScroller(node) ? normalized - max : normalized;
+  }
   function viewportRect(node) {
     if (isDocumentScroller(node)) return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight };
     const rect = node.getBoundingClientRect();
