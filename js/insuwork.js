@@ -7,6 +7,8 @@
   // insuwork_migration_choices에 accepted row가 백필되어 있어 팝업을 다시 보지 않는다.
   var TEST_EMAIL = 'bylts0428+codex-insuwork-20260815@gmail.com';
   var AZ_VIEWING_ROOM_OWNER_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  var KAKAO_PILOT_EMAILS = ['bylts@naver.com'];
+  var KAKAO_PILOT_OWNER_IDS = [AZ_VIEWING_ROOM_OWNER_ID];
   var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
@@ -67,6 +69,7 @@
     return String((window.AppState && (window.AppState.email || (window.AppState.user && window.AppState.user.email))) || storedUser().email || '').toLowerCase();
   }
   function canSeeAdminUsers() { return isLocal() || currentUserEmail() === 'bylts@naver.com'; }
+  function canUseKakaoPilot() { return localPreviewAllowed() || KAKAO_PILOT_EMAILS.indexOf(currentUserEmail()) >= 0 || KAKAO_PILOT_OWNER_IDS.indexOf(currentUserId()) >= 0; }
   function canSeeAzViewingRoom() { return localPreviewAllowed() || (authenticated() && (currentUserId() === AZ_VIEWING_ROOM_OWNER_ID || state.azViewingRoomAccess === true)); }
   function loadAzViewingRoomAccess() {
     if (localPreviewAllowed()) { state.azViewingRoomAccess = true; return Promise.resolve(true); }
@@ -1332,6 +1335,7 @@
   function customerDetailHtml(item) {
     var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), needsReview = customerNeedsStatusReview(item), status = needsReview ? '' : item.status;
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
+    var kakaoAction = canUseKakaoPilot() ? '<button type="button" class="iw-btn iw-kakao-btn" onclick="OSInsuwork.openKakaoDraft(\'customer\',\'' + esc(item.id) + '\')">카카오톡 보내기</button>' : '';
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectCustomerDetail()" aria-label="고객 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectCustomerDetail()">‹ 목록</button>'
       + '<div class="iw-inline-form-block">'
       + contractDatesField('iwd-customer', contractDatesOf(item), 'customerDetail')
@@ -1343,7 +1347,7 @@
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="iwd-customer-status">' + (needsReview ? '<option value="" selected>상태를 선택하세요</option>' : '') + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + familySectionHtml(item) + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="iw-consult-save"><button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
+      + familySectionHtml(item) + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -1381,6 +1385,7 @@
   function consultationDetailHtml(item, customer) {
     var profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
+    var kakaoAction = canUseKakaoPilot() ? '<button type="button" class="iw-btn iw-kakao-btn" onclick="OSInsuwork.openKakaoDraft(\'consultation\',\'' + esc(item.id) + '\')">카카오톡 보내기</button>' : '';
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectConsultation()">‹ 목록</button>'
       + '<div class="iw-inline-form-block">'
       + '<div class="iw-inline-form-row">' + inlineField('등록일자', dateMaskInputHtml('iwd-consult-date', date, 'detail')) + '</div>'
@@ -1392,7 +1397,7 @@
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwd-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="iw-consult-save"><button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -4168,6 +4173,74 @@
     }).then(function (saved) { return saveConsultationRich(saved, saved.content || memo).then(function (content) { if (content === saved.content) return saved; return updateOne('insuwork_consultations?id=eq.' + encodeURIComponent(saved.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { content: content }); }); }).then(function (saved) { upsertConsultation(saved); state.selectedConsultation = saved.id; resetRichPending(); finishSave(consultationId ? '상담을 수정했습니다.' : '상담을 등록했습니다.'); }).catch(saveError);
   }
   function saveConsultationRich(consultation, body) { var root = consultationAttachmentRoot(consultation.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(body); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '상담 첨부 · ' + consultation.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'consultation', consultation_id: consultation.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('insuwork_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'consultation'); }).then(function (prepared) { return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { return prepared.body; }); }); }
+  function kakaoTemplates() {
+    return [
+      { key: 'care_check', label: '안부톡', body: '#{고객명}님, 안녕하세요. 잘 지내고 계신지 안부드립니다. 보험금 청구나 보장 점검이 필요하시면 편하게 문의 주세요.' },
+      { key: 'claim_help', label: '보험금 청구 안내', body: '#{고객명}님, 보험금 청구가 필요하시면 진료비 영수증, 세부내역서, 진단 관련 서류를 준비해 주세요. 확인이 필요하시면 이 카톡으로 문의 주세요.' },
+      { key: 'consult_invite', label: '보험 상담 안내', body: '#{고객명}님, 보장 점검이나 가족 보험 상담이 필요하시면 가능한 시간을 알려주세요. 확인 후 상담 일정을 잡아드리겠습니다.' }
+    ];
+  }
+  function kakaoTarget(kind, id) {
+    if (kind === 'customer') {
+      var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(id) && isManagedCustomer(entry); });
+      return customer ? { area: 'customer', customer: customer, consultation: null } : null;
+    }
+    if (kind === 'consultation') {
+      var consultation = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); });
+      var linked = consultation && state.data.customers.find(function (entry) { return String(entry.id) === String(consultation.customer_id); });
+      return consultation && linked ? { area: 'consultation', customer: linked, consultation: consultation } : null;
+    }
+    return null;
+  }
+  function kakaoMessagePreview(template, customer) {
+    return String(template.body || '').replace(/#\{고객명\}/g, customer && customer.name || '고객');
+  }
+  function openKakaoDraft(kind, id) {
+    if (!canUseKakaoPilot()) { briefingAlert('카카오톡 파일럿은 임태성 게이트에서만 사용할 수 있습니다.', '카카오톡 보내기'); return; }
+    var target = kakaoTarget(kind, id);
+    if (!target) { briefingAlert('대상 고객을 확인하지 못했습니다.', '카카오톡 보내기'); return; }
+    var phone = phoneText(target.customer.phone || target.customer.phone_raw || '');
+    var templates = kakaoTemplates();
+    var options = templates.map(function (template) { return '<option value="' + esc(template.key) + '">' + esc(template.label) + '</option>'; }).join('');
+    var areaLabel = target.area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객';
+    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoDraft(\'' + esc(kind) + '\',\'' + esc(id) + '\')"><h2>카카오톡 보내기</h2><p class="iw-kakao-scope">' + esc(areaLabel) + ' · ' + esc(target.customer.name || '고객') + (phone ? ' · ' + esc(phone) : ' · 연락처 없음') + '</p><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoDraftPreview(\'' + esc(kind) + '\',\'' + esc(id) + '\')">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], target.customer)) + '</textarea></label><p class="iw-kakao-note">현재는 임태성 게이트 전용 발송 준비 기록만 저장합니다. 실제 알림톡/상담톡 API는 공식 딜러사 계약과 템플릿 승인 뒤 서버 함수로 연결합니다.</p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">발송 준비 저장</button></div></form>');
+  }
+  function refreshKakaoDraftPreview(kind, id) {
+    var target = kakaoTarget(kind, id), select = document.getElementById('iwf-kakao-template'), body = document.getElementById('iwf-kakao-body');
+    if (!target || !select || !body) return;
+    var template = kakaoTemplates().find(function (entry) { return entry.key === select.value; });
+    if (template) body.value = kakaoMessagePreview(template, target.customer);
+  }
+  function saveKakaoDraft(kind, id) {
+    if (!canUseKakaoPilot()) return;
+    var target = kakaoTarget(kind, id), templateKey = value('iwf-kakao-template'), bodyText = value('iwf-kakao-body');
+    var template = kakaoTemplates().find(function (entry) { return entry.key === templateKey; });
+    if (!target || !template || !bodyText) { briefingAlert('발송 대상과 문안을 확인해 주세요.', '카카오톡 보내기'); return; }
+    var phone = phoneText(target.customer.phone || target.customer.phone_raw || '');
+    var title = '카카오 발송 준비 · ' + (target.area === 'customer' ? '계약관리' : '상담관리') + ' · ' + (target.customer.name || '고객');
+    var row = {
+      owner_id: currentUserId(),
+      item_type: 'memo',
+      title: title,
+      body: sanitizeRich('<p><strong>[' + esc(writtenAt()) + '] ' + esc(template.label) + '</strong></p><p>' + esc(bodyText).replace(/\n/g, '<br>') + '</p>'),
+      visibility: 'private',
+      legacy_payload: {
+        workspace_category: 'kakao_message_pilot',
+        target_area: target.area,
+        target_id: target.area === 'customer' ? target.customer.id : target.consultation.id,
+        customer_id: target.customer.id,
+        consultation_id: target.consultation ? target.consultation.id : null,
+        recipient_name: target.customer.name || '',
+        recipient_phone: phone || '',
+        template_key: template.key,
+        template_label: template.label,
+        send_status: 'draft',
+        provider_status: 'not_connected',
+        direction: 'outbound'
+      }
+    };
+    writeOne('insuwork_items', row).then(function (saved) { upsertWorkspaceItem(saved); finishSave('카카오톡 발송 준비 기록을 저장했습니다.'); }).catch(saveError);
+  }
   function selectConsultation(id) { resetRichPending(); state.selectedConsultation = id && String(state.selectedConsultation) !== String(id) ? id : null; renderContent(); }
   function selectCustomerDetail(id) { resetRichPending(); state.selectedCustomerDetail = id && String(state.selectedCustomerDetail) !== String(id) ? id : null; renderContent(); }
   function showRowHover(event) {
@@ -4592,7 +4665,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openAzRoomTool: openAzRoomTool, startChatScrollCapture: startChatScrollCapture, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, openBriefingSearchResult: openBriefingSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
