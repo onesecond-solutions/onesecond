@@ -9,7 +9,7 @@
   var AZ_VIEWING_ROOM_OWNER_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var KAKAO_PILOT_EMAILS = ['bylts@naver.com'];
   var KAKAO_PILOT_OWNER_IDS = [AZ_VIEWING_ROOM_OWNER_ID];
-  var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 88 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 360, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
+  var CONSULT_BASE_COLUMNS = [{ key: 'date', label: '등록일자', width: 86 }, { key: 'name', label: '이름', width: 140 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 308, flex: true }, { key: 'status', label: '상담상태', width: 102 }];
   var CONSULT_STAGES = [{ key: '예약', color: '#5f6368' }, { key: '진행중', color: '#1a73e8' }, { key: '제안서발송', color: '#8430ce' }, { key: '클로징', color: '#e8710a' }, { key: '청약완료', color: '#1e8e3e' }, { key: '보류', color: '#f9ab00' }, { key: '종결', color: '#80868b' }];
   var CUSTOMER_STAGES = [{ key: '청약완료', color: '#1e8e3e' }, { key: '철회', color: '#d93025' }, { key: '실효', color: '#5f6368' }, { key: '부활', color: '#1a73e8' }];
   var CUSTOMER_REVIEW_STAGE = { key: '상태 확인 필요', color: '#e8710a' };
@@ -110,7 +110,15 @@
   function saveBoundWorkDraft(root) { if (!root || !root.dataset.workDraftKey) return; try { sessionStorage.setItem(root.dataset.workDraftKey, JSON.stringify(collectWorkDraft(root))); updateDraftStatus(root, false); } catch (_) {} }
   function scheduleWorkDraft(root) { if (!root) return; window.clearTimeout(state.draftTimer); state.draftTimer = window.setTimeout(function () { saveBoundWorkDraft(root); }, 250); }
   function bindWorkDraft(root, key) { if (!root || !key) return; root.dataset.workDraftKey = key; if (!root.querySelector('[data-work-draft-status]')) { var marker = document.createElement('p'), actions = root.querySelector('.iw-consult-save,.iw-form-actions'); marker.className = 'iw-draft-status'; marker.setAttribute('data-work-draft-status', ''); marker.setAttribute('aria-live', 'polite'); marker.textContent = '작성 내용은 이 브라우저를 닫기 전까지 자동으로 임시 저장됩니다.'; if (actions) root.insertBefore(marker, actions); else root.appendChild(marker); } var restored = restoreWorkDraft(root, readWorkDraft(key)); root.addEventListener('input', function () { root.dataset.workDraftDirty = '1'; scheduleWorkDraft(root); }); root.addEventListener('change', function () { root.dataset.workDraftDirty = '1'; scheduleWorkDraft(root); }); if (restored) updateDraftStatus(root, true); }
-  function consultColumns() { try { var saved = JSON.parse(localStorage.getItem(consultColumnStorageKey()) || '[]'); if (Array.isArray(saved) && saved.length) return saved; } catch (_) {} return CONSULT_BASE_COLUMNS.slice(); }
+  function consultColumns() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(consultColumnStorageKey()) || '[]');
+      if (Array.isArray(saved) && saved.length) {
+        return CONSULT_BASE_COLUMNS.map(function (base) { return Object.assign({}, saved.find(function (column) { return column && column.key === base.key; }) || {}, base); });
+      }
+    } catch (_) {}
+    return CONSULT_BASE_COLUMNS.slice();
+  }
   function isConsultColumnSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.setting_key === 'consultation_columns'; }
   function isFavoriteSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.setting_key === 'favorites'; }
   function isWorkspaceSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.workspace_category === 'settings'; }
@@ -1381,7 +1389,7 @@
     var totalRowCount = rows.length;
     if (selected && rows.indexOf(selected) >= state.consultationsRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.consultationsRenderLimit - 1));
     else rows = rows.slice(0, state.consultationsRenderLimit);
-    var columns = '<div class="iw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { return '<span>' + esc(column.label) + '</span>'; }).join('') + '<button type="button" class="iw-consult-column-button" onclick="OSInsuwork.manageConsultColumns()">+ 컬럼</button></div>';
+    var columns = '<div class="iw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { return '<span>' + esc(column.label) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
     var list = '<div class="iw-consult-list" role="list">' + columns + '<div class="iw-consult-rows">' + rows.map(function (item) {
       var customer = customers[item.customer_id] || {}, profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
       return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + kakaoBulkToggleHtml('consultation', item.id, customer.name || '고객 상담') + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>';
