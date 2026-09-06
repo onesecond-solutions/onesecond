@@ -1621,7 +1621,9 @@
     return '기타';
   }
   function calendarMonthlySummaryHtml() {
-    var range = calendarMonthRange(), seen = {}, counts = { total: 0, care: 0, care31: 0, care91: 0, care181: 0, care365: 0, careYear: 0, birthday: 0, insuranceAge: 0, application: 0, other: 0 };
+    var range = calendarMonthRange(), seen = {}, buckets = {
+      familyBirthday: [], staffBirthday: [], customerBirthday: [], care31: [], care91: [], care181: [], care365: [], careYear: [], insuranceAge: [], application: [], consultation: [], other: []
+    };
     var rows = allEvents().filter(function (event) {
       var start = String(event.event_date || '').slice(0, 10), end = String(event.event_end_date || event.event_date || '').slice(0, 10);
       if (!start || end < range.start || start > range.end) return false;
@@ -1632,33 +1634,40 @@
     }).sort(function (a, b) { return String(a.event_date || '').localeCompare(String(b.event_date || '')) || eventPriority(a) - eventPriority(b) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); });
     rows.forEach(function (event) {
       var kind = calendarMonthlySummaryKind(event);
-      counts.total += 1;
       if (isCareTask(event)) {
-        counts.care += 1;
-        if (kind === '31일') counts.care31 += 1;
-        else if (kind === '91일') counts.care91 += 1;
-        else if (kind === '181일') counts.care181 += 1;
-        else if (kind === '365일') counts.care365 += 1;
-        else if (kind === 'N년') counts.careYear += 1;
-      } else if (kind === '생일') counts.birthday += 1;
-      else if (kind === '상령일') counts.insuranceAge += 1;
-      else if (kind === '청약일') counts.application += 1;
-      else counts.other += 1;
+        if (kind === '31일') buckets.care31.push(event);
+        else if (kind === '91일') buckets.care91.push(event);
+        else if (kind === '181일') buckets.care181.push(event);
+        else if (kind === '365일') buckets.care365.push(event);
+        else buckets.careYear.push(event);
+      } else if (kind === '생일') buckets.customerBirthday.push(event);
+      else if (kind === '상령일') buckets.insuranceAge.push(event);
+      else if (kind === '청약일') buckets.application.push(event);
+      else if (!event.builtin) buckets.consultation.push(event);
+      else buckets.other.push(event);
     });
-    var chipsData = [
-      ['고객케어', counts.care, 'customer'], ['31일', counts.care31, 'customer'], ['91일', counts.care91, 'customer'],
-      ['181일', counts.care181, 'customer'], ['365일', counts.care365, 'customer'], ['N년', counts.careYear, 'customer'],
-      ['생일', counts.birthday, 'birthday'], ['상령일', counts.insuranceAge, 'insurance-age'], ['청약일', counts.application, 'customer'], ['기타', counts.other, 'schedule']
-    ];
-    var summaryLine = chipsData.filter(function (chip) { return chip[1] > 0; }).slice(0, 6).map(function (chip) { return chip[0] + ' ' + chip[1]; }).join(' · ') || '표시할 일정 없음';
-    var chips = chipsData.map(function (chip) { return '<span class="iw-month-summary-chip ' + chip[2] + '"><b>' + chip[1] + '</b><small>' + chip[0] + '</small></span>'; }).join('');
-    var mainRows = rows.slice(0, 8).map(function (event) {
-      var date = String(event.event_date || '').slice(0, 10), kind = calendarMonthlySummaryKind(event), target = event && event.customer_id && event.builtin ? 'OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')' : 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')';
-      return '<button type="button" class="iw-month-summary-row ' + calendarEventKind(event) + '" onclick="' + target + '"><time>' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8)) + '</time><span>' + esc(kind) + '</span><strong>' + esc(eventTitleLabel(event)) + '</strong></button>';
-    }).join('');
-    if (!rows.length) mainRows = '<p class="iw-month-summary-empty">이달에 표시할 주요 일정이 없습니다.</p>';
-    else if (rows.length > 8) mainRows += '<button type="button" class="iw-month-summary-more" onclick="OSInsuwork.setCalendarMode(\'agenda\')">나머지 ' + (rows.length - 8) + '건은 일정 목록에서 보기</button>';
-    return '<section class="iw-month-summary' + (state.calendarSummaryOpen ? ' open' : '') + '" aria-label="이달의 주요일정 요약"><button type="button" class="iw-month-summary-toggle" onclick="OSInsuwork.toggleCalendarSummary()"><span><strong>이달의 주요일정</strong><em>' + range.label + ' 기준</em></span><b>전체 ' + counts.total + '건</b><small>' + esc(summaryLine) + '</small><i aria-hidden="true">' + (state.calendarSummaryOpen ? '접기' : '펼치기') + '</i></button><div class="iw-month-summary-panel"><div class="iw-month-summary-chips">' + chips + '</div><div class="iw-month-summary-list">' + mainRows + '</div></div></section>';
+    function count(list) { return '<b>' + list.length + '명</b>'; }
+    function eventLine(event) {
+      var date = String(event.event_date || '').slice(0, 10), target = event && event.customer_id && event.builtin ? 'OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')' : 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')';
+      return '<button type="button" class="iw-month-summary-event ' + calendarEventKind(event) + '" onclick="' + target + '"><time>' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8)) + '</time><span>' + esc(eventTitleLabel(event)) + '</span></button>';
+    }
+    function summaryRow(group, label, list, kind) {
+      return '<div class="iw-month-summary-row ' + kind + '"><span>' + esc(group) + '</span><strong>' + esc(label) + '</strong>' + count(list) + '<div>' + (list.length ? list.map(eventLine).join('') : '<em>없음</em>') + '</div></div>';
+    }
+    var confirmed = [
+      summaryRow('생일', '가족', buckets.familyBirthday, 'birthday'),
+      summaryRow('생일', '직원', buckets.staffBirthday, 'birthday'),
+      summaryRow('생일', '고객', buckets.customerBirthday, 'birthday'),
+      summaryRow('고객케어', '31일', buckets.care31, 'customer'),
+      summaryRow('고객케어', '91일', buckets.care91, 'customer'),
+      summaryRow('고객케어', '181일', buckets.care181, 'customer'),
+      summaryRow('고객케어', '365일', buckets.care365, 'customer'),
+      summaryRow('고객케어', 'N년', buckets.careYear, 'customer'),
+      summaryRow('상령일', '고객', buckets.insuranceAge, 'insurance-age'),
+      summaryRow('청약일', '고객', buckets.application, 'customer')
+    ].join('');
+    var flexible = summaryRow('상담일정', '추가', buckets.consultation, 'schedule') + summaryRow('기타', '일정', buckets.other, 'schedule');
+    return '<section class="iw-month-summary' + (state.calendarSummaryOpen ? ' open' : '') + '" aria-label="이달의 주요일정 요약"><button type="button" class="iw-month-summary-toggle" onclick="OSInsuwork.toggleCalendarSummary()"><span><strong>이달의 주요일정</strong><em>' + range.label + ' 기준</em></span><b>전체 ' + rows.length + '건</b><i aria-hidden="true">' + (state.calendarSummaryOpen ? '접기' : '펼치기') + '</i></button><div class="iw-month-summary-panel"><section><h3>확정된 일정</h3>' + confirmed + '</section><section><h3>추가되는 상담일정</h3>' + flexible + '</section></div></section>';
   }
   function toggleCalendarSummary(force) {
     state.calendarSummaryOpen = typeof force === 'boolean' ? force : !state.calendarSummaryOpen;
