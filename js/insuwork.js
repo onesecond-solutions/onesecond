@@ -1600,14 +1600,72 @@
     var cols = group.cols.map(function (col) { return '<div class="iw-agenda-col">' + col.map(agendaEventChip).join('') + '</div>'; }).join('');
     return '<div class="iw-agenda-row"><time><strong>' + Number(date.slice(8)) + '</strong><span>' + Number(date.slice(5, 7)) + '월 · ' + weekday(date) + '</span></time><div class="iw-agenda-cols">' + cols + '</div></div>';
   }
+  function calendarMonthRange() {
+    var first = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1), last = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + 1, 0);
+    return { start: ymd(first), end: ymd(last), label: first.getFullYear() + '년 ' + (first.getMonth() + 1) + '월' };
+  }
+  function calendarCareBucket(event) {
+    var legacyId = String(event.legacy_id || ''), text = String((event.title || '') + ' ' + (event.description || ''));
+    if (legacyId.indexOf(':31') >= 0 || text.indexOf('+31일') >= 0 || text.indexOf('31일') >= 0) return '31일';
+    if (legacyId.indexOf(':91') >= 0 || text.indexOf('+91일') >= 0 || text.indexOf('91일') >= 0) return '91일';
+    if (legacyId.indexOf(':181') >= 0 || text.indexOf('+181일') >= 0 || text.indexOf('181일') >= 0) return '181일';
+    if (legacyId.indexOf(':365') >= 0 || text.indexOf('+365일') >= 0 || text.indexOf('365일') >= 0) return '365일';
+    if (legacyId.indexOf(':anniversary:') >= 0 || text.indexOf('기념일') >= 0) return 'N년';
+    return '케어';
+  }
+  function calendarMonthlySummaryKind(event) {
+    if (isCareTask(event)) return calendarCareBucket(event);
+    if (event && event.event_type === 'birthday') return '생일';
+    if (event && event.event_type === 'insurance-age') return '상령일';
+    if (event && event.event_type === 'application') return '청약일';
+    return '기타';
+  }
+  function calendarMonthlySummaryHtml() {
+    var range = calendarMonthRange(), seen = {}, counts = { total: 0, care: 0, care31: 0, care91: 0, care181: 0, care365: 0, careYear: 0, birthday: 0, insuranceAge: 0, application: 0, other: 0 };
+    var rows = allEvents().filter(function (event) {
+      var start = String(event.event_date || '').slice(0, 10), end = String(event.event_end_date || event.event_date || '').slice(0, 10);
+      if (!start || end < range.start || start > range.end) return false;
+      var key = String(event.id || '') + ':' + start + ':' + end;
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    }).sort(function (a, b) { return String(a.event_date || '').localeCompare(String(b.event_date || '')) || eventPriority(a) - eventPriority(b) || String(a.title || '').localeCompare(String(b.title || ''), 'ko'); });
+    rows.forEach(function (event) {
+      var kind = calendarMonthlySummaryKind(event);
+      counts.total += 1;
+      if (isCareTask(event)) {
+        counts.care += 1;
+        if (kind === '31일') counts.care31 += 1;
+        else if (kind === '91일') counts.care91 += 1;
+        else if (kind === '181일') counts.care181 += 1;
+        else if (kind === '365일') counts.care365 += 1;
+        else if (kind === 'N년') counts.careYear += 1;
+      } else if (kind === '생일') counts.birthday += 1;
+      else if (kind === '상령일') counts.insuranceAge += 1;
+      else if (kind === '청약일') counts.application += 1;
+      else counts.other += 1;
+    });
+    var chips = [
+      ['고객케어', counts.care, 'customer'], ['31일', counts.care31, 'customer'], ['91일', counts.care91, 'customer'],
+      ['181일', counts.care181, 'customer'], ['365일', counts.care365, 'customer'], ['N년', counts.careYear, 'customer'],
+      ['생일', counts.birthday, 'birthday'], ['상령일', counts.insuranceAge, 'insurance-age'], ['청약일', counts.application, 'customer'], ['기타', counts.other, 'schedule']
+    ].map(function (chip) { return '<span class="iw-month-summary-chip ' + chip[2] + '"><b>' + chip[1] + '</b><small>' + chip[0] + '</small></span>'; }).join('');
+    var mainRows = rows.slice(0, 8).map(function (event) {
+      var date = String(event.event_date || '').slice(0, 10), kind = calendarMonthlySummaryKind(event), target = event && event.customer_id && event.builtin ? 'OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')' : 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')';
+      return '<button type="button" class="iw-month-summary-row ' + calendarEventKind(event) + '" onclick="' + target + '"><time>' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8)) + '</time><span>' + esc(kind) + '</span><strong>' + esc(eventTitleLabel(event)) + '</strong></button>';
+    }).join('');
+    if (!rows.length) mainRows = '<p class="iw-month-summary-empty">이달에 표시할 주요 일정이 없습니다.</p>';
+    else if (rows.length > 8) mainRows += '<button type="button" class="iw-month-summary-more" onclick="OSInsuwork.setCalendarMode(\'agenda\')">나머지 ' + (rows.length - 8) + '건은 일정 목록에서 보기</button>';
+    return '<section class="iw-month-summary" aria-label="이달의 주요일정 요약"><div class="iw-month-summary-head"><div><strong>이달의 주요일정</strong><span>' + range.label + ' 기준</span></div><b>전체 ' + counts.total + '건</b></div><div class="iw-month-summary-chips">' + chips + '</div><div class="iw-month-summary-list">' + mainRows + '</div></section>';
+  }
   function calendarHtml() {
     var modes = [['day', '일'], ['week', '주'], ['month', '월'], ['agenda', '일정']];
-    var view = '';
-    if (state.calendarMode === 'month') view = monthView();
+    var view = '', monthMode = state.calendarMode === 'month';
+    if (monthMode) view = monthView();
     else if (state.calendarMode === 'agenda') view = agendaView();
     else if (state.calendarMode === 'day') view = timeView([state.selectedDate]);
     else { var selected = parseDate(state.selectedDate); selected.setDate(selected.getDate() - selected.getDay()); var week = []; for (var i = 0; i < 7; i++) week.push(addDays(selected, i)); view = timeView(week); }
-    return statusHtml() + '<div class="iw-calendar-shell"><div class="iw-calendar-toolbar"><div class="iw-calendar-left"><button class="iw-btn iw-today" onclick="OSInsuwork.calendarToday()">오늘</button><span class="iw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSInsuwork.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSInsuwork.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + helpBadgeHtml('calendar') + '</h2></div><div class="iw-actions iw-mode">' + modes.map(function (mode) { return '<button class="iw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="iw-btn primary" onclick="OSInsuwork.addEvent()">+ 일정</button></div></div>' + view + '</div>';
+    return statusHtml() + '<div class="iw-calendar-shell' + (monthMode ? ' has-month-summary' : '') + '"><div class="iw-calendar-toolbar"><div class="iw-calendar-left"><button class="iw-btn iw-today" onclick="OSInsuwork.calendarToday()">오늘</button><span class="iw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSInsuwork.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSInsuwork.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + helpBadgeHtml('calendar') + '</h2></div><div class="iw-actions iw-mode">' + modes.map(function (mode) { return '<button class="iw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="iw-btn primary" onclick="OSInsuwork.addEvent()">+ 일정</button></div></div>' + (monthMode ? calendarMonthlySummaryHtml() : '') + view + '</div>';
   }
   function scriptStageLabel(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].label; return stage || ''; }
   function scriptStageGroup(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].group; return 'mid'; }
