@@ -217,10 +217,15 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 #v-insuwork .iw-kakao-history article span{color:var(--ts);font-size:11px}
 #v-insuwork .iw-kakao-history article p{margin:0;color:var(--bodytx);font-size:var(--fs-caption);line-height:1.5}
 #v-insuwork .iw-kakao-hub{position:fixed;right:26px;bottom:28px;z-index:42}
-#v-insuwork .iw-kakao-hub-toggle{position:relative;display:grid;place-items:center;width:58px;height:58px;border:0;border-radius:999px;background:#2563eb;color:#fff;box-shadow:0 16px 38px rgba(37,99,235,.32);font:inherit;font-size:17px;font-weight:800;cursor:pointer}
-#v-insuwork .iw-kakao-hub-toggle.waiting{background:#f8dc53;color:#2c2412;box-shadow:0 16px 38px rgba(184,132,21,.24)}
-#v-insuwork .iw-kakao-hub-toggle.danger{background:#d93025;color:#fff;box-shadow:0 16px 38px rgba(217,48,37,.28)}
+#v-insuwork .iw-kakao-hub-toggle{position:relative;display:grid;place-items:center;width:66px;height:66px;overflow:hidden;border:2px solid rgba(255,255,255,.92);border-radius:999px;background:linear-gradient(145deg,#e7f0ff,#fff8cc);color:#fff;box-shadow:0 16px 38px rgba(37,99,235,.22),0 0 0 8px rgba(37,99,235,.06);font:inherit;font-size:17px;font-weight:800;cursor:pointer;animation:iw-kakao-float 3.6s ease-in-out infinite}
+#v-insuwork .iw-kakao-hub-toggle:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 20px 44px rgba(37,99,235,.26),0 0 0 10px rgba(248,220,83,.12)}
+#v-insuwork .iw-kakao-hub-toggle img{display:block;width:106%;height:106%;object-fit:cover;object-position:center}
+#v-insuwork .iw-kakao-hub-toggle.waiting{background:linear-gradient(145deg,#fff4a8,#e8f1ff);box-shadow:0 16px 38px rgba(184,132,21,.24),0 0 0 8px rgba(248,220,83,.12)}
+#v-insuwork .iw-kakao-hub-toggle.danger{background:linear-gradient(145deg,#ffe1df,#fff4a8);box-shadow:0 16px 38px rgba(217,48,37,.28),0 0 0 8px rgba(217,48,37,.1)}
 #v-insuwork .iw-kakao-hub-toggle b{position:absolute;top:-5px;right:-5px;display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border:2px solid var(--s1);border-radius:999px;background:#d93025;color:#fff;font-size:11px;line-height:1}
+#v-insuwork .iw-kakao-hub-toggle:after{content:"";position:absolute;inset:7px;border-radius:999px;border:1px solid rgba(255,255,255,.46);pointer-events:none}
+@keyframes iw-kakao-float{0%,100%{translate:0 0}50%{translate:0 -7px}}
+@media(prefers-reduced-motion:reduce){#v-insuwork .iw-kakao-hub-toggle{animation:none}}
 #v-insuwork .iw-kakao-hub-panel{position:absolute;right:0;bottom:70px;display:grid;gap:12px;width:min(360px,calc(100vw - 32px));padding:16px;border:1px solid color-mix(in srgb,var(--ac) 24%,var(--bd));border-radius:12px;background:var(--s1);box-shadow:0 24px 72px color-mix(in srgb,var(--tp) 24%,transparent);color:var(--tp)}
 #v-insuwork .iw-kakao-hub-panel[hidden]{display:none}
 #v-insuwork .iw-kakao-hub-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}
