@@ -4207,9 +4207,9 @@
   function saveConsultationRich(consultation, body) { var root = consultationAttachmentRoot(consultation.id), hasPending = state.pendingRichImages.length || state.pendingRichFiles.length; if (!root && !hasPending) return Promise.resolve(body); var rootId = root ? root.id : crypto.randomUUID(), rootBody = { id: rootId, owner_id: currentUserId(), item_type: 'memo', title: '상담 첨부 · ' + consultation.id, body: sanitizeRich(body), visibility: 'private', legacy_payload: { workspace_category: 'consultation', consultation_id: consultation.id, attachment_root: true } }; var ready = root ? Promise.resolve(root) : writeOne('insuwork_items', rootBody).then(function (created) { upsertWorkspaceItem(created); return created; }); return ready.then(function () { return prepareRichUploads(rootId, body, 'consultation'); }).then(function (prepared) { return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: prepared.body }).then(function (savedItem) { upsertWorkspaceItem(savedItem); return saveRichChildren(prepared.rows); }).then(function () { return prepared.body; }); }); }
   function kakaoTemplates() {
     return [
-      { key: 'care_check', label: '안부톡', body: '#{고객명}님, 안녕하세요. 잘 지내고 계신지 안부드립니다. 보험금 청구나 보장 점검이 필요하시면 편하게 문의 주세요.' },
-      { key: 'claim_help', label: '보험금 청구 안내', body: '#{고객명}님, 보험금 청구가 필요하시면 진료비 영수증, 세부내역서, 진단 관련 서류를 준비해 주세요. 확인이 필요하시면 이 카톡으로 문의 주세요.' },
-      { key: 'consult_invite', label: '보험 상담 안내', body: '#{고객명}님, 보장 점검이나 가족 보험 상담이 필요하시면 가능한 시간을 알려주세요. 확인 후 상담 일정을 잡아드리겠습니다.' }
+      { key: 'care_check', label: '안부톡', body: '#{고객명}님, 안녕하세요. 담당 설계사입니다.\n기존 계약 관리 차원에서 정기 확인 안내드립니다.\n최근 병원 이용, 주소·연락처 변경, 보험금 청구 예정 사항이 있으시면 이 메시지로 회신해 주세요.' },
+      { key: 'claim_help', label: '보험금 청구 안내', body: '#{고객명}님, 보험금 청구 접수에 필요한 기본 서류를 안내드립니다.\n진료비 영수증, 진료비 세부내역서, 진단·통원 관련 서류를 준비해 주세요.\n상황에 따라 추가 서류가 필요할 수 있어 확인이 필요하시면 회신해 주세요.' },
+      { key: 'consult_invite', label: '보험 상담 안내', body: '#{고객명}님, 요청하신 보험 상담 진행을 위해 안내드립니다.\n상담 가능한 날짜와 시간을 회신해 주시면 기존 보장 내용과 상담 목적을 확인한 뒤 일정을 조율하겠습니다.\n상담 전 준비할 자료가 있으면 함께 안내드리겠습니다.' }
     ];
   }
   function kakaoTarget(kind, id) {
