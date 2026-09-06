@@ -18,7 +18,8 @@ Date: 2026-09-06
 - 상담관리 상담 상세에 카카오톡 보내기 버튼을 추가했다.
 - 계약관리 리스트에 고객 선택 토글, 현재 목록 전체선택, 선택해제, 카카오톡 발송하기 버튼을 추가했다.
 - 상담관리 리스트에 상담 고객 선택 토글, 현재 목록 전체선택, 선택해제, 카카오톡 발송하기 버튼을 추가했다.
-- 버튼을 누르면 안부톡, 보험금 청구 안내, 보험 상담 안내 템플릿을 선택할 수 있다.
+- 버튼을 누르면 안부톡, 보험금 청구 안내, 보험 상담 안내, 명함 발송 템플릿을 선택할 수 있다.
+- 명함 발송 템플릿은 메시지 본문에서 먼저 담당자명, 회사명, 연락처를 보여주고, 향후 승인 템플릿 버튼으로 명함 보기 링크를 선택적으로 붙이는 방향이다.
 - 리스트 일괄 발송도 실제 발송 없이 선택 대상별 발송 준비 기록을 여러 건 저장한다.
 - 실제 카카오 API 발송은 하지 않는다.
 - 대신 `insuwork_items`에 발송 준비 기록을 저장한다.
@@ -47,7 +48,10 @@ legacy_payload.target_area: customer | consultation
 legacy_payload.target_id: 계약관리 고객 ID 또는 상담 ID
 legacy_payload.customer_id: 연결 고객 ID
 legacy_payload.consultation_id: 상담관리에서 보낸 경우 상담 ID, 계약관리에서 보낸 경우 null
-legacy_payload.template_key: care_check | claim_help | consult_invite
+legacy_payload.advisor_name: 발송 담당자명
+legacy_payload.advisor_company: 발송 담당자 회사명
+legacy_payload.advisor_phone: 발송 담당자 연락처
+legacy_payload.template_key: care_check | claim_help | consult_invite | name_card
 legacy_payload.send_status: draft
 legacy_payload.provider_status: not_connected
 legacy_payload.direction: outbound
@@ -81,6 +85,16 @@ legacy_payload.direction: outbound
 #{고객명}님, 요청하신 보험 상담 진행을 위해 안내드립니다.
 상담 가능한 날짜와 시간을 회신해 주시면 기존 보장 내용과 상담 목적을 확인한 뒤 일정을 조율하겠습니다.
 상담 전 준비할 자료가 있으면 함께 안내드리겠습니다.
+
+[명함 발송]
+#{고객명}님, 안녕하세요.
+담당자 정보를 안내드립니다.
+
+담당자: #{담당자명}
+소속: #{회사명}
+연락처: #{담당자전화번호}
+
+상담 또는 계약 관련 확인이 필요하시면 위 연락처로 문의해 주세요.
 ```
 
 실제 심사 전 확인할 점:
@@ -88,6 +102,8 @@ legacy_payload.direction: outbound
 - 보험 상담 안내는 고객 요청 또는 상담 진행 이력이 있는 대상에게 쓰는 문안으로 유지한다.
 - 불특정 기존 고객에게 신규 가입 권유처럼 보낼 경우 알림톡보다 친구톡/브랜드 메시지 검토가 필요하다.
 - 공급자 선정 후 승인 템플릿 코드와 실제 버튼 구성을 이 문서에 추가한다.
+- 명함 발송은 사용자가 보낸 사람을 바로 알 수 있도록 본문에 담당자 정보를 먼저 노출하고, 명함 이미지나 디지털 명함 페이지는 버튼으로만 보조한다.
+- 개인정보 수정 화면에서 회사명을 저장할 수 있게 했다. 명함 이미지 업로드는 저장소 공개 URL, 만료 없는 보기 링크, 카카오 승인 버튼 URL 정책을 정한 뒤 붙인다.
 
 ## 다음 구현 순서
 
@@ -97,6 +113,7 @@ legacy_payload.direction: outbound
 4. `insuwork_items` 임시 기록을 정식 테이블로 옮긴다.
 5. 상담톡 수신 웹훅을 연결한다.
 6. 답장 수신 시 `target_area`와 발송 세션 기준으로 계약관리/상담관리 원래 영역에 이력을 붙인다.
+7. 개인정보 수정의 명함 이미지 업로드와 명함 템플릿 팝업 내 즉시 업로드 흐름을 연결한다. 등록한 이미지는 사용자 프로필의 기본 명함으로 저장하고, 카카오 템플릿에서는 선택 버튼 URL로 사용한다.
 
 ## 열어둔 결정
 
@@ -104,3 +121,4 @@ legacy_payload.direction: outbound
 - 알림톡 버튼은 웹 링크, 상담톡 전환, 봇 키워드 중 어느 것을 기본으로 할지 결정 필요.
 - 카카오톡 채널로 고객이 먼저 문의한 경우의 매칭 UX가 필요하다.
 - 보험금 청구 문의는 계약관리 기존 고객 안의 문의 이력으로 둘지, 별도 청구 탭을 만들지 결정 필요.
+- 명함 보기 URL은 기존 `namecard.js` 생성 명함을 공개 페이지로 만들지, 업로드 이미지를 공개 저장소에 둘지 결정 필요.

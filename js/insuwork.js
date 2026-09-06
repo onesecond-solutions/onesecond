@@ -4209,8 +4209,16 @@
     return [
       { key: 'care_check', label: '안부톡', body: '#{고객명}님, 안녕하세요. 담당 설계사입니다.\n기존 계약 관리 차원에서 정기 확인 안내드립니다.\n최근 병원 이용, 주소·연락처 변경, 보험금 청구 예정 사항이 있으시면 이 메시지로 회신해 주세요.' },
       { key: 'claim_help', label: '보험금 청구 안내', body: '#{고객명}님, 보험금 청구 접수에 필요한 기본 서류를 안내드립니다.\n진료비 영수증, 진료비 세부내역서, 진단·통원 관련 서류를 준비해 주세요.\n상황에 따라 추가 서류가 필요할 수 있어 확인이 필요하시면 회신해 주세요.' },
-      { key: 'consult_invite', label: '보험 상담 안내', body: '#{고객명}님, 요청하신 보험 상담 진행을 위해 안내드립니다.\n상담 가능한 날짜와 시간을 회신해 주시면 기존 보장 내용과 상담 목적을 확인한 뒤 일정을 조율하겠습니다.\n상담 전 준비할 자료가 있으면 함께 안내드리겠습니다.' }
+      { key: 'consult_invite', label: '보험 상담 안내', body: '#{고객명}님, 요청하신 보험 상담 진행을 위해 안내드립니다.\n상담 가능한 날짜와 시간을 회신해 주시면 기존 보장 내용과 상담 목적을 확인한 뒤 일정을 조율하겠습니다.\n상담 전 준비할 자료가 있으면 함께 안내드리겠습니다.' },
+      { key: 'name_card', label: '명함 발송', body: '#{고객명}님, 안녕하세요.\n담당자 정보를 안내드립니다.\n\n담당자: #{담당자명}\n소속: #{회사명}\n연락처: #{담당자전화번호}\n\n상담 또는 계약 관련 확인이 필요하시면 위 연락처로 문의해 주세요.' }
     ];
+  }
+  function kakaoAdvisorProfile() {
+    var user = storedUser(), meta = user.user_metadata || {}, app = window.AppState || {};
+    var name = app.name || user.name || meta.name || '담당 설계사';
+    var company = app.company || user.company || meta.company || '소속 미입력';
+    var phone = app.phone || user.phone || meta.phone || '';
+    return { name: name, company: company, phone: phoneText(phone) || '연락처 미입력' };
   }
   function kakaoTarget(kind, id) {
     if (kind === 'customer') {
@@ -4225,10 +4233,15 @@
     return null;
   }
   function kakaoMessagePreview(template, customer) {
-    return String(template.body || '').replace(/#\{고객명\}/g, customer && customer.name || '고객');
+    var advisor = kakaoAdvisorProfile();
+    return String(template.body || '')
+      .replace(/#\{고객명\}/g, customer && customer.name || '고객')
+      .replace(/#\{담당자명\}/g, advisor.name)
+      .replace(/#\{회사명\}/g, advisor.company)
+      .replace(/#\{담당자전화번호\}/g, advisor.phone);
   }
   function kakaoDraftRow(target, template, bodyText) {
-    var phone = phoneText(target.customer.phone || target.customer.phone_raw || '');
+    var phone = phoneText(target.customer.phone || target.customer.phone_raw || ''), advisor = kakaoAdvisorProfile();
     return {
       owner_id: currentUserId(),
       item_type: 'memo',
@@ -4243,6 +4256,9 @@
         consultation_id: target.consultation ? target.consultation.id : null,
         recipient_name: target.customer.name || '',
         recipient_phone: phone || '',
+        advisor_name: advisor.name,
+        advisor_company: advisor.company,
+        advisor_phone: advisor.phone,
         template_key: template.key,
         template_label: template.label,
         send_status: 'draft',
@@ -4297,13 +4313,13 @@
     var templates = kakaoTemplates(), options = templates.map(function (template) { return '<option value="' + esc(template.key) + '">' + esc(template.label) + '</option>'; }).join('');
     var missingPhone = targets.filter(function (target) { return !phoneText(target.customer.phone || target.customer.phone_raw || ''); }).length;
     var names = targets.slice(0, 6).map(function (target) { return target.customer.name || '고객'; }).join(', ') + (targets.length > 6 ? ' 외 ' + (targets.length - 6) + '명' : '');
-    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoBulkDraft(\'' + esc(area) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 발송하기</h2><p>' + esc(area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객') + '에게 같은 템플릿을 발송 준비합니다.</p></div><div class="iw-kakao-summary"><strong>선택 ' + targets.length + '명</strong><span>' + (missingPhone ? '연락처 없음 ' + missingPhone + '명 포함' : '발송 준비 가능') + '</span></div><p class="iw-kakao-recipients">' + esc(names) + '</p><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoBulkPreview()">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(templates[0].body) + '</textarea></label></div><p class="iw-kakao-note">#{고객명}은 각 고객 이름으로 바뀌어 발송 준비 기록에 저장됩니다. 실제 알림톡 발송은 공급자 API 연결 후 가능합니다.</p><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">선택 ' + targets.length + '명 저장</button></div></form>');
+    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoBulkDraft(\'' + esc(area) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 발송하기</h2><p>' + esc(area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객') + '에게 같은 템플릿을 발송 준비합니다.</p></div><div class="iw-kakao-summary"><strong>선택 ' + targets.length + '명</strong><span>' + (missingPhone ? '연락처 없음 ' + missingPhone + '명 포함' : '발송 준비 가능') + '</span></div><p class="iw-kakao-recipients">' + esc(names) + '</p><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoBulkPreview()">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], { name: '#{고객명}' })) + '</textarea></label></div><p class="iw-kakao-note">#{고객명}은 각 고객 이름으로 바뀌어 발송 준비 기록에 저장됩니다. 담당자명, 회사명, 연락처는 개인정보 수정의 내 정보 기준으로 채워집니다. 실제 알림톡 발송은 공급자 API 연결 후 가능합니다.</p><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">선택 ' + targets.length + '명 저장</button></div></form>');
   }
   function refreshKakaoBulkPreview() {
     var select = document.getElementById('iwf-kakao-template'), body = document.getElementById('iwf-kakao-body');
     if (!select || !body) return;
     var template = kakaoTemplates().find(function (entry) { return entry.key === select.value; });
-    if (template) body.value = template.body;
+    if (template) body.value = kakaoMessagePreview(template, { name: '#{고객명}' });
   }
   function saveKakaoBulkDraft(area) {
     var targets = kakaoBulkTargets(area), templateKey = value('iwf-kakao-template'), bodyText = value('iwf-kakao-body');
