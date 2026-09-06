@@ -44,7 +44,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0, briefingSearchRows: [], briefingSearchQuery: '', briefingSearchLoading: false, briefingSearchRequestId: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
-    calendarMode: 'month', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
+    calendarMode: 'month', calendarSummaryOpen: false, selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
@@ -1645,18 +1645,24 @@
       else if (kind === '청약일') counts.application += 1;
       else counts.other += 1;
     });
-    var chips = [
+    var chipsData = [
       ['고객케어', counts.care, 'customer'], ['31일', counts.care31, 'customer'], ['91일', counts.care91, 'customer'],
       ['181일', counts.care181, 'customer'], ['365일', counts.care365, 'customer'], ['N년', counts.careYear, 'customer'],
       ['생일', counts.birthday, 'birthday'], ['상령일', counts.insuranceAge, 'insurance-age'], ['청약일', counts.application, 'customer'], ['기타', counts.other, 'schedule']
-    ].map(function (chip) { return '<span class="iw-month-summary-chip ' + chip[2] + '"><b>' + chip[1] + '</b><small>' + chip[0] + '</small></span>'; }).join('');
+    ];
+    var summaryLine = chipsData.filter(function (chip) { return chip[1] > 0; }).slice(0, 6).map(function (chip) { return chip[0] + ' ' + chip[1]; }).join(' · ') || '표시할 일정 없음';
+    var chips = chipsData.map(function (chip) { return '<span class="iw-month-summary-chip ' + chip[2] + '"><b>' + chip[1] + '</b><small>' + chip[0] + '</small></span>'; }).join('');
     var mainRows = rows.slice(0, 8).map(function (event) {
       var date = String(event.event_date || '').slice(0, 10), kind = calendarMonthlySummaryKind(event), target = event && event.customer_id && event.builtin ? 'OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')' : 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')';
       return '<button type="button" class="iw-month-summary-row ' + calendarEventKind(event) + '" onclick="' + target + '"><time>' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8)) + '</time><span>' + esc(kind) + '</span><strong>' + esc(eventTitleLabel(event)) + '</strong></button>';
     }).join('');
     if (!rows.length) mainRows = '<p class="iw-month-summary-empty">이달에 표시할 주요 일정이 없습니다.</p>';
     else if (rows.length > 8) mainRows += '<button type="button" class="iw-month-summary-more" onclick="OSInsuwork.setCalendarMode(\'agenda\')">나머지 ' + (rows.length - 8) + '건은 일정 목록에서 보기</button>';
-    return '<section class="iw-month-summary" aria-label="이달의 주요일정 요약"><div class="iw-month-summary-head"><div><strong>이달의 주요일정</strong><span>' + range.label + ' 기준</span></div><b>전체 ' + counts.total + '건</b></div><div class="iw-month-summary-chips">' + chips + '</div><div class="iw-month-summary-list">' + mainRows + '</div></section>';
+    return '<section class="iw-month-summary' + (state.calendarSummaryOpen ? ' open' : '') + '" aria-label="이달의 주요일정 요약"><button type="button" class="iw-month-summary-toggle" onclick="OSInsuwork.toggleCalendarSummary()"><span><strong>이달의 주요일정</strong><em>' + range.label + ' 기준</em></span><b>전체 ' + counts.total + '건</b><small>' + esc(summaryLine) + '</small><i aria-hidden="true">' + (state.calendarSummaryOpen ? '접기' : '펼치기') + '</i></button><div class="iw-month-summary-panel"><div class="iw-month-summary-chips">' + chips + '</div><div class="iw-month-summary-list">' + mainRows + '</div></div></section>';
+  }
+  function toggleCalendarSummary(force) {
+    state.calendarSummaryOpen = typeof force === 'boolean' ? force : !state.calendarSummaryOpen;
+    renderContent();
   }
   function calendarHtml() {
     var modes = [['day', '일'], ['week', '주'], ['month', '월'], ['agenda', '일정']];
@@ -4902,7 +4908,7 @@
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveHomeDate: moveHomeDate, homeToday: homeToday, openHomeCalendar: openHomeCalendar,
-    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay,
+    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay, toggleCalendarSummary: toggleCalendarSummary,
     todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, consultationsDirectory: consultationsDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
     libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
