@@ -2,6 +2,63 @@
   'use strict';
   function storedUser() { try { return JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch (_e) { return {}; } }
   function esc(value) { return String(value || '').replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
+  function currentUserId() { return (window.AppState && window.AppState.userId) || storedUser().id || ''; }
+  function cardStatus(text) { var node = document.getElementById('iw-profile-card-status'); if (node) node.textContent = text; }
+  function storeProfileBusinessCard(card) {
+    try {
+      if (card && card.storage_path) localStorage.setItem('iw_business_card_setting', JSON.stringify(card));
+      else localStorage.removeItem('iw_business_card_setting');
+    } catch (_e) {}
+  }
+  function setCardPreview(src) {
+    var img = document.getElementById('iw-profile-card-preview-img'), empty = document.getElementById('iw-profile-card-empty');
+    if (!img || !empty) return;
+    if (src) { img.src = src; img.hidden = false; empty.hidden = true; }
+    else { img.removeAttribute('src'); img.hidden = true; empty.hidden = false; }
+  }
+  function signProfileStoragePath(path) {
+    if (!path || !window.db || !window.db.fetch) return Promise.reject(new Error('명함 경로가 없습니다.'));
+    return window.db.fetch('/storage/v1/object/sign/myspace/' + String(path).split('/').map(encodeURIComponent).join('/'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) })
+      .then(function (response) { if (!response.ok) throw new Error('명함 미리보기를 불러오지 못했습니다.'); return response.json(); })
+      .then(function (data) { return window.db.url('/storage/v1' + data.signedURL); });
+  }
+  function loadProfileBusinessCard() {
+    var owner = currentUserId();
+    if (!owner || !window.db || !window.db.fetch) { setCardPreview(''); return; }
+    cardStatus('명함 정보를 불러오는 중입니다.');
+    window.db.fetch('/rest/v1/insuwork_items?owner_id=eq.' + encodeURIComponent(owner) + '&deleted_at=is.null&legacy_payload->>setting_key=eq.business_card&order=updated_at.desc.nullslast,created_at.desc&limit=1&select=id,title,storage_path,mime_type,file_size,legacy_payload')
+      .then(function (response) { if (!response.ok) throw new Error('명함 정보를 불러오지 못했습니다.'); return response.json(); })
+      .then(function (rows) {
+        var card = rows && rows[0];
+        if (!card || !card.storage_path) { storeProfileBusinessCard(null); setCardPreview(''); cardStatus('명함 템플릿에서 사용할 기본 명함입니다.'); return; }
+        storeProfileBusinessCard(card);
+        cardStatus(card.title || '등록된 명함');
+        return signProfileStoragePath(card.storage_path).then(setCardPreview);
+      }).catch(function () { setCardPreview(''); cardStatus('명함 미리보기를 불러오지 못했습니다.'); });
+  }
+  function uploadProfileBusinessCard(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type || '')) { cardStatus('이미지 파일만 업로드할 수 있습니다.'); return; }
+    if (file.size > 8 * 1024 * 1024) { cardStatus('8MB 이하 이미지만 업로드해 주세요.'); return; }
+    var owner = currentUserId();
+    if (!owner || !window.db || !window.db.getToken) { cardStatus('로그인 후 업로드할 수 있습니다.'); return; }
+    var localUrl = URL.createObjectURL(file); setCardPreview(localUrl); cardStatus('명함 이미지를 업로드하는 중입니다.');
+    var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : '', path = owner + '/profile/business-card-' + id + (ext ? '.' + ext : '');
+    fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
+      if (!response.ok) throw new Error('명함 이미지 업로드 실패');
+      return window.db.fetch('/rest/v1/insuwork_items?owner_id=eq.' + encodeURIComponent(owner) + '&deleted_at=is.null&legacy_payload->>setting_key=eq.business_card&limit=1&select=id').then(function (res) { if (!res.ok) throw new Error('명함 설정 조회 실패'); return res.json(); });
+    }).then(function (rows) {
+      var existing = rows && rows[0], body = { owner_id: owner, item_type: 'file', title: file.name || '명함 이미지', storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: 'settings', setting_key: 'business_card' } };
+      return window.db.fetch('/rest/v1/insuwork_items' + (existing ? '?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(owner) : ''), { method: existing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(existing ? body : Object.assign({ id: id, created_at: new Date().toISOString() }, body)) });
+    }).then(function (response) {
+      if (!response.ok) throw new Error('명함 설정 저장 실패');
+      return response.json();
+    }).then(function (rows) {
+      storeProfileBusinessCard(rows && rows[0]);
+      cardStatus((file.name || '명함 이미지') + ' 등록 완료');
+      window.setTimeout(loadProfileBusinessCard, 200);
+    }).catch(function () { cardStatus('업로드하지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
+  }
   function closeAccountMenu() { var menu = document.getElementById('iw-account-popover'), trigger = document.getElementById('iw-account-trigger'); if (menu) menu.hidden = true; if (trigger) trigger.setAttribute('aria-expanded', 'false'); }
   function currentBgMode() { try { return localStorage.getItem('iw_bg_mode') || 'white'; } catch (_e) { return 'white'; } }
   function applyBgMode(mode) {
@@ -42,6 +99,8 @@
     document.getElementById('iw-profile-company').value = state.company || user.company || (user.user_metadata && user.user_metadata.company) || '';
     document.getElementById('iw-profile-nickname').value = state.nickname || user.nickname || (user.user_metadata && user.user_metadata.nickname) || '';
     document.getElementById('iw-profile-message').textContent = '';
+    setCardPreview('');
+    loadProfileBusinessCard();
     dialog.showModal();
   }
   /* 2026-08-25 대표 승인 — 비로그인 우측 상단 버튼: 기존 /pages/landing.html 이동 대신 보험브리핑의
@@ -86,6 +145,7 @@
   if (profileDialog) {
     profileDialog.querySelector('.iw-profile-close').addEventListener('click', function () { profileDialog.close(); });
     profileDialog.querySelector('.iw-profile-cancel').addEventListener('click', function () { profileDialog.close(); });
+    document.getElementById('iw-profile-card-input').addEventListener('change', function () { uploadProfileBusinessCard(this.files && this.files[0]); this.value = ''; });
     document.getElementById('iw-profile-form').addEventListener('submit', function (event) {
       event.preventDefault();
       var name = document.getElementById('iw-profile-name').value.trim(), phone = document.getElementById('iw-profile-phone').value.trim(), company = document.getElementById('iw-profile-company').value.trim(), nickname = document.getElementById('iw-profile-nickname').value.trim(), message = document.getElementById('iw-profile-message');

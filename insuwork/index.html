@@ -61,10 +61,20 @@
         <div><strong id="iw-profile-title">개인정보 수정</strong><p>보험워크에서 사용할 기본 정보를 관리합니다.</p></div>
         <button type="button" class="iw-profile-close" aria-label="닫기">×</button>
       </div>
-      <label>이름<input type="text" id="iw-profile-name" autocomplete="name" maxlength="30" required></label>
-      <label>연락처<input type="tel" id="iw-profile-phone" autocomplete="tel" maxlength="20"></label>
-      <label>회사명<input type="text" id="iw-profile-company" autocomplete="organization" maxlength="40" placeholder="예: 에즈금융서비스"></label>
-      <label>닉네임(선택)<input type="text" id="iw-profile-nickname" autocomplete="off" maxlength="30" placeholder="공개자료실에 표시할 이름 (비워두면 익명)"></label>
+      <div class="iw-profile-body">
+        <div class="iw-profile-fields">
+          <label>이름<input type="text" id="iw-profile-name" autocomplete="name" maxlength="30" required></label>
+          <label>연락처<input type="tel" id="iw-profile-phone" autocomplete="tel" maxlength="20"></label>
+          <label>회사명<input type="text" id="iw-profile-company" autocomplete="organization" maxlength="40" placeholder="예: 에즈금융서비스"></label>
+          <label>닉네임(선택)<input type="text" id="iw-profile-nickname" autocomplete="off" maxlength="30" placeholder="공개자료실에 표시할 이름 (비워두면 익명)"></label>
+          <label class="iw-profile-card-pick">명함 이미지<input type="file" id="iw-profile-card-input" accept="image/*"></label>
+        </div>
+        <aside class="iw-profile-card-preview" aria-label="명함 미리보기">
+          <strong>명함 미리보기</strong>
+          <div><img id="iw-profile-card-preview-img" alt="" hidden><span id="iw-profile-card-empty">등록된 명함이 없습니다.</span></div>
+          <p id="iw-profile-card-status">명함 템플릿에서 사용할 기본 명함입니다.</p>
+        </aside>
+      </div>
       <p class="iw-profile-message" id="iw-profile-message" role="status"></p>
       <div class="iw-profile-actions"><button type="button" class="iw-profile-cancel">취소</button><button type="submit" class="iw-profile-save">저장</button></div>
     </form>
