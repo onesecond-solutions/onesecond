@@ -121,7 +121,8 @@
   }
   function isConsultColumnSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.setting_key === 'consultation_columns'; }
   function isFavoriteSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.setting_key === 'favorites'; }
-  function isWorkspaceSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.workspace_category === 'settings'; }
+  function isBusinessCardSetting(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'settings' && payload.setting_key === 'business_card'; }
+  function isWorkspaceSetting(item) { var payload = item && item.legacy_payload || {}; return item && payload.workspace_category === 'settings'; }
   function isConsultAttachmentItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'consultation'; }
   function isKakaoPilotItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'kakao_message_pilot'; }
   /* 2026-08-25 대표 확정 — 고객 상세카드 "고객내용" 메모·첨부(saveCustomerRich, workspace_category:'customer')가
@@ -4248,8 +4249,57 @@
       .replace(/#\{회사명\}/g, advisor.company)
       .replace(/#\{담당자전화번호\}/g, advisor.phone);
   }
+  function storedBusinessCardSetting() { try { return JSON.parse(localStorage.getItem('iw_business_card_setting') || 'null'); } catch (_) { return null; } }
+  function rememberBusinessCardSetting(card) { try { if (card && card.storage_path) localStorage.setItem('iw_business_card_setting', JSON.stringify(card)); } catch (_) {} }
+  function businessCardSetting() { return (state.data.items || []).find(isBusinessCardSetting) || storedBusinessCardSetting(); }
+  function businessCardUploadHtml() {
+    var card = businessCardSetting();
+    return '<div class="iw-kakao-card-upload" id="iwf-kakao-card-upload" hidden><div class="iw-kakao-card-info"><strong>명함 이미지</strong><span id="iwf-kakao-card-status">' + (card ? esc(card.title || '등록된 명함') : '등록된 명함 없음') + '</span></div><label class="iw-btn">명함 이미지 업로드<input type="file" accept="image/*" hidden onchange="OSInsuwork.uploadKakaoBusinessCard(this)"></label><div class="iw-kakao-card-preview"><img id="iwf-kakao-card-preview-img" alt="" hidden><span id="iwf-kakao-card-empty">등록된 명함이 없습니다.</span></div><p>명함 템플릿 선택 시 사용할 기본 명함으로 저장됩니다. 실제 카카오 발송에서는 승인된 버튼 링크로 연결합니다.</p></div>';
+  }
+  function setKakaoBusinessCardPreview(src) {
+    var img = document.getElementById('iwf-kakao-card-preview-img'), empty = document.getElementById('iwf-kakao-card-empty');
+    if (!img || !empty) return;
+    if (src) { img.src = src; img.hidden = false; empty.hidden = true; }
+    else { img.removeAttribute('src'); img.hidden = true; empty.hidden = false; }
+  }
+  function renderKakaoBusinessCardPreview(card) {
+    setKakaoBusinessCardPreview('');
+    if (!card || !card.storage_path) return;
+    signStoragePath(card.storage_path).then(setKakaoBusinessCardPreview).catch(function () {});
+  }
+  function syncKakaoTemplateExtras() {
+    var select = document.getElementById('iwf-kakao-template'), panel = document.getElementById('iwf-kakao-card-upload'), status = document.getElementById('iwf-kakao-card-status');
+    if (!select || !panel) return;
+    panel.hidden = select.value !== 'name_card';
+    if (status) { var card = businessCardSetting(); status.textContent = card ? (card.title || '등록된 명함') : '등록된 명함 없음'; renderKakaoBusinessCardPreview(card); }
+  }
+  function uploadKakaoBusinessCard(input) {
+    var file = input && input.files && input.files[0], status = document.getElementById('iwf-kakao-card-status');
+    if (input) input.value = '';
+    if (!file) return;
+    if (!/^image\//.test(file.type || '')) { if (status) status.textContent = '이미지 파일만 업로드할 수 있습니다.'; return; }
+    if (file.size > 8 * 1024 * 1024) { if (status) status.textContent = '8MB 이하 이미지만 업로드해 주세요.'; return; }
+    if (!authenticated() || !window.db || !window.db.getToken()) { if (status) status.textContent = '로그인 후 업로드할 수 있습니다.'; return; }
+    setKakaoBusinessCardPreview(URL.createObjectURL(file));
+    if (status) status.textContent = '업로드 중입니다.';
+    var owner = currentUserId(), id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : '', path = owner + '/profile/business-card-' + id + (ext ? '.' + ext : '');
+    fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
+      if (!response.ok) throw new Error('명함 이미지 업로드 실패');
+      var existing = businessCardSetting(), body = { owner_id: owner, item_type: 'file', title: file.name || '명함 이미지', storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: 'settings', setting_key: 'business_card' } };
+      return existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(owner), body) : writeOne('insuwork_items', Object.assign({ id: id, created_at: new Date().toISOString() }, body));
+    }).then(function (saved) {
+      upsertWorkspaceItem(saved);
+      rememberBusinessCardSetting(saved);
+      if (status) status.textContent = (saved && saved.title) || '명함 이미지 등록 완료';
+      syncKakaoTemplateExtras();
+    }).catch(function (error) {
+      console.warn(error);
+      if (status) status.textContent = '업로드하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    });
+  }
   function kakaoDraftRow(target, template, bodyText) {
     var phone = phoneText(target.customer.phone || target.customer.phone_raw || ''), advisor = kakaoAdvisorProfile();
+    var card = businessCardSetting();
     return {
       owner_id: currentUserId(),
       item_type: 'memo',
@@ -4267,6 +4317,8 @@
         advisor_name: advisor.name,
         advisor_company: advisor.company,
         advisor_phone: advisor.phone,
+        business_card_item_id: card ? card.id : null,
+        business_card_storage_path: card ? card.storage_path : null,
         template_key: template.key,
         template_label: template.label,
         send_status: 'draft',
@@ -4283,13 +4335,15 @@
     var templates = kakaoTemplates();
     var options = templates.map(function (template) { return '<option value="' + esc(template.key) + '">' + esc(template.label) + '</option>'; }).join('');
     var areaLabel = target.area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객';
-    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoDraft(\'' + esc(kind) + '\',\'' + esc(id) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 보내기</h2><p>' + esc(areaLabel) + '에게 발송할 문안을 준비합니다.</p></div><div class="iw-kakao-summary"><strong>' + esc(target.customer.name || '고객') + '</strong><span>' + (phone ? esc(phone) : '연락처 없음') + '</span></div><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoDraftPreview(\'' + esc(kind) + '\',\'' + esc(id) + '\')">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], target.customer)) + '</textarea></label></div><p class="iw-kakao-note">현재는 임태성 게이트 전용 발송 준비 기록만 저장합니다. 실제 알림톡/상담톡 API는 공식 딜러사 계약과 템플릿 승인 뒤 서버 함수로 연결합니다.</p><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">발송 준비 저장</button></div></form>');
+    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoDraft(\'' + esc(kind) + '\',\'' + esc(id) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 보내기</h2><p>' + esc(areaLabel) + '에게 발송할 문안을 준비합니다.</p></div><div class="iw-kakao-summary"><strong>' + esc(target.customer.name || '고객') + '</strong><span>' + (phone ? esc(phone) : '연락처 없음') + '</span></div><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoDraftPreview(\'' + esc(kind) + '\',\'' + esc(id) + '\')">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], target.customer)) + '</textarea></label></div>' + businessCardUploadHtml() + '<p class="iw-kakao-note">현재는 임태성 게이트 전용 발송 준비 기록만 저장합니다. 실제 알림톡/상담톡 API는 공식 딜러사 계약과 템플릿 승인 뒤 서버 함수로 연결합니다.</p><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">발송 준비 저장</button></div></form>');
+    syncKakaoTemplateExtras();
   }
   function refreshKakaoDraftPreview(kind, id) {
     var target = kakaoTarget(kind, id), select = document.getElementById('iwf-kakao-template'), body = document.getElementById('iwf-kakao-body');
     if (!target || !select || !body) return;
     var template = kakaoTemplates().find(function (entry) { return entry.key === select.value; });
     if (template) body.value = kakaoMessagePreview(template, target.customer);
+    syncKakaoTemplateExtras();
   }
   function saveKakaoDraft(kind, id) {
     if (!canUseKakaoPilot()) return;
@@ -4321,13 +4375,15 @@
     var templates = kakaoTemplates(), options = templates.map(function (template) { return '<option value="' + esc(template.key) + '">' + esc(template.label) + '</option>'; }).join('');
     var missingPhone = targets.filter(function (target) { return !phoneText(target.customer.phone || target.customer.phone_raw || ''); }).length;
     var names = targets.slice(0, 6).map(function (target) { return target.customer.name || '고객'; }).join(', ') + (targets.length > 6 ? ' 외 ' + (targets.length - 6) + '명' : '');
-    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoBulkDraft(\'' + esc(area) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 발송하기</h2><p>' + esc(area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객') + '에게 같은 템플릿을 발송 준비합니다.</p></div><div class="iw-kakao-summary"><strong>선택 ' + targets.length + '명</strong><span>' + (missingPhone ? '연락처 없음 ' + missingPhone + '명 포함' : '발송 준비 가능') + '</span></div><p class="iw-kakao-recipients">' + esc(names) + '</p><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoBulkPreview()">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], { name: '#{고객명}' })) + '</textarea></label></div><p class="iw-kakao-note">#{고객명}은 각 고객 이름으로 바뀌어 발송 준비 기록에 저장됩니다. 담당자명, 회사명, 연락처는 개인정보 수정의 내 정보 기준으로 채워집니다. 실제 알림톡 발송은 공급자 API 연결 후 가능합니다.</p><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">선택 ' + targets.length + '명 저장</button></div></form>');
+    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoBulkDraft(\'' + esc(area) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 발송하기</h2><p>' + esc(area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객') + '에게 같은 템플릿을 발송 준비합니다.</p></div><div class="iw-kakao-summary"><strong>선택 ' + targets.length + '명</strong><span>' + (missingPhone ? '연락처 없음 ' + missingPhone + '명 포함' : '발송 준비 가능') + '</span></div><p class="iw-kakao-recipients">' + esc(names) + '</p><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoBulkPreview()">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], { name: '#{고객명}' })) + '</textarea></label></div>' + businessCardUploadHtml() + '<p class="iw-kakao-note">#{고객명}은 각 고객 이름으로 바뀌어 발송 준비 기록에 저장됩니다. 담당자명, 회사명, 연락처는 개인정보 수정의 내 정보 기준으로 채워집니다. 실제 알림톡 발송은 공급자 API 연결 후 가능합니다.</p><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">선택 ' + targets.length + '명 저장</button></div></form>');
+    syncKakaoTemplateExtras();
   }
   function refreshKakaoBulkPreview() {
     var select = document.getElementById('iwf-kakao-template'), body = document.getElementById('iwf-kakao-body');
     if (!select || !body) return;
     var template = kakaoTemplates().find(function (entry) { return entry.key === select.value; });
     if (template) body.value = kakaoMessagePreview(template, { name: '#{고객명}' });
+    syncKakaoTemplateExtras();
   }
   function saveKakaoBulkDraft(area) {
     var targets = kakaoBulkTargets(area), templateKey = value('iwf-kakao-template'), bodyText = value('iwf-kakao-body');
@@ -4760,7 +4816,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, uploadKakaoBusinessCard: uploadKakaoBusinessCard, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openAzRoomTool: openAzRoomTool, startChatScrollCapture: startChatScrollCapture, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, openBriefingSearchResult: openBriefingSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,

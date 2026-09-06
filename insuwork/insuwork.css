@@ -58,19 +58,29 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 .iw-header-actions{display:flex;flex-shrink:0;align-items:center;gap:10px}
 .iw-mobile-link{display:inline-flex;align-items:center;height:34px;padding:0 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);font-size:var(--fs-meta);text-decoration:none;white-space:nowrap}
 .iw-mobile-link:hover{color:var(--ac);border-color:var(--ac)}
-.iw-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
+.iw-profile-dialog{position:fixed;inset:50% auto auto 50%;width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;padding:0;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 24px 80px color-mix(in srgb,var(--tp) 24%,transparent);transform:translate(-50%,-50%)}
 .iw-profile-dialog::backdrop{background:color-mix(in srgb,var(--tp) 42%,transparent);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .iw-profile-dialog form{display:grid;gap:18px;padding:24px}
 .iw-profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .iw-profile-head strong{font-size:var(--fs-title-sm)}
 .iw-profile-head p{margin:6px 0 0;color:var(--ts);font-size:var(--fs-meta)}
+.iw-profile-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,280px);gap:18px;align-items:start}
+.iw-profile-fields{display:grid;gap:18px}
 .iw-profile-dialog label{display:grid;gap:8px;color:var(--ts);font-size:var(--fs-meta);font-weight:var(--fw-medium)}
 .iw-profile-dialog input{min-height:44px;padding:0 13px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit}
+.iw-profile-card-pick input{padding:10px 13px}
+.iw-profile-card-preview{display:grid;gap:10px;padding:14px;border:1px solid color-mix(in srgb,var(--ac) 26%,var(--bd));border-radius:var(--radius-sm);background:color-mix(in srgb,var(--ac) 5%,var(--s1))}
+.iw-profile-card-preview strong{color:var(--tp);font-size:var(--fs-body)}
+.iw-profile-card-preview>div{display:grid;place-items:center;aspect-ratio:1.58/1;width:100%;overflow:hidden;border:1px dashed color-mix(in srgb,var(--ac) 34%,var(--bd));border-radius:var(--radius-sm);background:var(--s1)}
+.iw-profile-card-preview img{display:block;width:100%;height:100%;object-fit:contain}
+.iw-profile-card-preview span{padding:12px;color:var(--ts);font-size:var(--fs-caption);text-align:center}
+.iw-profile-card-preview p{margin:0;color:var(--ts);font-size:var(--fs-caption);line-height:1.5}
 .iw-profile-close{width:34px;height:34px;border:0;border-radius:var(--radius-full);background:var(--s2);color:var(--tp);font-size:var(--fs-xl);cursor:pointer}
 .iw-profile-message{min-height:20px;margin:0;color:var(--ts);font-size:var(--fs-meta)}
 .iw-profile-actions{display:flex;justify-content:flex-end;gap:8px}
 .iw-profile-actions button{min-height:40px;padding:0 18px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--tp);font-weight:var(--fw-medium);cursor:pointer}
 .iw-profile-actions .iw-profile-save{border-color:var(--ac);background:var(--ac);color:var(--s1)}
+@media(max-width:680px){.iw-profile-body{grid-template-columns:1fr}.iw-profile-card-preview{order:-1}}
 .iw-page #v-insuwork .iw-dialog{position:fixed;inset:50% auto auto 50%;max-height:calc(100dvh - 32px);margin:0;overflow:auto;transform:translate(-50%,-50%)}
 /* 로그인 후 고객 등록 모달의 운전여부는 행별 균등분할 기준으로 표시한다. */
 .iw-page #v-insuwork .iw-driving-panel{left:0;right:0;box-sizing:border-box;width:100%;max-width:100%;overflow-x:hidden}
@@ -180,6 +190,16 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 #v-insuwork .iw-kakao-fields select:focus,#v-insuwork .iw-kakao-fields textarea:focus{outline:2px solid color-mix(in srgb,#f8dc53 55%,transparent);border-color:#d9b62f}
 #v-insuwork .iw-kakao-note{margin:0;padding:12px 14px;border:1px solid color-mix(in srgb,var(--ac) 24%,var(--bd));border-radius:8px;background:color-mix(in srgb,var(--ac) 7%,var(--s1));color:var(--ts);font-size:var(--fs-body);line-height:1.6}
 #v-insuwork .iw-kakao-recipients{margin:0;padding:0 2px;overflow:hidden;color:var(--bodytx);font-size:var(--fs-body);line-height:1.5;text-overflow:ellipsis;white-space:nowrap}
+#v-insuwork .iw-kakao-card-upload{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(170px,220px);align-items:center;gap:10px 14px;margin:0;padding:13px 14px;border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd));border-radius:8px;background:color-mix(in srgb,var(--ac) 5%,var(--s1))}
+#v-insuwork .iw-kakao-card-upload[hidden]{display:none}
+#v-insuwork .iw-kakao-card-info{display:grid;gap:4px;min-width:0}
+#v-insuwork .iw-kakao-card-upload strong{color:var(--tp);font-size:var(--fs-body);line-height:1.3}
+#v-insuwork .iw-kakao-card-upload span{overflow:hidden;color:var(--ts);font-size:var(--fs-caption);text-overflow:ellipsis;white-space:nowrap}
+#v-insuwork .iw-kakao-card-upload .iw-btn{min-height:34px;padding:0 12px;font-size:var(--fs-caption);white-space:nowrap}
+#v-insuwork .iw-kakao-card-preview{display:grid;place-items:center;aspect-ratio:1.58/1;width:100%;overflow:hidden;border:1px dashed color-mix(in srgb,var(--ac) 34%,var(--bd));border-radius:8px;background:var(--s1)}
+#v-insuwork .iw-kakao-card-preview img{display:block;width:100%;height:100%;object-fit:contain}
+#v-insuwork .iw-kakao-card-preview span{padding:10px;text-align:center;white-space:normal}
+#v-insuwork .iw-kakao-card-upload p{grid-column:1/-1;margin:0;color:var(--ts);font-size:var(--fs-caption);line-height:1.5}
 #v-insuwork .iw-kakao-actions{margin-top:2px}
 #v-insuwork .iw-kakao-bulkbar{display:flex;align-items:center;gap:8px;margin:10px 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,#f2d24b 42%,var(--bd));border-radius:8px;background:color-mix(in srgb,#f8dc53 10%,var(--s1))}
 #v-insuwork .iw-kakao-bulkbar span{margin-right:auto;color:var(--tp);font-size:var(--fs-body);font-weight:700;white-space:nowrap}
@@ -203,6 +223,7 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
   #v-insuwork .iw-kakao-fields label{grid-template-columns:1fr;gap:7px}
   #v-insuwork .iw-kakao-fields label>span{padding-top:0}
   #v-insuwork .iw-kakao-recipients{white-space:normal}
+  #v-insuwork .iw-kakao-card-upload{grid-template-columns:1fr}
 }
 #v-insuwork .iw-nav-guide{
   position:relative;
