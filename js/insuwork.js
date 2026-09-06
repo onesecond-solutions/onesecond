@@ -812,7 +812,6 @@
   function homeTodayKind(event) {
     if (event && event.event_type === 'birthday') return 'birthday';
     if (event && event.event_type === 'insurance-age') return 'age';
-    if (event && event.event_type === 'application') return 'care';
     if (isCareTask(event)) return 'care';
     return 'schedule';
   }
@@ -831,7 +830,7 @@
     if (state.homeErrorDate === state.homeDate) return '<div class="iw-empty iw-home-today-empty" role="alert">일정을 불러오지 못했습니다. 날짜를 다시 선택해 주세요.</div>';
     var labels = [state.homeDate === ymd(new Date()) ? '오늘일정' : '일정', '고객케어', '상령일', '생일'];
     var columns = [[], [], [], []];
-    todayEvents.slice().sort(function (a, b) {
+    todayEvents.slice().filter(function (event) { return !(event && event.event_type === 'application'); }).sort(function (a, b) {
       return (a.completed_at ? 1 : 0) - (b.completed_at ? 1 : 0) || eventPriority(a) - eventPriority(b) || String(a.event_time || '').localeCompare(String(b.event_time || '')) || String(a.title || '').localeCompare(String(b.title || ''), 'ko');
     }).forEach(function (event) { columns[homeTodayColumnIndex(event)].push(event); });
     var total = columns.reduce(function (sum, col) { return sum + col.length; }, 0);
