@@ -1666,12 +1666,12 @@
   }
   function calendarHtml() {
     var modes = [['day', '일'], ['week', '주'], ['month', '월'], ['agenda', '일정']];
-    var view = '', monthMode = state.calendarMode === 'month';
+    var view = '', monthMode = state.calendarMode === 'month', showMonthSummary = monthMode && canUseKakaoPilot();
     if (monthMode) view = monthView();
     else if (state.calendarMode === 'agenda') view = agendaView();
     else if (state.calendarMode === 'day') view = timeView([state.selectedDate]);
     else { var selected = parseDate(state.selectedDate); selected.setDate(selected.getDate() - selected.getDay()); var week = []; for (var i = 0; i < 7; i++) week.push(addDays(selected, i)); view = timeView(week); }
-    return statusHtml() + '<div class="iw-calendar-shell' + (monthMode ? ' has-month-summary' : '') + '"><div class="iw-calendar-toolbar"><div class="iw-calendar-left"><button class="iw-btn iw-today" onclick="OSInsuwork.calendarToday()">오늘</button><span class="iw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSInsuwork.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSInsuwork.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + helpBadgeHtml('calendar') + '</h2></div><div class="iw-actions iw-mode">' + modes.map(function (mode) { return '<button class="iw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="iw-btn primary" onclick="OSInsuwork.addEvent()">+ 일정</button></div></div>' + (monthMode ? calendarMonthlySummaryHtml() : '') + view + '</div>';
+    return statusHtml() + '<div class="iw-calendar-shell' + (showMonthSummary ? ' has-month-summary' : '') + '"><div class="iw-calendar-toolbar"><div class="iw-calendar-left"><button class="iw-btn iw-today" onclick="OSInsuwork.calendarToday()">오늘</button><span class="iw-month-switcher"><button type="button" aria-label="이전 보기" onclick="OSInsuwork.moveCalendar(-1)">‹</button><button type="button" aria-label="다음 보기" onclick="OSInsuwork.moveCalendar(1)">›</button></span><h2>' + calendarTitle() + helpBadgeHtml('calendar') + '</h2></div><div class="iw-actions iw-mode">' + modes.map(function (mode) { return '<button class="iw-btn ' + (state.calendarMode === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setCalendarMode(\'' + mode[0] + '\')">' + mode[1] + '</button>'; }).join('') + '<button class="iw-btn primary" onclick="OSInsuwork.addEvent()">+ 일정</button></div></div>' + (showMonthSummary ? calendarMonthlySummaryHtml() : '') + view + '</div>';
   }
   function scriptStageLabel(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].label; return stage || ''; }
   function scriptStageGroup(stage) { for (var i = 0; i < SCRIPT_STAGES.length; i++) if (SCRIPT_STAGES[i].stage === stage) return SCRIPT_STAGES[i].group; return 'mid'; }
