@@ -44,7 +44,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0, briefingSearchRows: [], briefingSearchQuery: '', briefingSearchLoading: false, briefingSearchRequestId: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
-    calendarMode: 'month', calendarSummaryOpen: false, calendarSummaryBucket: '', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
+    calendarMode: 'month', calendarSummaryOpen: false, calendarSummaryBuckets: [], selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
@@ -1652,7 +1652,7 @@
       return '<button type="button" class="iw-month-summary-event ' + calendarEventKind(event) + '" onclick="' + target + '"><time>' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8)) + '</time><span>' + esc(eventTitleLabel(event)) + '</span></button>';
     }
     function summaryRow(id, group, label, list, kind) {
-      var open = state.calendarSummaryBucket === id;
+      var open = state.calendarSummaryBuckets.indexOf(id) >= 0;
       return '<div class="iw-month-summary-row ' + kind + (open ? ' open' : '') + '"><button type="button" onclick="OSInsuwork.toggleCalendarSummaryBucket(\'' + esc(id) + '\')"><span>' + esc(group) + '</span><strong>' + esc(label) + '</strong>' + count(list) + '<i aria-hidden="true">' + (open ? '닫기' : '보기') + '</i></button><div>' + (open ? (list.length ? list.map(eventLine).join('') : '<em>없음</em>') : '') + '</div></div>';
     }
     var confirmed = [
@@ -1672,11 +1672,13 @@
   }
   function toggleCalendarSummary(force) {
     state.calendarSummaryOpen = typeof force === 'boolean' ? force : !state.calendarSummaryOpen;
-    if (!state.calendarSummaryOpen) state.calendarSummaryBucket = '';
+    if (!state.calendarSummaryOpen) state.calendarSummaryBuckets = [];
     renderContent();
   }
   function toggleCalendarSummaryBucket(id) {
-    state.calendarSummaryBucket = state.calendarSummaryBucket === id ? '' : id;
+    var index = state.calendarSummaryBuckets.indexOf(id);
+    if (index >= 0) state.calendarSummaryBuckets.splice(index, 1);
+    else state.calendarSummaryBuckets.push(id);
     renderContent();
   }
   function calendarHtml() {
