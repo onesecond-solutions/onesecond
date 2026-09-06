@@ -955,12 +955,12 @@
     /* legacyId 충돌 방지 — 가장 이른(=customerProfile(customer).contract_date와 같은) 계약일만 옛 legacyId 포맷을 유지(기존 케어 완료·생성 이력 보존), 그 외 계약일은 '@날짜'를 붙여 유니크화 */
     var legacyBase = String(customerProfile(customer).contract_date || '').slice(0, 10);
     var suffix = base === legacyBase ? '' : '@' + base;
-    var titleSuffix = suffix ? ' (청약 ' + base + ')' : '';
+    var titleSuffix = ' (청약일자 ' + base + ')';
     var targets = [], offsetDates = {};
     CARE_STEPS.forEach(function (step) {
       var date = addDays(base, step[0]);
       offsetDates[date] = true;
-      targets.push({ legacyId: customer.id + ':' + step[0] + suffix, date: date, title: name + ' 청약 ' + step[1] + ' 케어' + titleSuffix, description: name + ' 고객 ' + applyLabel + ' 기준 ' + step[1] + ' 확인 일정입니다.' + (phone ? ' 연락처: ' + phone : '') });
+      targets.push({ legacyId: customer.id + ':' + step[0] + suffix, date: date, title: name + ' ' + step[1] + ' 케어' + titleSuffix, description: name + ' 고객 ' + applyLabel + ' 기준 ' + step[1] + ' 확인 일정입니다.' + (phone ? ' 연락처: ' + phone : '') });
     });
     var contractYear = parseDate(base).getFullYear(), currentYear = new Date().getFullYear();
     for (var year = contractYear + 1; year <= currentYear + 2; year++) {
@@ -974,16 +974,16 @@
     var bases = contractDatesOf(customer).filter(function (base) { return /^\d{4}-\d{2}-\d{2}$/.test(base); });
     if (!bases.length || !customer || !customer.id) return Promise.resolve(true);
     var targets = bases.reduce(function (all, base) { return all.concat(careTaskTargets(customer, base)); }, []);
-    var existingRows = Array.isArray(knownRows) ? Promise.resolve(knownRows) : api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,task_date,description');
+    var existingRows = Array.isArray(knownRows) ? Promise.resolve(knownRows) : api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&legacy_source=eq.care_auto&customer_id=eq.' + encodeURIComponent(customer.id) + '&select=id,legacy_id,title,task_date,description');
     return existingRows.then(function (existing) {
       var have = {}; (existing || []).forEach(function (row) { have[row.legacy_id] = row; });
       var toCreate = targets.filter(function (t) { return !have[t.legacyId]; });
-      var toUpdate = targets.filter(function (t) { var row = have[t.legacyId]; return row && (row.task_date !== t.date || row.description !== t.description); });
+      var toUpdate = targets.filter(function (t) { var row = have[t.legacyId]; return row && (row.title !== t.title || row.task_date !== t.date || row.description !== t.description); });
       var creates = toCreate.map(function (t) {
         return writeOne('insuwork_tasks', { owner_id: currentUserId(), customer_id: customer.id, title: t.title, description: t.description, task_date: t.date, legacy_source: 'care_auto', legacy_id: t.legacyId }).then(function (task) { upsertTask(task); return true; }).catch(function () { return false; });
       });
       var updates = toUpdate.map(function (t) {
-        return updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(have[t.legacyId].id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { task_date: t.date, description: t.description }).then(function (task) { upsertTask(task); return true; }).catch(function () { return false; });
+        return updateOne('insuwork_tasks?id=eq.' + encodeURIComponent(have[t.legacyId].id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { title: t.title, task_date: t.date, description: t.description }).then(function (task) { upsertTask(task); return true; }).catch(function () { return false; });
       });
       return Promise.all(creates.concat(updates)).then(function (results) { return results.every(function (ok) { return ok; }); });
     }).catch(function () { return false; });
@@ -996,7 +996,7 @@
     if (!customers.length) return Promise.resolve();
     var rows = [], pageSize = 1000;
     function readPage(offset) {
-      return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(userId) + '&legacy_source=eq.care_auto&order=id.asc&limit=' + pageSize + '&offset=' + offset + '&select=id,customer_id,legacy_id,task_date,description').then(function (page) {
+      return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(userId) + '&legacy_source=eq.care_auto&order=id.asc&limit=' + pageSize + '&offset=' + offset + '&select=id,customer_id,legacy_id,title,task_date,description').then(function (page) {
         rows = rows.concat(page);
         if (page.length === pageSize) return readPage(offset + pageSize);
       });
