@@ -115,6 +115,7 @@
   function isFavoriteSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.setting_key === 'favorites'; }
   function isWorkspaceSetting(item) { var payload = item && item.legacy_payload || {}; return item && item.item_type === 'memo' && payload.workspace_category === 'settings'; }
   function isConsultAttachmentItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'consultation'; }
+  function isKakaoPilotItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'kakao_message_pilot'; }
   /* 2026-08-25 대표 확정 — 고객 상세카드 "고객내용" 메모·첨부(saveCustomerRich, workspace_category:'customer')가
      상담 첨부(isConsultAttachmentItem)처럼 자료실 목록에서 걸러지지 않고 그대로 노출되던 버그 수정. */
   function isCustomerAttachmentItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'customer'; }
@@ -271,7 +272,7 @@
     var columnSetting = state.data.items.find(isConsultColumnSetting); if (columnSetting && columnSetting.body) localStorage.setItem(consultColumnStorageKey(), columnSetting.body);
     applyFavoriteSetting(state.data.items);
     state.data.scripts = state.data.items.filter(function (item) { return item.item_type === 'note' && !isConsultAttachmentItem(item); }).map(function (item) { return Object.assign({}, item, { script_text: item.body }); });
-    state.data.library = state.data.items.filter(function (item) { return item.item_type !== 'note' && !isWorkspaceSetting(item) && !isConsultAttachmentItem(item) && !isCustomerAttachmentItem(item); }).map(function (item) { return Object.assign({}, item, { memo_text: item.item_type === 'memo' ? item.body : null, description: item.body, link_url: item.url, file_url: item.item_type === 'file' ? item.storage_path : null }); });
+    state.data.library = state.data.items.filter(function (item) { return item.item_type !== 'note' && !isWorkspaceSetting(item) && !isConsultAttachmentItem(item) && !isCustomerAttachmentItem(item) && !isKakaoPilotItem(item); }).map(function (item) { return Object.assign({}, item, { memo_text: item.item_type === 'memo' ? item.body : null, description: item.body, link_url: item.url, file_url: item.item_type === 'file' ? item.storage_path : null }); });
     state.data.events = state.data.events.map(function (item) { return Object.assign({}, item, { event_date: item.task_date, event_time: item.task_time, event_end_date: item.end_date || item.task_date, event_end_time: item.end_time || null }); });
     state.data.consultations = state.data.consultations.map(function (item) { return Object.assign({}, item, { memo: item.content }); });
     if (state.fullLoaded) pruneFavorites();
@@ -1347,7 +1348,7 @@
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="iwd-customer-status">' + (needsReview ? '<option value="" selected>상태를 선택하세요</option>' : '') + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + familySectionHtml(item) + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section><div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
+      + familySectionHtml(item) + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('customer', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -1397,7 +1398,7 @@
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwd-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section><div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -3373,6 +3374,23 @@
   }
   function customerExistingAttachments(customerId) { var root = customerAttachmentRoot(customerId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="iw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(attachmentItemHtml).join('') + '</div>'; }
   function consultationExistingAttachments(consultationId) { var root = consultationAttachmentRoot(consultationId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="iw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(attachmentItemHtml).join('') + '</div>'; }
+  function kakaoHistoryRows(area, id) {
+    return (state.data.items || []).filter(function (entry) {
+      var payload = entry.legacy_payload || {};
+      if (payload.workspace_category !== 'kakao_message_pilot' || payload.target_area !== area) return false;
+      if (area === 'customer') return String(payload.customer_id || '') === String(id || '');
+      return String(payload.consultation_id || '') === String(id || '');
+    }).sort(function (a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); }).slice(0, 5);
+  }
+  function kakaoHistoryHtml(area, id) {
+    if (!canUseKakaoPilot()) return '';
+    var rows = kakaoHistoryRows(area, id);
+    if (!rows.length) return '<section class="iw-kakao-history"><h3>카카오 발송 준비 이력</h3><p>아직 저장된 발송 준비 기록이 없습니다.</p></section>';
+    return '<section class="iw-kakao-history"><h3>카카오 발송 준비 이력</h3><div>' + rows.map(function (entry) {
+      var payload = entry.legacy_payload || {}, text = stripHtml(entry.body || '');
+      return '<article><strong>' + esc(payload.template_label || entry.title || '카카오톡') + '</strong><span>' + esc(formatDate(entry.created_at)) + ' · ' + esc(payload.send_status === 'draft' ? '발송 준비' : payload.send_status || '기록') + '</span><p>' + esc(text).slice(0, 180) + '</p></article>';
+    }).join('') + '</div></section>';
+  }
   function addConsultation(customerId) { resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId || ''); }) || {}; dialog(formShell('상담 등록', consultationForm(null, customer), 'OSInsuwork.saveConsultation()')); refreshInsuranceAge(); bindWorkDraft(document.querySelector('#iw-dialog .iw-form'), workDraftKey('consultation', 'new-' + (customer.id || 'blank'))); refreshInsuranceAge(); }
   function editConsultation(id) { var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return; resetRichPending(); var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }) || {}; dialog(formShell('상담 수정', consultationForm(item, customer), 'OSInsuwork.saveConsultation()')); refreshInsuranceAge(); hydrateRichStorage(); bindWorkDraft(document.querySelector('#iw-dialog .iw-form'), workDraftKey('consultation', 'edit-' + id)); refreshInsuranceAge(); }
   function refreshInsuranceAge() { var target = document.getElementById('iwf-insurance-age'); if (!target) return; var age = insuranceAge(value('iwf-consult-birth'), value('iwf-consult-date')); target.textContent = '보험나이 ' + (age === '' ? '-' : age + '세'); }
