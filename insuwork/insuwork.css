@@ -216,6 +216,27 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 #v-insuwork .iw-kakao-history article strong{color:var(--tp);font-size:var(--fs-caption)}
 #v-insuwork .iw-kakao-history article span{color:var(--ts);font-size:11px}
 #v-insuwork .iw-kakao-history article p{margin:0;color:var(--bodytx);font-size:var(--fs-caption);line-height:1.5}
+#v-insuwork .iw-kakao-hub{position:fixed;right:26px;bottom:28px;z-index:42}
+#v-insuwork .iw-kakao-hub-toggle{position:relative;display:grid;place-items:center;width:58px;height:58px;border:0;border-radius:999px;background:#2563eb;color:#fff;box-shadow:0 16px 38px rgba(37,99,235,.32);font:inherit;font-size:17px;font-weight:800;cursor:pointer}
+#v-insuwork .iw-kakao-hub-toggle.waiting{background:#f8dc53;color:#2c2412;box-shadow:0 16px 38px rgba(184,132,21,.24)}
+#v-insuwork .iw-kakao-hub-toggle.danger{background:#d93025;color:#fff;box-shadow:0 16px 38px rgba(217,48,37,.28)}
+#v-insuwork .iw-kakao-hub-toggle b{position:absolute;top:-5px;right:-5px;display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border:2px solid var(--s1);border-radius:999px;background:#d93025;color:#fff;font-size:11px;line-height:1}
+#v-insuwork .iw-kakao-hub-panel{position:absolute;right:0;bottom:70px;display:grid;gap:12px;width:min(360px,calc(100vw - 32px));padding:16px;border:1px solid color-mix(in srgb,var(--ac) 24%,var(--bd));border-radius:12px;background:var(--s1);box-shadow:0 24px 72px color-mix(in srgb,var(--tp) 24%,transparent);color:var(--tp)}
+#v-insuwork .iw-kakao-hub-panel[hidden]{display:none}
+#v-insuwork .iw-kakao-hub-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#v-insuwork .iw-kakao-hub-panel header strong{font-size:17px}
+#v-insuwork .iw-kakao-hub-panel header button{width:30px;height:30px;border:0;border-radius:999px;background:var(--s2);color:var(--tp);font:inherit;font-size:18px;cursor:pointer}
+#v-insuwork .iw-kakao-hub-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#v-insuwork .iw-kakao-hub-stats span{display:grid;gap:3px;padding:10px;border:1px solid var(--bd);border-radius:8px;background:color-mix(in srgb,var(--s2) 72%,transparent);color:var(--ts);font-size:12px;text-align:center}
+#v-insuwork .iw-kakao-hub-stats b{color:var(--tp);font-size:18px;line-height:1}
+#v-insuwork .iw-kakao-hub-tabs{display:flex;gap:6px;overflow:auto}
+#v-insuwork .iw-kakao-hub-tabs button{min-height:30px;padding:0 10px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--ts);font:inherit;font-size:12px;white-space:nowrap}
+#v-insuwork .iw-kakao-hub-tabs .on{border-color:#f2d24b;background:#fff5b8;color:#6f5210;font-weight:800}
+#v-insuwork .iw-kakao-hub-list{display:grid;gap:7px;max-height:260px;overflow:auto}
+#v-insuwork .iw-kakao-hub-list article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--s1)}
+#v-insuwork .iw-kakao-hub-list strong,#v-insuwork .iw-kakao-hub-list span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#v-insuwork .iw-kakao-hub-list strong{font-size:13px}
+#v-insuwork .iw-kakao-hub-list span,#v-insuwork .iw-kakao-hub-list small,#v-insuwork .iw-kakao-hub-list p{margin:0;color:var(--ts);font-size:12px}
 @media(max-width:680px){
   #v-insuwork .iw-kakao-form{padding:24px 20px 20px}
   #v-insuwork .iw-kakao-summary{display:grid;justify-content:stretch}
@@ -224,6 +245,8 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
   #v-insuwork .iw-kakao-fields label>span{padding-top:0}
   #v-insuwork .iw-kakao-recipients{white-space:normal}
   #v-insuwork .iw-kakao-card-upload{grid-template-columns:1fr}
+  #v-insuwork .iw-kakao-hub{right:16px;bottom:18px}
+  #v-insuwork .iw-kakao-hub-toggle{width:52px;height:52px}
 }
 #v-insuwork .iw-nav-guide{
   position:relative;
