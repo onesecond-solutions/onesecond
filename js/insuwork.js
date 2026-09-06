@@ -44,7 +44,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0, briefingSearchRows: [], briefingSearchQuery: '', briefingSearchLoading: false, briefingSearchRequestId: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
-    calendarMode: 'month', calendarSummaryOpen: false, selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
+    calendarMode: 'month', calendarSummaryOpen: false, calendarSummaryBucket: '', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
@@ -1651,26 +1651,32 @@
       var date = String(event.event_date || '').slice(0, 10), target = event && event.customer_id && event.builtin ? 'OSInsuwork.openCustomerFromEvent(\'' + esc(event.customer_id) + '\')' : 'OSInsuwork.showEvent(\'' + esc(event.id) + '\')';
       return '<button type="button" class="iw-month-summary-event ' + calendarEventKind(event) + '" onclick="' + target + '"><time>' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8)) + '</time><span>' + esc(eventTitleLabel(event)) + '</span></button>';
     }
-    function summaryRow(group, label, list, kind) {
-      return '<div class="iw-month-summary-row ' + kind + '"><span>' + esc(group) + '</span><strong>' + esc(label) + '</strong>' + count(list) + '<div>' + (list.length ? list.map(eventLine).join('') : '<em>없음</em>') + '</div></div>';
+    function summaryRow(id, group, label, list, kind) {
+      var open = state.calendarSummaryBucket === id;
+      return '<div class="iw-month-summary-row ' + kind + (open ? ' open' : '') + '"><button type="button" onclick="OSInsuwork.toggleCalendarSummaryBucket(\'' + esc(id) + '\')"><span>' + esc(group) + '</span><strong>' + esc(label) + '</strong>' + count(list) + '<i aria-hidden="true">' + (open ? '닫기' : '보기') + '</i></button><div>' + (open ? (list.length ? list.map(eventLine).join('') : '<em>없음</em>') : '') + '</div></div>';
     }
     var confirmed = [
-      summaryRow('생일', '가족', buckets.familyBirthday, 'birthday'),
-      summaryRow('생일', '직원', buckets.staffBirthday, 'birthday'),
-      summaryRow('생일', '고객', buckets.customerBirthday, 'birthday'),
-      summaryRow('고객케어', '31일', buckets.care31, 'customer'),
-      summaryRow('고객케어', '91일', buckets.care91, 'customer'),
-      summaryRow('고객케어', '181일', buckets.care181, 'customer'),
-      summaryRow('고객케어', '365일', buckets.care365, 'customer'),
-      summaryRow('고객케어', 'N년', buckets.careYear, 'customer'),
-      summaryRow('상령일', '고객', buckets.insuranceAge, 'insurance-age'),
-      summaryRow('청약일', '고객', buckets.application, 'customer')
+      summaryRow('birthday-family', '생일', '가족', buckets.familyBirthday, 'birthday'),
+      summaryRow('birthday-staff', '생일', '직원', buckets.staffBirthday, 'birthday'),
+      summaryRow('birthday-customer', '생일', '고객', buckets.customerBirthday, 'birthday'),
+      summaryRow('care-31', '고객케어', '31일', buckets.care31, 'customer'),
+      summaryRow('care-91', '고객케어', '91일', buckets.care91, 'customer'),
+      summaryRow('care-181', '고객케어', '181일', buckets.care181, 'customer'),
+      summaryRow('care-365', '고객케어', '365일', buckets.care365, 'customer'),
+      summaryRow('care-year', '고객케어', 'N년', buckets.careYear, 'customer'),
+      summaryRow('insurance-age', '상령일', '고객', buckets.insuranceAge, 'insurance-age'),
+      summaryRow('application', '청약일', '고객', buckets.application, 'customer')
     ].join('');
-    var flexible = summaryRow('상담일정', '추가', buckets.consultation, 'schedule') + summaryRow('기타', '일정', buckets.other, 'schedule');
+    var flexible = summaryRow('consultation', '상담일정', '추가', buckets.consultation, 'schedule') + summaryRow('other', '기타', '일정', buckets.other, 'schedule');
     return '<section class="iw-month-summary' + (state.calendarSummaryOpen ? ' open' : '') + '" aria-label="이달의 주요일정 요약"><button type="button" class="iw-month-summary-toggle" onclick="OSInsuwork.toggleCalendarSummary()"><span><strong>이달의 주요일정</strong><em>' + range.label + ' 기준</em></span><b>전체 ' + rows.length + '건</b><i aria-hidden="true">' + (state.calendarSummaryOpen ? '접기' : '펼치기') + '</i></button><div class="iw-month-summary-panel"><section><h3>확정된 일정</h3>' + confirmed + '</section><section><h3>추가되는 상담일정</h3>' + flexible + '</section></div></section>';
   }
   function toggleCalendarSummary(force) {
     state.calendarSummaryOpen = typeof force === 'boolean' ? force : !state.calendarSummaryOpen;
+    if (!state.calendarSummaryOpen) state.calendarSummaryBucket = '';
+    renderContent();
+  }
+  function toggleCalendarSummaryBucket(id) {
+    state.calendarSummaryBucket = state.calendarSummaryBucket === id ? '' : id;
     renderContent();
   }
   function calendarHtml() {
@@ -4917,7 +4923,7 @@
     filterStrategyPool: filterStrategyPool, setStrategyScope: setStrategyScope, selectStrategyCompany: selectStrategyCompany, toggleStrategyMonth: toggleStrategyMonth, openStrategy: openStrategy,
     setCalendarMode: function (mode) { state.calendarMode = mode; renderContent(); setUrl(false); },
     moveHomeDate: moveHomeDate, homeToday: homeToday, openHomeCalendar: openHomeCalendar,
-    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay, toggleCalendarSummary: toggleCalendarSummary,
+    moveCalendar: moveCalendar, calendarToday: function () { state.selectedDate = ymd(new Date()); state.cursor = new Date(); renderContent(); setUrl(false); }, selectDate: selectDate, openCalendarDay: openCalendarDay, toggleCalendarSummary: toggleCalendarSummary, toggleCalendarSummaryBucket: toggleCalendarSummaryBucket,
     todaySummary: todaySummary, upcomingConsultPrep: upcomingConsultPrep, eventsFor: eventsFor, eventsInRange: eventsInRange, customersDirectory: customersDirectory, consultationsDirectory: consultationsDirectory, quickSaveConsultationNote: quickSaveConsultationNote,
     libraryDirectory: libraryDirectory, libraryFeedDirectory: libraryFeedDirectory,
     __testLoad: function (data) { if (!isLocal()) return; state.data = data; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; rebuildWorkspaceDerived(); renderShell(); }
