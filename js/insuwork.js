@@ -44,7 +44,7 @@
   var state = {
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0, briefingSearchRows: [], briefingSearchQuery: '', briefingSearchLoading: false, briefingSearchRequestId: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
-    calendarMode: 'month', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, cursor: new Date(),
+    calendarMode: 'month', selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
     scriptsData: null, scriptsLoading: false, scriptsStage: 'opening', scriptsOpenId: null,
     newsData: null, newsLoading: false, newsPool: 'all', newsScope: 'all', newsCoSel: null, newsOpenMonths: {},
     newsCoNameQuery: '', newsCoNameComposing: false, newsCoNameTimer: 0,
@@ -1266,6 +1266,20 @@
     rows.forEach(function (item) { var status = customerDisplayStatus(item); if (counts.hasOwnProperty(status)) counts[status]++; });
     return counts;
   }
+  function kakaoBulkState(area) { return area === 'customer' ? state.kakaoSelectedCustomers : state.kakaoSelectedConsultations; }
+  function setKakaoBulkState(area, ids) { if (area === 'customer') state.kakaoSelectedCustomers = ids; else state.kakaoSelectedConsultations = ids; }
+  function kakaoBulkSelected(area, id) { return kakaoBulkState(area).indexOf(String(id)) >= 0; }
+  function kakaoBulkToggleHtml(area, id, label) {
+    var checked = kakaoBulkSelected(area, id);
+    return '<span role="checkbox" tabindex="0" class="iw-kakao-select' + (checked ? ' on' : '') + '" data-kakao-area="' + esc(area) + '" data-kakao-id="' + esc(id) + '" aria-checked="' + (checked ? 'true' : 'false') + '" aria-label="' + esc(label || '고객') + ' 선택" onclick="event.stopPropagation();OSInsuwork.toggleKakaoBulkTarget(\'' + esc(area) + '\',\'' + esc(id) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();OSInsuwork.toggleKakaoBulkTarget(\'' + esc(area) + '\',\'' + esc(id) + '\')}"></span>';
+  }
+  function kakaoBulkBarHtml(area, rows) {
+    if (!canUseKakaoPilot()) return '';
+    var ids = rows.map(function (entry) { return String(entry.id); });
+    var selected = kakaoBulkState(area).filter(function (id) { return ids.indexOf(String(id)) >= 0; });
+    var areaLabel = area === 'customer' ? '계약관리' : '상담관리';
+    return '<div class="iw-kakao-bulkbar"><span>' + esc(areaLabel) + ' 선택 ' + selected.length + '명</span><button type="button" class="iw-btn" onclick="OSInsuwork.selectAllKakaoBulk(\'' + esc(area) + '\')">현재 목록 전체선택</button><button type="button" class="iw-btn" onclick="OSInsuwork.clearKakaoBulk(\'' + esc(area) + '\')">선택해제</button><button type="button" class="iw-btn iw-kakao-btn" onclick="OSInsuwork.openKakaoBulkDraft(\'' + esc(area) + '\')" ' + (selected.length ? '' : 'disabled') + '>카카오톡 발송하기</button></div>';
+  }
   function customersHtml() {
     var columns = [{ key: 'date', label: '청약일자', width: 86 }, { key: 'name', label: '이름', width: 140 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 308, flex: true }, { key: 'status', label: '고객상태', width: 102 }];
     var gridStyle = '--iw-consult-template:' + consultGridTemplate(columns);
@@ -1281,10 +1295,10 @@
     if (selected && rows.indexOf(selected) >= state.customersRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.customersRenderLimit - 1));
     else rows = rows.slice(0, state.customersRenderLimit);
     var header = '<div class="iw-consult-columns" style="' + gridStyle + '">' + columns.map(function (column) { return '<span' + (column.key === 'name' ? ' class="iw-contract-name-head"' : '') + '>' + column.label + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
-    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '상담내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong class="iw-contract-name-cell">' + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span>' + familyBadgeHtml(item) + '</strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
+    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '상담내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong class="iw-contract-name-cell">' + kakaoBulkToggleHtml('customer', item.id, values.name) + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span>' + familyBadgeHtml(item) + '</strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
     var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
-    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>계약관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
+    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>계약관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + kakaoBulkBarHtml('customer', rows) + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function familyCandidates(customer) {
     var note = stripHtml(customerProfile(customer).note || ''), kin = /(배우자|남편|아내|부모|아버지|어머니|엄마|아빠|아들|딸|자녀|형제|자매)/;
@@ -1370,11 +1384,11 @@
     var columns = '<div class="iw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { return '<span>' + esc(column.label) + '</span>'; }).join('') + '<button type="button" class="iw-consult-column-button" onclick="OSInsuwork.manageConsultColumns()">+ 컬럼</button></div>';
     var list = '<div class="iw-consult-list" role="list">' + columns + '<div class="iw-consult-rows">' + rows.map(function (item) {
       var customer = customers[item.customer_id] || {}, profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
-      return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>';
+      return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong>' + kakaoBulkToggleHtml('consultation', item.id, customer.name || '고객 상담') + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>';
     }).join('') + (rows.length ? '' : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreConsultations()') + '</div>';
     var detail = selected ? consultationDetailHtml(selected, customers[selected.customer_id] || {}) : '';
     var stats = statFilterBarHtml({ kind: 'consult', stages: CONSULT_STAGES, activeStatus: state.consultationStatusFilter, counts: counts, nameQuery: state.consultNameQuery, nameInputId: 'iw-consult-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterConsultationStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addConsultation()">+ 상담 등록</button>' });
-    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>상담관리' + helpBadgeHtml('consultations') + '</h2></div>' + stats + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master">' + list + '</section>' + detail + '</div></div>';
+    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>상담관리' + helpBadgeHtml('consultations') + '</h2></div>' + stats + kakaoBulkBarHtml('consultation', rows) + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master">' + list + '</section>' + detail + '</div></div>';
   }
   function manageConsultColumns() {
     var columns = consultColumns(), rows = columns.map(function (column, index) { return '<div class="iw-column-setting"><span>' + esc(column.label) + '</span><button type="button" onclick="OSInsuwork.moveConsultColumn(' + index + ',-1)"' + (index === 0 ? ' disabled' : '') + '>←</button><button type="button" onclick="OSInsuwork.moveConsultColumn(' + index + ',1)"' + (index === columns.length - 1 ? ' disabled' : '') + '>→</button>' + (column.custom ? '<button type="button" class="danger" onclick="OSInsuwork.deleteConsultColumn(\'' + esc(column.key) + '\')">삭제</button>' : '') + '</div>'; }).join('');
@@ -4213,6 +4227,30 @@
   function kakaoMessagePreview(template, customer) {
     return String(template.body || '').replace(/#\{고객명\}/g, customer && customer.name || '고객');
   }
+  function kakaoDraftRow(target, template, bodyText) {
+    var phone = phoneText(target.customer.phone || target.customer.phone_raw || '');
+    return {
+      owner_id: currentUserId(),
+      item_type: 'memo',
+      title: '카카오 발송 준비 · ' + (target.area === 'customer' ? '계약관리' : '상담관리') + ' · ' + (target.customer.name || '고객'),
+      body: sanitizeRich('<p><strong>[' + esc(writtenAt()) + '] ' + esc(template.label) + '</strong></p><p>' + esc(kakaoMessagePreview({ body: bodyText }, target.customer)).replace(/\n/g, '<br>') + '</p>'),
+      visibility: 'private',
+      legacy_payload: {
+        workspace_category: 'kakao_message_pilot',
+        target_area: target.area,
+        target_id: target.area === 'customer' ? target.customer.id : target.consultation.id,
+        customer_id: target.customer.id,
+        consultation_id: target.consultation ? target.consultation.id : null,
+        recipient_name: target.customer.name || '',
+        recipient_phone: phone || '',
+        template_key: template.key,
+        template_label: template.label,
+        send_status: 'draft',
+        provider_status: 'not_connected',
+        direction: 'outbound'
+      }
+    };
+  }
   function openKakaoDraft(kind, id) {
     if (!canUseKakaoPilot()) { briefingAlert('카카오톡 파일럿은 임태성 게이트에서만 사용할 수 있습니다.', '카카오톡 보내기'); return; }
     var target = kakaoTarget(kind, id);
@@ -4234,30 +4272,45 @@
     var target = kakaoTarget(kind, id), templateKey = value('iwf-kakao-template'), bodyText = value('iwf-kakao-body');
     var template = kakaoTemplates().find(function (entry) { return entry.key === templateKey; });
     if (!target || !template || !bodyText) { briefingAlert('발송 대상과 문안을 확인해 주세요.', '카카오톡 보내기'); return; }
-    var phone = phoneText(target.customer.phone || target.customer.phone_raw || '');
-    var title = '카카오 발송 준비 · ' + (target.area === 'customer' ? '계약관리' : '상담관리') + ' · ' + (target.customer.name || '고객');
-    var row = {
-      owner_id: currentUserId(),
-      item_type: 'memo',
-      title: title,
-      body: sanitizeRich('<p><strong>[' + esc(writtenAt()) + '] ' + esc(template.label) + '</strong></p><p>' + esc(bodyText).replace(/\n/g, '<br>') + '</p>'),
-      visibility: 'private',
-      legacy_payload: {
-        workspace_category: 'kakao_message_pilot',
-        target_area: target.area,
-        target_id: target.area === 'customer' ? target.customer.id : target.consultation.id,
-        customer_id: target.customer.id,
-        consultation_id: target.consultation ? target.consultation.id : null,
-        recipient_name: target.customer.name || '',
-        recipient_phone: phone || '',
-        template_key: template.key,
-        template_label: template.label,
-        send_status: 'draft',
-        provider_status: 'not_connected',
-        direction: 'outbound'
-      }
-    };
-    writeOne('insuwork_items', row).then(function (saved) { upsertWorkspaceItem(saved); finishSave('카카오톡 발송 준비 기록을 저장했습니다.'); }).catch(saveError);
+    writeOne('insuwork_items', kakaoDraftRow(target, template, bodyText)).then(function (saved) { upsertWorkspaceItem(saved); finishSave('카카오톡 발송 준비 기록을 저장했습니다.'); }).catch(saveError);
+  }
+  function toggleKakaoBulkTarget(area, id) {
+    var ids = kakaoBulkState(area).slice(), key = String(id), index = ids.indexOf(key);
+    if (index >= 0) ids.splice(index, 1); else ids.push(key);
+    setKakaoBulkState(area, ids);
+    renderContent();
+  }
+  function selectAllKakaoBulk(area) {
+    var nodes = Array.prototype.slice.call(document.querySelectorAll('#v-insuwork .iw-kakao-select[data-kakao-area="' + area + '"]'));
+    setKakaoBulkState(area, nodes.map(function (node) { return String(node.getAttribute('data-kakao-id') || ''); }).filter(Boolean));
+    renderContent();
+  }
+  function clearKakaoBulk(area) { setKakaoBulkState(area, []); renderContent(); }
+  function kakaoBulkTargets(area) {
+    var kind = area === 'customer' ? 'customer' : 'consultation';
+    return kakaoBulkState(area).map(function (id) { return kakaoTarget(kind, id); }).filter(Boolean);
+  }
+  function openKakaoBulkDraft(area) {
+    if (!canUseKakaoPilot()) return;
+    var targets = kakaoBulkTargets(area);
+    if (!targets.length) { briefingAlert('카카오톡을 보낼 대상을 선택해 주세요.', '카카오톡 발송하기'); return; }
+    var templates = kakaoTemplates(), options = templates.map(function (template) { return '<option value="' + esc(template.key) + '">' + esc(template.label) + '</option>'; }).join('');
+    var missingPhone = targets.filter(function (target) { return !phoneText(target.customer.phone || target.customer.phone_raw || ''); }).length;
+    var names = targets.slice(0, 6).map(function (target) { return target.customer.name || '고객'; }).join(', ') + (targets.length > 6 ? ' 외 ' + (targets.length - 6) + '명' : '');
+    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoBulkDraft(\'' + esc(area) + '\')"><h2>카카오톡 발송하기</h2><p class="iw-kakao-scope">' + esc(area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객') + ' · 선택 ' + targets.length + '명' + (missingPhone ? ' · 연락처 없음 ' + missingPhone + '명' : '') + '</p><p class="iw-kakao-recipients">' + esc(names) + '</p><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoBulkPreview()">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(templates[0].body) + '</textarea></label><p class="iw-kakao-note">#{고객명}은 각 고객 이름으로 바뀌어 발송 준비 기록에 저장됩니다. 실제 알림톡 발송은 공급자 API 연결 후 가능합니다.</p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">선택 ' + targets.length + '명 저장</button></div></form>');
+  }
+  function refreshKakaoBulkPreview() {
+    var select = document.getElementById('iwf-kakao-template'), body = document.getElementById('iwf-kakao-body');
+    if (!select || !body) return;
+    var template = kakaoTemplates().find(function (entry) { return entry.key === select.value; });
+    if (template) body.value = template.body;
+  }
+  function saveKakaoBulkDraft(area) {
+    var targets = kakaoBulkTargets(area), templateKey = value('iwf-kakao-template'), bodyText = value('iwf-kakao-body');
+    var template = kakaoTemplates().find(function (entry) { return entry.key === templateKey; });
+    if (!targets.length || !template || !bodyText) { briefingAlert('발송 대상과 문안을 확인해 주세요.', '카카오톡 발송하기'); return; }
+    Promise.all(targets.map(function (target) { return writeOne('insuwork_items', kakaoDraftRow(target, template, bodyText)); }))
+      .then(function (savedRows) { savedRows.forEach(upsertWorkspaceItem); setKakaoBulkState(area, []); finishSave('카카오톡 발송 준비 기록 ' + savedRows.length + '건을 저장했습니다.'); }).catch(saveError);
   }
   function selectConsultation(id) { resetRichPending(); state.selectedConsultation = id && String(state.selectedConsultation) !== String(id) ? id : null; renderContent(); }
   function selectCustomerDetail(id) { resetRichPending(); state.selectedCustomerDetail = id && String(state.selectedCustomerDetail) !== String(id) ? id : null; renderContent(); }
@@ -4683,7 +4736,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openAzRoomTool: openAzRoomTool, startChatScrollCapture: startChatScrollCapture, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, openBriefingSearchResult: openBriefingSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
