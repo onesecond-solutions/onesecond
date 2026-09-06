@@ -570,7 +570,7 @@
     }).join('') + '</details>';
   }
   function navHtml() {
-    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '계약관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료'], ['public-library', '⇄', '공개자료실']];
+    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '계약관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
     if (window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()) items.push(['ledger', '₩', '가계부']);
     var briefingGroup = [['◫', '뉴스 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업', 'section:product-lineups'], ['✎', '스크립트', 'section:scripts']];
