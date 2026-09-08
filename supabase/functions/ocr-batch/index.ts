@@ -53,6 +53,22 @@ async function rest(path: string, init?: RequestInit) {
   });
 }
 
+// PostgREST 프로젝트 응답 상한(통상 1,000행)을 넘는 큐도 빠짐없이 읽는다.
+// 쿼리에 limit을 넣지 않고 Range를 이동해야 오래된 리플릿 뒤의 신규 자료가 누락되지 않는다.
+async function restAll<T>(path: string, pageSize = 1000, maxPages = 20): Promise<T[]> {
+  const rows: T[] = [];
+  for (let page = 0; page < maxPages; page++) {
+    const from = page * pageSize;
+    const response = await rest(path, { headers: { Range: `${from}-${from + pageSize - 1}` } });
+    if (!response.ok) throw new Error(`paged rest ${response.status}: ${path}`);
+    const batch = await response.json();
+    if (!Array.isArray(batch)) throw new Error(`paged rest invalid response: ${path}`);
+    rows.push(...batch);
+    if (batch.length < pageSize) break;
+  }
+  return rows;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST만 허용됩니다." }, 405);
@@ -201,14 +217,32 @@ async function processBriefingLeaflets(limit: number) {
   const out = { picked: 0, ok: 0, empty: 0, failed: 0, oversize: 0, remaining: -1 };
   if (!limit) return out;
   try {
-    const [leafletResponse, indexResponse] = await Promise.all([
-      rest('briefing_leaflets?deleted_at=is.null&select=id,storage_path,mime_type,file_size,received_date&order=received_date.asc,sort_order.asc&limit=2000'),
-      rest('briefing_leaflet_search?select=leaflet_id,ocr_status&limit=2000')
+    const [leaflets, indexed] = await Promise.all([
+      restAll<{ id: string; storage_path: string; mime_type: string | null; file_size: number | null; received_date: string }>(
+        'briefing_leaflets?deleted_at=is.null&select=id,storage_path,mime_type,file_size,received_date&order=received_date.desc,sort_order.asc'
+      ),
+      restAll<{ leaflet_id: string; ocr_status: string }>('briefing_leaflet_search?select=leaflet_id,ocr_status')
     ]);
-    if (!leafletResponse.ok || !indexResponse.ok) return { ...out, failed: 1 };
-    const leaflets = await leafletResponse.json();
-    const indexed = await indexResponse.json();
     const statuses = new Map(indexed.map((row: { leaflet_id: string; ocr_status: string }) => [row.leaflet_id, row.ocr_status]));
+
+    // OCR은 제한된 건수만 처리하더라도 제목·회사명은 즉시 검색되게 기본 색인을 먼저 만든다.
+    // 한 번의 bulk upsert로 최대 500건씩 채워 다음 cron 틱에서 전체 신규분이 빠르게 합류한다.
+    const missing = leaflets.filter(row => !statuses.has(row.id)).slice(0, 500);
+    if (missing.length) {
+      const now = new Date().toISOString();
+      const stubs = missing.map(row => {
+        const title = decodeLeafletName(row.storage_path) || `${row.received_date} 보험이슈 자료`;
+        return { leaflet_id: row.id, title, ...briefingMetadata(title), ocr_status: 'pending', updated_at: now };
+      });
+      const seeded = await rest('briefing_leaflet_search?on_conflict=leaflet_id', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(stubs)
+      });
+      if (!seeded.ok) throw new Error(`briefing seed ${seeded.status}`);
+      missing.forEach(row => statuses.set(row.id, 'pending'));
+    }
+
     const pending = leaflets.filter((row: { id: string }) => !statuses.has(row.id) || ['pending','error'].includes(String(statuses.get(row.id)))).slice(0, limit);
     out.picked = pending.length;
     out.remaining = Math.max(0, leaflets.length - indexed.filter((row: { ocr_status: string }) => ['done','empty','skip','oversize'].includes(row.ocr_status)).length - pending.length);
