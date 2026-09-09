@@ -3419,7 +3419,9 @@
         for (var i = 0; i < clipboard.items.length; i++) {
           var item = clipboard.items[i];
           if (item.kind === 'file' && /^image\//.test(item.type || '')) {
-            var file = item.getAsFile(); if (!file) continue; event.preventDefault();
+            var file = item.getAsFile(); if (!file) continue;
+            event.preventDefault();
+            event.stopPropagation();
             var reader = new FileReader();
             reader.onload = function (e) {
               var url = String(e.target.result || '');

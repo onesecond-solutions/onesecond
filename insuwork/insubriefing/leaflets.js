@@ -680,6 +680,10 @@
   function bindPasteEvents() {
     document.addEventListener('paste', function (e) {
       if (!isPilot()) return;
+      /* 이 리스너는 SPA 수명 동안 유지된다. 보험이슈 화면을 떠난 뒤 계약관리의
+         고객 캡처를 붙여넣어도 이전 selectedDate가 남아 있으면 공개 리플렛으로
+         오인할 수 있으므로, 현재 리플렛 그리드가 실제 DOM에 있을 때만 처리한다. */
+      if (e.defaultPrevented || !document.getElementById('ib-leaflet-grid')) return;
       var target = e.target;
       if (target && (target.matches('input,textarea') || target.isContentEditable)) return;
       if (!state.selectedDate) { showNotice('먼저 자료를 등록할 날짜를 선택해 주세요.'); return; }
