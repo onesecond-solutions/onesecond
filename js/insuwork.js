@@ -3549,6 +3549,11 @@
   function queueCustomerAddressSearch(idPrefix, query) {
     var id = idPrefix || 'iwf-customer', q = String(query || '').trim();
     clearTimeout(customerAddressSearchTimers[id]);
+    var addressInput = document.getElementById(id + '-address');
+    if (addressInput && addressInput.dataset.postcodeSelection === 'true') {
+      delete addressInput.dataset.postcodeSelection;
+      return;
+    }
     if (q.length < 2) { closeCustomerAddress(id); return; }
     customerAddressSearchTimers[id] = setTimeout(function () { searchCustomerAddress(id, q, true); }, 420);
   }
@@ -3567,7 +3572,11 @@
           oncomplete: function (data) {
             var zip = document.getElementById(prefix + 'zip'), address = document.getElementById(prefix + 'address'), detail = document.getElementById(prefix + 'address-detail');
             if (zip) { zip.value = data.zonecode || data.postcode || ''; zip.dispatchEvent(new Event('input', { bubbles: true })); }
-            if (address) { address.value = data.roadAddress || data.jibunAddress || data.address || ''; address.dispatchEvent(new Event('input', { bubbles: true })); }
+            if (address) {
+              address.value = data.roadAddress || data.jibunAddress || data.address || '';
+              address.dataset.postcodeSelection = 'true';
+              address.dispatchEvent(new Event('input', { bubbles: true }));
+            }
             closeCustomerAddress(id);
             if (detail) detail.focus();
           }
