@@ -9,6 +9,17 @@
   function uid(prefix) { return (prefix || 'id') + '-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); }
   function clone(value) { return JSON.parse(JSON.stringify(value || {})); }
   function blankRecord() { return { version: 1, source: null, showSummary: false, showHiddenProducts: false, products: [], rows: [], updatedAt: '' }; }
+  function workspaceStarter() {
+    var rows = ['실손', '암', '뇌', '심장', '수술비', '배상책임', '운전자'].map(function (section) { return { id: uid('coverage'), section: section, group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }; });
+    rows.splice(1, 1,
+      { id: uid('coverage'), section: '암', group: '진단비', name: '일반암 진단비', values: {}, hidden: false, selected: false },
+      { id: uid('coverage'), section: '암', group: '치료비1', name: '항암방사선약물치료비', values: {}, hidden: false, selected: false },
+      { id: uid('coverage'), section: '암', group: '치료비1', name: '암수술비', values: {}, hidden: false, selected: false },
+      { id: uid('coverage'), section: '암', group: '치료비2', name: '로봇암수술비', values: {}, hidden: false, selected: false },
+      { id: uid('coverage'), section: '암', group: '치료비3', name: '암주요 치료비(급여 비급여 포함)', values: {}, hidden: false, selected: false }
+    );
+    return { version: 1, source: null, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: '' };
+  }
   function cancerMiddleGroup(name) {
     var text = String(name || '').replace(/\s+/g, '');
     if (!text) return '';
@@ -179,7 +190,7 @@
   function moveProduct(customerId, fromId, toId) { var d = draft(customerId); var from = d.products.findIndex(function (item) { return String(item.id) === String(fromId); }), to = d.products.findIndex(function (item) { return String(item.id) === String(toId); }); if (from < 0 || to < 0 || from === to) return; var product = d.products.splice(from, 1)[0]; d.products.splice(to, 0, product); rerender(customerId); }
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var lines = [['대분류', '중분류', '담보', '합계금액'].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   var exposed = {
-    html: html, workspaceHtml: function (record) { return html(WORKSPACE_KEY, record, { expanded: true, excelOnly: true, page: true }); }, reset: reset, importFile: importFile,
+    html: html, workspaceHtml: function (record) { return html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, excelOnly: true, page: true }); }, reset: reset, importFile: importFile,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); },
     setRow: function (customerId, id, key, value) { setPath(customerId, 'row', id, key, value); }, setMergedField: setMergedField,
