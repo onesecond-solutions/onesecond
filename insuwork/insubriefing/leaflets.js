@@ -91,6 +91,25 @@
       dialog.showModal();
     });
   }
+  function promptRename(currentName) {
+    return new Promise(function (resolve) {
+      var name = String(currentName || '파일'), dot = name.lastIndexOf('.');
+      var extension = dot > 0 ? name.slice(dot) : '', stem = dot > 0 ? name.slice(0, dot) : name;
+      var dialog = document.createElement('dialog');
+      dialog.className = 'ib-confirm-dialog ib-rename-dialog';
+      dialog.innerHTML = '<form method="dialog"><span class="ib-confirm-brand">보험워크</span><h2>이름 변경</h2><label>자료 이름<span class="ib-rename-field"><input type="text" required maxlength="120"><em></em></span></label><p>파일 형식과 내용은 그대로 유지됩니다.</p><div class="ib-confirm-actions"><button type="submit" value="cancel">취소</button><button type="submit" value="confirm" class="ib-confirm-submit">저장</button></div></form>';
+      var input = dialog.querySelector('input'), suffix = dialog.querySelector('.ib-rename-field em');
+      input.value = stem; suffix.textContent = extension;
+      document.body.appendChild(dialog);
+      dialog.addEventListener('cancel', function (e) { e.preventDefault(); dialog.close('cancel'); });
+      dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close('cancel'); });
+      dialog.addEventListener('close', function () {
+        var value = dialog.returnValue === 'confirm' ? safeFileName(input.value.trim() + extension) : '';
+        dialog.remove(); resolve(value || null);
+      }, { once: true });
+      dialog.showModal(); input.focus(); input.select();
+    });
+  }
 
   // ── 공휴일·절기(보험워크 캘린더와 동일 로직 이식, 일정 CRUD는 제외) ──────
   var SOLAR_TERM_NAMES = ['소한', '대한', '입춘', '우수', '경칩', '춘분', '청명', '곡우', '입하', '소만', '망종', '하지', '소서', '대서', '입추', '처서', '백로', '추분', '한로', '상강', '입동', '소설', '대설', '동지'];
@@ -237,7 +256,7 @@
         : '<img loading="lazy" src="' + esc(url) + '" alt="리플렛">';
       return '<span class="ib-leaflet-thumb' + (isPdf ? ' is-pdf' : '') + (isDocument ? ' is-document' : '') + '" data-id="' + esc(item.id) + '" data-path="' + esc(item.storage_path) + '" data-url="' + esc(url) + '" data-name="' + esc(name || dateStr + ' 리플렛') + '" data-mime="' + esc(item.mime_type || '') + '" data-kind="' + esc(kind) + '" data-pdf="' + (isPdf ? '1' : '0') + '">'
         + content
-        + (admin ? '<button type="button" class="ib-leaflet-delete" aria-label="리플렛 삭제" title="삭제">×</button>' : '')
+        + (admin ? '<button type="button" class="ib-leaflet-rename" aria-label="자료 이름 변경" title="이름 변경">✎</button><button type="button" class="ib-leaflet-delete" aria-label="리플렛 삭제" title="삭제">×</button>' : '')
         + '</span>';
     }).join('');
     var holidayHtml = holidays.map(function (h) { return '<span class="ib-leaflet-holiday ib-leaflet-holiday-' + h.kind + '">' + esc(h.title) + '</span>'; }).join('');
@@ -365,7 +384,19 @@
       node.addEventListener('mouseenter', function () { showHover(node); });
       node.addEventListener('mouseleave', hideHover);
     });
-    if (isPilot()) bindDeleteEvents();
+    if (isPilot()) { bindRenameEvents(); bindDeleteEvents(); }
+  }
+  function bindRenameEvents() {
+    var buttons = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-rename');
+    Array.prototype.forEach.call(buttons, function (button) {
+      button.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation(); hideHover();
+        var thumb = button.closest('.ib-leaflet-thumb'); if (!thumb) return;
+        promptRename(thumb.getAttribute('data-name')).then(function (name) {
+          if (name) renameLeaflet(thumb.getAttribute('data-id'), thumb.getAttribute('data-path'), name, button);
+        });
+      });
+    });
   }
   function bindDeleteEvents() {
     var buttons = document.querySelectorAll('#ib-leaflet-grid .ib-leaflet-delete');
@@ -566,6 +597,34 @@
         button.disabled = false;
         showNotice(err.message || '삭제에 실패했습니다.');
       });
+  }
+  function renameLeaflet(id, storagePath, newName, button) {
+    if (!id || !storagePath || !window.db || !window.db.fetch) return;
+    var oldName = originalName(storagePath), slash = storagePath.lastIndexOf('/');
+    var folder = slash >= 0 ? storagePath.slice(0, slash + 1) : '';
+    var base = slash >= 0 ? storagePath.slice(slash + 1) : storagePath, marker = base.indexOf('--');
+    var prefix = marker >= 0 ? base.slice(0, marker) : String(id), cleanName = safeFileName(newName);
+    if (cleanName === oldName) return;
+    var nextPath = folder + prefix + '--b64_' + encodeStoredName(cleanName);
+    button.disabled = true;
+    window.db.fetch('/storage/v1/object/move', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bucketId: BUCKET, sourceKey: storagePath, destinationKey: nextPath })
+    }).then(function (res) {
+      if (!res.ok) return uploadError(res, '자료 이름 변경에 실패했습니다.').then(function (error) { throw error; });
+      return window.db.fetch('/rest/v1/briefing_leaflets?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ storage_path: nextPath })
+      });
+    }).then(function (res) {
+      if (!res.ok) {
+        return window.db.fetch('/storage/v1/object/move', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bucketId: BUCKET, sourceKey: nextPath, destinationKey: storagePath })
+        }).then(function () { return uploadError(res, '자료 정보 갱신에 실패했습니다.'); }).then(function (error) { throw error; });
+      }
+      reloadCurrent(); showNotice('자료 이름을 변경했습니다.');
+    }).catch(function (err) { button.disabled = false; showNotice(err.message || '이름 변경에 실패했습니다.'); });
   }
   function uploadBlob(blob, fileType, mimeType, receivedDate, pageCount, ext, sourceName) {
     var owner = currentUser().id;

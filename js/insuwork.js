@@ -735,7 +735,7 @@
     carrierDirectory().forEach(function (item) { if (matches(item.name)) results.push({ icon: '↗', kind: '보험사 원전산', title: item.name, sub: item.systemUrl ? '원전산 열기' : '연결 정보 확인 중', action: "OSInsuwork.openCarrierSystem('" + esc(jsString(item.name)) + "')" }); });
     paymentSearchResults().forEach(function (item) { results.push(item); });
     if (state.briefingSearchQuery === searchNorm(q)) state.briefingSearchRows.forEach(function (item) {
-      results.push({ icon: '◫', kind: '보험이슈' + (item.category ? ' · ' + item.category : ''), title: item.title, sub: [item.insurer, item.received_date, item.snippet].filter(Boolean).join(' · '), action: "OSInsuwork.openBriefingSearchResult('" + esc(item.id) + "')", raw: item });
+      results.push({ icon: '◫', kind: '보험이슈' + (item.category ? ' · ' + item.category : ''), title: briefingLeafletName(item.storage_path) || item.title, sub: [item.insurer, item.received_date, item.snippet].filter(Boolean).join(' · '), action: "OSInsuwork.openBriefingSearchResult('" + esc(item.id) + "')", raw: item });
     });
     var waiting = state.briefingSearchLoading ? '<div class="iw-sync-note">보험이슈 자료를 검색하고 있습니다.</div>' : '';
     var modes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
@@ -764,9 +764,18 @@
     var normalized = searchNorm(value), requestId = ++state.briefingSearchRequestId;
     if (!normalized || !window.db || !window.db.fetch) { state.briefingSearchRows = []; state.briefingSearchQuery = normalized; state.briefingSearchLoading = false; return; }
     state.briefingSearchLoading = true; state.briefingSearchQuery = normalized;
-    window.db.fetch('/rest/v1/rpc/search_briefing_leaflets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ p_query: String(value || '').trim(), p_limit: 30 }) })
-      .then(function (response) { if (!response.ok) throw new Error('보험이슈 검색 실패'); return response.json(); })
-      .then(function (rows) { if (requestId === state.briefingSearchRequestId) state.briefingSearchRows = Array.isArray(rows) ? rows : []; })
+    var ocrSearch = window.db.fetch('/rest/v1/rpc/search_briefing_leaflets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ p_query: String(value || '').trim(), p_limit: 30 }) })
+      .then(function (response) { if (!response.ok) throw new Error('보험이슈 검색 실패'); return response.json(); });
+    var nameSearch = window.db.fetchPublic('/rest/v1/briefing_leaflets?deleted_at=is.null&order=received_date.desc&limit=5000&select=id,storage_path,mime_type,file_size,received_date')
+      .then(function (response) { if (!response.ok) return []; return response.json(); })
+      .then(function (rows) { return (rows || []).filter(function (row) { return searchNorm(briefingLeafletName(row.storage_path)).indexOf(normalized) >= 0; }).slice(0, 30); });
+    Promise.all([ocrSearch, nameSearch])
+      .then(function (sets) {
+        if (requestId !== state.briefingSearchRequestId) return;
+        var merged = [], seen = {};
+        sets[0].concat(sets[1]).forEach(function (row) { if (!seen[row.id]) { seen[row.id] = true; merged.push(row); } });
+        state.briefingSearchRows = merged.slice(0, 30);
+      })
       .catch(function () { if (requestId === state.briefingSearchRequestId) state.briefingSearchRows = []; })
       .finally(function () { if (requestId === state.briefingSearchRequestId) { state.briefingSearchLoading = false; if (state.query.trim()) renderContent(); } });
   }
@@ -2203,8 +2212,29 @@
     var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
     var bodyText = item.item_type === 'link' ? '' : stripHtml(item.body || '');
     var link = item.url;
+    var own = String(item.owner_id || '') === String(currentUserId() || '');
     var actions = item.storage_path ? '<button type="button" class="iw-btn primary" onclick="OSInsuwork.openPublicLibraryFile(\'' + esc(item.id) + '\')">열기</button>' : (link ? '<a class="iw-btn primary" href="' + esc(link) + '" target="_blank" rel="noopener">파일 열기</a>' : '');
+    if (own) actions += '<button type="button" class="iw-btn" onclick="OSInsuwork.editPublicLibraryItem(\'' + esc(item.id) + '\')">이름 변경</button>';
     dialog('<div class="iw-detail"><span class="iw-badge">' + publicLibraryKind(item) + ' · ' + esc(publicLibraryAuthor(item)) + '</span><h2 class="iw-detail-title"><span>' + esc(item.title || '(제목 없음)') + '</span></h2><p>' + formatDate(item.created_at) + '</p><div class="iw-detail-body">' + (item.item_type === 'note' ? (item.body || '') : esc(bodyText)) + '</div><div class="iw-detail-actions">' + actions + '</div></div>');
+  }
+
+  function briefingLeafletName(path) {
+    var base = String(path || '').split('/').pop() || '', marker = base.indexOf('--');
+    if (marker < 0) return base;
+    var stored = base.slice(marker + 2); if (stored.indexOf('b64_') !== 0) return stored;
+    try {
+      var encoded = stored.slice(4).replace(/-/g, '+').replace(/_/g, '/');
+      while (encoded.length % 4) encoded += '=';
+      var binary = window.atob(encoded), bytes = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    } catch (_) { return ''; }
+  }
+  function editPublicLibraryItem(id) {
+    var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); });
+    if (!item || String(item.owner_id || '') !== String(currentUserId() || '')) return;
+    if (!workspaceItem(id)) state.data.items.push(item);
+    closeDialog(); editAsset(id);
   }
   function openPublicLibraryFile(id) {
     var item = (state.publicLibraryData || []).find(function (entry) { return String(entry.id) === String(id); }); if (!item || !item.storage_path) return;
@@ -3214,12 +3244,17 @@
         changes.body = prepared.body; changes.url = value('iwf-edit-link') || null; changes.visibility = value('iwf-edit-visibility') === 'public' ? 'public' : 'private';
         return updateOne('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
           .then(function (updated) { return saveRichChildren(prepared.rows).then(function () { return updated; }); });
-      }).then(function (updated) { upsertWorkspaceItem(updated); resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
+      }).then(function (updated) { upsertWorkspaceItem(updated); syncPublicLibraryItem(updated); resetRichPending(); finishSave('자료를 수정했습니다.'); }).catch(saveError);
       return;
     }
     changes.visibility = value('iwf-edit-visibility') === 'public' ? 'public' : 'private';
     updateOne('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null', changes)
-      .then(function (updated) { upsertWorkspaceItem(updated); finishSave('자료를 수정했습니다.'); }).catch(saveError);
+      .then(function (updated) { upsertWorkspaceItem(updated); syncPublicLibraryItem(updated); finishSave('자료를 수정했습니다.'); }).catch(saveError);
+  }
+  function syncPublicLibraryItem(updated) {
+    if (!updated || !state.publicLibraryData) return;
+    if (updated.visibility !== 'public') state.publicLibraryData = state.publicLibraryData.filter(function (entry) { return String(entry.id) !== String(updated.id); });
+    else state.publicLibraryData = state.publicLibraryData.map(function (entry) { return String(entry.id) === String(updated.id) ? Object.assign({}, entry, updated) : entry; });
   }
   function deleteAsset(id) {
     var item = workspaceItem(id); if (!item || item.item_type === 'folder') return;
@@ -5001,7 +5036,7 @@
     setPublicLibView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.publicLibView = view; renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
+    showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, editPublicLibraryItem: editPublicLibraryItem, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, queueCustomerAddressSearch: queueCustomerAddressSearch, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, showSearchImageHover: showSearchImageHover, hideSearchImageHover: hideSearchImageHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, uploadKakaoBusinessCard: uploadKakaoBusinessCard, toggleKakaoHub: toggleKakaoHub, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
