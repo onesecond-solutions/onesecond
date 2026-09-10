@@ -221,23 +221,9 @@ async function processBriefingLeaflets(limit: number) {
       restAll<{ id: string; storage_path: string; mime_type: string | null; file_size: number | null; received_date: string }>(
         'briefing_leaflets?deleted_at=is.null&select=id,storage_path,mime_type,file_size,received_date&order=received_date.desc,sort_order.asc'
       ),
-      restAll<{ leaflet_id: string; ocr_status: string; title: string; extracted_text: string }>('briefing_leaflet_search?select=leaflet_id,ocr_status,title,extracted_text')
+      restAll<{ leaflet_id: string; ocr_status: string }>('briefing_leaflet_search?select=leaflet_id,ocr_status')
     ]);
     const statuses = new Map(indexed.map((row: { leaflet_id: string; ocr_status: string }) => [row.leaflet_id, row.ocr_status]));
-
-    // 저장소 파일명을 바꾼 기존 자료도 다음 배치에서 검색 제목과 즉시 맞춘다.
-    const indexedById = new Map(indexed.map(row => [row.leaflet_id, row]));
-    const renamed = leaflets.filter(row => {
-      const have = indexedById.get(row.id);
-      return have && have.title !== (decodeLeafletName(row.storage_path) || `${row.received_date} 보험이슈 자료`);
-    }).slice(0, 500);
-    await Promise.all(renamed.map(row => {
-      const have = indexedById.get(row.id)!;
-      return upsertBriefingIndex(row.id, {
-        title: decodeLeafletName(row.storage_path) || `${row.received_date} 보험이슈 자료`,
-        extracted_text: have.extracted_text || ''
-      });
-    }));
 
     // OCR은 제한된 건수만 처리하더라도 제목·회사명은 즉시 검색되게 기본 색인을 먼저 만든다.
     // 한 번의 bulk upsert로 최대 500건씩 채워 다음 cron 틱에서 전체 신규분이 빠르게 합류한다.
