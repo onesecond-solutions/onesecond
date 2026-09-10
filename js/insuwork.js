@@ -3585,7 +3585,12 @@
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
     var existing = coverageWorkspaceItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
     var body = { owner_id: currentUserId(), item_type: 'memo', title: '보장분석 기본 양식', body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis_template: true, coverage_analysis: next } };
-    var ready = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
+    var ready;
+    if (existing) {
+      var previous = existing.legacy_payload && existing.legacy_payload.coverage_analysis;
+      var history = { id: crypto.randomUUID(), owner_id: currentUserId(), parent_id: existing.id, item_type: 'memo', title: '보장분석 기본 양식 이전 버전', body: coverageAnalysisSummary(previous), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_history: true, coverage_analysis: JSON.parse(JSON.stringify(previous || {})), replaced_at: new Date().toISOString() }, created_at: new Date().toISOString() };
+      ready = writeOne('insuwork_items', history).then(function (savedHistory) { upsertWorkspaceItem(savedHistory); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body); });
+    } else ready = writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
     return ready.then(function (saved) { upsertWorkspaceItem(saved); if (!sourceFile) return next; return uploadCoverageWorkspaceSource(rootId, sourceFile).then(function (source) { next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis_template: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석 기본 양식을 저장했습니다.'); return savedRecord; });
   }
   function saveCoverageWorkspaceToCustomer(record) {
