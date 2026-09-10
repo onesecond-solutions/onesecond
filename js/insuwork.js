@@ -35,7 +35,7 @@
     try { var p = new URLSearchParams(location.search); return p.has('view') || p.has('section'); }
     catch (_) { return !!location.search; }
   })();
-  var SECTIONS = ['ledger', 'az-viewing-room', 'home', 'assets', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'product-lineups', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'daily-briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users'];
+  var SECTIONS = ['ledger', 'az-viewing-room', 'home', 'assets', 'coverage-analysis', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'product-lineups', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'daily-briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users'];
   /* 2026-08-30 대표 확정 — 보험워크는 원세컨드와 별도 사이트다. 비로그인 첫 진입은 내부 업무 셸
      일부를 잠가 보여주는 방식이 아니라 보험워크 CI 기반 공개 랜딩만 렌더링한다. 로그인 후에는 기존
      업무 홈과 메뉴를 그대로 유지한다. */
@@ -129,6 +129,7 @@
   /* 2026-08-25 대표 확정 — 고객 상세카드 "고객내용" 메모·첨부(saveCustomerRich, workspace_category:'customer')가
      상담 첨부(isConsultAttachmentItem)처럼 자료실 목록에서 걸러지지 않고 그대로 노출되던 버그 수정. */
   function isCustomerAttachmentItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'customer'; }
+  function isCoverageAnalysisWorkspaceItem(item) { var payload = item && item.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis'; }
   function saveConsultColumns(columns) { var serialized = JSON.stringify(columns); localStorage.setItem(consultColumnStorageKey(), serialized); if (!authenticated()) return; var existing = state.data.items.find(isConsultColumnSetting), body = { owner_id: currentUserId(), item_type: 'memo', title: 'consultation_columns', body: serialized, visibility: 'private', legacy_payload: { workspace_category: 'settings', setting_key: 'consultation_columns' } }; var request = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', body); request.then(function (saved) { if (!existing && saved) state.data.items.push(saved); }).catch(function (error) { console.warn('Consultation column preference save failed', error); if (typeof window.toast === 'function') window.toast('컬럼 설정은 이 브라우저에 저장했습니다. 서버 동기화는 잠시 후 다시 시도해 주세요.'); }); }
   function normalizeFavorites(value) {
     var rows = Array.isArray(value) ? value : [];
@@ -180,7 +181,7 @@
     }
     window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=' + encodeURIComponent(target);
   }
-  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'coverage-analysis') return canUseCoverageAnalysis(); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
   /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
      로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
      그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
@@ -281,8 +282,8 @@
   function rebuildWorkspaceDerived() {
     var columnSetting = state.data.items.find(isConsultColumnSetting); if (columnSetting && columnSetting.body) localStorage.setItem(consultColumnStorageKey(), columnSetting.body);
     applyFavoriteSetting(state.data.items);
-    state.data.scripts = state.data.items.filter(function (item) { return item.item_type === 'note' && !isConsultAttachmentItem(item); }).map(function (item) { return Object.assign({}, item, { script_text: item.body }); });
-    state.data.library = state.data.items.filter(function (item) { return item.item_type !== 'note' && !isWorkspaceSetting(item) && !isConsultAttachmentItem(item) && !isCustomerAttachmentItem(item) && !isKakaoPilotItem(item); }).map(function (item) { return Object.assign({}, item, { memo_text: item.item_type === 'memo' ? item.body : null, description: item.body, link_url: item.url, file_url: item.item_type === 'file' ? item.storage_path : null }); });
+    state.data.scripts = state.data.items.filter(function (item) { return item.item_type === 'note' && !isConsultAttachmentItem(item) && !isCoverageAnalysisWorkspaceItem(item); }).map(function (item) { return Object.assign({}, item, { script_text: item.body }); });
+    state.data.library = state.data.items.filter(function (item) { return item.item_type !== 'note' && !isWorkspaceSetting(item) && !isConsultAttachmentItem(item) && !isCustomerAttachmentItem(item) && !isKakaoPilotItem(item) && !isCoverageAnalysisWorkspaceItem(item); }).map(function (item) { return Object.assign({}, item, { memo_text: item.item_type === 'memo' ? item.body : null, description: item.body, link_url: item.url, file_url: item.item_type === 'file' ? item.storage_path : null }); });
     state.data.events = state.data.events.map(function (item) { return Object.assign({}, item, { event_date: item.task_date, event_time: item.task_time, event_end_date: item.end_date || item.task_date, event_end_time: item.end_time || null }); });
     state.data.consultations = state.data.consultations.map(function (item) { return Object.assign({}, item, { memo: item.content }); });
     if (state.fullLoaded) pruneFavorites();
@@ -426,7 +427,7 @@
   }
 
   function needsFullItems() {
-    return !!state.query.trim() || ['assets', 'customers', 'consultations', 'trash'].indexOf(state.section) >= 0 || /\/m\/(library|search|customers|consultations)\.html$/.test(location.pathname);
+    return !!state.query.trim() || ['assets', 'coverage-analysis', 'customers', 'consultations', 'trash'].indexOf(state.section) >= 0 || /\/m\/(library|search|customers|consultations)\.html$/.test(location.pathname);
   }
   function dataReadyForSection() { return state.coreLoaded && (!needsFullItems() || state.fullLoaded); }
   function loadHomeDate() {
@@ -585,6 +586,7 @@
   }
   function navHtml() {
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '계약관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
+    if (canUseCoverageAnalysis()) items.push(['coverage-analysis', '▥', '보장분석']);
     if (window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()) items.push(['ledger', '₩', '가계부']);
     var briefingGroup = [['◫', '뉴스 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업', 'section:product-lineups'], ['✎', '스크립트', 'section:scripts']];
@@ -2273,6 +2275,7 @@
     if (blockingStatus && PROTECTED_SECTIONS.indexOf(state.section) >= 0) return statusHtml();
     if (state.query.trim()) return searchHtml();
     if (state.section === 'assets') return assetsHtml();
+    if (state.section === 'coverage-analysis') return coverageAnalysisPageHtml();
     if (state.section === 'customers') return customersHtml();
     if (state.section === 'consultations') return consultationsHtml();
     if (state.section === 'calendar') return calendarHtml();
@@ -3557,6 +3560,32 @@
   }
   function coverageAnalysisItem(customerId) {
     return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'customer' && payload.coverage_analysis_record === true && String(payload.customer_id || '') === String(customerId || ''); });
+  }
+  function coverageWorkspaceItem() {
+    return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_workspace === true; });
+  }
+  function coverageAnalysisPageHtml() {
+    if (!canUseCoverageAnalysis()) return homeHtml();
+    if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
+    var item = coverageWorkspaceItem(), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석</h2><p class="iw-subtitle">엑셀 보장분석 파일을 불러와 보험사·상품·담보와 금액을 확인하고 수정합니다.</p></div></div>'
+      + '<div class="iw-ca-page-guide"><strong>엑셀 파일로 시작</strong><span>파일의 보장구분·주요특약·보험사 상품 열을 읽어 편집 가능한 표로 만듭니다. 빈 금액과 비어 있는 보험사 열도 원본 그대로 유지합니다.</span></div>'
+      + window.OSInsuworkCoverage.workspaceHtml(record || null);
+  }
+  function rerenderCoverageWorkspace() {
+    if (state.section === 'coverage-analysis' && canUseCoverageAnalysis()) renderContent();
+  }
+  function uploadCoverageWorkspaceSource(rootId, file) {
+    var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : '', path = currentUserId() + '/coverage-analysis/workspace/' + id + (ext ? '.' + ext : '');
+    var row = { id: id, owner_id: currentUserId(), parent_id: rootId, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_source: true }, created_at: new Date().toISOString() };
+    return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error('보장분석 원본 파일 업로드에 실패했습니다.'); return writeOne('insuwork_items', row); }).then(function (saved) { upsertWorkspaceItem(saved); return saved; });
+  }
+  function saveCoverageWorkspaceAnalysis(record, sourceFile) {
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
+    var existing = coverageWorkspaceItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
+    var body = { owner_id: currentUserId(), item_type: 'memo', title: '보장분석 작업', body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis: next } };
+    var ready = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
+    return ready.then(function (saved) { upsertWorkspaceItem(saved); if (!sourceFile) return next; return uploadCoverageWorkspaceSource(rootId, sourceFile).then(function (source) { next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석 작업을 저장했습니다.'); return savedRecord; });
   }
   function coverageAnalysisSectionHtml(customerId) {
     if (!canUseCoverageAnalysis() || !window.OSInsuworkCoverage || !customerId) return '';
@@ -5073,7 +5102,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    saveCoverageAnalysis: saveCoverageAnalysis, loadCoveragePdfFile: loadCoveragePdfFile, rerenderCoverageAnalysis: rerenderCoverageAnalysis, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, loadCoveragePdfFile: loadCoveragePdfFile, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
