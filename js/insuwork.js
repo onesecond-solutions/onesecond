@@ -3568,8 +3568,8 @@
     if (!canUseCoverageAnalysis()) return homeHtml();
     if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
     var item = coverageWorkspaceItem(), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
-    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석</h2><p class="iw-subtitle">엑셀 보장분석 파일을 불러와 보험사·상품·담보와 금액을 확인하고 수정합니다.</p></div></div>'
-      + '<div class="iw-ca-page-guide"><strong>엑셀 파일로 시작</strong><span>파일의 보장구분·주요특약·보험사 상품 열을 읽어 편집 가능한 표로 만듭니다. 빈 금액과 비어 있는 보험사 열도 원본 그대로 유지합니다.</span></div>'
+    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석</h2><p class="iw-subtitle">반복해서 사용할 기본 보장분석 양식을 직접 만들고 저장합니다.</p></div></div>'
+      + '<div class="iw-ca-page-guide"><strong>기본 양식 설정</strong><span>분류·담보·보험사·상품 순서를 편집해 저장하면 새 고객 보장분석의 시작 양식으로 사용합니다. 엑셀을 불러와 양식을 만들 수도 있습니다.</span></div>'
       + window.OSInsuworkCoverage.workspaceHtml(record || null);
   }
   function rerenderCoverageWorkspace() {
@@ -3583,13 +3583,17 @@
   function saveCoverageWorkspaceAnalysis(record, sourceFile) {
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
     var existing = coverageWorkspaceItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
-    var body = { owner_id: currentUserId(), item_type: 'memo', title: '보장분석 작업', body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis: next } };
+    var body = { owner_id: currentUserId(), item_type: 'memo', title: '보장분석 기본 양식', body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis_template: true, coverage_analysis: next } };
     var ready = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
-    return ready.then(function (saved) { upsertWorkspaceItem(saved); if (!sourceFile) return next; return uploadCoverageWorkspaceSource(rootId, sourceFile).then(function (source) { next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석 작업을 저장했습니다.'); return savedRecord; });
+    return ready.then(function (saved) { upsertWorkspaceItem(saved); if (!sourceFile) return next; return uploadCoverageWorkspaceSource(rootId, sourceFile).then(function (source) { next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis_template: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석 기본 양식을 저장했습니다.'); return savedRecord; });
   }
   function coverageAnalysisSectionHtml(customerId) {
     if (!canUseCoverageAnalysis() || !window.OSInsuworkCoverage || !customerId) return '';
     var item = coverageAnalysisItem(customerId), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    if (!record) {
+      var templateItem = coverageWorkspaceItem(), template = templateItem && templateItem.legacy_payload && templateItem.legacy_payload.coverage_analysis;
+      if (template) { record = JSON.parse(JSON.stringify(template)); record.source = null; record.sourceItemId = null; record.updatedAt = ''; record._templateSeed = true; }
+    }
     return window.OSInsuworkCoverage.html(customerId, record || null);
   }
   function rerenderCoverageAnalysis(customerId) {

@@ -18,7 +18,7 @@
       { id: uid('coverage'), section: '암', group: '치료비2', name: '로봇암수술비', values: {}, hidden: false, selected: false },
       { id: uid('coverage'), section: '암', group: '치료비3', name: '암주요 치료비(급여 비급여 포함)', values: {}, hidden: false, selected: false }
     );
-    return { version: 1, source: null, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: '' };
+    return { version: 1, source: null, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: '', _starter: true };
   }
   function cancerMiddleGroup(name) {
     var text = String(name || '').replace(/\s+/g, '');
@@ -50,6 +50,7 @@
   function draft(customerId, record) {
     var key = String(customerId || '');
     if (!drafts[key]) drafts[key] = normalize(record);
+    else if (record && (drafts[key]._starter || drafts[key]._templateSeed) && !record._starter) drafts[key] = normalize(record);
     return drafts[key];
   }
   function reset(customerId, record) { drafts[String(customerId || '')] = normalize(record); }
@@ -210,7 +211,7 @@
   }
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var lines = [['대분류', '중분류', '담보', '합계금액'].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   var exposed = {
-    html: html, workspaceHtml: function (record) { return html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, excelOnly: true, page: true }); }, reset: reset, importFile: importFile,
+    html: html, workspaceHtml: function (record) { return html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, excelOnly: true, page: true }).replace('>보장분석 저장</button>', '>기본 양식 저장</button>'); }, reset: reset, importFile: importFile,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); },
     setRow: function (customerId, id, key, value) { setPath(customerId, 'row', id, key, value); }, setMergedField: setMergedField,
@@ -222,7 +223,7 @@
     toggleSummary: function (customerId) { var d = draft(customerId); d.showSummary = !d.showSummary; rerender(customerId); },
     selectSection: function (customerId, section, checked) { var d = draft(customerId); d.rows.forEach(function (r) { if (r.section === section) r.selected = checked; }); rerender(customerId); },
     moveRow: moveRow, moveProduct: moveProduct,
-    save: function (customerId) { var d = draft(customerId); d.updatedAt = new Date().toISOString(); saveTarget(customerId, clone(d), null).then(function (saved) { if (saved) reset(customerId, saved); rerenderTarget(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
+    save: function (customerId) { var d = draft(customerId); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString(); saveTarget(customerId, clone(d), null).then(function (saved) { if (saved) reset(customerId, saved); rerenderTarget(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     importExistingPdf: function (customerId, fileId) { api().loadCoveragePdfFile(fileId).then(function (file) { return loadPdfJs().then(function () { return window.pdfjsLib.getDocument({ data: file.buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); }).then(function (record) { reset(customerId, record); return api().saveCoverageAnalysis(customerId, record, null, fileId); }); }).then(function () { rerender(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function () { api().coverageNotice('선택한 보장분석 표를 이미지로 복사했습니다. 카카오톡에 붙여넣어 주세요.'); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
   };
