@@ -912,3 +912,35 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-contract-date-row>.iw-date-control{flex:1;width:auto}
 #v-insuwork .iw-date-control>#iwf-consult-date,#v-insuwork .iw-date-control>#iwd-consult-date{width:100%;flex:1}
 #v-insuwork .iw-birth-age>.iw-date-control{font-size:var(--fs-body);font-weight:400;color:var(--tp)}
+#v-insuwork .iw-coverage-analysis{margin-block:var(--sp-3,12px);border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);overflow:hidden}
+#v-insuwork .iw-coverage-analysis>header{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3,12px);padding:var(--sp-3,12px) var(--sp-4,16px);background:color-mix(in srgb,var(--ac) 7%,var(--s1))}
+#v-insuwork .iw-coverage-analysis>header h3{margin:0 0 2px}
+#v-insuwork .iw-ca-source{display:block;color:var(--ts);font-size:var(--text-xs)}
+#v-insuwork .iw-ca-panel{padding:var(--sp-3,12px)}
+#v-insuwork .iw-ca-toolbar{display:flex;flex-wrap:wrap;gap:var(--sp-2,8px);margin-bottom:var(--sp-3,12px)}
+#v-insuwork .iw-ca-toolbar label{cursor:pointer}
+#v-insuwork .iw-ca-summary{display:flex;gap:var(--sp-2,8px);margin-bottom:var(--sp-3,12px)}
+#v-insuwork .iw-ca-summary span{padding:7px 11px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2)}
+#v-insuwork .iw-ca-table-wrap{max-width:100%;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-sm)}
+#v-insuwork .iw-ca-table-wrap table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:var(--text-sm)}
+#v-insuwork .iw-ca-table-wrap th,#v-insuwork .iw-ca-table-wrap td{min-width:116px;padding:5px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);background:var(--s1);vertical-align:middle}
+#v-insuwork .iw-ca-table-wrap th{background:var(--s2);font-weight:700}
+#v-insuwork .iw-ca-table-wrap th:nth-child(1),#v-insuwork .iw-ca-table-wrap td:nth-child(1){position:sticky;left:0;z-index:3;min-width:36px;width:36px}
+#v-insuwork .iw-ca-table-wrap th:nth-child(2),#v-insuwork .iw-ca-table-wrap td:nth-child(2){position:sticky;left:36px;z-index:2;min-width:86px;background:color-mix(in srgb,var(--ac) 5%,var(--s1))}
+#v-insuwork .iw-ca-table-wrap th:nth-child(3),#v-insuwork .iw-ca-table-wrap td:nth-child(3){position:sticky;left:122px;z-index:2;min-width:94px;background:color-mix(in srgb,var(--ac) 4%,var(--s1))}
+#v-insuwork .iw-ca-table-wrap th:nth-child(4),#v-insuwork .iw-ca-table-wrap td:nth-child(4){position:sticky;left:216px;z-index:2;min-width:190px;background:var(--s1)}
+#v-insuwork .iw-ca-table-wrap thead th{z-index:4}
+#v-insuwork .iw-ca-table-wrap input:not([type=checkbox]){width:100%;min-width:0;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;padding:7px;color:var(--tp)}
+#v-insuwork .iw-ca-table-wrap input:not([type=checkbox]):focus{border-color:var(--ac);background:var(--s1);outline:0}
+#v-insuwork .iw-ca-product{min-width:158px!important}
+#v-insuwork .iw-ca-product input{display:block;margin-bottom:3px;text-align:center;font-weight:600}
+#v-insuwork .iw-ca-product-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:3px}
+#v-insuwork .iw-ca-product button,#v-insuwork .iw-ca-row-actions button{border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--ts);cursor:pointer}
+#v-insuwork .iw-ca-product.is-hidden{opacity:.6}
+#v-insuwork .iw-ca-row-actions{min-width:64px!important;white-space:nowrap}
+#v-insuwork .iw-ca-row-actions button{width:26px;height:26px;margin:1px}
+#v-insuwork .iw-ca-empty{margin:18px;text-align:center;color:var(--ts)}
+#v-insuwork .iw-ca-panel footer{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3,12px);padding-top:var(--sp-3,12px);color:var(--ts);font-size:var(--text-xs)}
+#v-insuwork .iw-ca-panel footer>div{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--sp-2,8px)}
+#v-insuwork .iw-att-coverage{border:1px solid var(--ac);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--ac) 7%,var(--s1));color:var(--ac);padding:5px 8px;cursor:pointer;white-space:nowrap}
+@media(max-width:720px){#v-insuwork .iw-ca-panel footer{align-items:stretch;flex-direction:column}#v-insuwork .iw-ca-panel footer>div{justify-content:flex-start}}

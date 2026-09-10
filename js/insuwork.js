@@ -70,6 +70,7 @@
   }
   function canSeeAdminUsers() { return isLocal() || currentUserEmail() === 'bylts@naver.com'; }
   function canUseKakaoPilot() { return localPreviewAllowed() || KAKAO_PILOT_EMAILS.indexOf(currentUserEmail()) >= 0 || KAKAO_PILOT_OWNER_IDS.indexOf(currentUserId()) >= 0; }
+  function canUseCoverageAnalysis() { return localPreviewAllowed() || (authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID); }
   function canSeeAzViewingRoom() { return localPreviewAllowed() || (authenticated() && (currentUserId() === AZ_VIEWING_ROOM_OWNER_ID || state.azViewingRoomAccess === true)); }
   function loadAzViewingRoomAccess() {
     if (localPreviewAllowed()) { state.azViewingRoomAccess = true; return Promise.resolve(true); }
@@ -1398,7 +1399,7 @@
       + inlineField('전화번호', '<input id="iwd-customer-phone" inputmode="numeric" value="' + esc(phoneText(item.phone || item.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('고객상태', '<select id="iwd-customer-status">' + (needsReview ? '<option value="" selected>상태를 선택하세요</option>' : '') + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + familySectionHtml(item) + customerExtraFieldsHtml(profile, 'iwd-customer') + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('customer', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
+      + familySectionHtml(item) + customerExtraFieldsHtml(profile, 'iwd-customer') + coverageAnalysisSectionHtml(item.id) + '<section><h3>상담내용</h3>' + richEditorField('iwd-customer-new', profile.note || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + customerExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('customer', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn iw-consult-add-event" onclick="event.stopPropagation();OSInsuwork.addEventForCustomer(\'' + esc(item.id) + '\')">+ 일정 추가</button><button type="button" class="iw-btn danger" onclick="OSInsuwork.trashCustomer(\'' + esc(item.id) + '\')">삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectCustomerDetail()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.' + (needsReview ? 'saveLegacyCustomerStatus' : 'saveCustomerDetail') + '(\'' + esc(item.id) + '\')">' + (needsReview ? '고객상태 저장' : '저장') + '</button></div></article>';
   }
   function consultationStageCounts(rows, customers) {
     var counts = { all: rows.length }; CONSULT_STAGES.forEach(function (stage) { counts[stage.key] = 0; });
@@ -1448,7 +1449,7 @@
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwd-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + coverageAnalysisSectionHtml(customer.id) + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -3554,18 +3555,68 @@
       + '<div class="iw-consult-editor">' + formField('상담내용', richEditorField('iwf-consult-memo', item.memo || '')) + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</div>'
       + '<input id="iwf-consult-customer-id" type="hidden" value="' + esc(customer.id || '') + '"><input id="iwf-consult-id" type="hidden" value="' + esc(item.id || '') + '"></div>';
   }
+  function coverageAnalysisItem(customerId) {
+    return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'customer' && payload.coverage_analysis_record === true && String(payload.customer_id || '') === String(customerId || ''); });
+  }
+  function coverageAnalysisSectionHtml(customerId) {
+    if (!canUseCoverageAnalysis() || !window.OSInsuworkCoverage || !customerId) return '';
+    var item = coverageAnalysisItem(customerId), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    return window.OSInsuworkCoverage.html(customerId, record || null);
+  }
+  function rerenderCoverageAnalysis(customerId) {
+    if (!canUseCoverageAnalysis()) return;
+    renderContent();
+    requestAnimationFrame(function () { var panel = document.querySelector('#v-insuwork .iw-ca-panel[data-customer-id="' + String(customerId).replace(/["\\]/g, '') + '"]'); if (!panel) return; panel.hidden = false; var button = panel.parentElement.querySelector('header > button'); if (button) button.textContent = '접기'; });
+  }
+  function coverageAnalysisSummary(record) {
+    var rows = record && Array.isArray(record.rows) ? record.rows : [], products = record && Array.isArray(record.products) ? record.products : [];
+    return '담보 ' + rows.length + '개 · 회사·상품 ' + products.length + '개';
+  }
+  function uploadCoverageSource(customerId, rootId, file) {
+    if (!file) return Promise.resolve(null);
+    var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : '', path = currentUserId() + '/coverage-analysis/' + customerId + '/' + id + (ext ? '.' + ext : '');
+    var row = { id: id, owner_id: currentUserId(), parent_id: rootId, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customerId, coverage_analysis_source: true }, created_at: new Date().toISOString() };
+    return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error('보장분석 원본 파일 업로드에 실패했습니다.'); return writeOne('insuwork_items', row); }).then(function (saved) { upsertWorkspaceItem(saved); return saved; });
+  }
+  function saveCoverageAnalysis(customerId, record, sourceFile, existingSourceId) {
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
+    var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId); });
+    if (!customer) return Promise.reject(new Error('고객을 확인하지 못했습니다.'));
+    var existing = coverageAnalysisItem(customerId), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
+    if (existingSourceId) next.sourceItemId = existingSourceId;
+    var body = { owner_id: currentUserId(), item_type: 'memo', title: '보장분석 · ' + (customer.name || '고객'), body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: { workspace_category: 'customer', customer_id: customerId, coverage_analysis_record: true, coverage_analysis: next } };
+    var ready = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
+    return ready.then(function (saved) { upsertWorkspaceItem(saved); return uploadCoverageSource(customerId, rootId, sourceFile).then(function (source) { if (!source) return next; next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'customer', customer_id: customerId, coverage_analysis_record: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석을 저장했습니다.'); return savedRecord; });
+  }
+  function loadCoveragePdfFile(fileId) {
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
+    var file = (state.data.items || []).find(function (entry) { return String(entry.id) === String(fileId); });
+    if (!file || !file.storage_path || !(/pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf')) return Promise.reject(new Error('PDF 원본을 확인하지 못했습니다.'));
+    return signStoragePath(file.storage_path).then(function (url) { return fetch(url); }).then(function (response) { if (!response.ok) throw new Error('PDF 원본을 불러오지 못했습니다.'); return response.arrayBuffer(); }).then(function (buffer) { return { name: file.title || '보장분석.pdf', buffer: buffer }; });
+  }
+  function sendCoverageToKakao(customerId, text) {
+    if (!canUseCoverageAnalysis()) return;
+    try { sessionStorage.setItem('iw_coverage_kakao_' + customerId, text); } catch (_) {}
+    if (typeof window.toast === 'function') window.toast('보장분석을 복사했습니다. 카카오 발송 문안에 붙여 넣어 주세요.');
+    openKakaoDraft('customer', customerId);
+  }
+  function coverageError(message) { briefingAlert(message, '보장분석'); }
+  function coverageNotice(message) { if (typeof window.toast === 'function') window.toast(message); else briefingAlert(message, '보장분석'); }
   function consultationAttachmentRoot(consultationId) { return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'consultation' && payload.attachment_root === true && String(payload.consultation_id || '') === String(consultationId || ''); }); }
   function customerAttachmentRoot(customerId) { return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'customer' && payload.attachment_root === true && String(payload.customer_id || '') === String(customerId || ''); }); }
   /* 첨부파일 목록 항목(2026-08-20, 대표 확정) — 이름수정·삭제 버튼 추가. 기존 자료실의
      editAsset/deleteAsset(insuwork_items 공용 함수)를 그대로 재사용 — 첨부파일도 같은
      insuwork_items 테이블 행이라 새 함수 없이 그대로 동작. */
-  function attachmentItemHtml(file) {
+  function attachmentItemHtml(file, customerId) {
+    var isPdf = /pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf';
+    var coverageImport = canUseCoverageAnalysis() && customerId && isPdf ? '<button type="button" class="iw-att-coverage" title="PDF를 보장분석 표로 불러오기" onclick="OSInsuworkCoverage.importExistingPdf(\'' + esc(customerId) + '\',\'' + esc(file.id) + '\')">보장분석으로 불러오기</button>' : '';
     return '<span class="iw-att-item"><a href="#" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title || '첨부파일') + '" data-file-mime="' + esc(file.mime_type || '') + '" onclick="event.preventDefault();OSInsuwork.openStoragePreview(this)">' + esc(file.title || '첨부파일') + '<small>' + formatBytes(file.file_size) + '</small></a>'
+      + coverageImport
       + '<button type="button" class="iw-att-edit" title="이름 수정" onclick="OSInsuwork.editAsset(\'' + esc(file.id) + '\')">✎</button>'
       + '<button type="button" class="iw-att-del" title="삭제" onclick="OSInsuwork.deleteAsset(\'' + esc(file.id) + '\')">×</button></span>';
   }
-  function customerExistingAttachments(customerId) { var root = customerAttachmentRoot(customerId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="iw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(attachmentItemHtml).join('') + '</div>'; }
-  function consultationExistingAttachments(consultationId) { var root = consultationAttachmentRoot(consultationId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="iw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(attachmentItemHtml).join('') + '</div>'; }
+  function customerExistingAttachments(customerId) { var root = customerAttachmentRoot(customerId); if (!root) return ''; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="iw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(function (file) { return attachmentItemHtml(file, customerId); }).join('') + '</div>'; }
+  function consultationExistingAttachments(consultationId) { var root = consultationAttachmentRoot(consultationId); if (!root) return ''; var consultation = state.data.consultations.find(function (entry) { return String(entry.id) === String(consultationId); }); var customerId = consultation && consultation.customer_id; var files = (state.data.items || []).filter(function (entry) { return String(entry.parent_id || '') === String(root.id); }); if (!files.length) return ''; return '<div class="iw-consult-existing"><strong>기존 첨부파일 ' + files.length + '개</strong>' + files.map(function (file) { return attachmentItemHtml(file, customerId); }).join('') + '</div>'; }
   function kakaoHistoryRows(area, id) {
     return (state.data.items || []).filter(function (entry) {
       var payload = entry.legacy_payload || {};
@@ -4546,7 +4597,8 @@
     var templates = kakaoTemplates();
     var options = templates.map(function (template) { return '<option value="' + esc(template.key) + '">' + esc(template.label) + '</option>'; }).join('');
     var areaLabel = target.area === 'customer' ? '계약관리 기존 고객' : '상담관리 신규 상담 고객';
-    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoDraft(\'' + esc(kind) + '\',\'' + esc(id) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 보내기</h2><p>' + esc(areaLabel) + '에게 발송할 문안을 준비합니다.</p></div><div class="iw-kakao-compose"><div class="iw-kakao-message-pane"><div class="iw-kakao-summary"><strong>' + esc(target.customer.name || '고객') + '</strong><span>' + (phone ? esc(phone) : '연락처 없음') + '</span></div><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoDraftPreview(\'' + esc(kind) + '\',\'' + esc(id) + '\')">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(kakaoMessagePreview(templates[0], target.customer)) + '</textarea></label></div><p class="iw-kakao-note">현재는 임태성 게이트 전용 발송 준비 기록만 저장합니다. 실제 알림톡/상담톡 API는 공식 딜러사 계약과 템플릿 승인 뒤 서버 함수로 연결합니다.</p></div>' + businessCardUploadHtml() + '</div><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">발송 준비 저장</button></div></form>');
+    var coverageText = ''; try { coverageText = sessionStorage.getItem('iw_coverage_kakao_' + target.customer.id) || ''; sessionStorage.removeItem('iw_coverage_kakao_' + target.customer.id); } catch (_) {}
+    dialog('<form class="iw-form iw-kakao-form" onsubmit="event.preventDefault();OSInsuwork.saveKakaoDraft(\'' + esc(kind) + '\',\'' + esc(id) + '\')"><div class="iw-kakao-head"><span>카카오 파일럿</span><h2>카카오톡 보내기</h2><p>' + esc(areaLabel) + '에게 발송할 문안을 준비합니다.</p></div><div class="iw-kakao-compose"><div class="iw-kakao-message-pane"><div class="iw-kakao-summary"><strong>' + esc(target.customer.name || '고객') + '</strong><span>' + (phone ? esc(phone) : '연락처 없음') + '</span></div><div class="iw-kakao-fields"><label><span>템플릿</span><select id="iwf-kakao-template" onchange="OSInsuwork.refreshKakaoDraftPreview(\'' + esc(kind) + '\',\'' + esc(id) + '\')">' + options + '</select></label><label><span>발송 문안</span><textarea id="iwf-kakao-body" rows="7">' + esc(coverageText || kakaoMessagePreview(templates[0], target.customer)) + '</textarea></label></div><p class="iw-kakao-note">현재는 임태성 게이트 전용 발송 준비 기록만 저장합니다. 실제 알림톡/상담톡 API는 공식 딜러사 계약과 템플릿 승인 뒤 서버 함수로 연결합니다.</p></div>' + businessCardUploadHtml() + '</div><div class="iw-form-actions iw-kakao-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">발송 준비 저장</button></div></form>');
     syncKakaoTemplateExtras();
   }
   function refreshKakaoDraftPreview(kind, id) {
@@ -5021,6 +5073,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
+    saveCoverageAnalysis: saveCoverageAnalysis, loadCoveragePdfFile: loadCoveragePdfFile, rerenderCoverageAnalysis: rerenderCoverageAnalysis, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
