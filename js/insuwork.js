@@ -2489,7 +2489,7 @@
       + '<div class="iw-consult-hover" id="iw-row-hover" aria-hidden="true"></div><div class="iw-search-image-hover" id="iw-search-image-hover" aria-hidden="true"></div><div class="iw-asset-drop-overlay" id="iw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 복사 저장합니다.</span></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('iw-search-input'); if (globalInput) globalInput.value = state.query; }
     if (window.OSInsuworkMobileSection) window.OSInsuworkMobileSection.mount(view, state.section);
-    bindSearch(); bindAssetWorkspaceDrop(); renderContent();
+    bindSearch(); bindAssetWorkspaceDrop(); bindWorkspacePaste(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
   function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); }, 0); hideRowHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml() + kakaoHubHtml(); hydrateFileDrags(); if (state.query.trim() && state.searchView !== 'list') hydrateAssetThumbs(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
@@ -2673,7 +2673,27 @@
       + swatches + '</div></details>';
   }
   function focusRich(id) { placeRichCaret(document.getElementById(id)); }
-  function richPaste(event) { var text = String(event && event.clipboardData && event.clipboardData.getData('text/plain') || '').trim(); if (!/^https?:\/\/\S+$/i.test(text)) return; event.preventDefault(); var safe = esc(text); document.execCommand('insertHTML', false, '<a href="' + safe + '" target="_blank" rel="noopener">' + safe + '</a>'); }
+  function clipboardFiles(clipboard) {
+    var files = Array.prototype.slice.call(clipboard && clipboard.files || []);
+    if (!files.length && clipboard && clipboard.items) Array.prototype.forEach.call(clipboard.items, function (item) {
+      var file = item.kind === 'file' && item.getAsFile ? item.getAsFile() : null;
+      if (file) files.push(file);
+    });
+    return files;
+  }
+  function richPaste(event) {
+    var files = clipboardFiles(event && event.clipboardData), images = files.filter(function (file) { return /^image\//.test(file.type || ''); });
+    if (images.length) {
+      event.preventDefault(); event.stopPropagation();
+      addRichImages(images, event.currentTarget && event.currentTarget.id);
+      if (event.currentTarget) event.currentTarget.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
+    var text = String(event && event.clipboardData && event.clipboardData.getData('text/plain') || '').trim();
+    if (!/^https?:\/\/\S+$/i.test(text)) return;
+    event.preventDefault(); event.stopPropagation();
+    var safe = esc(text); document.execCommand('insertHTML', false, '<a href="' + safe + '" target="_blank" rel="noopener">' + safe + '</a>');
+  }
   function richValue(id) { var editor = document.getElementById(id); return editor ? sanitizeRich(editor.innerHTML) : ''; }
   function richHasText(html) { var doc = new DOMParser().parseFromString(String(html || ''), 'text/html'); return !!String(doc.body.textContent || '').trim() || !!doc.body.querySelector('img'); }
   function resetRichPending() { (state.pendingRichImages || []).forEach(function (entry) { if (entry.preview) URL.revokeObjectURL(entry.preview); }); state.pendingRichFiles = []; state.pendingRichImages = []; }
@@ -3271,6 +3291,19 @@
     view.addEventListener('drop', function (event) {
       if (state.section !== 'assets' || !externalFileDrag(event)) return;
       event.preventDefault(); state.externalDragDepth = 0; setAssetDropOverlay(false); importExternalAssetDrop(event.dataTransfer);
+    });
+  }
+  function bindWorkspacePaste() {
+    var view = document.getElementById('v-insuwork'); if (!view || view._workspacePasteBound) return;
+    view._workspacePasteBound = true;
+    view.addEventListener('paste', function (event) {
+      if (state.section !== 'assets' || event.defaultPrevented) return;
+      var target = event.target;
+      if (target && (target.matches('input,textarea,select') || target.isContentEditable)) return;
+      var files = clipboardFiles(event.clipboardData);
+      if (!files.length) return;
+      event.preventDefault(); event.stopPropagation();
+      uploadAssetFiles(files);
     });
   }
   function readAllDirectoryEntries(entry) {
