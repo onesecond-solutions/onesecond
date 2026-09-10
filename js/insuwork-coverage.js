@@ -130,13 +130,34 @@
     if (!rows.length) throw new Error('PDF에서 표를 자동 인식하지 못했습니다. 스캔 PDF라면 OCR 처리 후 직접 행을 추가해 주세요.');
     return { version: 1, source: { name: fileName, type: 'pdf', importedAt: new Date().toISOString(), needsReview: true }, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: new Date().toISOString() };
   }
+  function matchKey(value) { return String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, ''); }
+  function mergeImportedRecord(baseRecord, importedRecord) {
+    var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {};
+    imported.products.forEach(function (incoming) {
+      var key = matchKey(incoming.company) + '|' + matchKey(incoming.product), existing = key === '|' ? null : base.products.find(function (product) { return matchKey(product.company) + '|' + matchKey(product.product) === key; });
+      if (!existing) { existing = clone(incoming); existing.id = uid('product'); base.products.push(existing); }
+      else { ['company', 'product', 'renewal', 'premium', 'payment'].forEach(function (field) { if (!existing[field] && incoming[field]) existing[field] = incoming[field]; }); }
+      productIds[incoming.id] = existing.id;
+    });
+    imported.rows.forEach(function (incoming) {
+      var nameKey = matchKey(incoming.name), candidates = nameKey ? base.rows.filter(function (row) { return matchKey(row.name) === nameKey; }) : [], existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(incoming.section); }) || (candidates.length === 1 ? candidates[0] : null);
+      if (!existing) {
+        existing = clone(incoming); existing.id = uid('coverage'); existing.values = {}; existing.selected = false; existing.hidden = false;
+        var lastSectionIndex = -1; base.rows.forEach(function (row, index) { if (matchKey(row.section) === matchKey(incoming.section)) lastSectionIndex = index; });
+        base.rows.splice(lastSectionIndex >= 0 ? lastSectionIndex + 1 : base.rows.length, 0, existing);
+      }
+      if (incoming.total !== '') existing.total = incoming.total;
+      Object.keys(incoming.values || {}).forEach(function (incomingProductId) { var targetProductId = productIds[incomingProductId]; if (targetProductId && incoming.values[incomingProductId] !== '') existing.values[targetProductId] = incoming.values[incomingProductId]; });
+    });
+    base.source = clone(imported.source); base.updatedAt = new Date().toISOString(); delete base._starter; return normalize(base);
+  }
   function importFile(customerId, input) {
     var file = input && input.files && input.files[0]; if (!file) return;
     var ext = (file.name.split('.').pop() || '').toLowerCase(), job;
     if (ext === 'xlsx' || ext === 'xls') job = loadSheetJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return parseWorkbook(buffer, file.name); });
     else if (ext === 'pdf') job = loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); });
     else { api().coverageError('엑셀 또는 PDF 파일을 선택해 주세요.'); input.value = ''; return; }
-    job.then(function (record) { reset(customerId, record); return saveTarget(customerId, record, file); }).then(function () { rerenderTarget(customerId); }).catch(function (error) { api().coverageError(error.message || String(error)); }).finally(function () { input.value = ''; });
+    job.then(function (record) { var merged = mergeImportedRecord(draft(customerId), record); reset(customerId, merged); return saveTarget(customerId, merged, file); }).then(function () { rerenderTarget(customerId); }).catch(function (error) { api().coverageError(error.message || String(error)); }).finally(function () { input.value = ''; });
   }
   function visibleProducts(d) { return d.products.filter(function (p) { return !p.hidden || d.showHiddenProducts; }); }
   function summaryHtml(d) {
