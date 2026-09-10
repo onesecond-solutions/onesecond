@@ -914,8 +914,11 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-birth-age>.iw-date-control{font-size:var(--fs-body);font-weight:400;color:var(--tp)}
 #v-insuwork .iw-coverage-analysis{margin-block:var(--sp-3,12px);border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);overflow:hidden}
 #v-insuwork .iw-ca-page-head{margin-bottom:var(--sp-3,12px)}
-#v-insuwork .iw-ca-page-guide{display:flex;align-items:flex-start;gap:var(--sp-3,12px);margin-bottom:var(--sp-3,12px);padding:var(--sp-4,16px);border:1px solid var(--bd);border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 5%,var(--s1));color:var(--ts)}
+#v-insuwork .iw-ca-page-guide{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-4,16px);margin-bottom:var(--sp-3,12px);padding:var(--sp-4,16px);border:1px solid var(--bd);border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 5%,var(--s1));color:var(--ts)}
+#v-insuwork .iw-ca-page-guide>div{display:flex;align-items:flex-start;gap:var(--sp-3,12px)}
 #v-insuwork .iw-ca-page-guide strong{flex:0 0 auto;color:var(--tp)}
+#v-insuwork .iw-ca-customer-target{display:grid;flex:0 0 min(360px,40%);gap:var(--sp-1,4px);color:var(--tp);font-weight:700}
+#v-insuwork .iw-ca-customer-target select{width:100%;min-height:40px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);padding:0 var(--sp-3,12px)}
 #v-insuwork .iw-coverage-analysis.iw-ca-page{margin:0;min-height:calc(100% - 118px)}
 #v-insuwork .iw-coverage-analysis.iw-ca-page .iw-ca-panel{padding:var(--sp-4,16px)}
 #v-insuwork .iw-coverage-analysis.iw-ca-page .iw-ca-table-wrap{max-height:calc(100vh - 390px)}
@@ -961,4 +964,4 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-panel footer{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3,12px);padding-top:var(--sp-3,12px);color:var(--ts);font-size:var(--text-xs)}
 #v-insuwork .iw-ca-panel footer>div{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--sp-2,8px)}
 #v-insuwork .iw-att-coverage{border:1px solid var(--ac);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--ac) 7%,var(--s1));color:var(--ac);padding:5px 8px;cursor:pointer;white-space:nowrap}
-@media(max-width:720px){#v-insuwork .iw-ca-page-guide{flex-direction:column}#v-insuwork .iw-coverage-analysis.iw-ca-page .iw-ca-table-wrap{max-height:none}#v-insuwork .iw-ca-panel footer{align-items:stretch;flex-direction:column}#v-insuwork .iw-ca-panel footer>div{justify-content:flex-start}}
+@media(max-width:720px){#v-insuwork .iw-ca-page-guide,#v-insuwork .iw-ca-page-guide>div{align-items:stretch;flex-direction:column}#v-insuwork .iw-ca-customer-target{flex-basis:auto;width:100%}#v-insuwork .iw-coverage-analysis.iw-ca-page .iw-ca-table-wrap{max-height:none}#v-insuwork .iw-ca-panel footer{align-items:stretch;flex-direction:column}#v-insuwork .iw-ca-panel footer>div{justify-content:flex-start}}

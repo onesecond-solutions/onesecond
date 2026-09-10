@@ -210,8 +210,15 @@
     return coverageImageBlob(customerId).then(function (blob) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); });
   }
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var lines = [['대분류', '중분류', '담보', '합계금액'].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
+  function workspaceHtml(record) {
+    var markup = html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, excelOnly: true, page: true });
+    var copyButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + WORKSPACE_KEY + '\',false)">선택 화면 복사</button>';
+    var saveButton = '<button type="button" class="iw-btn primary" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">보장분석 저장</button>';
+    var orderedButtons = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">기본 양식 편집저장</button>' + copyButton + '<button type="button" class="iw-btn primary" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">보장분석·보험비교 저장</button>';
+    return markup.replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
+  }
   var exposed = {
-    html: html, workspaceHtml: function (record) { return html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, excelOnly: true, page: true }).replace('>보장분석 저장</button>', '>기본 양식 저장</button>'); }, reset: reset, importFile: importFile,
+    html: html, workspaceHtml: workspaceHtml, reset: reset, importFile: importFile,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); },
     setRow: function (customerId, id, key, value) { setPath(customerId, 'row', id, key, value); }, setMergedField: setMergedField,
@@ -224,6 +231,7 @@
     selectSection: function (customerId, section, checked) { var d = draft(customerId); d.rows.forEach(function (r) { if (r.section === section) r.selected = checked; }); rerender(customerId); },
     moveRow: moveRow, moveProduct: moveProduct,
     save: function (customerId) { var d = draft(customerId); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString(); saveTarget(customerId, clone(d), null).then(function (saved) { if (saved) reset(customerId, saved); rerenderTarget(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
+    saveWorkspaceToCustomer: function () { var d = clone(draft(WORKSPACE_KEY)); delete d._starter; delete d._templateSeed; delete d.sourceItemId; d.source = null; d.updatedAt = new Date().toISOString(); api().saveCoverageWorkspaceToCustomer(d).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     importExistingPdf: function (customerId, fileId) { api().loadCoveragePdfFile(fileId).then(function (file) { return loadPdfJs().then(function () { return window.pdfjsLib.getDocument({ data: file.buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); }).then(function (record) { reset(customerId, record); return api().saveCoverageAnalysis(customerId, record, null, fileId); }); }).then(function () { rerender(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function () { api().coverageNotice('선택한 보장분석 표를 이미지로 복사했습니다. 카카오톡에 붙여넣어 주세요.'); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
   };
