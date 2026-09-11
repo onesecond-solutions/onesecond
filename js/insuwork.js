@@ -3639,6 +3639,16 @@
     if (!file || !file.storage_path || !(/pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf')) return Promise.reject(new Error('PDF 원본을 확인하지 못했습니다.'));
     return signStoragePath(file.storage_path).then(function (url) { return fetch(url); }).then(function (response) { if (!response.ok) throw new Error('PDF 원본을 불러오지 못했습니다.'); return response.arrayBuffer(); }).then(function (buffer) { return { name: file.title || '보장분석.pdf', buffer: buffer }; });
   }
+  function extractCoverageFile(file) {
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석 파일 인식 권한이 없습니다.'));
+    if (!file || file.size > 15 * 1024 * 1024) return Promise.reject(new Error('PDF·이미지 파일은 15MB 이하만 인식할 수 있습니다.'));
+    var mime = file.type || (/\.pdf$/i.test(file.name || '') ? 'application/pdf' : /\.webp$/i.test(file.name || '') ? 'image/webp' : /\.png$/i.test(file.name || '') ? 'image/png' : 'image/jpeg');
+    return file.arrayBuffer().then(function (buffer) {
+      var bytes = new Uint8Array(buffer), binary = '', chunk = 0x8000;
+      for (var i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
+      return window.db.fetch('/functions/v1/gemini-coverage-import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: btoa(binary), mimeType: mime }) });
+    }).then(function (response) { return response.json().then(function (body) { if (!response.ok) throw new Error(body.error || '파일 표 인식에 실패했습니다.'); return body; }); });
+  }
   function sendCoverageToKakao(customerId, text) {
     if (!canUseCoverageAnalysis()) return;
     try { sessionStorage.setItem('iw_coverage_kakao_' + customerId, text); } catch (_) {}
@@ -5118,7 +5128,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
