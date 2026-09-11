@@ -4,6 +4,7 @@
   var drafts = {};
   var sheetJsPromise = null;
   var pdfJsPromise = null;
+  var officeCryptoPromise = null;
 
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function uid(prefix) { return (prefix || 'id') + '-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); }
@@ -25,7 +26,7 @@
     if (!text) return '';
     if (/암주요치료비/.test(text)) return '치료비3';
     if (/로봇암수술비|표적항암약물치료비|양성자방사선치료비|세기조절방사선치료비|카티.*항암약물치료비|중입자방사선치료비/.test(text)) return '치료비2';
-    if (/항암방사선.*약물치료비|암수술비/.test(text)) return '치료비1';
+    if (/항암(?:방사선.*약물|약물.*방사선)치료비|암수술비/.test(text)) return '치료비1';
     if (/암.*진단|유사암.*진단/.test(text)) return '진단비';
     return '';
   }
@@ -72,13 +73,73 @@
     return new Promise(function (resolve, reject) { var s = document.createElement('script'); s.src = src; s.onload = resolve; s.onerror = function () { reject(new Error('분석 모듈을 불러오지 못했습니다.')); }; document.head.appendChild(s); });
   }
   function loadSheetJs() { if (!sheetJsPromise) sheetJsPromise = loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', function () { return !!window.XLSX; }); return sheetJsPromise; }
+  function loadOfficeCrypto() { if (!officeCryptoPromise) officeCryptoPromise = loadScript('/js/vendor/officecrypto.min.js?v=20260911coverage18', function () { return !!window.OSOfficeCrypto; }); return officeCryptoPromise; }
   function loadPdfJs() {
     if (!pdfJsPromise) pdfJsPromise = loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function () { return !!window.pdfjsLib; }).then(function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; });
     return pdfJsPromise;
   }
   function cellText(value) { if (value == null) return ''; if (value instanceof Date) return value.toISOString().slice(0, 10); return String(value).trim(); }
+  function sectionName(value) {
+    var raw = cellText(value).replace(/\n/g, ' ').trim(), key = raw.replace(/\s+/g, '');
+    if (!key) return '';
+    if (/실손/.test(key)) return '실손';
+    if (/^암|암진단/.test(key)) return '암';
+    if (/뇌/.test(key)) return '뇌';
+    if (/심장|허혈|급성심근/.test(key)) return '심장';
+    if (/수술|입원/.test(key)) return '수술비';
+    if (/배상|화재생활/.test(key)) return '배상책임';
+    if (/운전|교통사고/.test(key)) return '운전자';
+    return raw;
+  }
+  function makeProduct(company, product, premium, renewal, sourceColumn) { return { id: uid('product'), company: cellText(company), product: cellText(product), renewal: cellText(renewal), premium: cellText(premium), payment: '', hidden: false, sourceColumn: sourceColumn }; }
+  function makeRecord(fileName, type, products, rows) { products.forEach(function (p) { delete p.sourceColumn; }); return { version: 1, source: { name: fileName, type: type, importedAt: new Date().toISOString(), needsReview: true }, showSummary: false, showHiddenProducts: false, products: products, rows: rows, updatedAt: new Date().toISOString() }; }
+  function parseBanksaladWorkbook(workbook, fileName) {
+    var sheet = workbook.Sheets[workbook.SheetNames[0]], grid = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+    var headerIndex = grid.findIndex(function (row) { return cellText(row[0]) === '보장구분' && /주요특약/.test(cellText(row[1])); });
+    if (headerIndex < 0) return null;
+    var products = [], productStart = 6, width = Math.max.apply(null, grid.map(function (row) { return row.length; }));
+    for (var c = productStart; c < width; c++) {
+      var company = cellText(grid[headerIndex - 2] && grid[headerIndex - 2][c]), product = cellText(grid[headerIndex] && grid[headerIndex][c]), premium = cellText(grid[headerIndex - 1] && grid[headerIndex - 1][c]);
+      if (company || product) products.push(makeProduct(company, product, premium, '', c));
+    }
+    var currentSection = '', rows = [];
+    for (var r = headerIndex + 1; r < grid.length; r++) {
+      var source = grid[r] || [], suppliedSection = cellText(source[0]), name = cellText(source[1]);
+      if (suppliedSection) currentSection = sectionName(suppliedSection);
+      if (!name || /^(보험료|합계|안내)/.test(name)) continue;
+      var values = {}; products.forEach(function (p) { values[p.id] = cellText(source[p.sourceColumn]); });
+      rows.push({ id: uid('coverage'), section: currentSection, group: '', name: name, recommended: cellText(source[3]), status: cellText(source[2]), total: cellText(source[4]), difference: cellText(source[5]), values: values, hidden: false, selected: false });
+    }
+    return makeRecord(fileName, 'xlsx', products, rows);
+  }
+  function parseBomappWorkbook(workbook, fileName) {
+    var sheetName = workbook.SheetNames.find(function (name) { return /상품별.*보장/.test(name); });
+    if (!sheetName) return null;
+    var grid = window.XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: false });
+    var headerIndex = grid.findIndex(function (row) { return cellText(row[0]) === '구분' && /보장명/.test(cellText(row[1])); });
+    var productRow = grid.findIndex(function (row) { return /보험사.*상품/.test(cellText(row[1])); });
+    if (headerIndex < 0 || productRow < 0) return null;
+    var detailName = workbook.SheetNames.find(function (name) { return /보험.*현황/.test(name); }), companyByProduct = {};
+    if (detailName) {
+      var detail = window.XLSX.utils.sheet_to_json(workbook.Sheets[detailName], { header: 1, defval: '', raw: false }), detailHeader = detail.findIndex(function (row) { return cellText(row[0]) === '보험사' && cellText(row[1]) === '상품명'; });
+      if (detailHeader >= 0) for (var di = detailHeader + 1; di < detail.length; di++) if (cellText(detail[di][1])) companyByProduct[matchKey(detail[di][1])] = cellText(detail[di][0]);
+    }
+    var products = [];
+    for (var c = 4; c < (grid[productRow] || []).length; c++) { var product = cellText(grid[productRow][c]); if (product) products.push(makeProduct(companyByProduct[matchKey(product)] || '', product, cellText(grid[productRow + 4] && grid[productRow + 4][c]), '', c)); }
+    var rows = [], currentSection = '';
+    for (var r = headerIndex + 1; r < grid.length; r++) {
+      var source = grid[r] || [], suppliedSection = cellText(source[0]), name = cellText(source[1]);
+      if (suppliedSection) currentSection = sectionName(suppliedSection);
+      if (!name || /^\*/.test(name)) continue;
+      var values = {}; products.forEach(function (p) { values[p.id] = cellText(source[p.sourceColumn]); });
+      rows.push({ id: uid('coverage'), section: currentSection, group: '', name: name, recommended: '', status: '', total: cellText(source[2]), difference: '', values: values, hidden: false, selected: false });
+    }
+    return makeRecord(fileName, 'xlsx', products, rows);
+  }
   function parseWorkbook(buffer, fileName) {
     var workbook = window.XLSX.read(buffer, { type: 'array', cellDates: true });
+    var specialized = parseBanksaladWorkbook(workbook, fileName) || parseBomappWorkbook(workbook, fileName);
+    if (specialized) return specialized;
     var sheet = workbook.Sheets[workbook.SheetNames[0]];
     var grid = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
     var headerIndex = grid.findIndex(function (row) { var joined = row.map(cellText).join('|'); return (joined.indexOf('보장구분') >= 0 || joined.indexOf('대분류') >= 0) && (joined.indexOf('주요특약') >= 0 || joined.indexOf('담보') >= 0); });
@@ -108,7 +169,7 @@
       rows.push({ id: uid('coverage'), section: section, group: group, name: name, recommended: '', status: '', total: totalColumn >= 0 ? cellText(row[totalColumn]) : '', difference: '', values: values, hidden: false, selected: false });
     }
     products.forEach(function (p) { delete p.sourceColumn; });
-    return { version: 1, source: { name: fileName, type: 'xlsx', importedAt: new Date().toISOString() }, showSummary: false, showHiddenProducts: false, products: products, rows: rows, updatedAt: new Date().toISOString() };
+    return makeRecord(fileName, 'xlsx', products, rows);
   }
   function parsePdfItems(pages, fileName) {
     var lines = [];
@@ -130,11 +191,15 @@
     if (!rows.length) throw new Error('PDF에서 표를 자동 인식하지 못했습니다. 스캔 PDF라면 OCR 처리 후 직접 행을 추가해 주세요.');
     return { version: 1, source: { name: fileName, type: 'pdf', importedAt: new Date().toISOString(), needsReview: true }, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: new Date().toISOString() };
   }
-  function matchKey(value) { return String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, ''); }
+  function matchKey(value) {
+    var key = String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, '').replace(/질환/g, '').replace(/의료비/g, '실손비').replace(/일반암진단비|암진단비(?:ⅱ|ii)?유사암제외/g, '일반암진단').replace(/소액유사암/g, '유사암').replace(/항암약물방사선/g, '항암방사선약물').replace(/허가치료/g, '치료').replace(/암수술비/g, '암수술');
+    return key;
+  }
   function mergeImportedRecord(baseRecord, importedRecord) {
-    var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {};
+    var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {}, productOccurrences = {};
     imported.products.forEach(function (incoming) {
-      var key = matchKey(incoming.company) + '|' + matchKey(incoming.product), existing = key === '|' ? null : base.products.find(function (product) { return matchKey(product.company) + '|' + matchKey(product.product) === key; });
+      var key = matchKey(incoming.company) + '|' + matchKey(incoming.product), occurrence = productOccurrences[key] || 0, matches = key === '|' ? [] : base.products.filter(function (product) { return matchKey(product.company) + '|' + matchKey(product.product) === key; }), existing = matches[occurrence] || null;
+      productOccurrences[key] = occurrence + 1;
       if (!existing) { existing = clone(incoming); existing.id = uid('product'); base.products.push(existing); }
       else { ['company', 'product', 'renewal', 'premium', 'payment'].forEach(function (field) { if (!existing[field] && incoming[field]) existing[field] = incoming[field]; }); }
       productIds[incoming.id] = existing.id;
@@ -147,16 +212,39 @@
         base.rows.splice(lastSectionIndex >= 0 ? lastSectionIndex + 1 : base.rows.length, 0, existing);
       }
       if (incoming.total !== '') existing.total = incoming.total;
+      if (incoming.recommended !== '') existing.recommended = incoming.recommended;
+      if (incoming.status !== '') existing.status = incoming.status;
+      if (incoming.difference !== '') existing.difference = incoming.difference;
       Object.keys(incoming.values || {}).forEach(function (incomingProductId) { var targetProductId = productIds[incomingProductId]; if (targetProductId && incoming.values[incomingProductId] !== '') existing.values[targetProductId] = incoming.values[incomingProductId]; });
     });
     base.source = clone(imported.source); base.updatedAt = new Date().toISOString(); delete base._starter; return normalize(base);
   }
+  function isEncryptedOffice(buffer) { var b = new Uint8Array(buffer); return b.length > 8 && b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0; }
+  function decryptWorkbook(buffer, fileName) {
+    if (!isEncryptedOffice(buffer)) return Promise.resolve(buffer);
+    var password = window.prompt(fileName + '\n파일 비밀번호를 입력해 주세요. 비밀번호는 저장되지 않습니다.');
+    if (password == null || password === '') return Promise.reject(new Error('암호화 엑셀을 열려면 비밀번호가 필요합니다.'));
+    return loadOfficeCrypto().then(function () { return window.OSOfficeCrypto.decrypt(window.Buffer.from(new Uint8Array(buffer)), { password: password }); }).then(function (output) { return new Uint8Array(output).buffer; }).catch(function (error) { if (/password|incorrect/i.test(error && error.message || '')) throw new Error('엑셀 비밀번호가 맞지 않습니다.'); throw error; });
+  }
+  function recordFromStructured(data, fileName, type) {
+    var products = (data && data.products || []).map(function (p) { return makeProduct(p.company, p.product, p.premium, p.renewal); });
+    var rows = (data && data.rows || []).map(function (row) {
+      var values = {};
+      products.forEach(function (p, index) { values[p.id] = cellText(row.values && row.values[index]); });
+      return { id: uid('coverage'), section: sectionName(row.section), group: cellText(row.group), name: cellText(row.name), recommended: cellText(row.recommended), status: cellText(row.status), total: cellText(row.total), difference: '', values: values, hidden: false, selected: false };
+    }).filter(function (row) { return row.name; });
+    if (!rows.length) throw new Error('파일에서 보장 항목을 읽지 못했습니다.');
+    return makeRecord(fileName, type, products, rows);
+  }
   function importFile(customerId, input) {
     var file = input && input.files && input.files[0]; if (!file) return;
     var ext = (file.name.split('.').pop() || '').toLowerCase(), job;
-    if (ext === 'xlsx' || ext === 'xls') job = loadSheetJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return parseWorkbook(buffer, file.name); });
-    else if (ext === 'pdf') job = loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); });
-    else { api().coverageError('엑셀 또는 PDF 파일을 선택해 주세요.'); input.value = ''; return; }
+    if (ext === 'xlsx' || ext === 'xls') job = loadSheetJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return decryptWorkbook(buffer, file.name); }).then(function (buffer) { return parseWorkbook(buffer, file.name); });
+    else if (/^(pdf|png|jpe?g|webp)$/.test(ext)) job = api().extractCoverageFile(file).then(function (data) { return recordFromStructured(data, file.name, ext); }).catch(function (structuredError) {
+      if (ext !== 'pdf') throw structuredError;
+      return loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); });
+    });
+    else { api().coverageError('엑셀, PDF 또는 이미지 파일을 선택해 주세요.'); input.value = ''; return; }
     job.then(function (record) { var merged = mergeImportedRecord(draft(customerId), record); reset(customerId, merged); return saveTarget(customerId, merged, file); }).then(function () { rerenderTarget(customerId); }).catch(function (error) { api().coverageError(error.message || String(error)); }).finally(function () { input.value = ''; });
   }
   function visibleProducts(d) { return d.products.filter(function (p) { return !p.hidden || d.showHiddenProducts; }); }
@@ -205,7 +293,7 @@
       return '<tr class="' + (r.hidden ? 'is-hidden' : '') + '">' + selectionCell + sectionCell + groupCell + '<td class="iw-ca-name-cell"><input value="' + esc(r.name) + '" placeholder="담보명" onchange="OSInsuworkCoverage.setRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'name\',this.value)"></td><td class="iw-ca-total-cell"><input value="' + esc(r.total) + '" placeholder="합계금액" onchange="OSInsuworkCoverage.setRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'total\',this.value)"></td>' + products.map(function (p) { return '<td class="iw-ca-product-cell"><input value="' + esc((r.values || {})[p.id] || '') + '" aria-label="' + esc(r.name + ' ' + p.company) + '" onchange="OSInsuworkCoverage.setCell(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'' + esc(p.id) + '\',this.value)"></td>'; }).join('') + '<td class="iw-ca-row-actions"><button type="button" title="아래에 담보 삽입" onclick="OSInsuworkCoverage.addRow(\'' + esc(customerId) + '\',' + index + ')">＋</button><button type="button" title="담보 삭제" onclick="OSInsuworkCoverage.removeRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\')">×</button></td></tr>';
     }).join('');
     var source = d.source ? '<span class="iw-ca-source">원본: ' + esc(d.source.name || '') + (d.source.needsReview ? ' · 인식 결과 검토 필요' : '') + '</span>' : '<span class="iw-ca-source">등록된 보장분석 없음</span>';
-    var expanded = options.expanded === true, accept = options.excelOnly ? '.xlsx,.xls' : '.xlsx,.xls,.pdf', uploadLabel = options.excelOnly ? '엑셀 불러오기' : '엑셀·PDF 불러오기';
+    var expanded = options.expanded === true, accept = '.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp', uploadLabel = '파일 불러오기';
     return '<section class="iw-coverage-analysis' + (options.page ? ' iw-ca-page' : '') + '" style="' + columnStyle + '"><header><div><h3>보장분석 표</h3>' + source + '</div>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.togglePanel(\'' + esc(customerId) + '\',this)">' + (expanded ? '접기' : '펼치기') + '</button>') + '</header><div class="iw-ca-panel" data-customer-id="' + esc(customerId) + '"' + (expanded ? '' : ' hidden') + '><div class="iw-ca-toolbar"><label class="iw-btn primary">' + uploadLabel + '<input type="file" accept="' + accept + '" hidden onchange="OSInsuworkCoverage.importFile(\'' + esc(customerId) + '\',this)"></label><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + esc(customerId) + '\')">+ 회사·상품</button><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addRow(\'' + esc(customerId) + '\',-1)">+ 담보</button><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.toggleSummary(\'' + esc(customerId) + '\')">개수 ' + (d.showSummary ? '숨기기' : '보기') + '</button>' + (hiddenCount ? '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.toggleHiddenProducts(\'' + esc(customerId) + '\')">숨긴 상품 ' + hiddenCount + '개 ' + (d.showHiddenProducts ? '접기' : '보기') + '</button>' : '') + '</div>' + summaryHtml(d) + '<div class="iw-ca-table-wrap"><table><thead><tr><th class="iw-ca-check-cell"></th><th class="iw-ca-section-cell">대분류</th><th class="iw-ca-group-cell">중분류</th><th class="iw-ca-name-cell">담보</th><th class="iw-ca-total-cell">합계금액</th>' + productHeaders + '<th></th></tr></thead><tbody>' + (body || '<tr><td colspan="' + (6 + products.length) + '"><p class="iw-ca-empty">엑셀 파일을 불러오거나 담보를 추가해 주세요.</p></td></tr>') + '</tbody></table></div><footer><span>빈 금액도 원자료로 보존되며 자동 제외되지 않습니다.</span><div><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',false)">선택 화면 복사</button>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',true)">카카오톡으로 보내기</button>') + '<button type="button" class="iw-btn primary" onclick="OSInsuworkCoverage.save(\'' + esc(customerId) + '\')">보장분석 저장</button></div></footer></div></section>';
   }
   function addProduct(customerId) { var d = draft(customerId), p = { id: uid('product'), company: '', product: '', renewal: '', premium: '', payment: '', hidden: false }; d.products.push(p); d.rows.forEach(function (r) { r.values[p.id] = ''; }); rerender(customerId); }
@@ -250,7 +338,7 @@
   }
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var lines = [['대분류', '중분류', '담보', '합계금액'].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   function workspaceHtml(record) {
-    var markup = html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, excelOnly: true, page: true });
+    var markup = html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, page: true });
     var productButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + WORKSPACE_KEY + '\')">+ 회사·상품</button>';
     var resetButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.resetToBaseTemplate()">기본 양식으로 초기화</button>';
     var copyButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + WORKSPACE_KEY + '\',false)">선택 화면 복사</button>';
