@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>보장분석 엑셀 편집기</title>
+  <link rel="stylesheet" href="/css/app-core.css?v=20260708">
+  <link rel="stylesheet" href="/css/tokens-v2.css?v=20260817darkmode">
+  <style>
+    html,body{height:100%;margin:0;background:var(--s1);color:var(--tp);font-family:var(--font-sans,Arial,sans-serif)}
+    #coverage-sheet-app{height:100%;display:flex;flex-direction:column;min-width:0}
+    #coverage-sheet-app .cs-toolbar{display:flex;align-items:center;gap:var(--sp-2,8px);padding:var(--sp-3,12px);border-bottom:1px solid var(--bd);background:var(--s1);flex-wrap:wrap}
+    #coverage-sheet-app .cs-toolbar button,#coverage-sheet-app .cs-file-label,#coverage-sheet-app .cs-tabs button{min-height:34px;padding:6px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+    #coverage-sheet-app .cs-toolbar button:hover,#coverage-sheet-app .cs-file-label:hover,#coverage-sheet-app .cs-tabs button:hover{background:var(--s2)}
+    #coverage-sheet-app .cs-toolbar .primary{background:var(--ac);border-color:var(--ac);color:var(--on-ac,#fff);font-weight:700}
+    #coverage-sheet-app .cs-toolbar .cs-color{width:38px;height:34px;padding:3px}
+    #coverage-sheet-app .cs-divider{width:1px;height:24px;background:var(--bd)}
+    #coverage-sheet-app .cs-status{margin-left:auto;color:var(--ts);font-size:12px}
+    #coverage-sheet-app .cs-tabs{display:flex;gap:4px;padding:6px 10px 0;background:var(--s2);border-bottom:1px solid var(--bd)}
+    #coverage-sheet-app .cs-tabs button{border-bottom-left-radius:0;border-bottom-right-radius:0;min-height:30px;padding:4px 14px}
+    #coverage-sheet-app .cs-tabs button.on{background:var(--s1);border-bottom-color:var(--s1);font-weight:700}
+    #coverage-sheet-app .cs-grid-wrap{flex:1;min-height:0;overflow:auto;background:var(--s1);position:relative}
+    #coverage-sheet-app .cs-grid{border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:max-content;font-size:13px}
+    #coverage-sheet-app .cs-grid th,#coverage-sheet-app .cs-grid td{box-sizing:border-box;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;position:relative;background:var(--s1)}
+    #coverage-sheet-app .cs-grid thead th{position:sticky;top:0;z-index:5;height:28px;background:var(--s2);text-align:center;color:var(--ts);font-weight:600}
+    #coverage-sheet-app .cs-grid .cs-corner{position:sticky;left:0;z-index:7;width:46px;min-width:46px}
+    #coverage-sheet-app .cs-grid .cs-row-head{position:sticky;left:0;z-index:4;width:46px;min-width:46px;background:var(--s2);text-align:center;color:var(--ts);font-weight:500;user-select:none}
+    #coverage-sheet-app .cs-cell{min-height:100%;width:100%;box-sizing:border-box;padding:5px 7px;outline:none;white-space:pre-wrap;overflow-wrap:anywhere;cursor:cell}
+    #coverage-sheet-app td.selected{box-shadow:inset 0 0 0 2px var(--ac);z-index:2}
+    #coverage-sheet-app td.in-range{background:color-mix(in srgb,var(--ac) 10%,var(--s1))}
+    #coverage-sheet-app .cs-empty{display:grid;place-items:center;height:100%;color:var(--ts)}
+    #coverage-sheet-app .cs-help{padding:5px 12px;border-top:1px solid var(--bd);font-size:12px;color:var(--ts);background:var(--s2)}
+    @media(max-width:760px){#coverage-sheet-app .cs-toolbar{align-items:stretch}#coverage-sheet-app .cs-status{width:100%;margin-left:0}}
+  </style>
+</head>
+<body>
+  <main id="coverage-sheet-app">
+    <div class="cs-toolbar" aria-label="편집 도구">
+      <label class="cs-file-label">파일 불러오기<input id="cs-file" type="file" accept=".xlsx" hidden></label>
+      <button type="button" id="cs-reset">빈 기본표</button>
+      <button type="button" id="cs-save" class="primary">작업본 저장</button>
+      <button type="button" id="cs-download">XLSX 내려받기</button>
+      <span class="cs-divider"></span>
+      <button type="button" data-command="bold"><b>굵게</b></button>
+      <input type="color" id="cs-fill" class="cs-color" value="#fff9c4" title="채우기 색상" aria-label="채우기 색상">
+      <button type="button" data-command="left">왼쪽</button>
+      <button type="button" data-command="center">가운데</button>
+      <button type="button" data-command="right">오른쪽</button>
+      <button type="button" data-command="merge">셀 병합</button>
+      <button type="button" data-command="unmerge">병합 해제</button>
+      <span class="cs-divider"></span>
+      <button type="button" data-command="add-row">+ 행</button>
+      <button type="button" data-command="delete-row">행 삭제</button>
+      <button type="button" data-command="add-column">+ 열</button>
+      <button type="button" data-command="delete-column">열 삭제</button>
+      <span id="cs-status" class="cs-status" role="status">편집기를 준비하고 있습니다.</span>
+    </div>
+    <nav id="cs-tabs" class="cs-tabs" aria-label="시트"></nav>
+    <div id="cs-grid-wrap" class="cs-grid-wrap"><div class="cs-empty">기본표를 불러오는 중입니다.</div></div>
+    <div class="cs-help">마우스로 범위를 선택할 수 있습니다. Ctrl+C·Ctrl+V·Delete·Ctrl+S를 사용할 수 있습니다.</div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var app = document.getElementById('coverage-sheet-app');
+    var gridWrap = document.getElementById('cs-grid-wrap');
+    var tabs = document.getElementById('cs-tabs');
+    var statusNode = document.getElementById('cs-status');
+    var workbook = null, worksheet = null, templateBytes = null, fileName = '보장분석 작업본.xlsx';
+    var anchor = null, focus = null, dragging = false, draftTimer = 0;
+    var LOCAL_KEY = 'iw_coverage_sheet_draft_v1';
+
+    function status(message, error) { statusNode.textContent = message; statusNode.style.color = error ? 'var(--danger,#c62828)' : ''; }
+    function toBase64(buffer) { var bytes = new Uint8Array(buffer), parts = [], size = 0x8000; for (var i = 0; i < bytes.length; i += size) parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + size))); return btoa(parts.join('')); }
+    function fromBase64(value) { var binary = atob(value), bytes = new Uint8Array(binary.length); for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i); return bytes.buffer; }
+    function downloadBytes(buffer, name) { var url = URL.createObjectURL(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })), link = document.createElement('a'); link.href = url; link.download = name; link.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000); }
+    function columnName(index) { var name = ''; while (index > 0) { index--; name = String.fromCharCode(65 + index % 26) + name; index = Math.floor(index / 26); } return name; }
+    function color(value, fallback) { if (!value) return fallback || ''; var hex = value.argb || value.rgb || ''; if (hex.length === 8) hex = hex.slice(2); return /^[0-9a-f]{6}$/i.test(hex) ? '#' + hex : fallback || ''; }
+    function cellCss(cell) {
+      var style = cell.style || {}, font = style.font || {}, align = style.alignment || {}, fill = style.fill || {}, border = style.border || {}, css = [];
+      if (font.bold) css.push('font-weight:700'); if (font.italic) css.push('font-style:italic'); if (font.size) css.push('font-size:' + font.size + 'pt');
+      var fontColor = color(font.color); if (fontColor) css.push('color:' + fontColor);
+      var fillColor = color(fill.fgColor); if (fillColor && fill.pattern !== 'none') css.push('background:' + fillColor);
+      if (align.horizontal) css.push('text-align:' + ({ left:'left',center:'center',right:'right',fill:'left',justify:'justify' }[align.horizontal] || 'left'));
+      if (align.vertical) css.push('vertical-align:' + ({ top:'top',middle:'middle',bottom:'bottom' }[align.vertical] || 'middle'));
+      if (align.wrapText) css.push('white-space:pre-wrap');
+      ['top','right','bottom','left'].forEach(function (side) { var item = border[side]; if (item && item.style) css.push('border-' + side + ':1px solid ' + color(item.color, '#9e9e9e')); });
+      return css.join(';');
+    }
+    function bounds() { var a = anchor || { row: 1, col: 1 }, b = focus || a; return { r1: Math.min(a.row,b.row), r2: Math.max(a.row,b.row), c1: Math.min(a.col,b.col), c2: Math.max(a.col,b.col) }; }
+    function selectedCells() { var b = bounds(), cells = []; for (var r=b.r1;r<=b.r2;r++) for (var c=b.c1;c<=b.c2;c++) cells.push(worksheet.getCell(r,c)); return cells; }
+    function markSelection() { var b = bounds(); gridWrap.querySelectorAll('td[data-row]').forEach(function (td) { var r=+td.dataset.row,c=+td.dataset.col; td.classList.toggle('in-range',r>=b.r1&&r<=b.r2&&c>=b.c1&&c<=b.c2); td.classList.toggle('selected',focus&&r===focus.row&&c===focus.col); }); }
+    function select(row,col,extend) { if (!extend || !anchor) anchor={row:row,col:col}; focus={row:row,col:col}; markSelection(); }
+    function mergeMap(maxRow,maxCol) { var map={},skip={}; for(var r=1;r<=maxRow;r++) for(var c=1;c<=maxCol;c++){var cell=worksheet.getCell(r,c);if(!cell.isMerged)continue;var master=cell.master||cell,key=master.address;if(!map[key])map[key]={r1:r,r2:r,c1:c,c2:c};else{map[key].r1=Math.min(map[key].r1,r);map[key].r2=Math.max(map[key].r2,r);map[key].c1=Math.min(map[key].c1,c);map[key].c2=Math.max(map[key].c2,c);}if(cell.address!==key)skip[cell.address]=true;}return {map:map,skip:skip};}
+    function display(cell) { return cell.text == null ? '' : String(cell.text); }
+    function parseValue(text) { text=String(text||''); if(text.charAt(0)==='=') return { formula:text.slice(1) }; var compact=text.replace(/,/g,''); return /^-?\d+(\.\d+)?$/.test(compact)&&text.trim()!=='' ? Number(compact) : text; }
+    function renderTabs() { tabs.innerHTML=''; workbook.worksheets.forEach(function (sheet) { var button=document.createElement('button');button.type='button';button.textContent=sheet.name;button.className=sheet===worksheet?'on':'';button.addEventListener('click',function(){worksheet=sheet;anchor=focus=null;render();});tabs.appendChild(button);}); }
+    function render() {
+      if(!worksheet)return; renderTabs();
+      var maxRow=Math.max(worksheet.rowCount||1,20), maxCol=Math.max(worksheet.columnCount||1,8); maxRow=Math.min(maxRow,250);maxCol=Math.min(maxCol,60);
+      var merges=mergeMap(maxRow,maxCol), table=document.createElement('table');table.className='cs-grid';
+      var thead=document.createElement('thead'),head=document.createElement('tr'),corner=document.createElement('th');corner.className='cs-corner';head.appendChild(corner);
+      for(var c=1;c<=maxCol;c++){var th=document.createElement('th'),width=Math.max(54,Math.min(360,Math.round((worksheet.getColumn(c).width||12)*7)));th.textContent=columnName(c);th.style.width=width+'px';th.style.minWidth=width+'px';head.appendChild(th);}thead.appendChild(head);table.appendChild(thead);
+      var tbody=document.createElement('tbody');
+      for(var r=1;r<=maxRow;r++){var tr=document.createElement('tr'),rowHeight=Math.max(24,Math.min(240,Math.round((worksheet.getRow(r).height||18)*1.33)));tr.style.height=rowHeight+'px';var rh=document.createElement('th');rh.className='cs-row-head';rh.textContent=r;tr.appendChild(rh);
+        for(c=1;c<=maxCol;c++){var cell=worksheet.getCell(r,c);if(merges.skip[cell.address])continue;var td=document.createElement('td'),merge=merges.map[cell.address];td.dataset.row=r;td.dataset.col=c;if(merge){td.rowSpan=merge.r2-merge.r1+1;td.colSpan=merge.c2-merge.c1+1;}var editor=document.createElement('div');editor.className='cs-cell';editor.contentEditable='true';editor.spellcheck=false;editor.textContent=display(cell);editor.style.cssText=cellCss(cell);editor.addEventListener('blur',function(){var rr=+this.parentNode.dataset.row,cc=+this.parentNode.dataset.col,target=worksheet.getCell(rr,cc),next=this.textContent||'';if(display(target)!==next){target.value=parseValue(next);dirty();}});td.appendChild(editor);tr.appendChild(td);}
+        tbody.appendChild(tr);}
+      table.appendChild(tbody);gridWrap.innerHTML='';gridWrap.appendChild(table);markSelection();status('편집할 셀이나 범위를 선택해 주세요.');
+    }
+    async function workbookBuffer() { workbook.calcProperties.fullCalcOnLoad=true;workbook.calcProperties.forceFullCalc=true;return workbook.xlsx.writeBuffer(); }
+    function dirty() { status('이 브라우저에 임시 저장 중…');clearTimeout(draftTimer);draftTimer=setTimeout(async function(){try{localStorage.setItem(LOCAL_KEY,toBase64(await workbookBuffer()));status('이 브라우저에 임시 저장됨');}catch(e){status('임시 저장하지 못했습니다.',true);}},700); }
+    async function loadBuffer(buffer,name) { var next=new ExcelJS.Workbook();await next.xlsx.load(buffer);workbook=next;worksheet=workbook.worksheets[0];fileName=(name||'보장분석 작업본.xlsx').replace(/\.[^.]+$/, '')+'.xlsx';anchor=focus=null;render();dirty(); }
+    async function loadTemplate() { await loadBuffer(templateBytes.slice(0),'보장분석 작업본.xlsx'); }
+    async function initialize(message) {
+      if(!window.ExcelJS){status('엑셀 편집 라이브러리를 불러오지 못했습니다. 새로고침해 주세요.',true);return;}
+      try{var response=await fetch(message.templateUrl,{cache:'no-store'});if(!response.ok)throw new Error('기본표를 불러오지 못했습니다.');templateBytes=await response.arrayBuffer();var draft='';try{draft=localStorage.getItem(LOCAL_KEY)||'';}catch(_){}
+        if(message.saved&&message.saved.data)await loadBuffer(fromBase64(message.saved.data),message.saved.fileName);else if(draft)await loadBuffer(fromBase64(draft),'보장분석 작업본.xlsx');else await loadTemplate();
+        status(message.saved&&message.saved.updatedAt?'저장된 작업본을 불러왔습니다.':'빈 기본표를 불러왔습니다.');
+      }catch(error){status(error.message||String(error),true);gridWrap.innerHTML='<div class="cs-empty">작업본을 불러오지 못했습니다.</div>';}
+    }
+    function apply(command) { if(!worksheet||!focus)return status('먼저 셀이나 범위를 선택해 주세요.',true);var b=bounds(),cells=selectedCells();try{
+      if(command==='bold')cells.forEach(function(c){c.font=Object.assign({},c.font||{},{bold:!(c.font&&c.font.bold)});});
+      else if(['left','center','right'].indexOf(command)>=0)cells.forEach(function(c){c.alignment=Object.assign({},c.alignment||{},{horizontal:command,vertical:'middle'});});
+      else if(command==='merge'){worksheet.mergeCells(b.r1,b.c1,b.r2,b.c2);}
+      else if(command==='unmerge'){var seen={};cells.forEach(function(c){if(c.isMerged){var a=(c.master||c).address;if(!seen[a]){seen[a]=1;worksheet.unMergeCells(a);}}});}
+      else if(command==='add-row'){worksheet.spliceRows(b.r2+1,0,[]);focus=anchor={row:b.r2+1,col:b.c1};}
+      else if(command==='delete-row'){worksheet.spliceRows(b.r1,b.r2-b.r1+1);focus=anchor={row:Math.max(1,b.r1),col:b.c1};}
+      else if(command==='add-column'){worksheet.spliceColumns(b.c2+1,0,[]);focus=anchor={row:b.r1,col:b.c2+1};}
+      else if(command==='delete-column'){worksheet.spliceColumns(b.c1,b.c2-b.c1+1);focus=anchor={row:b.r1,col:Math.max(1,b.c1)};}
+      render();dirty();
+    }catch(error){status('선택 범위를 처리하지 못했습니다: '+(error.message||error),true);}}
+    gridWrap.addEventListener('mousedown',function(e){var td=e.target.closest('td[data-row]');if(!td)return;dragging=true;select(+td.dataset.row,+td.dataset.col,e.shiftKey);});
+    gridWrap.addEventListener('mouseover',function(e){var td=e.target.closest('td[data-row]');if(dragging&&td){focus={row:+td.dataset.row,col:+td.dataset.col};markSelection();}});document.addEventListener('mouseup',function(){dragging=false;});
+    app.addEventListener('click',function(e){var command=e.target.closest('[data-command]');if(command)apply(command.dataset.command);});
+    document.getElementById('cs-fill').addEventListener('input',function(){if(!worksheet||!focus)return;var argb='FF'+this.value.slice(1).toUpperCase();selectedCells().forEach(function(c){c.fill={type:'pattern',pattern:'solid',fgColor:{argb:argb}};});render();dirty();});
+    document.getElementById('cs-file').addEventListener('change',function(){var file=this.files&&this.files[0];if(file)file.arrayBuffer().then(function(buffer){return loadBuffer(buffer,file.name);}).catch(function(e){status(e.message||String(e),true);});this.value='';});
+    document.getElementById('cs-reset').addEventListener('click',function(){if(templateBytes&&confirm('현재 편집 내용을 비우고 기본표로 돌아갈까요?'))loadTemplate();});
+    document.getElementById('cs-download').addEventListener('click',async function(){try{downloadBytes(await workbookBuffer(),fileName);status('XLSX 파일을 내려받았습니다.');}catch(e){status(e.message||String(e),true);}});
+    document.getElementById('cs-save').addEventListener('click',async function(){try{status('보험워크에 저장 중…');parent.postMessage({type:'coverage-sheet:save',data:toBase64(await workbookBuffer()),fileName:fileName},location.origin);}catch(e){status(e.message||String(e),true);}});
+    document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();document.getElementById('cs-save').click();return;}if(e.key==='Delete'&&worksheet&&focus&&!e.target.isContentEditable){selectedCells().forEach(function(c){c.value=null;});render();dirty();}});
+    document.addEventListener('copy',function(e){if(!worksheet||!focus||e.target.isContentEditable)return;var b=bounds(),rows=[];for(var r=b.r1;r<=b.r2;r++){var cols=[];for(var c=b.c1;c<=b.c2;c++)cols.push(display(worksheet.getCell(r,c)));rows.push(cols.join('\t'));}e.clipboardData.setData('text/plain',rows.join('\n'));e.preventDefault();});
+    document.addEventListener('paste',function(e){if(!worksheet||!focus)return;var text=e.clipboardData&&e.clipboardData.getData('text/plain');if(!text)return;e.preventDefault();var rows=text.replace(/\r/g,'').split('\n');rows.forEach(function(line,ri){line.split('\t').forEach(function(value,ci){worksheet.getCell(focus.row+ri,focus.col+ci).value=parseValue(value);});});render();dirty();});
+    window.addEventListener('message',function(e){if(e.origin!==location.origin||!e.data)return;if(e.data.type==='coverage-sheet:init')initialize(e.data);if(e.data.type==='coverage-sheet:saved')status(e.data.ok?'보험워크 비공개 작업본으로 저장했습니다.':e.data.error||'저장하지 못했습니다.',!e.data.ok);});
+    parent.postMessage({type:'coverage-sheet:ready'},location.origin);
+  })();
+  </script>
+</body>
+</html>
