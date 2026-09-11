@@ -965,3 +965,9 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-panel footer>div{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--sp-2,8px)}
 #v-insuwork .iw-att-coverage{border:1px solid var(--ac);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--ac) 7%,var(--s1));color:var(--ac);padding:5px 8px;cursor:pointer;white-space:nowrap}
 @media(max-width:720px){#v-insuwork .iw-ca-page-guide,#v-insuwork .iw-ca-page-guide>div{align-items:stretch;flex-direction:column}#v-insuwork .iw-ca-customer-target{flex-basis:auto;width:100%}#v-insuwork .iw-coverage-analysis.iw-ca-page .iw-ca-table-wrap{max-height:none}#v-insuwork .iw-ca-panel footer{align-items:stretch;flex-direction:column}#v-insuwork .iw-ca-panel footer>div{justify-content:flex-start}}
+
+/* 임태성 게이트 전용 보장분석 엑셀 */
+#v-insuwork .iw-coverage-sheet-page{height:100%;min-height:0;display:flex;flex-direction:column}
+#v-insuwork .iw-coverage-sheet-shell{flex:1;min-height:640px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);overflow:hidden}
+#v-insuwork .iw-coverage-sheet-shell iframe{display:block;width:100%;height:calc(100vh - 250px);min-height:640px;border:0;background:var(--s1)}
+@media(max-width:720px){#v-insuwork .iw-coverage-sheet-shell,#v-insuwork .iw-coverage-sheet-shell iframe{min-height:720px}#v-insuwork .iw-coverage-sheet-shell iframe{height:calc(100vh - 220px)}}
