@@ -5,6 +5,9 @@
   var sheetJsPromise = null;
   var pdfJsPromise = null;
   var officeCryptoPromise = null;
+  var coverageSynonymsPromise = null;
+  var coverageSynonymExactIndex = {};
+  var coverageSynonymLooseIndex = {};
 
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]; }); }
   function uid(prefix) { return (prefix || 'id') + '-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); }
@@ -74,6 +77,37 @@
   }
   function loadSheetJs() { if (!sheetJsPromise) sheetJsPromise = loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', function () { return !!window.XLSX; }); return sheetJsPromise; }
   function loadOfficeCrypto() { if (!officeCryptoPromise) officeCryptoPromise = loadScript('/js/vendor/officecrypto.min.js?v=20260911coverage18', function () { return !!window.OSOfficeCrypto; }); return officeCryptoPromise; }
+  function synonymExactKey(value) { return String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, ''); }
+  function synonymKey(value) { return String(value || '').toLowerCase().replace(/\([^)]*\)/g, '').replace(/[\s·ㆍ,._()\-\/]/g, ''); }
+  function loadCoverageSynonyms() {
+    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260911coverage19', { cache: 'no-store' }).then(function (response) {
+      if (!response.ok) throw new Error('담보명 동의어 사전을 불러오지 못했습니다.');
+      return response.json();
+    }).then(function (data) {
+      var exactIndex = {}, looseIndex = {}, ambiguousLoose = {};
+      (data.entries || []).forEach(function (entry) {
+        [entry.canonical].concat(entry.aliases || []).forEach(function (name) {
+          var exactKey = synonymExactKey(name), looseKey = synonymKey(name);
+          if (exactKey && !exactIndex[exactKey]) exactIndex[exactKey] = entry;
+          if (!looseKey) return;
+          if (looseIndex[looseKey] && looseIndex[looseKey].canonical !== entry.canonical) ambiguousLoose[looseKey] = true;
+          else looseIndex[looseKey] = entry;
+        });
+      });
+      Object.keys(ambiguousLoose).forEach(function (key) { delete looseIndex[key]; });
+      coverageSynonymExactIndex = exactIndex;
+      coverageSynonymLooseIndex = looseIndex;
+      return data;
+    }).catch(function (error) {
+      coverageSynonymExactIndex = {};
+      coverageSynonymLooseIndex = {};
+      console.warn('[coverage-synonyms]', error);
+      return null;
+    });
+    return coverageSynonymsPromise;
+  }
+  function coverageSynonym(value) { return coverageSynonymExactIndex[synonymExactKey(value)] || coverageSynonymLooseIndex[synonymKey(value)] || null; }
+  function coverageMatchKey(value) { var entry = coverageSynonym(value); return synonymKey(entry ? entry.canonical : value); }
   function loadPdfJs() {
     if (!pdfJsPromise) pdfJsPromise = loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function () { return !!window.pdfjsLib; }).then(function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; });
     return pdfJsPromise;
@@ -205,11 +239,17 @@
       productIds[incoming.id] = existing.id;
     });
     imported.rows.forEach(function (incoming) {
-      var nameKey = matchKey(incoming.name), candidates = nameKey ? base.rows.filter(function (row) { return matchKey(row.name) === nameKey; }) : [], existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(incoming.section); }) || (candidates.length === 1 ? candidates[0] : null);
+      var synonym = coverageSynonym(incoming.name), targetSection = synonym && synonym.section || incoming.section, nameKey = coverageMatchKey(incoming.name);
+      var candidates = nameKey ? base.rows.filter(function (row) { return coverageMatchKey(row.name) === nameKey; }) : [];
+      var existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(targetSection); }) || (candidates.length === 1 ? candidates[0] : null);
       if (!existing) {
         existing = clone(incoming); existing.id = uid('coverage'); existing.values = {}; existing.selected = false; existing.hidden = false;
-        var lastSectionIndex = -1; base.rows.forEach(function (row, index) { if (matchKey(row.section) === matchKey(incoming.section)) lastSectionIndex = index; });
+        if (synonym) { existing.name = synonym.canonical; existing.section = synonym.section || existing.section; existing.group = synonym.group || existing.group; existing.sourceNames = [incoming.name]; }
+        var lastSectionIndex = -1; base.rows.forEach(function (row, index) { if (matchKey(row.section) === matchKey(existing.section)) lastSectionIndex = index; });
         base.rows.splice(lastSectionIndex >= 0 ? lastSectionIndex + 1 : base.rows.length, 0, existing);
+      } else if (incoming.name && coverageMatchKey(incoming.name) === coverageMatchKey(existing.name) && synonymKey(incoming.name) !== synonymKey(existing.name)) {
+        existing.sourceNames = Array.isArray(existing.sourceNames) ? existing.sourceNames : [];
+        if (existing.sourceNames.indexOf(incoming.name) < 0) existing.sourceNames.push(incoming.name);
       }
       if (incoming.total !== '') existing.total = incoming.total;
       if (incoming.recommended !== '') existing.recommended = incoming.recommended;
@@ -245,7 +285,7 @@
       return loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); });
     });
     else { api().coverageError('엑셀, PDF 또는 이미지 파일을 선택해 주세요.'); input.value = ''; return; }
-    job.then(function (record) { var merged = mergeImportedRecord(draft(customerId), record); reset(customerId, merged); return saveTarget(customerId, merged, file); }).then(function () { rerenderTarget(customerId); }).catch(function (error) { api().coverageError(error.message || String(error)); }).finally(function () { input.value = ''; });
+    Promise.all([job, loadCoverageSynonyms()]).then(function (results) { var merged = mergeImportedRecord(draft(customerId), results[0]); reset(customerId, merged); return saveTarget(customerId, merged, file); }).then(function () { rerenderTarget(customerId); }).catch(function (error) { api().coverageError(error.message || String(error)); }).finally(function () { input.value = ''; });
   }
   function visibleProducts(d) { return d.products.filter(function (p) { return !p.hidden || d.showHiddenProducts; }); }
   function summaryHtml(d) {
@@ -362,7 +402,7 @@
     resetToBaseTemplate: function () { var d = draft(WORKSPACE_KEY); d.products = []; d.source = null; delete d.sourceItemId; d.showHiddenProducts = false; d.rows.forEach(function (row) { row.values = {}; row.total = ''; row.recommended = ''; row.status = ''; row.difference = ''; row.selected = false; }); rerender(WORKSPACE_KEY); api().coverageNotice('회사·상품과 금액을 비웠습니다. 기본 양식 편집저장을 눌러야 확정됩니다.'); },
     save: function (customerId) { var d = draft(customerId); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString(); saveTarget(customerId, clone(d), null).then(function (saved) { if (saved) reset(customerId, saved); rerenderTarget(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     saveWorkspaceToCustomer: function () { var d = clone(draft(WORKSPACE_KEY)); delete d._starter; delete d._templateSeed; delete d.sourceItemId; d.source = null; d.updatedAt = new Date().toISOString(); api().saveCoverageWorkspaceToCustomer(d).catch(function (e) { api().coverageError(e.message || String(e)); }); },
-    importExistingPdf: function (customerId, fileId) { api().loadCoveragePdfFile(fileId).then(function (file) { return loadPdfJs().then(function () { return window.pdfjsLib.getDocument({ data: file.buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); }).then(function (record) { reset(customerId, record); return api().saveCoverageAnalysis(customerId, record, null, fileId); }); }).then(function () { rerender(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
+    importExistingPdf: function (customerId, fileId) { Promise.all([api().loadCoveragePdfFile(fileId), loadCoverageSynonyms()]).then(function (results) { var file = results[0]; return loadPdfJs().then(function () { return window.pdfjsLib.getDocument({ data: file.buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return { file: file, record: parsePdfItems(pages, file.name) }; }); }).then(function (result) { var merged = mergeImportedRecord(draft(customerId), result.record); reset(customerId, merged); return api().saveCoverageAnalysis(customerId, merged, null, fileId); }).then(function () { rerender(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function () { api().coverageNotice('선택한 보장분석 표를 이미지로 복사했습니다. 카카오톡에 붙여넣어 주세요.'); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
   };
   window.OSInsuworkCoverage = exposed;
