@@ -65,3 +65,9 @@
 - 기본 양식은 `workspace_category='coverage_analysis'`, `coverage_analysis_workspace=true`, `coverage_analysis_template=true`로 구분하고 임태성 소유 레코드만 갱신한다.
 - `legacy_payload.workspace_category='customer'`, `coverage_analysis_record=true`, `customer_id`로 고객과 연결한다.
 - 새로 업로드한 원본은 기존 `myspace` 비공개 버킷에 원장 자식 파일로 저장한다.
+
+## 2026-09-12 작업 영역 확대
+
+- 독립 보장분석 표 우측 상단의 `전체 화면 보기`로 표·편집 도구·저장 버튼만 창 전체에 표시한다.
+- `원래 화면으로` 또는 Esc로 복귀한다. 편집 데이터·스크롤을 유지하고 표 재렌더 시에도 확대 상태를 유지한다.
+- 기존 임태성 게이트와 저장 경로를 그대로 사용한다.
