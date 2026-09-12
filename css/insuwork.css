@@ -997,3 +997,11 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-name-resizer{position:absolute;right:-4px;top:0;bottom:0;width:9px;cursor:col-resize;touch-action:none;z-index:6;border-right:2px solid var(--bd)}
 #v-insuwork .iw-ca-name-resizer:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 15%,transparent)}
 #v-insuwork .iw-ca-name-cell textarea{field-sizing:fixed;overflow-x:auto}
+#v-insuwork .iw-ca-import-progress { margin: auto; width: min(380px, calc(100vw - 32px)); box-sizing: border-box; padding: 28px 24px; border: 1px solid var(--bd); border-radius: 16px; background: var(--s1); color: var(--tp); text-align: center; }
+#v-insuwork .iw-ca-import-progress::backdrop { background: rgb(0 0 0 / 35%); }
+#v-insuwork .iw-ca-import-progress h3 { margin: 16px 0 10px; font-size: 18px; }
+#v-insuwork .iw-ca-import-progress p { margin: 0 0 12px; color: var(--ts); font-size: 14px; line-height: 1.6; }
+#v-insuwork .iw-ca-import-progress small { color: var(--tf); line-height: 1.6; }
+#v-insuwork .iw-ca-import-spinner { width: 30px; height: 30px; margin: auto; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: iw-ca-import-spin .8s linear infinite; }
+@keyframes iw-ca-import-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { #v-insuwork .iw-ca-import-spinner { animation: none; } }
