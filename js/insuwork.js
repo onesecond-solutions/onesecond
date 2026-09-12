@@ -3568,13 +3568,28 @@
   function coverageWorkspaceItem() {
     return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_workspace === true; });
   }
+  function coverageWorkingItem() {
+    return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_working === true; });
+  }
+  function canEditCoverageTemplate() { return localPreviewAllowed() || (authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID); }
+  function getCoverageBaseTemplate() {
+    var item = coverageWorkspaceItem(), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    return record ? JSON.parse(JSON.stringify(record)) : null;
+  }
+  function coverageWorkspaceRecord() {
+    var item = coverageWorkingItem(), working = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    var template = getCoverageBaseTemplate();
+    // The form editor may have explicitly saved a newer template than their working copy.
+    if (canEditCoverageTemplate() && template && working && String(template.updatedAt || '') > String(working.updatedAt || '')) return template;
+    return working || template;
+  }
   function coverageAnalysisPageHtml() {
     if (!canUseCoverageAnalysis()) return homeHtml();
     if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
-    var item = coverageWorkspaceItem(), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    var record = coverageWorkspaceRecord();
     var customerOptions = (state.data.customers || []).slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'ko'); }).map(function (customer) { return '<option value="' + esc(customer.id) + '">' + esc(customer.name || '(이름 없음)') + (customer.phone || customer.phone_raw ? ' · ' + esc(phoneText(customer.phone || customer.phone_raw)) : '') + '</option>'; }).join('');
-    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석·보험비교</h2><p class="iw-subtitle">기본 양식을 편집하고, 고객별 보장 현황과 보험상품을 한 화면에서 비교해 저장합니다.</p></div></div>'
-      + '<div class="iw-ca-page-guide"><div><strong>기본 양식 설정</strong><span>분류·담보·보험사·상품 순서를 편집해 저장하면 새 고객의 보장분석·보험비교 시작 양식으로 사용합니다. 엑셀을 불러와 양식을 만들 수도 있습니다.</span></div><label class="iw-ca-customer-target"><span>고객별 저장 대상</span><select id="iw-ca-target-customer"><option value="">고객을 선택하세요</option>' + customerOptions + '</select></label></div>'
+    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석·보험비교</h2><p class="iw-subtitle">자료를 불러와 보장 현황을 비교하고, 작업표 또는 선택한 고객에게 저장합니다.</p></div></div>'
+      + '<div class="iw-ca-page-guide"><div><strong>보장분석 작업표</strong><span>초기화하면 저장된 기본 양식으로 새로 시작합니다. 내 작업표 저장과 고객별 저장은 기본 양식을 변경하지 않습니다.</span></div><label class="iw-ca-customer-target"><span>고객별 저장 대상</span><select id="iw-ca-target-customer"><option value="">고객을 선택하세요</option>' + customerOptions + '</select></label></div>'
       + window.OSInsuworkCoverage.workspaceHtml(record || null);
   }
   function rerenderCoverageWorkspace() {
@@ -3586,16 +3601,23 @@
     return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error('보장분석 원본 파일 업로드에 실패했습니다.'); return writeOne('insuwork_items', row); }).then(function (saved) { upsertWorkspaceItem(saved); return saved; });
   }
   function saveCoverageWorkspaceAnalysis(record, sourceFile) {
+    if (!canEditCoverageTemplate()) return Promise.reject(new Error('기본 양식은 임태성만 저장할 수 있습니다.'));
+    return persistCoverageWorkspaceAnalysis(record, sourceFile, true);
+  }
+  function saveCoverageWorkspaceDraft(record, sourceFile) { return persistCoverageWorkspaceAnalysis(record, sourceFile, false); }
+  function persistCoverageWorkspaceAnalysis(record, sourceFile, asTemplate) {
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
-    var existing = coverageWorkspaceItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
-    var body = { owner_id: currentUserId(), item_type: 'memo', title: '보장분석 기본 양식', body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis_template: true, coverage_analysis: next } };
+    var existing = asTemplate ? coverageWorkspaceItem() : coverageWorkingItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
+    var payload = { workspace_category: 'coverage_analysis', coverage_analysis_workspace: asTemplate, coverage_analysis_template: asTemplate, coverage_analysis_working: !asTemplate, coverage_analysis: next };
+    var title = asTemplate ? '보장분석 기본 양식' : '보장분석 내 작업표';
+    var body = { owner_id: currentUserId(), item_type: 'memo', title: title, body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: payload };
     var ready;
     if (existing) {
       var previous = existing.legacy_payload && existing.legacy_payload.coverage_analysis;
-      var history = { id: crypto.randomUUID(), owner_id: currentUserId(), parent_id: existing.id, item_type: 'memo', title: '보장분석 기본 양식 이전 버전', body: coverageAnalysisSummary(previous), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_history: true, coverage_analysis: JSON.parse(JSON.stringify(previous || {})), replaced_at: new Date().toISOString() }, created_at: new Date().toISOString() };
+      var history = { id: crypto.randomUUID(), owner_id: currentUserId(), parent_id: existing.id, item_type: 'memo', title: title + ' 이전 버전', body: coverageAnalysisSummary(previous), visibility: 'private', legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_history: true, coverage_analysis: JSON.parse(JSON.stringify(previous || {})), replaced_at: new Date().toISOString() }, created_at: new Date().toISOString() };
       ready = writeOne('insuwork_items', history).then(function (savedHistory) { upsertWorkspaceItem(savedHistory); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body); });
     } else ready = writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
-    return ready.then(function (saved) { upsertWorkspaceItem(saved); if (!sourceFile) return next; return uploadCoverageWorkspaceSource(rootId, sourceFile).then(function (source) { next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'coverage_analysis', coverage_analysis_workspace: true, coverage_analysis_template: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석 기본 양식을 저장했습니다.'); return savedRecord; });
+    return ready.then(function (saved) { upsertWorkspaceItem(saved); if (!sourceFile) return next; return uploadCoverageWorkspaceSource(rootId, sourceFile).then(function (source) { next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: payload }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast(asTemplate ? '보장분석 기본 양식을 저장했습니다.' : '내 작업표를 저장했습니다.'); return savedRecord; });
   }
   function saveCoverageWorkspaceToCustomer(record) {
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석·보험비교를 사용할 권한이 없습니다.'));
@@ -5150,7 +5172,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    canEditCoverageTemplate: canEditCoverageTemplate, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고

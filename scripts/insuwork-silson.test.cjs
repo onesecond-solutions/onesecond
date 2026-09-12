@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const { webcrypto } = require('node:crypto');
 let savedWorkspace = null;
-const context = {window:{OSInsuwork:{saveCoverageWorkspaceAnalysis:async(record)=>{savedWorkspace=record;return record;},rerenderCoverageWorkspace(){},coverageError(error){throw new Error(error);}}},document:{addEventListener(){},querySelectorAll(){return[];}},crypto:webcrypto,console,queueMicrotask,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};
+const context = {window:{OSInsuwork:{canEditCoverageTemplate:()=>true,saveCoverageWorkspaceAnalysis:async(record)=>{savedWorkspace=record;return record;},rerenderCoverageWorkspace(){},coverageError(error){throw new Error(error);}}},document:{addEventListener(){},querySelectorAll(){return[];}},crypto:webcrypto,console,queueMicrotask,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('js/insuwork-coverage.js','utf8').replace('window.OSInsuworkCoverage = exposed;', 'window.OSInsuworkCoverage = exposed; window.testing = {normalize,mergeImportedRecord,loadCoverageSynonyms,coverageSynonym,mergedSpan};'),context);
 const api=context.window.testing;
