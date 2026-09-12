@@ -82,3 +82,24 @@ test('non-editor cannot save template but working-copy persistence has no templa
   assert.equal(items.filter(x => x.legacy_payload.coverage_analysis_template).length, 1);
   assert.equal(items.find(x => x.legacy_payload.coverage_analysis_working).owner_id, 'ordinary-user');
 });
+
+test('history restore is owner scoped and restores the reviewed snapshot to template and working copy', async () => {
+  let rendered = '', restored = [], query = '', currentDraft;
+  const historical = { id: 'before-import', owner_id: 'owner', legacy_payload: { coverage_analysis: clone(base), replaced_at: '2026-09-12T02:00:00Z' } };
+  const status = { textContent: '' };
+  const context = { canEditCoverageTemplate: () => true, currentUserId: () => 'owner', coverageWorkspaceItem: () => ({ id: 'template' }), api: async q => { query = q; return [historical]; }, dialog: html => rendered = html, esc: x => String(x || ''), coverageError: e => { throw Error(e); }, document: { getElementById: () => status }, saveCoverageWorkspaceAnalysis: async r => restored.push(['template', clone(r)]), saveCoverageWorkspaceDraft: async r => restored.push(['working', clone(r)]), window: { OSInsuworkCoverage: { reset: (key, r) => currentDraft = clone(r) } }, forceCloseDialog() {}, rerenderCoverageWorkspace() {}, coverageNotice() {} };
+  vm.createContext(context);
+  const from = appSource.indexOf('  var coverageTemplateHistory = []');
+  vm.runInContext(appSource.slice(from, appSource.indexOf('  function coverageAnalysisPageHtml()', from)), context);
+  await context.openCoverageTemplateHistory();
+  assert.match(query, /owner_id=eq.owner/);
+  assert.match(query, /parent_id=eq.template/);
+  context.previewCoverageTemplateHistory('before-import');
+  assert.match(rendered, /간병인지원 질병입원일당/);
+  await context.restoreCoverageTemplateHistory('not-a-snapshot', {});
+  assert.equal(restored.length, 0);
+  await context.restoreCoverageTemplateHistory('before-import', {});
+  assert.deepEqual(restored.map(x => x[0]), ['template', 'working']);
+  assert.equal(currentDraft.rows[0].name, base.rows[0].name);
+  assert.deepEqual(historical.legacy_payload.coverage_analysis, base);
+});
