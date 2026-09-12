@@ -549,6 +549,7 @@
     var value = input.value;
     if (!(event && event.isComposing)) {
       var plain = value.replace(/,/g, '').replace(/만$/, '');
+      if (value === '만') { value = ''; input.value = ''; }
       if (/^\d+(?:\.\d*)?$/.test(plain)) {
         var before = value.slice(0, input.selectionStart == null ? value.length : input.selectionStart).replace(/[,만]/g, '').length;
         var parts = plain.split('.');
