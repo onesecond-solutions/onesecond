@@ -984,6 +984,11 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-fullscreen>.iw-ca-panel{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden}
 #v-insuwork .iw-ca-fullscreen .iw-ca-toolbar,#v-insuwork .iw-ca-fullscreen footer{flex:0 0 auto}
 #v-insuwork .iw-coverage-analysis.iw-ca-page.iw-ca-fullscreen .iw-ca-table-wrap{flex:1;min-height:0;height:auto;max-height:none;overscroll-behavior:contain}
+#v-insuwork .iw-ca-save-status{margin-left:auto;color:var(--ts);font-size:var(--text-sm);font-weight:700;white-space:nowrap}
+#v-insuwork .iw-ca-save-status.is-saving{color:var(--ac)}
+#v-insuwork .iw-ca-save-status.is-saved{color:var(--ok,#138a55)}
+#v-insuwork .iw-ca-save-status.is-error{color:var(--err,#d92d20)}
+#v-insuwork .iw-ca-panel footer button:disabled{cursor:wait;opacity:.62}
 
 #v-insuwork .iw-ca-name-cell{max-width:var(--iw-ca-name-w)}
 #v-insuwork .iw-ca-name-cell textarea{box-sizing:border-box;max-width:100%;white-space:pre;overflow-wrap:normal;word-break:normal}
