@@ -399,13 +399,17 @@
     }, context.measureText('담보').width);
     return Math.max(100, Math.ceil(width + 28));
   }
-  function syncNameColumn(customerId) {
+  function fitNameRows(field) {
+    var rows = field.value.split(/\r\n|\r|\n/).length;
+    if (field.rows !== rows) field.rows = rows;
+  }
+  function syncNameColumn(customerId, editedField) {
     var panel = panelFor(customerId), textarea = panel && panel.querySelector('.iw-ca-name-cell textarea');
-    if (textarea) { panel.closest('.iw-coverage-analysis').style.setProperty('--iw-ca-name-w', nameColumnWidth(draft(customerId), textarea) + 'px'); panel.querySelectorAll('.iw-ca-name-cell textarea').forEach(function (field) { field.style.height = 'auto'; field.style.height = field.scrollHeight + 2 + 'px'; }); }
+    if (textarea) { var section = panel.closest('.iw-coverage-analysis'), width = nameColumnWidth(draft(customerId), textarea) + 'px'; if (section.style.getPropertyValue('--iw-ca-name-w') !== width) section.style.setProperty('--iw-ca-name-w', width); if (editedField) fitNameRows(editedField); else panel.querySelectorAll('.iw-ca-name-cell textarea').forEach(fitNameRows); }
   }
   function resizeNameColumn(customerId, rowId, textarea) {
     setPath(customerId, 'row', rowId, 'name', textarea.value);
-    syncNameColumn(customerId);
+    syncNameColumn(customerId, textarea);
   }
   function resetNameColumn(customerId) {
     delete draft(customerId).nameColumnWidth;
