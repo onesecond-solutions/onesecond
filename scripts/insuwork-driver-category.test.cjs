@@ -25,7 +25,7 @@ test('legacy 운전 section rows are unified into 운전자 on normalize, keepin
  assert.equal(result.rows.filter(r => r.section === '운전').length, 0, 'no rows should remain labeled 운전');
  assert.equal(result.rows.filter(r => r.section === '운전자').length, 10, 'all 10 rows should be under 운전자');
  // names/conditions must be preserved verbatim, nothing merged or renamed
- var names = result.rows.map(r => r.name).sort();
+ var names = Array.from(result.rows, r => r.name).sort();
  var expected = ['교통사고 벌금(대물)','교통사고 벌금(대인)','교통사고 벌금(스쿨존 추가보장)','교통사고 처리 지원금(6주미만 중대)','교통사고 처리 지원금(사망)','교통사고 처리지원금','변호사 선임 비용(경찰조사 미포함)','운전자 벌금(스쿨존)','자동차사고 변호사선임비용','자동차사고부상치료비'].sort();
  assert.deepEqual(names, expected);
 });
