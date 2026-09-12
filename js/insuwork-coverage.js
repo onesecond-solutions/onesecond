@@ -545,6 +545,27 @@
     setPath(customerId, 'row', rowId, 'name', textarea.value);
     syncNameColumn(customerId, textarea);
   }
+  function inputAmount(customerId, rowId, productId, input, event) {
+    var value = input.value;
+    if (!(event && event.isComposing)) {
+      var plain = value.replace(/,/g, '').replace(/만$/, '');
+      if (value === '만') { value = ''; input.value = ''; }
+      if (/^\d+(?:\.\d*)?$/.test(plain)) {
+        var before = value.slice(0, input.selectionStart == null ? value.length : input.selectionStart).replace(/[,만]/g, '').length;
+        var parts = plain.split('.');
+        var formatted = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (parts.length > 1 ? '.' + parts[1] : '');
+        value = formatted + '만';
+        if (input.value !== value) {
+          input.value = value;
+          var caret = 0, digits = 0;
+          while (caret < formatted.length && digits < before) { if (formatted[caret] !== ',') digits++; caret++; }
+          input.setSelectionRange(caret, caret);
+        }
+      }
+    }
+    var row = draft(customerId).rows.find(function (item) { return String(item.id) === String(rowId); });
+    if (row) { if (productId === null) row.total = value; else row.values[productId] = value; }
+  }
   function resetNameColumn(customerId) {
     delete draft(customerId).nameColumnWidth;
     syncNameColumn(customerId);
@@ -588,7 +609,7 @@
       var sectionDrag = r.section ? ' draggable="true" title="대분류를 위아래로 이동" ondragover="event.preventDefault()" ondrop="OSInsuworkCoverage.moveSection(\'' + esc(customerId) + '\',event.dataTransfer.getData(\'text/plain\'),\'' + esc(r.id) + '\')" ondragstart="event.dataTransfer.setData(\'text/plain\',\'' + esc(r.id) + '\')"' : '';
       var sectionCell = sectionSpan ? '<td rowspan="' + sectionSpan + '"' + (flat ? ' colspan="2"' : '') + sectionDrag + ' class="iw-ca-section-cell iw-ca-merged iw-ca-section-tone-' + (sectionOrdinal % 6) + (flat ? ' iw-ca-section-flat' : '') + '"><input value="' + esc(r.section) + '" placeholder="대분류" oninput="OSInsuworkCoverage.setMergedField(\'' + esc(customerId) + '\',' + index + ',\'section\',this.value)"></td>' : '';
       var groupCell = !flat && groupSpan ? '<td rowspan="' + groupSpan + '" class="iw-ca-merged iw-ca-group-cell"><input value="' + esc(r.group) + '" placeholder="중분류" oninput="OSInsuworkCoverage.setMergedField(\'' + esc(customerId) + '\',' + index + ',\'group\',this.value)"></td>' : '';
-      return '<tr class="' + (r.hidden ? 'is-hidden' : '') + '">' + selectionCell + sectionCell + groupCell + '<td class="iw-ca-name-cell"><textarea title="' + esc(conflictText(r)) + '" rows="1" wrap="off" placeholder="담보명" oninput="OSInsuworkCoverage.resizeNameColumn(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',this)">' + esc(r.name) + '</textarea></td><td class="iw-ca-total-cell"><input value="' + esc(r.total) + '" placeholder="합계금액" oninput="OSInsuworkCoverage.setRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'total\',this.value)"></td>' + products.map(function (p) { return '<td class="iw-ca-product-cell"><input value="' + esc((r.values || {})[p.id] || '') + '" aria-label="' + esc(r.name + ' ' + p.company) + '" oninput="OSInsuworkCoverage.setCell(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'' + esc(p.id) + '\',this.value)"></td>'; }).join('') + '<td class="iw-ca-row-actions"><button type="button" title="아래에 담보 삽입" onclick="OSInsuworkCoverage.addRow(\'' + esc(customerId) + '\',' + index + ')">＋</button><button type="button" title="담보 삭제" onclick="OSInsuworkCoverage.removeRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\')">×</button></td></tr>';
+      return '<tr class="' + (r.hidden ? 'is-hidden' : '') + '">' + selectionCell + sectionCell + groupCell + '<td class="iw-ca-name-cell"><textarea title="' + esc(conflictText(r)) + '" rows="1" wrap="off" placeholder="담보명" oninput="OSInsuworkCoverage.resizeNameColumn(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',this)">' + esc(r.name) + '</textarea></td><td class="iw-ca-total-cell"><input value="' + esc(r.total) + '" placeholder="합계금액" inputmode="decimal" oninput="OSInsuworkCoverage.inputAmount(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',null,this,event)"></td>' + products.map(function (p) { return '<td class="iw-ca-product-cell"><input value="' + esc((r.values || {})[p.id] || '') + '" aria-label="' + esc(r.name + ' ' + p.company) + '" inputmode="decimal" oninput="OSInsuworkCoverage.inputAmount(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'' + esc(p.id) + '\',this,event)"></td>'; }).join('') + '<td class="iw-ca-row-actions"><button type="button" title="아래에 담보 삽입" onclick="OSInsuworkCoverage.addRow(\'' + esc(customerId) + '\',' + index + ')">＋</button><button type="button" title="담보 삭제" onclick="OSInsuworkCoverage.removeRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\')">×</button></td></tr>';
     }).join('');
     var source = d.source ? '<span class="iw-ca-source" title="' + esc((d.source.notes || []).join(' · ')) + '">원본: ' + esc(d.source.name || '') + (d.source.needsReview ? ' · 인식 결과 검토 필요' : '') + (d.source.notes && d.source.notes.length ? ' · 보장·계약 항목 없는 원본 ' + d.source.notes.length + '개' : '') + (d.rows.some(function (row) { return (row.importConflicts || []).length; }) ? ' · 자료 간 금액 차이 있음 (담보명에 마우스를 올려 확인)' : '') + '</span>' : '<span class="iw-ca-source">등록된 보장분석 없음</span>';
     var expanded = options.expanded === true, accept = '.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp', uploadLabel = '파일 불러오기';
@@ -692,6 +713,7 @@
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); },
     setRow: function (customerId, id, key, value) { setPath(customerId, 'row', id, key, value); }, setMergedField: setMergedField,
+    inputAmount: inputAmount,
     setCell: function (customerId, rowId, productId, value) { var r = draft(customerId).rows.find(function (x) { return String(x.id) === String(rowId); }); if (r) r.values[productId] = value; },
     addProduct: addProduct, removeProduct: removeProduct, addRow: addRow, removeRow: removeRow,
     toggleProduct: function (customerId, id) { var p = draft(customerId).products.find(function (x) { return String(x.id) === String(id); }); if (p) p.hidden = !p.hidden; rerender(customerId); },
