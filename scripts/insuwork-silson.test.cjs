@@ -18,7 +18,7 @@ test('normalization preserves unknown scope and separates generation columns',()
  assert.equal(result.rows.find(r=>r.id==='r3').group,'3세대 실손');
  assert.equal(original.rows[1].name,'상해입원 의료비');
  const html=context.window.OSInsuworkCoverage.html('test',original,{expanded:true});
- assert.ok(html.includes('iw-ca-group-cell')); assert.ok(!html.includes('colspan="2"'));
+ assert.ok(html.includes('iw-ca-group-cell')); assert.ok(!html.split('<tbody>')[1].includes('colspan="2"')); assert.ok(html.includes('class="iw-ca-customer-header"'));
 });
 test('mixed generations split values without duplicating total; reload is stable',()=>{
  const input={products:[{id:'p',product:'3세대 실손'},{id:'q',product:'4세대 실손'}],rows:[row('질병입원 의료비','',{p:'100',q:'200'})]};
