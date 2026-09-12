@@ -3617,13 +3617,19 @@
       coverageNotice('선택한 이전 버전으로 기본 양식과 작업표를 복원했습니다.');
     }).catch(function (error) { if (button) button.disabled = false; if (status) status.textContent = '복원을 마치지 못했습니다. 다시 시도해 주세요.'; coverageError(error.message || String(error)); });
   }
+  function getCoverageCustomerInfo(id) {
+    if (!canUseCoverageAnalysis()) return null;
+    var customer = (state.data.customers || []).find(function (item) { return String(item.id) === String(id); });
+    if (!customer) return null;
+    return { id: customer.id, name: customer.name || '', birthDate: customerProfile(customer).birth_date || '' };
+  }
   function coverageAnalysisPageHtml() {
     if (!canUseCoverageAnalysis()) return homeHtml();
     if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
-    var record = coverageWorkspaceRecord();
-    var customerOptions = (state.data.customers || []).slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'ko'); }).map(function (customer) { return '<option value="' + esc(customer.id) + '">' + esc(customer.name || '(이름 없음)') + (customer.phone || customer.phone_raw ? ' · ' + esc(phoneText(customer.phone || customer.phone_raw)) : '') + '</option>'; }).join('');
+    var record = coverageWorkspaceRecord(), headerCustomerId = window.OSInsuworkCoverage.headerCustomerId(record);
+    var customerOptions = (state.data.customers || []).slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'ko'); }).map(function (customer) { return '<option value="' + esc(customer.id) + '"' + (String(customer.id) === String(headerCustomerId) ? ' selected' : '') + '>' + esc(customer.name || '(이름 없음)') + (customer.phone || customer.phone_raw ? ' · ' + esc(phoneText(customer.phone || customer.phone_raw)) : '') + '</option>'; }).join('');
     return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석·보험비교</h2><p class="iw-subtitle">자료를 불러와 보장 현황을 비교하고, 작업표 또는 선택한 고객에게 저장합니다.</p></div></div>'
-      + '<div class="iw-ca-page-guide"><div><strong>보장분석 작업표</strong><span>초기화하면 저장된 기본 양식으로 새로 시작합니다. 내 작업표 저장과 고객별 저장은 기본 양식을 변경하지 않습니다.</span></div><label class="iw-ca-customer-target"><span>고객별 저장 대상</span><select id="iw-ca-target-customer"><option value="">고객을 선택하세요</option>' + customerOptions + '</select></label></div>'
+      + '<div class="iw-ca-page-guide"><div><strong>보장분석 작업표</strong><span>초기화하면 저장된 기본 양식으로 새로 시작합니다. 내 작업표 저장과 고객별 저장은 기본 양식을 변경하지 않습니다.</span></div><label class="iw-ca-customer-target"><span>고객별 저장 대상</span><select id="iw-ca-target-customer" onchange="OSInsuworkCoverage.selectHeaderCustomer(this.value)"><option value="">고객을 선택하세요</option>' + customerOptions + '</select></label></div>'
       + window.OSInsuworkCoverage.workspaceHtml(record || null);
   }
   function rerenderCoverageWorkspace() {
@@ -3649,6 +3655,7 @@
   function persistCoverageWorkspaceAnalysis(record, sourceFile, asTemplate) {
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
     var existing = asTemplate ? coverageWorkspaceItem() : coverageWorkingItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
+    if (asTemplate) delete next.customerInfo;
     var payload = { workspace_category: 'coverage_analysis', coverage_analysis_workspace: asTemplate, coverage_analysis_template: asTemplate, coverage_analysis_working: !asTemplate, coverage_analysis: next };
     var title = asTemplate ? '보장분석 기본 양식' : '보장분석 내 작업표';
     var body = { owner_id: currentUserId(), item_type: 'memo', title: title, body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: payload };
@@ -3671,7 +3678,7 @@
     var item = coverageAnalysisItem(customerId), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
     if (!record) {
       var templateItem = coverageWorkspaceItem(), template = templateItem && templateItem.legacy_payload && templateItem.legacy_payload.coverage_analysis;
-      if (template) { record = JSON.parse(JSON.stringify(template)); record.source = null; record.sourceItemId = null; record.updatedAt = ''; record._templateSeed = true; }
+      if (template) { record = JSON.parse(JSON.stringify(template)); delete record.customerInfo; record.source = null; record.sourceItemId = null; record.updatedAt = ''; record._templateSeed = true; }
     }
     return window.OSInsuworkCoverage.html(customerId, record || null);
   }
@@ -5213,7 +5220,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, canEditCoverageTemplate: canEditCoverageTemplate, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, getCoverageCustomerInfo: getCoverageCustomerInfo, coverageInsuranceAge: insuranceAge, canEditCoverageTemplate: canEditCoverageTemplate, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고

@@ -589,6 +589,36 @@
     d.freezeColumns = d.freezeColumns === false;
     rerender(customerId);
   }
+  function customerHeaderInfo(customerId, record) {
+    return record.customerInfo || (customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(customerId) : null) || {};
+  }
+  function customerAge(info) { var age = api().coverageInsuranceAge ? api().coverageInsuranceAge(info.birthDate || '') : ''; return age === '' ? '보험나이 확인' : '보험나이 ' + age + '세'; }
+  function premiumSummary(products) {
+    var total = 0, missing = 0;
+    products.forEach(function (product) {
+      var text = cellText(product.premium).replace(/,/g, ''), match = text.match(/(?:^|[^\d.])([\d]+(?:\.\d+)?)\s*(만|천)?\s*원/);
+      if (!match && /^\d+(?:\.\d+)?$/.test(text)) match = [text, text, ''];
+      if (!match) { missing++; return; }
+      total += Number(match[1]) * (match[2] === '만' ? 10000 : match[2] === '천' ? 1000 : 1);
+    });
+    if (!products.length) return '—';
+    return total.toLocaleString('ko-KR', { maximumFractionDigits: 2 }) + '원' + (missing ? ' · ' + missing + '건 확인 필요' : '');
+  }
+  function customerHeaderHtml(customerId, d) {
+    var info = customerHeaderInfo(customerId, d);
+    return '<input aria-label="고객명" placeholder="고객명" value="' + esc(info.name || '') + '" oninput="OSInsuworkCoverage.setCustomerInfo(\'' + esc(customerId) + '\',\'name\',this.value)"><input type="date" aria-label="생년월일" value="' + esc(info.birthDate || '') + '" oninput="OSInsuworkCoverage.setCustomerInfo(\'' + esc(customerId) + '\',\'birthDate\',this.value)"><span class="iw-ca-insurance-age">' + esc(customerAge(info)) + '</span>';
+  }
+  function setCustomerInfo(customerId, key, value) {
+    var d = draft(customerId); d.customerInfo = Object.assign({}, customerHeaderInfo(customerId, d)); d.customerInfo[key] = value;
+    var panel = panelFor(customerId), age = panel && panel.querySelector('.iw-ca-insurance-age'); if (age) age.textContent = customerAge(d.customerInfo);
+  }
+  function selectHeaderCustomer(id) {
+    var d = draft(WORKSPACE_KEY); d.customerInfo = id && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(id) : {};
+    var panel = panelFor(WORKSPACE_KEY), header = panel && panel.querySelector('.iw-ca-customer-header'); if (header) header.innerHTML = customerHeaderHtml(WORKSPACE_KEY, d);
+  }
+  function updatePremiumHeader(customerId) {
+    var panel = panelFor(customerId), header = panel && panel.querySelector('.iw-ca-premium-summary'); if (header) header.textContent = premiumSummary(visibleProducts(draft(customerId)));
+  }
   function html(customerId, record, options) {
     options = options || {};
     if (typeof queueMicrotask === 'function') queueMicrotask(function () { syncNameColumn(customerId); if (document.fonts) document.fonts.ready.then(function () { syncNameColumn(customerId); }); });
@@ -613,7 +643,7 @@
     }).join('');
     var source = d.source ? '<span class="iw-ca-source" title="' + esc((d.source.notes || []).join(' · ')) + '">원본: ' + esc(d.source.name || '') + (d.source.needsReview ? ' · 인식 결과 검토 필요' : '') + (d.source.notes && d.source.notes.length ? ' · 보장·계약 항목 없는 원본 ' + d.source.notes.length + '개' : '') + (d.rows.some(function (row) { return (row.importConflicts || []).length; }) ? ' · 자료 간 금액 차이 있음 (담보명에 마우스를 올려 확인)' : '') + '</span>' : '<span class="iw-ca-source">등록된 보장분석 없음</span>';
     var expanded = options.expanded === true, accept = '.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp', uploadLabel = '파일 불러오기';
-    return '<section class="iw-coverage-analysis' + (options.page ? ' iw-ca-page' : '') + (freezeColumns ? '' : ' iw-ca-freeze-off') + '" style="' + columnStyle + '"><header><div><h3>보장분석 표</h3>' + source + '</div>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.togglePanel(\'' + esc(customerId) + '\',this)">' + (expanded ? '접기' : '펼치기') + '</button>') + '</header><div class="iw-ca-panel" data-customer-id="' + esc(customerId) + '"' + (expanded ? '' : ' hidden') + '><div class="iw-ca-toolbar"><label class="iw-btn primary">' + uploadLabel + '<input type="file" multiple accept="' + accept + '" hidden onchange="OSInsuworkCoverage.importFile(\'' + esc(customerId) + '\',this)"></label><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + esc(customerId) + '\')">+ 회사·상품</button><button type="button" class="iw-btn" aria-expanded="' + coverageFilter(customerId).open + '" onclick="OSInsuworkCoverage.toggleCoverageFilters(\'' + esc(customerId) + '\')">담보현황</button><button type="button" class="iw-btn" aria-pressed="' + freezeColumns + '" onclick="OSInsuworkCoverage.toggleFreezeColumns(\'' + esc(customerId) + '\')">' + (freezeColumns ? '틀 고정 해제' : '틀 고정') + '</button>' + (hiddenCount ? '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.toggleHiddenProducts(\'' + esc(customerId) + '\')">숨긴 상품 ' + hiddenCount + '개 ' + (d.showHiddenProducts ? '접기' : '보기') + '</button>' : '') + '</div>' + filterHtml(customerId, d) + '<div class="iw-ca-table-wrap"><table><thead><tr><th class="iw-ca-check-cell"></th><th class="iw-ca-section-cell">대분류</th><th class="iw-ca-group-cell">중분류</th><th class="iw-ca-name-cell">담보<span class="iw-ca-name-resizer" title="드래그하여 너비 조절 · 더블클릭하면 자동 맞춤" onpointerdown="OSInsuworkCoverage.startNameResize(event,\'' + esc(customerId) + '\')" ondblclick="OSInsuworkCoverage.resetNameColumn(\'' + esc(customerId) + '\')"></span></th><th class="iw-ca-total-cell">합계금액</th>' + productHeaders + '<th></th></tr></thead><tbody>' + (body || '<tr><td colspan="' + (6 + products.length) + '"><p class="iw-ca-empty">엑셀 파일을 불러오거나 담보를 추가해 주세요.</p></td></tr>') + '</tbody></table></div><footer><span>빈 금액도 원자료로 보존되며 자동 제외되지 않습니다.</span>' + saveStatusHtml(customerId) + '<div><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',false)">선택 화면 복사</button>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',true)">카카오톡으로 보내기</button>') + '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + esc(customerId) + '\')">보장분석 저장</button></div></footer></div></section>';
+    return '<section class="iw-coverage-analysis' + (options.page ? ' iw-ca-page' : '') + (freezeColumns ? '' : ' iw-ca-freeze-off') + '" style="' + columnStyle + '"><header><div><h3>보장분석 표</h3>' + source + '</div>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.togglePanel(\'' + esc(customerId) + '\',this)">' + (expanded ? '접기' : '펼치기') + '</button>') + '</header><div class="iw-ca-panel" data-customer-id="' + esc(customerId) + '"' + (expanded ? '' : ' hidden') + '><div class="iw-ca-toolbar"><label class="iw-btn primary">' + uploadLabel + '<input type="file" multiple accept="' + accept + '" hidden onchange="OSInsuworkCoverage.importFile(\'' + esc(customerId) + '\',this)"></label><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + esc(customerId) + '\')">+ 회사·상품</button><button type="button" class="iw-btn" aria-expanded="' + coverageFilter(customerId).open + '" onclick="OSInsuworkCoverage.toggleCoverageFilters(\'' + esc(customerId) + '\')">담보현황</button><button type="button" class="iw-btn" aria-pressed="' + freezeColumns + '" onclick="OSInsuworkCoverage.toggleFreezeColumns(\'' + esc(customerId) + '\')">' + (freezeColumns ? '틀 고정 해제' : '틀 고정') + '</button>' + (hiddenCount ? '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.toggleHiddenProducts(\'' + esc(customerId) + '\')">숨긴 상품 ' + hiddenCount + '개 ' + (d.showHiddenProducts ? '접기' : '보기') + '</button>' : '') + '</div>' + filterHtml(customerId, d) + '<div class="iw-ca-table-wrap"><table><thead><tr><th class="iw-ca-check-cell"></th><th colspan="2" class="iw-ca-customer-header">' + customerHeaderHtml(customerId, d) + '</th><th class="iw-ca-name-cell">담보<span class="iw-ca-name-resizer" title="드래그하여 너비 조절 · 더블클릭하면 자동 맞춤" onpointerdown="OSInsuworkCoverage.startNameResize(event,\'' + esc(customerId) + '\')" ondblclick="OSInsuworkCoverage.resetNameColumn(\'' + esc(customerId) + '\')"></span></th><th class="iw-ca-total-cell">합계금액<div class="iw-ca-premium-label">합계보험료</div><span class="iw-ca-premium-summary">' + esc(premiumSummary(products)) + '</span></th>' + productHeaders + '<th></th></tr></thead><tbody>' + (body || '<tr><td colspan="' + (6 + products.length) + '"><p class="iw-ca-empty">엑셀 파일을 불러오거나 담보를 추가해 주세요.</p></td></tr>') + '</tbody></table></div><footer><span>빈 금액도 원자료로 보존되며 자동 제외되지 않습니다.</span>' + saveStatusHtml(customerId) + '<div><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',false)">선택 화면 복사</button>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',true)">카카오톡으로 보내기</button>') + '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + esc(customerId) + '\')">보장분석 저장</button></div></footer></div></section>';
   }
   function addProduct(customerId) { var d = draft(customerId), p = { id: uid('product'), company: '', product: '', renewal: '', premium: '', payment: '', hidden: false }; d.products.push(p); d.rows.forEach(function (r) { r.values[p.id] = ''; }); rerender(customerId); }
   function removeProduct(customerId, id) {
@@ -646,7 +676,7 @@
   function moveProduct(customerId, fromId, toId) { var d = draft(customerId); var from = d.products.findIndex(function (item) { return String(item.id) === String(fromId); }), to = d.products.findIndex(function (item) { return String(item.id) === String(toId); }); if (from < 0 || to < 0 || from === to) return; var product = d.products.splice(from, 1)[0]; d.products.splice(to, 0, product); rerender(customerId); }
   function drawCell(ctx, x, y, width, height, text, options) {
     options = options || {};
-    if (typeof queueMicrotask === 'function') queueMicrotask(function () { syncNameColumn(customerId); if (document.fonts) document.fonts.ready.then(function () { syncNameColumn(customerId); }); }); ctx.fillStyle = options.fill || '#ffffff'; ctx.fillRect(x, y, width, height); ctx.strokeStyle = '#cfc8ba'; ctx.strokeRect(x + .5, y + .5, width - 1, height - 1); ctx.fillStyle = options.color || '#17345d'; ctx.font = (options.bold ? '700 ' : '400 ') + (options.size || 14) + 'px Arial, sans-serif'; ctx.textAlign = options.align || 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = options.fill || '#ffffff'; ctx.fillRect(x, y, width, height); ctx.strokeStyle = '#cfc8ba'; ctx.strokeRect(x + .5, y + .5, width - 1, height - 1); ctx.fillStyle = options.color || '#17345d'; ctx.font = (options.bold ? '700 ' : '400 ') + (options.size || 14) + 'px Arial, sans-serif'; ctx.textAlign = options.align || 'center'; ctx.textBaseline = 'middle';
     var padding = 10, tx = options.align === 'left' ? x + padding : x + width / 2, lines = String(text || '').split('\n'); lines.forEach(function (line, index) { ctx.fillText(line, tx, y + height / 2 + (index - (lines.length - 1) / 2) * 19, width - padding * 2); });
   }
   function coverageImageBlob(customerId) {
@@ -654,7 +684,7 @@
     if (!rows.length) return Promise.reject(new Error('복사할 대분류를 먼저 선택해 주세요.'));
     var widths = [110, 100, 270, 110].concat(products.map(function () { return 158; })), headerHeight = 96, rowHeight = 42, totalWidth = widths.reduce(function (sum, width) { return sum + width; }, 0), canvas = document.createElement('canvas'), scale = 2;
     canvas.width = totalWidth * scale; canvas.height = (headerHeight + rows.length * rowHeight) * scale; var ctx = canvas.getContext('2d'); ctx.scale(scale, scale); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, totalWidth, canvas.height / scale);
-    var x = 0, headers = ['대분류', '중분류', '담보', '합계금액']; headers.forEach(function (label, index) { drawCell(ctx, x, 0, widths[index], headerHeight, label, { fill: '#f3efe6', bold: true }); x += widths[index]; });
+    var info = customerHeaderInfo(customerId, d), x = widths[0] + widths[1]; drawCell(ctx, 0, 0, x, headerHeight, [info.name || '고객명', info.birthDate || '생년월일 확인', customerAge(info)].join('\n'), { fill: '#f3efe6', bold: true }); drawCell(ctx, x, 0, widths[2], headerHeight, '담보', { fill: '#f3efe6', bold: true }); x += widths[2]; drawCell(ctx, x, 0, widths[3], headerHeight, '합계금액\n합계보험료\n' + premiumSummary(products), { fill: '#f3efe6', bold: true }); x += widths[3];
     products.forEach(function (p, index) { drawCell(ctx, x, 0, widths[index + 4], headerHeight, [p.company, p.product, p.premium].filter(Boolean).join('\n'), { fill: '#f3efe6', bold: true, size: 13 }); x += widths[index + 4]; });
     var sectionColors = ['#dfe9c9', '#d7e5f5', '#e5def1', '#d8edf0', '#fae4d2', '#ececec', '#f4e2c3'];
     rows.forEach(function (row, index) { var y = headerHeight + index * rowHeight, px = widths[0] + widths[1]; drawCell(ctx, px, y, widths[2], rowHeight, row.name, { align: 'left' }); px += widths[2]; drawCell(ctx, px, y, widths[3], rowHeight, row.total, { bold: true }); px += widths[3]; products.forEach(function (p, pIndex) { drawCell(ctx, px, y, widths[pIndex + 4], rowHeight, (row.values || {})[p.id] || '', { bold: true }); px += widths[pIndex + 4]; }); });
@@ -665,12 +695,13 @@
     if (!navigator.clipboard || !window.ClipboardItem) return Promise.reject(new Error('이 브라우저에서는 이미지 복사를 지원하지 않습니다.'));
     return coverageImageBlob(customerId).then(function (blob) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); });
   }
-  function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var lines = [['대분류', '중분류', '담보', '합계금액'].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
+  function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var info = customerHeaderInfo(customerId, d); var lines = [[[info.name || '고객명', info.birthDate || '생년월일 확인', customerAge(info)].join(' · '), '', '담보', '합계금액 · 합계보험료 ' + premiumSummary(products)].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   function saveRecord(customerId, asTemplate) {
     var d = clone(draft(customerId)); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString();
     setSaveState(customerId, 'saving', '저장 중…');
     return Promise.resolve().then(function () {
-      return asTemplate ? api().saveCoverageWorkspaceAnalysis(d, null) : saveTarget(customerId, d, null);
+      if (asTemplate) { var template = clone(d); delete template.customerInfo; return api().saveCoverageWorkspaceAnalysis(template, null).then(function () { return d; }); }
+      return saveTarget(customerId, d, null);
     }).then(function (saved) {
       if (saved) reset(customerId, saved);
       setSaveState(customerId, 'saved', asTemplate ? '기본 양식 저장 완료' : customerId === WORKSPACE_KEY ? '작업표 저장 완료' : '보장분석 저장 완료');
@@ -680,7 +711,7 @@
   function resetToBaseTemplate() {
     if (importBusy || (saveStates[WORKSPACE_KEY] || {}).tone === 'saving') return;
     var template = api().getCoverageBaseTemplate(), d = normalize(template || workspaceStarter());
-    d.products = []; d.source = null; delete d.sourceItemId; delete d._starter; delete d._templateSeed;
+    d.products = []; d.source = null; delete d.customerInfo; delete d.sourceItemId; delete d._starter; delete d._templateSeed;
     d.showHiddenProducts = false; d.updatedAt = new Date().toISOString();
     d.rows.forEach(function (row) { row.values = {}; row.total = ''; row.recommended = ''; row.status = ''; row.difference = ''; delete row.sourceTotal; row.hidden = false; row.selected = false; });
     reset(WORKSPACE_KEY, d); coverageFilter(WORKSPACE_KEY).sections = [];
@@ -711,8 +742,10 @@
     toggleWorkspaceExpanded: toggleWorkspaceExpanded,
     html: html, workspaceHtml: workspaceHtml, reset: reset, importFile: importFile,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
-    setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); },
+    setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); if (key === 'premium') updatePremiumHeader(customerId); },
     setRow: function (customerId, id, key, value) { setPath(customerId, 'row', id, key, value); }, setMergedField: setMergedField,
+    headerCustomerId: function (record) { var d = drafts[WORKSPACE_KEY] || record || {}; return d.customerInfo && d.customerInfo.id || ''; },
+    setCustomerInfo: setCustomerInfo, selectHeaderCustomer: selectHeaderCustomer,
     inputAmount: inputAmount,
     setCell: function (customerId, rowId, productId, value) { var r = draft(customerId).rows.find(function (x) { return String(x.id) === String(rowId); }); if (r) r.values[productId] = value; },
     addProduct: addProduct, removeProduct: removeProduct, addRow: addRow, removeRow: removeRow,
