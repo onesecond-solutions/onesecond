@@ -4,14 +4,14 @@
   var drafts = {};
   var coverageFilters = {};
   function coverageFilter(customerId) {
-    return coverageFilters[customerId] || (coverageFilters[customerId] = { open: false, section: null });
+    return coverageFilters[customerId] || (coverageFilters[customerId] = { open: false, sections: [] });
   }
   function filterHtml(customerId, record) {
     var filter = coverageFilter(customerId);
     if (!filter.open) return '';
     var sections = Array.from(new Set(record.rows.map(function (row) { return row.section || ''; })));
     return '<div class="iw-ca-filters" role="group" aria-label="담보 대분류 현황">' + [null].concat(sections).map(function (section) {
-      return '<button type="button" class="iw-btn' + (filter.section === section ? ' primary' : '') + '" aria-pressed="' + (filter.section === section) + '" data-section="' + esc(section || '') + '" onclick="OSInsuworkCoverage.filterSection(\'' + esc(customerId) + '\',' + (section === null ? 'null' : 'this.dataset.section') + ')">' + esc(section === null ? '전체현황' : section || '미분류') + '</button>';
+      return '<button type="button" class="iw-btn' + ((section === null ? !filter.sections.length : filter.sections.indexOf(section) >= 0) ? ' primary' : '') + '" aria-pressed="' + ((section === null ? !filter.sections.length : filter.sections.indexOf(section) >= 0)) + '" data-section="' + esc(section || '') + '" onclick="OSInsuworkCoverage.filterSection(\'' + esc(customerId) + '\',' + (section === null ? 'null' : 'this.dataset.section') + ')">' + esc(section === null ? '전체현황' : section || '미분류') + '</button>';
     }).join('') + '</div>';
   }
   var saveStates = {};
@@ -469,12 +469,12 @@
     if (typeof queueMicrotask === 'function') queueMicrotask(function () { syncNameColumn(customerId); if (document.fonts) document.fonts.ready.then(function () { syncNameColumn(customerId); }); });
     var d = draft(customerId, record), products = visibleProducts(d), hiddenCount = d.products.filter(function (p) { return p.hidden; }).length, freezeColumns = d.freezeColumns !== false;
     var activeFilter = coverageFilter(customerId);
-    if (activeFilter.section !== null && !d.rows.some(function (row) { return (row.section || '') === activeFilter.section; })) activeFilter.section = null;
+    activeFilter.sections = activeFilter.sections.filter(function (section) { return d.rows.some(function (row) { return (row.section || '') === section; }); });
     var columnStyle = '--iw-ca-section-w:' + textColumnWidth(d.rows, 'section', '대분류', 82, 150) + 'px;--iw-ca-group-w:' + textColumnWidth(d.rows, 'group', '중분류', 86, 150) + 'px;--iw-ca-name-w:' + nameColumnWidth(d) + 'px;--iw-ca-total-w:' + textColumnWidth(d.rows, 'total', '합계금액', 96, 180) + 'px';
     var productHeaders = products.map(function (p) { var label = [p.company, p.product].filter(Boolean).join(' · ') || '이 회사·상품'; return '<th draggable="true" ondragover="event.preventDefault()" ondrop="OSInsuworkCoverage.moveProduct(\'' + esc(customerId) + '\',event.dataTransfer.getData(\'text/plain\'),\'' + esc(p.id) + '\')" ondragstart="event.dataTransfer.setData(\'text/plain\',\'' + esc(p.id) + '\')" class="iw-ca-product' + (p.hidden ? ' is-hidden' : '') + '"><button type="button" class="iw-ca-product-remove" title="회사·상품 열 삭제" aria-label="' + esc(label) + ' 열 삭제" draggable="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();OSInsuworkCoverage.removeProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\')">×</button><input value="' + esc(p.company) + '" placeholder="보험사" aria-label="보험사" oninput="OSInsuworkCoverage.setProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\',\'company\',this.value)"><input value="' + esc(p.product) + '" placeholder="상품명" aria-label="상품명" oninput="OSInsuworkCoverage.setProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\',\'product\',this.value)"><input value="' + esc(p.premium) + '" placeholder="보험료" aria-label="보험료" oninput="OSInsuworkCoverage.setProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\',\'premium\',this.value)"><div class="iw-ca-product-actions"><button type="button" onclick="OSInsuworkCoverage.toggleProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\')">' + (p.hidden ? '다시 표시' : '상품 숨기기') + '</button>' + (!p.hidden && p.company ? '<button type="button" onclick="OSInsuworkCoverage.hideCompany(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\')">보험사 전체 숨기기</button>' : '') + '</div></th>'; }).join('');
     var sectionOrdinal = -1, lastSection = null;
     var body = d.rows.map(function (r, index) {
-      if (coverageFilter(customerId).section !== null && (r.section || '') !== coverageFilter(customerId).section) return '';
+      if (activeFilter.sections.length && activeFilter.sections.indexOf(r.section || '') < 0) return '';
       var sectionSpan = mergedSpan(d.rows, index, 'section'), groupSpan = mergedSpan(d.rows, index, 'group');
       if (r.section !== lastSection) { sectionOrdinal++; lastSection = r.section; }
       var sectionRows = d.rows.filter(function (row) { return row.section === r.section; });
@@ -553,8 +553,8 @@
     return markup.replace(productButton, resetButton + productButton).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
   }
   var exposed = {
-    toggleCoverageFilters: function (customerId) { var filter = coverageFilter(customerId); filter.open = !filter.open; if (!filter.open) filter.section = null; rerender(customerId); },
-    filterSection: function (customerId, section) { coverageFilter(customerId).section = section; rerender(customerId); requestAnimationFrame(function () { var panel = panelFor(customerId), wrap = panel && panel.querySelector('.iw-ca-table-wrap'); if (wrap) wrap.scrollTop = 0; }); },
+    toggleCoverageFilters: function (customerId) { var filter = coverageFilter(customerId); filter.open = !filter.open; if (!filter.open) filter.sections = []; rerender(customerId); },
+    filterSection: function (customerId, section) { var filter = coverageFilter(customerId), index = filter.sections.indexOf(section); if (section === null) filter.sections = []; else if (index >= 0) filter.sections.splice(index, 1); else filter.sections.push(section); rerender(customerId); requestAnimationFrame(function () { var panel = panelFor(customerId), wrap = panel && panel.querySelector('.iw-ca-table-wrap'); if (wrap) wrap.scrollTop = 0; }); },
     toggleFreezeColumns: toggleFreezeColumns,
     startNameResize: startNameResize, resetNameColumn: resetNameColumn,
     resizeNameColumn: resizeNameColumn,
