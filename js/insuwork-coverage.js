@@ -397,6 +397,10 @@
     imported.products.forEach(function (incoming) {
       var key = productMatchKey(incoming.company) + '|' + productMatchKey(incoming.product), occurrence = productOccurrences[key] || 0, matches = key === '|' ? [] : base.products.filter(function (product) { return productMatchKey(product.company) + '|' + productMatchKey(product.product) === key; }), existing = matches[occurrence] || null;
       productOccurrences[key] = occurrence + 1;
+      if (!existing && incoming.product) {
+        var partialMatches = base.products.filter(function (product) { return productMatchKey(product.product) === productMatchKey(incoming.product) && (!product.company || !incoming.company); });
+        if (partialMatches.length === 1 && occurrence === 0) existing = partialMatches[0];
+      }
       if (!existing) { existing = clone(incoming); existing.id = uid('product'); base.products.push(existing); }
       else { ['company', 'product', 'renewal', 'premium', 'payment', 'generation'].forEach(function (field) { if (!existing[field] && incoming[field]) existing[field] = incoming[field]; }); }
       productIds[incoming.id] = existing.id;
@@ -405,6 +409,10 @@
       var synonym = coverageSynonym(incoming.name), targetSection = templateSection(synonym && synonym.section || incoming.section, incoming.name), nameKey = coverageMatchKey(incoming.name);
       var candidates = nameKey ? base.rows.filter(function (row) { return !usedRows.has(row.id) && coverageMatchKey(row.name) === nameKey && (!isSilson(targetSection) || (isSilson(row.section) && (row.group === incoming.group || (row.group === '세대 확인' && !hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))))); }) : [];
       var existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(targetSection); }) || (candidates.length === 1 ? candidates[0] : null);
+      if (!existing && isSilson(targetSection) && incoming.group === '세대 확인') {
+        var sameContractRows = base.rows.filter(function (row) { return !usedRows.has(row.id) && isSilson(row.section) && coverageMatchKey(row.name) === nameKey && Object.keys(incoming.values).some(function (id) { return hasEnrolledAmount(incoming.values[id]) && hasEnrolledAmount(row.values[productIds[id]]); }); });
+        if (sameContractRows.length === 1) existing = sameContractRows[0];
+      }
       if (!existing && !hasEnrolledAmount(incoming.total) && !Object.values(incoming.values || {}).some(hasEnrolledAmount)) return;
       if (!existing) {
         existing = clone(incoming); existing.id = uid('coverage'); existing.values = {}; existing.selected = false; existing.hidden = false;
@@ -449,8 +457,7 @@
       // An overview's 가입금액 column is a total, never an invented insurance product.
       if (!products.length && !total && row.values && row.values.length === 1) total = cellText(row.values[0]);
       return { id: uid('coverage'), section: sectionName(row.section), group: cellText(row.group), name: cellText(row.name), recommended: cellText(row.recommended), status: cellText(row.status), total: total, difference: '', values: values, hidden: false, selected: false };
-    }).filter(function (row) { return row.name; });
-    if (!rows.length && !products.length) throw new Error('파일에서 보장 항목이나 계약 정보를 읽지 못했습니다.');
+    }).filter(function (row) { return row.name && !/^(?:총\s*보험료|월\s*보험료|납입(?:완료|예정)|총\s*납입|보유\s*계약|마이데이터)/.test(row.name); });
     return makeRecord(fileName, type, products, rows);
   }
   function parseImportFile(file) {
@@ -475,10 +482,12 @@
       return parseImportFile(file).then(function (record) { records.push(record); });
     }); }, Promise.resolve());
     return Promise.all([job, loadCoverageSynonyms()]).then(function () {
+      if (!records.some(function (record) { return record.rows.length || record.products.length; })) throw new Error('파일에서 보장 항목이나 계약 정보를 읽지 못했습니다.');
       showImportProgress('기본 양식에 금액을 연결하고 저장하고 있습니다.');
       var merged = draft(customerId);
       records.forEach(function (record) { merged = mergeImportedRecord(merged, record); });
       merged.source = Object.assign({}, merged.source, { name: files.map(function (file) { return file.name; }).join(' · '), files: records.map(function (record) { return record.source; }) });
+      merged.source.notes = records.filter(function (record) { return !record.rows.length && !record.products.length; }).map(function (record) { return record.source.name + ': 보장·계약 항목 없음 (원본 보관)'; });
       return saveTarget(customerId, merged, files.length === 1 ? files[0] : files).then(function (saved) { reset(customerId, saved || merged); });
     }).then(function () { rerenderTarget(customerId); }).catch(function (error) {
       hideImportProgress(); api().coverageError(error.message || String(error));
@@ -581,7 +590,7 @@
       var groupCell = !flat && groupSpan ? '<td rowspan="' + groupSpan + '" class="iw-ca-merged iw-ca-group-cell"><input value="' + esc(r.group) + '" placeholder="중분류" oninput="OSInsuworkCoverage.setMergedField(\'' + esc(customerId) + '\',' + index + ',\'group\',this.value)"></td>' : '';
       return '<tr class="' + (r.hidden ? 'is-hidden' : '') + '">' + selectionCell + sectionCell + groupCell + '<td class="iw-ca-name-cell"><textarea title="' + esc(conflictText(r)) + '" rows="1" wrap="off" placeholder="담보명" oninput="OSInsuworkCoverage.resizeNameColumn(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',this)">' + esc(r.name) + '</textarea></td><td class="iw-ca-total-cell"><input value="' + esc(r.total) + '" placeholder="합계금액" oninput="OSInsuworkCoverage.setRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'total\',this.value)"></td>' + products.map(function (p) { return '<td class="iw-ca-product-cell"><input value="' + esc((r.values || {})[p.id] || '') + '" aria-label="' + esc(r.name + ' ' + p.company) + '" oninput="OSInsuworkCoverage.setCell(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\',\'' + esc(p.id) + '\',this.value)"></td>'; }).join('') + '<td class="iw-ca-row-actions"><button type="button" title="아래에 담보 삽입" onclick="OSInsuworkCoverage.addRow(\'' + esc(customerId) + '\',' + index + ')">＋</button><button type="button" title="담보 삭제" onclick="OSInsuworkCoverage.removeRow(\'' + esc(customerId) + '\',\'' + esc(r.id) + '\')">×</button></td></tr>';
     }).join('');
-    var source = d.source ? '<span class="iw-ca-source">원본: ' + esc(d.source.name || '') + (d.source.needsReview ? ' · 인식 결과 검토 필요' : '') + (d.rows.some(function (row) { return (row.importConflicts || []).length; }) ? ' · 자료 간 금액 차이 있음 (담보명에 마우스를 올려 확인)' : '') + '</span>' : '<span class="iw-ca-source">등록된 보장분석 없음</span>';
+    var source = d.source ? '<span class="iw-ca-source" title="' + esc((d.source.notes || []).join(' · ')) + '">원본: ' + esc(d.source.name || '') + (d.source.needsReview ? ' · 인식 결과 검토 필요' : '') + (d.source.notes && d.source.notes.length ? ' · 보장·계약 항목 없는 원본 ' + d.source.notes.length + '개' : '') + (d.rows.some(function (row) { return (row.importConflicts || []).length; }) ? ' · 자료 간 금액 차이 있음 (담보명에 마우스를 올려 확인)' : '') + '</span>' : '<span class="iw-ca-source">등록된 보장분석 없음</span>';
     var expanded = options.expanded === true, accept = '.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp', uploadLabel = '파일 불러오기';
     return '<section class="iw-coverage-analysis' + (options.page ? ' iw-ca-page' : '') + (freezeColumns ? '' : ' iw-ca-freeze-off') + '" style="' + columnStyle + '"><header><div><h3>보장분석 표</h3>' + source + '</div>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.togglePanel(\'' + esc(customerId) + '\',this)">' + (expanded ? '접기' : '펼치기') + '</button>') + '</header><div class="iw-ca-panel" data-customer-id="' + esc(customerId) + '"' + (expanded ? '' : ' hidden') + '><div class="iw-ca-toolbar"><label class="iw-btn primary">' + uploadLabel + '<input type="file" multiple accept="' + accept + '" hidden onchange="OSInsuworkCoverage.importFile(\'' + esc(customerId) + '\',this)"></label><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + esc(customerId) + '\')">+ 회사·상품</button><button type="button" class="iw-btn" aria-expanded="' + coverageFilter(customerId).open + '" onclick="OSInsuworkCoverage.toggleCoverageFilters(\'' + esc(customerId) + '\')">담보현황</button><button type="button" class="iw-btn" aria-pressed="' + freezeColumns + '" onclick="OSInsuworkCoverage.toggleFreezeColumns(\'' + esc(customerId) + '\')">' + (freezeColumns ? '틀 고정 해제' : '틀 고정') + '</button>' + (hiddenCount ? '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.toggleHiddenProducts(\'' + esc(customerId) + '\')">숨긴 상품 ' + hiddenCount + '개 ' + (d.showHiddenProducts ? '접기' : '보기') + '</button>' : '') + '</div>' + filterHtml(customerId, d) + '<div class="iw-ca-table-wrap"><table><thead><tr><th class="iw-ca-check-cell"></th><th class="iw-ca-section-cell">대분류</th><th class="iw-ca-group-cell">중분류</th><th class="iw-ca-name-cell">담보<span class="iw-ca-name-resizer" title="드래그하여 너비 조절 · 더블클릭하면 자동 맞춤" onpointerdown="OSInsuworkCoverage.startNameResize(event,\'' + esc(customerId) + '\')" ondblclick="OSInsuworkCoverage.resetNameColumn(\'' + esc(customerId) + '\')"></span></th><th class="iw-ca-total-cell">합계금액</th>' + productHeaders + '<th></th></tr></thead><tbody>' + (body || '<tr><td colspan="' + (6 + products.length) + '"><p class="iw-ca-empty">엑셀 파일을 불러오거나 담보를 추가해 주세요.</p></td></tr>') + '</tbody></table></div><footer><span>빈 금액도 원자료로 보존되며 자동 제외되지 않습니다.</span>' + saveStatusHtml(customerId) + '<div><button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',false)">선택 화면 복사</button>' + (options.page ? '' : '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + esc(customerId) + '\',true)">카카오톡으로 보내기</button>') + '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + esc(customerId) + '\')">보장분석 저장</button></div></footer></div></section>';
   }
