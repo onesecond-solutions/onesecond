@@ -951,8 +951,9 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-section-tone-4{background:color-mix(in srgb,var(--t-event) 20%,var(--s1))}
 #v-insuwork .iw-ca-section-tone-5{background:color-mix(in srgb,var(--err) 16%,var(--s1))}
 #v-insuwork .iw-ca-table-wrap thead th{z-index:4}
-#v-insuwork .iw-ca-table-wrap input:not([type=checkbox]){width:100%;min-width:0;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;padding:7px;color:var(--tp)}
-#v-insuwork .iw-ca-table-wrap input:not([type=checkbox]):focus{border-color:var(--ac);background:var(--s1);outline:0}
+#v-insuwork .iw-ca-table-wrap input:not([type=checkbox]),#v-insuwork .iw-ca-table-wrap textarea{width:100%;min-width:0;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;padding:7px;color:var(--tp)}
+#v-insuwork .iw-ca-table-wrap input:not([type=checkbox]):focus,#v-insuwork .iw-ca-table-wrap textarea:focus{border-color:var(--ac);background:var(--s1);outline:0}
+#v-insuwork .iw-ca-table-wrap textarea{display:block;font:inherit;line-height:1.4;resize:none;overflow:hidden;field-sizing:content;white-space:pre-wrap;word-break:break-word}
 #v-insuwork .iw-ca-product,#v-insuwork .iw-ca-product-cell{width:158px;min-width:158px!important}
 #v-insuwork .iw-ca-product input{display:block;margin-bottom:3px;text-align:center;font-weight:600}
 #v-insuwork .iw-ca-product-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:3px}
