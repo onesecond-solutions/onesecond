@@ -2,6 +2,29 @@
   'use strict';
 
   var drafts = {};
+  var workspaceExpanded = false;
+  function syncWorkspaceExpanded() {
+    var panel = panelFor(WORKSPACE_KEY), section = panel && panel.closest('.iw-coverage-analysis');
+    if (!section) return;
+    section.classList.toggle('iw-ca-fullscreen', workspaceExpanded);
+    var button = section.querySelector('.iw-ca-fullscreen-toggle');
+    if (button) { button.textContent = workspaceExpanded ? '원래 화면으로' : '전체 화면 보기'; button.setAttribute('aria-pressed', String(workspaceExpanded)); }
+    if (section.showPopover) {
+      if (workspaceExpanded) { section.setAttribute('popover', 'manual'); if (!section.matches(':popover-open')) section.showPopover(); }
+      else { if (section.matches(':popover-open')) section.hidePopover(); section.removeAttribute('popover'); }
+    }
+  }
+  function toggleWorkspaceExpanded() {
+    var view = captureView(WORKSPACE_KEY);
+    workspaceExpanded = !workspaceExpanded;
+    syncWorkspaceExpanded();
+    restoreView(WORKSPACE_KEY, view);
+    var panel = panelFor(WORKSPACE_KEY), button = panel && panel.closest('.iw-coverage-analysis').querySelector('.iw-ca-fullscreen-toggle');
+    if (button) button.focus({ preventScroll: true });
+  }
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && workspaceExpanded && panelFor(WORKSPACE_KEY)) { event.preventDefault(); event.stopImmediatePropagation(); toggleWorkspaceExpanded(); }
+  }, true);
   var sheetJsPromise = null;
   var pdfJsPromise = null;
   var officeCryptoPromise = null;
@@ -379,6 +402,8 @@
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var lines = [['대분류', '중분류', '담보', '합계금액'].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   function workspaceHtml(record) {
     var markup = html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, page: true });
+    queueMicrotask(syncWorkspaceExpanded);
+    markup = markup.replace('</header>', '<button type="button" class="iw-btn iw-ca-fullscreen-toggle" aria-pressed="false" onclick="OSInsuworkCoverage.toggleWorkspaceExpanded()">전체 화면 보기</button></header>');
     var productButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + WORKSPACE_KEY + '\')">+ 회사·상품</button>';
     var resetButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.resetToBaseTemplate()">기본 양식으로 초기화</button>';
     var copyButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + WORKSPACE_KEY + '\',false)">선택 화면 복사</button>';
@@ -387,6 +412,7 @@
     return markup.replace(productButton, resetButton + productButton).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
   }
   var exposed = {
+    toggleWorkspaceExpanded: toggleWorkspaceExpanded,
     html: html, workspaceHtml: workspaceHtml, reset: reset, importFile: importFile,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); },
