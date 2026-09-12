@@ -56,7 +56,55 @@
     if (/암.*진단|유사암.*진단/.test(text)) return '진단비';
     return '';
   }
-  function flatSection(section) { return /실손/.test(String(section || '').replace(/\s+/g, '')); }
+  function isSilson(section) { return /실손|실비/.test(String(section || '')); }
+  function flatSection() { return false; }
+  function silsonGeneration(value) {
+    var matches = String(value || '').match(/[1-5]\s*세대/g) || [];
+    var numbers = Array.from(new Set(matches.map(function (v) { return v.replace(/\s/g, ''); })));
+    return numbers.length === 1 ? numbers[0] + ' 실손' : '세대 확인';
+  }
+  function silsonName(value) {
+    var name = String(value || ''), key = name.replace(/\s/g, '');
+    var names = {
+      '질병입원의료비': '질병 입원 의료비', '상해입원의료비': '상해 입원 의료비',
+      '질병통원의료비': '질병 통원 의료비', '상해통원의료비': '상해 통원 의료비',
+      '비급여도수,체외충격파,증식치료(실손)': '비급여 도수·체외충격파·증식치료',
+      '비급여도수·체외충격파·증식치료': '비급여 도수·체외충격파·증식치료',
+      '비급여주사료(실손)': '비급여 주사료', '비급여주사료': '비급여 주사료',
+      '비급여MRI,MRA(실손)': '비급여 MRI·MRA', '비급여MRI·MRA': '비급여 MRI·MRA'
+    };
+    if (names[key]) return names[key];
+    var combined = key.match(/^(질병|상해)(?:실손)?의료비\(입원[·ㆍ,\/]통원\)$/);
+    if (combined) return combined[1] + ' 의료비(입원·통원)';
+    var benefit = key.match(/^(질병|상해)(급여|비급여|중증비급여|비중증비급여)(?:실손)?의료비$/);
+    if (benefit) return benefit[1] + ' ' + benefit[2].replace('중증비급여', '중증 비급여') + ' 의료비';
+    return name;
+  }
+  function normalizeSilsonRows(rows, products) {
+    return rows.flatMap(function (row) {
+      if (!isSilson(row.section)) return [row];
+      var original = row.name, standard = silsonName(original);
+      if (standard !== original) { row.sourceNames = Array.from(new Set((row.sourceNames || []).concat(original))); row.name = standard; }
+      var generation = silsonGeneration(row.group);
+      if (generation === '세대 확인') generation = silsonGeneration(row.section + ' ' + row.name);
+      row.section = '실손';
+      var buckets = {};
+      products.forEach(function (product) {
+        var value = row.values[product.id];
+        if (value == null || value === '') return;
+        var productGeneration = silsonGeneration(product.generation || product.product);
+        var group = productGeneration !== '세대 확인' ? productGeneration : generation;
+        if (!buckets[group]) buckets[group] = {};
+        buckets[group][product.id] = value;
+      });
+      var groups = Object.keys(buckets);
+      if (groups.length <= 1) { row.group = groups[0] || generation; return [row]; }
+      return groups.map(function (group, index) {
+        var split = clone(row); split.id = index ? row.id + '-silson-' + group.charAt(0) : row.id;
+        split.group = group; split.values = buckets[group]; split.sourceTotal = row.total; split.total = ''; return split;
+      });
+    });
+  }
   function sectionOrder(section) {
     var text = String(section || '').replace(/\s+/g, '');
     var patterns = [/실손/, /^암$/, /뇌/, /심장/, /수술/, /배상책임/, /운전자/];
@@ -66,12 +114,13 @@
   function normalize(record) {
     var next = Object.assign(blankRecord(), clone(record));
     next.products = (next.products || []).map(function (p) { return Object.assign({ id: uid('product'), company: '', product: '', renewal: '', premium: '', payment: '', hidden: false }, p); });
-    next.rows = (next.rows || []).map(function (r) { var row = Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, r); if (row.section === '암') { var cancerGroup = cancerMiddleGroup(row.name); if (cancerGroup) row.group = cancerGroup; else if (/^치료비\s*[123]$/.test(row.group)) row.group = row.group.replace(/\s+/g, ''); } if (flatSection(row.section)) row.group = ''; return row; }).filter(function (row) { return !(row.section === '암' && /고액암/.test(String(row.name || '').replace(/\s+/g, ''))); });
+    next.rows = (next.rows || []).map(function (r) { var row = Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, r); if (row.section === '암') { var cancerGroup = cancerMiddleGroup(row.name); if (cancerGroup) row.group = cancerGroup; else if (/^치료비\s*[123]$/.test(row.group)) row.group = row.group.replace(/\s+/g, ''); } return row; }).filter(function (row) { return !(row.section === '암' && /고액암/.test(String(row.name || '').replace(/\s+/g, ''))); });
+    next.rows = normalizeSilsonRows(next.rows, next.products);
     var cancerPositions = [], cancerRows = [], cancerOrder = { '진단비': 0, '치료비1': 1, '치료비2': 2, '치료비3': 3 };
     next.rows.forEach(function (row, index) { if (row.section === '암') { cancerPositions.push(index); cancerRows.push(row); } });
     cancerRows.sort(function (a, b) { return (Object.prototype.hasOwnProperty.call(cancerOrder, a.group) ? cancerOrder[a.group] : 99) - (Object.prototype.hasOwnProperty.call(cancerOrder, b.group) ? cancerOrder[b.group] : 99); });
     cancerPositions.forEach(function (position, index) { next.rows[position] = cancerRows[index]; });
-    next.rows = next.rows.map(function (row, index) { return { row: row, index: index }; }).sort(function (a, b) { return sectionOrder(a.row.section) - sectionOrder(b.row.section) || a.index - b.index; }).map(function (item) { return item.row; });
+    next.rows = next.rows.map(function (row, index) { return { row: row, index: index }; }).sort(function (a, b) { return sectionOrder(a.row.section) - sectionOrder(b.row.section) || (isSilson(a.row.section) && isSilson(b.row.section) ? (parseInt(a.row.group, 10) || 9) - (parseInt(b.row.group, 10) || 9) : 0) || a.index - b.index; }).map(function (item) { return item.row; });
     return next;
   }
   function draft(customerId, record) {
@@ -103,7 +152,7 @@
   function synonymExactKey(value) { return String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, ''); }
   function synonymKey(value) { return String(value || '').toLowerCase().replace(/\([^)]*\)/g, '').replace(/[\s·ㆍ,._()\-\/]/g, ''); }
   function loadCoverageSynonyms() {
-    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260911coverage19', { cache: 'no-store' }).then(function (response) {
+    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260912silson1', { cache: 'no-store' }).then(function (response) {
       if (!response.ok) throw new Error('담보명 동의어 사전을 불러오지 못했습니다.');
       return response.json();
     }).then(function (data) {
@@ -112,7 +161,7 @@
         [entry.canonical].concat(entry.aliases || []).forEach(function (name) {
           var exactKey = synonymExactKey(name), looseKey = synonymKey(name);
           if (exactKey && !exactIndex[exactKey]) exactIndex[exactKey] = entry;
-          if (!looseKey) return;
+          if (!looseKey || isSilson(entry.section)) return;
           if (looseIndex[looseKey] && looseIndex[looseKey].canonical !== entry.canonical) ambiguousLoose[looseKey] = true;
           else looseIndex[looseKey] = entry;
         });
@@ -130,7 +179,7 @@
     return coverageSynonymsPromise;
   }
   function coverageSynonym(value) { return coverageSynonymExactIndex[synonymExactKey(value)] || coverageSynonymLooseIndex[synonymKey(value)] || null; }
-  function coverageMatchKey(value) { var entry = coverageSynonym(value); return synonymKey(entry ? entry.canonical : value); }
+  function coverageMatchKey(value) { var entry = coverageSynonym(value); return entry && isSilson(entry.section) || /실손|의료비/.test(String(value || '')) ? synonymExactKey(entry ? entry.canonical : silsonName(value)) : synonymKey(entry ? entry.canonical : value); }
   function loadPdfJs() {
     if (!pdfJsPromise) pdfJsPromise = loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function () { return !!window.pdfjsLib; }).then(function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; });
     return pdfJsPromise;
@@ -263,11 +312,11 @@
     });
     imported.rows.forEach(function (incoming) {
       var synonym = coverageSynonym(incoming.name), targetSection = synonym && synonym.section || incoming.section, nameKey = coverageMatchKey(incoming.name);
-      var candidates = nameKey ? base.rows.filter(function (row) { return coverageMatchKey(row.name) === nameKey; }) : [];
+      var candidates = nameKey ? base.rows.filter(function (row) { return coverageMatchKey(row.name) === nameKey && (!isSilson(targetSection) || (isSilson(row.section) && row.group === incoming.group)); }) : [];
       var existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(targetSection); }) || (candidates.length === 1 ? candidates[0] : null);
       if (!existing) {
         existing = clone(incoming); existing.id = uid('coverage'); existing.values = {}; existing.selected = false; existing.hidden = false;
-        if (synonym) { existing.name = synonym.canonical; existing.section = synonym.section || existing.section; existing.group = synonym.group || existing.group; existing.sourceNames = [incoming.name]; }
+        if (synonym) { existing.name = synonym.canonical; existing.section = synonym.section || existing.section; existing.group = synonym.group || existing.group; existing.sourceNames = Array.from(new Set((incoming.sourceNames || []).concat(incoming.name))); }
         var lastSectionIndex = -1; base.rows.forEach(function (row, index) { if (matchKey(row.section) === matchKey(existing.section)) lastSectionIndex = index; });
         base.rows.splice(lastSectionIndex >= 0 ? lastSectionIndex + 1 : base.rows.length, 0, existing);
       } else if (incoming.name && coverageMatchKey(incoming.name) === coverageMatchKey(existing.name) && synonymKey(incoming.name) !== synonymKey(existing.name)) {
@@ -319,9 +368,9 @@
   }
   function mergedSpan(rows, index, key) {
     var value = rows[index] && rows[index][key] || '';
-    if (!value || (index > 0 && rows[index - 1][key] === value)) return value ? 0 : 1;
+    if (!value || (index > 0 && rows[index - 1][key] === value && (key !== 'group' || rows[index - 1].section === rows[index].section))) return value ? 0 : 1;
     var span = 1;
-    while (index + span < rows.length && rows[index + span][key] === value) span++;
+    while (index + span < rows.length && rows[index + span][key] === value && (key !== 'group' || rows[index + span].section === rows[index].section)) span++;
     return span;
   }
   function setMergedField(customerId, index, key, value) {
@@ -330,7 +379,7 @@
     var previous = row[key] || '';
     row[key] = value;
     if (!previous) return;
-    for (var i = index + 1; i < d.rows.length && d.rows[i][key] === previous; i++) d.rows[i][key] = value;
+    for (var i = index + 1; i < d.rows.length && d.rows[i][key] === previous && (key !== 'group' || d.rows[i].section === row.section); i++) d.rows[i][key] = value;
   }
   function textColumnWidth(rows, key, label, minimum, maximum) {
     var values = [label].concat(rows.map(function (row) { return row[key] || ''; }));
