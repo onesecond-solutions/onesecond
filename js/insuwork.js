@@ -3583,6 +3583,40 @@
     if (canEditCoverageTemplate() && template && working && String(template.updatedAt || '') > String(working.updatedAt || '')) return template;
     return working || template;
   }
+  var coverageTemplateHistory = [];
+  function openCoverageTemplateHistory() {
+    if (!canEditCoverageTemplate()) return;
+    var template = coverageWorkspaceItem();
+    if (!template) return coverageError('저장된 기본 양식이 없습니다.');
+    dialog('<div class="iw-form"><h2>기본 양식 이전 버전</h2><p>저장 이력을 불러오는 중…</p></div>');
+    return api('insuwork_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&parent_id=eq.' + encodeURIComponent(template.id) + '&deleted_at=is.null&legacy_payload->>coverage_analysis_history=eq.true&order=created_at.desc&limit=500&select=id,owner_id,parent_id,legacy_payload,created_at').then(function (rows) {
+      coverageTemplateHistory = rows || [];
+      dialog('<div class="iw-form"><h2>기본 양식 이전 버전</h2><p>버전을 선택해 담보 구성을 확인한 후 복원합니다. 복원 전 현재 양식과 작업표도 이전 버전으로 보관됩니다.</p>' + coverageTemplateHistory.map(function (item) {
+        var payload = item.legacy_payload || {}, record = payload.coverage_analysis || {}, source = record.source && record.source.name || '불러온 파일 없음';
+        var sections = Array.from(new Set((record.rows || []).map(function (row) { return row.section; }))).join(' · ');
+        return '<button type="button" class="iw-btn" style="display:block;width:100%;height:auto;text-align:left;margin-bottom:8px;white-space:normal" data-history-id="' + esc(item.id) + '" onclick="OSInsuwork.previewCoverageTemplateHistory(this.dataset.historyId)">' + esc(new Date(payload.replaced_at || item.created_at).toLocaleString('ko-KR')) + ' 저장 전 · 담보 ' + (record.rows || []).length + '개<br>' + esc(source) + '<br>' + esc(sections) + '</button>';
+      }).join('') + (!coverageTemplateHistory.length ? '<p>이전 버전이 없습니다.</p>' : '') + '<button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">닫기</button></div>');
+    }).catch(function (error) { coverageError(error.message || String(error)); });
+  }
+  function previewCoverageTemplateHistory(id) {
+    if (!canEditCoverageTemplate()) return;
+    var item = coverageTemplateHistory.find(function (entry) { return entry.id === id && entry.owner_id === currentUserId(); });
+    if (!item) return;
+    var record = item.legacy_payload.coverage_analysis || {};
+    dialog('<div class="iw-form"><h2>복원할 기본 양식</h2><p>' + esc(new Date(item.legacy_payload.replaced_at || item.created_at).toLocaleString('ko-KR')) + ' 저장 전 · ' + (record.rows || []).length + '개 담보</p><p>원본: ' + esc(record.source && record.source.name || '없음') + '</p><div style="max-height:55vh;overflow:auto"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>합계금액</th></tr></thead><tbody>' + (record.rows || []).map(function (row) { return '<tr><td>' + esc(row.section) + '</td><td>' + esc(row.group) + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.total) + '</td></tr>'; }).join('') + '</tbody></table></div><p id="iw-ca-restore-status" role="status"></p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.openCoverageTemplateHistory()">목록으로</button><button type="button" class="iw-btn primary" data-history-id="' + esc(id) + '" onclick="OSInsuwork.restoreCoverageTemplateHistory(this.dataset.historyId,this)">이 버전으로 양식·작업표 복원</button></div></div>');
+  }
+  function restoreCoverageTemplateHistory(id, button) {
+    if (!canEditCoverageTemplate() || button && button.disabled) return;
+    var item = coverageTemplateHistory.find(function (entry) { return entry.id === id && entry.owner_id === currentUserId(); });
+    if (!item || !item.legacy_payload.coverage_analysis) return;
+    if (button) button.disabled = true;
+    var status = document.getElementById('iw-ca-restore-status'); if (status) status.textContent = '이전 버전 보관 및 복원 중…';
+    var record = JSON.parse(JSON.stringify(item.legacy_payload.coverage_analysis)); record.updatedAt = new Date().toISOString();
+    return saveCoverageWorkspaceAnalysis(record, null).then(function () { return saveCoverageWorkspaceDraft(record, null); }).then(function () {
+      window.OSInsuworkCoverage.reset('__coverage_workspace__', record); forceCloseDialog(); rerenderCoverageWorkspace();
+      coverageNotice('선택한 이전 버전으로 기본 양식과 작업표를 복원했습니다.');
+    }).catch(function (error) { if (button) button.disabled = false; if (status) status.textContent = '복원을 마치지 못했습니다. 다시 시도해 주세요.'; coverageError(error.message || String(error)); });
+  }
   function coverageAnalysisPageHtml() {
     if (!canUseCoverageAnalysis()) return homeHtml();
     if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
@@ -5172,7 +5206,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    canEditCoverageTemplate: canEditCoverageTemplate, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, canEditCoverageTemplate: canEditCoverageTemplate, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고

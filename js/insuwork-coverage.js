@@ -626,7 +626,8 @@
     var copyButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + WORKSPACE_KEY + '\',false)">선택 화면 복사</button>';
     var saveButton = '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">보장분석 저장</button>';
     var templateButton = api().canEditCoverageTemplate && api().canEditCoverageTemplate() ? '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">기본 양식 저장</button>' : '';
-    var orderedButtons = templateButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">선택 고객에게 저장</button>';
+    var historyButton = templateButton ? '<button type="button" class="iw-btn" onclick="OSInsuwork.openCoverageTemplateHistory()">이전 양식 복원</button>' : '';
+    var orderedButtons = templateButton + historyButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">선택 고객에게 저장</button>';
     return markup.replace(productButton, resetButton + productButton).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
   }
   var exposed = {
