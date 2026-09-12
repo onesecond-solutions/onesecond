@@ -941,7 +941,7 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-section-cell.iw-ca-section-flat{width:calc(var(--iw-ca-section-w) + var(--iw-ca-group-w));min-width:calc(var(--iw-ca-section-w) + var(--iw-ca-group-w))!important}
 #v-insuwork .iw-ca-group-cell{position:sticky;left:calc(36px + var(--iw-ca-section-w));z-index:2;width:var(--iw-ca-group-w);min-width:var(--iw-ca-group-w)!important;background:color-mix(in srgb,var(--ac) 7%,var(--s1))}
 #v-insuwork .iw-ca-name-cell{position:sticky;left:calc(36px + var(--iw-ca-section-w) + var(--iw-ca-group-w));z-index:2;width:var(--iw-ca-name-w);min-width:var(--iw-ca-name-w)!important;background:var(--s1)}
-#v-insuwork .iw-ca-total-cell{width:var(--iw-ca-total-w);min-width:var(--iw-ca-total-w)!important}
+#v-insuwork .iw-ca-total-cell{position:sticky;left:calc(36px + var(--iw-ca-section-w) + var(--iw-ca-group-w) + var(--iw-ca-name-w));z-index:2;width:var(--iw-ca-total-w);min-width:var(--iw-ca-total-w)!important;background:var(--s1);box-shadow:2px 0 0 var(--bd)}
 #v-insuwork .iw-ca-merged{vertical-align:middle;text-align:center;font-weight:800}
 #v-insuwork .iw-ca-merged input{text-align:center;font-weight:800}
 #v-insuwork .iw-ca-section-tone-0{background:color-mix(in srgb,var(--ok) 28%,var(--s1))}
@@ -950,7 +950,9 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-ca-section-tone-3{background:color-mix(in srgb,var(--warn) 25%,var(--s1))}
 #v-insuwork .iw-ca-section-tone-4{background:color-mix(in srgb,var(--t-event) 20%,var(--s1))}
 #v-insuwork .iw-ca-section-tone-5{background:color-mix(in srgb,var(--err) 16%,var(--s1))}
-#v-insuwork .iw-ca-table-wrap thead th{z-index:4}
+#v-insuwork .iw-ca-table-wrap thead th{position:sticky;top:0;z-index:4}
+#v-insuwork .iw-ca-table-wrap thead .iw-ca-check-cell,#v-insuwork .iw-ca-table-wrap thead .iw-ca-section-cell,#v-insuwork .iw-ca-table-wrap thead .iw-ca-group-cell,#v-insuwork .iw-ca-table-wrap thead .iw-ca-name-cell,#v-insuwork .iw-ca-table-wrap thead .iw-ca-total-cell{z-index:6;background:var(--s2)}
+#v-insuwork .iw-coverage-analysis.iw-ca-freeze-off .iw-ca-check-cell,#v-insuwork .iw-coverage-analysis.iw-ca-freeze-off .iw-ca-section-cell,#v-insuwork .iw-coverage-analysis.iw-ca-freeze-off .iw-ca-group-cell,#v-insuwork .iw-coverage-analysis.iw-ca-freeze-off .iw-ca-name-cell,#v-insuwork .iw-coverage-analysis.iw-ca-freeze-off .iw-ca-total-cell{left:auto;box-shadow:none}
 #v-insuwork .iw-ca-table-wrap input:not([type=checkbox]),#v-insuwork .iw-ca-table-wrap textarea{width:100%;min-width:0;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;padding:7px;color:var(--tp)}
 #v-insuwork .iw-ca-table-wrap input:not([type=checkbox]):focus,#v-insuwork .iw-ca-table-wrap textarea:focus{border-color:var(--ac);background:var(--s1);outline:0}
 #v-insuwork .iw-ca-table-wrap textarea{display:block;font:inherit;line-height:1.4;resize:none;overflow:hidden;field-sizing:content;white-space:pre-wrap;word-break:break-word}
