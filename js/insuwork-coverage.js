@@ -180,7 +180,7 @@
     next.rows.forEach(function (part) {
       if (!part.sharedLimit) return;
       var target = next.rows.find(function (row) { return row !== part && !row.sharedLimit && isSilson(row.section) && coverageMatchKey(row.name) === coverageMatchKey(part.name) && !hasEnrolledAmount(row.total) && !Object.values(row.values || {}).some(hasEnrolledAmount); });
-      if (target) { ['values', 'total', 'group', 'sourceNames', 'sourceDetails', 'valueSources', 'sharedLimit'].forEach(function (key) { if (part[key] !== undefined) target[key] = clone(part[key]); }); mappedCombined.add(part); }
+      if (target) { ['values', 'total', 'group', 'sourceNames', 'sourceDetails', 'valueSources', 'sharedLimit'].forEach(function (key) { if (part[key] !== undefined) target[key] = typeof part[key] === 'object' ? clone(part[key]) : part[key]; }); mappedCombined.add(part); }
     });
     next.rows = next.rows.filter(function (row) { return !mappedCombined.has(row); });
     next.rows = normalizeSilsonRows(next.rows, next.products);
