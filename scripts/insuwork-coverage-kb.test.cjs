@@ -33,7 +33,7 @@ test('collapsed saved cancer rows recover original names and per-policy amounts'
 test('heart diagnosis rider spelling merges distinct policies but not overlapping values',()=>{const a=setup();const r=a.normalize({rows:[{id:'t',section:'심장',name:'급성심근경색 진단비',values:{a:'1000만'}},{id:'p',section:'심장',name:'급성심근경색증진단담보',values:{a:'',b:'1000만'}}]});assert.equal(r.rows.length,1);assert.equal(r.rows[0].total,'2,000만');assert.equal(Object.keys(r.rows[0].values).length,2);assert.equal(a.normalize(r).rows.length,1);});
 
 test('legacy header fragments quarantine reversibly without discarding legitimate total-only or evidenced benefits',()=>{
- const a=setup();const bad=['','만','억만','충분 - 미가입 -만','( . )','종합보험 무배당','상해%미만후유장해 - -','만 -- --','년납/세 만기','암치료비(연간회한)'];
+ const a=setup();const bad=['','만','억만','충분 - 미가입 -만','( . )','종합보험 무배당','상해%미만후유장해 - -','만 -- --','년납/세 만기','암치료비(연간회한)','정액   질병수술비   질병수술   만','실손   질병(전체질병을 의미)   만','() DB손보','권장   만','대비급여실손','상해사망 -억만'];
  const r=a.normalize({rows:bad.map((name,i)=>({id:'bad'+i,name,total:'2601',values:{}})).concat([{name:'신규 특약',total:'300만'},{name:'',total:''},{name:'암치료비(연간회한)',total:'100만',values:{p:'100만'},sourceDetails:[{provider:'kb-detail'}]}])});
  assert.equal(r.legacyRejectedRows.length,bad.length);assert.equal(r.rows.length,3);assert.equal(a.normalize(r).legacyRejectedRows.length,bad.length);
 });

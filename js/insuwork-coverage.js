@@ -166,7 +166,7 @@
     if ((row.sourceDetails || []).length || Object.values(row.values || {}).some(hasEnrolledAmount)) return false;
     var name = String(row.name || ''), units = name.match(/(?:^|\s)(?:만|억|원)(?=\s|$)/g) || [];
     if (!name.trim()) return !!String(row.total || '').trim(); // Keep intentional empty template rows.
-    return units.length >= 2 || /^(?:[\s억만원()+.,~%-]+)$/.test(name) ||
+    return units.length >= 2 || (units.length > 0 && /^(?:정액|실손|권장)\s/.test(name)) || /^\(\)\s*(?:한화손보|삼성화재|DB손보)/.test(name) || /-억만|^대비급여실손$/.test(name) || /^(?:[\s억만원()+.,~%-]+)$/.test(name) ||
       /(?:충분|부족|미가입)/.test(name) && /[+-]|(?:만|억)/.test(name) ||
       /(?:--|\.\.\s*~)|(?:년납|월납).*?(?:년|세)|년납\/세|^세 만기$|건\s+원\s+건/.test(name) ||
       /(?:상해|질병)%|\(회한\)|연간회한|\(주미만|~\s*급치아/.test(name) ||
