@@ -11,3 +11,23 @@ test('legacy noise is quarantined and KB combined silson maps to four existing t
 test('mixed customer detail pages reject and ordinary unknown benefits remain visible',()=>{const a=setup();const mixed=JSON.parse(JSON.stringify(data));mixed[1].items.find(i=>i.str==='테스트').str='다른고객';assert.throws(()=>a.parseKbPdf(mixed,'report.pdf'),/서로 다른 고객/);assert.equal(a.normalize({rows:[{name:'새로운 담보',values:{},total:'500만'}]}).rows.length,1);});
 
 test('workspace double-save persists once and emits one success notice',async()=>{const a=setup();let finish,count=0,notices=0;a.env.OSInsuwork={saveCoverageWorkspaceDraft:()=>{count++;return new Promise(resolve=>finish=resolve)},rerenderCoverageWorkspace(){},coverageNotice(){notices++},coverageError(e){throw Error(e)}};a.reset('__coverage_workspace__',{products:[],rows:[]});const saving=a.saveRecord('__coverage_workspace__',false);await a.saveRecord('__coverage_workspace__',false);assert.equal(count,1);finish({products:[],rows:[]});await saving;assert.equal(notices,1);});
+
+test('owner heart aliases and cancer taxonomy map to saved template, preserving distinct conditions',async()=>{
+ const a=setup();await a.loadCoverageSynonyms();
+ const names=['급성심근경색 진단비','허혈성심장질환 진단비','암주요 치료비(급여, 비급여 포함)','비급여 암주요 치료비'];
+ const template={products:[],rows:names.map((name,i)=>({id:'t'+i,name,section:i<2?'심장':'암',group:i<2?'진단비':'치료비3',values:{}}))};
+ const kb=a.parseKbPdf([page(1,[[1,'급성심근경색증진단비담보','기타','2000만'],[2,'허혈심장질환진단비','기타','1000만'],[3,'종합병원암주요치료비(수술)(연간1회한)','기타','300만'],[4,'종합병원하이클래스암주요치료비(항암약물)','기타','500만'],[5,'종합병원암주요치료비(중환자실)','기타','600만']])],'report.pdf');
+ const r=a.mergeImportedRecord(template,kb);
+ names.forEach((name,i)=>{const row=r.rows.find(x=>x.id==='t'+i);assert.equal(row.name,name);assert.ok(Object.values(row.values).some(Boolean));});
+ assert.equal(r.rows.length,5);assert.equal(r.rows.filter(x=>x.name===names[2]).length,2);
+ assert.equal(r.rows.find(x=>x.id==='t3').total,'500만');
+ assert.ok(r.rows.find(x=>x.id==='t2').sourceDetails[0].companyName.includes('연간1회한'));
+ assert.equal(a.mergeImportedRecord(r,kb).rows.length,5);
+ const saved=a.normalize({rows:[{name:'급성심근경색증 진단비',section:'심장'},{name:'허혈심장질환 수술비',section:'심장'},{name:'하이클래스치료비',section:'기타'}]});
+ assert.equal(saved.rows.find(x=>x.name==='비급여 암주요 치료비').group,'치료비3');
+ assert.ok(saved.rows.some(x=>x.name==='허혈성심장질환 수술비'));
+ assert.ok(saved.rows.some(x=>x.name==='급성심근경색 진단비'));
+ assert.equal(a.normalize(saved).rows.length,3);
+});
+
+test('saved imported owner terms populate empty form rows without resetting work',()=>{const a=setup();const r=a.normalize({rows:[{id:'form',section:'암',group:'치료비3',name:'비급여 암주요 치료비',values:{}},{id:'imported',section:'기타',name:'종합병원하이클래스암주요치료비(수술)',values:{p:'300만'},sourceDetails:[{provider:'kb-detail',number:'1'}]}]});assert.equal(r.rows.length,1);assert.equal(r.rows[0].id,'form');assert.equal(r.rows[0].values.p,'300만');assert.equal(r.rows[0].sourceDetails.length,1);assert.equal(a.normalize(r).rows.length,1);});
