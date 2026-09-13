@@ -41,7 +41,7 @@ test('workspace saves the latest input values and clearly separates template and
  const markup=context.window.OSInsuworkCoverage.workspaceHtml(record);
  assert.match(markup,/oninput="OSInsuworkCoverage\.setProduct/);
  assert.doesNotMatch(markup,/>기본 양식 저장</);
- assert.match(markup,/data-ca-save="customer"[^>]*>선택 고객에게 저장/);
+ assert.match(markup,/data-ca-save="customer"[^>]*>고객에게 저장/);
  context.window.OSInsuworkCoverage.setProduct(key,'p1','company','수정 보험사');
  context.window.OSInsuworkCoverage.setRow(key,'r1','total','1억원');
  context.window.OSInsuworkCoverage.setCell(key,'r1','p1','5천만원');

@@ -2853,6 +2853,7 @@
     var prev = document.querySelector('#iw-preview .iw-preview-nav-prev'), next = document.querySelector('#iw-preview .iw-preview-nav-next');
     if (!overlay) return false;
     closeDialog();
+    if (document.querySelector('#v-insuwork .iw-ca-fullscreen') && overlay.showPopover) { overlay.setAttribute('popover', 'manual'); if (!overlay.matches(':popover-open')) overlay.showPopover(); }
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('has-asset', !!assetRef);
     if (prev) { prev.hidden = !navigation; prev.disabled = !navigation || !navigation.previous; }
     if (next) { next.hidden = !navigation; next.disabled = !navigation || !navigation.next; }
@@ -3019,7 +3020,7 @@
     var page = state.preview && state.preview.page;
     Array.prototype.forEach.call(box.querySelectorAll('.iw-preview-thumb'), function (btn) { btn.classList.toggle('on', Number(btn.getAttribute('data-page')) === page); });
   }
-  function closePreview() { var overlay = document.getElementById('iw-preview'), thumbs = document.getElementById('iw-preview-thumbs'); if (overlay) { overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); } if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); } state.preview = null; document.body.classList.remove('iw-preview-open'); }
+  function closePreview() { var overlay = document.getElementById('iw-preview'), thumbs = document.getElementById('iw-preview-thumbs'); if (overlay) { if (overlay.hidePopover && overlay.matches(':popover-open')) overlay.hidePopover(); overlay.removeAttribute('popover'); overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); } if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); } state.preview = null; document.body.classList.remove('iw-preview-open'); }
   function previewZoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewRotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) scrollToPreviewPage(next); }
@@ -3645,7 +3646,14 @@
     if (!canUseCoverageAnalysis()) return;
     var file = (state.data.items || []).find(function (item) { return String(item.id) === String(id) && item.owner_id === currentUserId() && !item.deleted_at && item.storage_path; });
     if (!file) return coverageError('원본 파일을 찾을 수 없습니다.');
-    forceCloseDialog(); return openFilePreview(file.id);
+    forceCloseDialog();
+    if (previewType(file)) return openFilePreview(file.id);
+    // Reserve the tab during the click so signing an Excel download does not lose user activation.
+    var target = window.open('about:blank', '_blank'); if (target) target.opener = null;
+    return signStoragePath(file.storage_path).then(function (url) {
+      if (target) target.location.replace(url);
+      else dialog('<div class="iw-form"><h2>원본 파일 보기</h2><a class="iw-btn" href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(file.title || '원본 파일 열기') + '</a></div>');
+    }).catch(function (error) { if (target) target.close(); coverageError(error.message || String(error)); });
   }
   function openCoverageSources(record) {
     if (!canUseCoverageAnalysis()) return;

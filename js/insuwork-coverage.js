@@ -57,6 +57,7 @@
   }
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape' && importBusy) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    if (event.key === 'Escape' && document.querySelector && document.querySelector('#v-insuwork dialog[open], #iw-preview.open')) return;
     if (event.key === 'Escape' && workspaceExpanded && panelFor(WORKSPACE_KEY)) { event.preventDefault(); event.stopImmediatePropagation(); toggleWorkspaceExpanded(); }
   }, true);
   var sheetJsPromise = null;
