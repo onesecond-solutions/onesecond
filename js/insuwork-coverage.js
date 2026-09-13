@@ -84,16 +84,21 @@
   // InsuranceWork display taxonomy approved by the owner; source terms remain available.
   function ownerCoverageName(value) {
     var name = String(value || ''), key = name.replace(/\s/g, '');
-    if (/하이클래스/.test(key) || /비급여암주요치료비/.test(key)) return '비급여 암주요 치료비';
-    if (/암주요치료비/.test(key)) return '암주요 치료비(급여, 비급여 포함)';
+
     name = name.replace(/급성심근경색증/g, '급성심근경색').replace(/허혈심장질환/g, '허혈성심장질환');
     var heart = name.replace(/\s/g, '').match(/^(급성심근경색|허혈성심장질환)진단(?:비)?(?:담보)?(?:\(갱신형\))?$/);
     return heart ? heart[1] + ' 진단비' : name;
   }
+  function majorCancerCategory(name) {
+    var key = String(name || '').replace(/\s/g, '');
+    if (/하이클래스|비급여암주요치료비/.test(key)) return '비급여 암주요치료비';
+    if (/암주요치료비/.test(key)) return '암주요치료비';
+    return '';
+  }
   function cancerMiddleGroup(name) {
     var text = String(name || '').replace(/\s+/g, '');
     if (!text) return '';
-    if (/암주요치료비/.test(text)) return '치료비3';
+    if (majorCancerCategory(name)) return majorCancerCategory(name);
     if (/로봇암수술비|표적항암약물치료비|양성자방사선치료비|세기조절방사선치료비|카티.*항암약물치료비|중입자방사선치료비/.test(text)) return '치료비2';
     if (/항암(?:방사선.*약물|약물.*방사선)치료비|암수술비/.test(text)) return '치료비1';
     if (/암.*진단|유사암.*진단/.test(text)) return '진단비';
@@ -170,10 +175,26 @@
       next.legacyRejectedRows = (next.legacyRejectedRows || []).concat(rejected);
       next.rows = next.rows.filter(function (row) { return !isLegacyPdfNoise(row); });
     }
-    next.rows = (next.rows || []).map(function (r) { var row = Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, r); var canonical = ownerCoverageName(row.name); if (canonical !== row.name) { row.sourceNames = Array.from(new Set((row.sourceNames || []).concat(row.name))); row.name = canonical; } if (/암주요치료비/.test(row.name.replace(/\s/g, ''))) { row.section = '암'; row.group = '치료비3'; } if (row.section === '운전') row.section = '운전자'; if (row.section === '암') { var cancerGroup = cancerMiddleGroup(row.name); if (cancerGroup) row.group = cancerGroup; else if (/^치료비\s*[123]$/.test(row.group)) row.group = row.group.replace(/\s+/g, ''); } return row; });
+    // Recover names collapsed by the previous taxonomy release; never overwrite edited names.
+    next.rows = (next.rows || []).flatMap(function (row) {
+      if (!/^(?:암주요\s*치료비\(급여,?\s*비급여 포함\)|비급여\s*암주요\s*치료비)$/.test(row.name || '')) return [row];
+      var details = (row.sourceDetails || []).filter(function (d) { return majorCancerCategory(d.companyName); });
+      if (details.length) return details.map(function (detail, index) {
+        var restored = clone(row), product = next.products.find(function (p) { return p.contractKey === detail.contractKey; });
+        restored.id = index ? row.id + '-source-' + index : row.id;
+        restored.name = detail.companyName; restored.group = majorCancerCategory(detail.companyName);
+        restored.sourceDetails = [detail]; restored.sourceNames = [detail.companyName];
+        if (product) { restored.values = {}; restored.values[product.id] = detail.amount; restored.total = detail.amount; restored.valueSources = {}; restored.valueSources[product.id] = detail.provider; }
+        return restored;
+      });
+      var original = (row.sourceNames || []).find(function (name) { return majorCancerCategory(name) && name !== '비급여 암주요 치료비' && !/^암주요\s*치료비\(급여/.test(name); });
+      if (original) row.name = original;
+      return [row];
+    });
+    next.rows = (next.rows || []).map(function (r) { var row = Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, r); var canonical = ownerCoverageName(row.name); if (canonical !== row.name) { row.sourceNames = Array.from(new Set((row.sourceNames || []).concat(row.name))); row.name = canonical; } if (majorCancerCategory(row.name)) { row.section = '암'; row.group = majorCancerCategory(row.name); } if (row.section === '운전') row.section = '운전자'; if (row.section === '암') { var cancerGroup = cancerMiddleGroup(row.name); if (cancerGroup) row.group = cancerGroup; else if (/^치료비\s*[123]$/.test(row.group)) row.group = row.group.replace(/\s+/g, ''); } return row; });
     var mappedOwnerRows = new Set();
     next.rows.forEach(function (row) {
-      if (mappedOwnerRows.has(row) || !/암주요치료비|급성심근경색|허혈성심장질환/.test(row.name.replace(/\s/g, '')) || (!hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))) return;
+      if (mappedOwnerRows.has(row) || !/급성심근경색|허혈성심장질환/.test(row.name.replace(/\s/g, '')) || (!hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))) return;
       var target = next.rows.find(function (candidate) { return candidate !== row && !mappedOwnerRows.has(candidate) && candidate.section === row.section && coverageMatchKey(candidate.name) === coverageMatchKey(row.name) && ((!hasEnrolledAmount(candidate.total) && !Object.values(candidate.values).some(hasEnrolledAmount) && !(candidate.sourceDetails || []).length) || (/^(급성심근경색|허혈성심장질환) 진단비$/.test(row.name) && Object.values(candidate.values).some(hasEnrolledAmount) && Object.keys(row.values).filter(function (id) { return hasEnrolledAmount(row.values[id]); }).every(function (id) { return !hasEnrolledAmount(candidate.values[id]); }))); });
       if (!target) return;
       var targetId = target.id, targetHidden = target.hidden, targetSelected = target.selected, targetGroup = target.group;
@@ -206,7 +227,7 @@
     });
     next.rows = next.rows.filter(function (row) { return !mappedCombined.has(row); });
     next.rows = normalizeSilsonRows(next.rows, next.products);
-    var cancerPositions = [], cancerRows = [], cancerOrder = { '진단비': 0, '치료비1': 1, '치료비2': 2, '치료비3': 3 };
+    var cancerPositions = [], cancerRows = [], cancerOrder = { '진단비': 0, '치료비1': 1, '치료비2': 2, '치료비3': 3, '암주요치료비': 4, '비급여 암주요치료비': 5 };
     next.rows.forEach(function (row, index) { if (row.section === '암') { cancerPositions.push(index); cancerRows.push(row); } });
     cancerRows.sort(function (a, b) { return (Object.prototype.hasOwnProperty.call(cancerOrder, a.group) ? cancerOrder[a.group] : 99) - (Object.prototype.hasOwnProperty.call(cancerOrder, b.group) ? cancerOrder[b.group] : 99); });
     cancerPositions.forEach(function (position, index) { next.rows[position] = cancerRows[index]; });
@@ -281,6 +302,7 @@
   // Parentheses contain benefit scope (대인/대물, 지급률, 지급일수), not decoration.
   function coverageSynonym(value) { return coverageSynonymExactIndex[synonymExactKey(value)] || null; }
   function coverageMatchKey(value) {
+    if (majorCancerCategory(value)) return synonymExactKey(value);
     var canonical = ownerCoverageName(value), entry = coverageSynonym(canonical), name = ownerCoverageName(entry ? entry.canonical : silsonName(canonical));
     return synonymExactKey(name).replace(/진단$/, '진단비').replace(/사망보험금$/, '사망');
   }
@@ -460,10 +482,10 @@
           // Composite company names require the row's specific credit label to distinguish benefits.
           if (/상해사망후유장해|상해질병후유장해|상해\+질병|2대질환/.test(cleaned) && creditName && !/기타|고액항암/.test(creditName)) mappingName = creditName;
         }
-        mappingName = ownerCoverageName(mappingName);
+        mappingName = majorCancerCategory(companyName) ? companyName : ownerCoverageName(mappingName);
         var ownerAdministrative = mappingName.replace(/(?:\(갱신형\))?(?:담보)?$/, '');
         if (coverageSynonym(ownerAdministrative)) mappingName = ownerAdministrative;
-        var synonym = coverageSynonym(mappingName), name = synonym ? synonym.canonical : mappingName;
+        var synonym = majorCancerCategory(mappingName) ? null : coverageSynonym(mappingName), name = synonym ? synonym.canonical : mappingName;
         var section = synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
         var existing = rows.find(function (r) { return r.name === name && !Object.prototype.hasOwnProperty.call(r.values, product.id); });
         var detail = { provider: 'kb-detail', page: pageIndex + 1, number: marker.text, companyName: companyName, creditName: creditName, amount: amount, contractKey: key };
@@ -549,7 +571,7 @@
         if (!Object.values(incoming.values).some(hasEnrolledAmount)) return;
       }
 
-      var synonym = coverageSynonym(incoming.name), targetSection = templateSection(synonym && synonym.section || incoming.section, incoming.name), nameKey = coverageMatchKey(incoming.name);
+      var synonym = majorCancerCategory(incoming.name) ? null : coverageSynonym(incoming.name), targetSection = templateSection(synonym && synonym.section || incoming.section, incoming.name), nameKey = coverageMatchKey(incoming.name);
       var candidates = nameKey ? base.rows.filter(function (row) { return !usedRows.has(row.id) && coverageMatchKey(row.name) === nameKey && (!isSilson(targetSection) || (isSilson(row.section) && (row.group === incoming.group || (row.group === '세대 확인' && !hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))))); }) : [];
       var existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(targetSection); }) || (candidates.length === 1 ? candidates[0] : null);
       if (!existing && isSilson(targetSection) && incoming.group === '세대 확인') {
