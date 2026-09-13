@@ -530,7 +530,7 @@
   }
   function importFile(customerId, input) {
     var files = Array.from(input && input.files || []); if (!files.length) return;
-    if (importBusy) { input.value = ''; return; }
+    if (importBusy || openingCustomer) { input.value = ''; return; }
     if (files.some(function (file) { return !/\.(xlsx?|pdf|png|jpe?g|webp)$/i.test(file.name); })) { api().coverageError('엑셀, PDF 또는 이미지 파일을 선택해 주세요.'); input.value = ''; return; }
     // Structured spreadsheets take precedence over OCR; other sources fill gaps, never add the same amount twice.
     files.sort(function (a, b) { return Number(!/\.xlsx?$/i.test(a.name)) - Number(!/\.xlsx?$/i.test(b.name)); });
@@ -553,6 +553,55 @@
     }).then(function () { rerenderTarget(customerId); }).catch(function (error) {
       hideImportProgress(); api().coverageError(error.message || String(error));
     }).finally(function () { hideImportProgress(); importBusy = false; input.value = ''; });
+  }
+  var customerWorkspaceDrafts = {}, openingCustomer = false;
+  function openCustomerWorkspace(customerId, savedRecord, existingWorking) {
+    if (importBusy || openingCustomer || (saveStates[WORKSPACE_KEY] || {}).tone === 'saving') return Promise.reject(new Error('현재 분석 또는 저장이 끝난 후 다시 열어 주세요.'));
+    var info = api().getCoverageCustomerInfo(customerId);
+    if (!info) return Promise.reject(new Error('고객 정보를 확인하지 못했습니다.'));
+    var current = drafts[WORKSPACE_KEY] || (existingWorking ? normalize(existingWorking) : null);
+    if (current && current.customerInfo && String(current.customerInfo.id) === String(customerId)) return Promise.resolve({ hasAnalysis: !!(current.source || current.products.length) });
+    openingCustomer = true;
+    var preserve = Promise.resolve().then(function () { return current ? api().saveCoverageWorkspaceDraft(clone(current), null) : null; });
+    return Promise.resolve(preserve).then(function () {
+      if (current && current.customerInfo && current.customerInfo.id) customerWorkspaceDrafts[current.customerInfo.id] = clone(current);
+      var record = customerWorkspaceDrafts[customerId] || savedRecord;
+      if (!record) {
+        record = normalize(api().getCoverageBaseTemplate() || workspaceStarter());
+        record.products = []; record.source = null; delete record.sourceItemId; delete record.customerInfo;
+        record.rows.forEach(function (row) { row.values = {}; row.total = ''; row.recommended = ''; row.status = ''; row.difference = ''; row.hidden = false; row.selected = false; delete row.importConflicts; delete row.sourceTotal; });
+      } else record = clone(record);
+      record.customerInfo = Object.assign({}, info, record.customerInfo || {}, { id: customerId });
+      delete record._starter; delete record._templateSeed;
+      reset(WORKSPACE_KEY, record); coverageFilter(WORKSPACE_KEY).sections = []; delete saveStates[WORKSPACE_KEY];
+      return { hasAnalysis: !!(record.source || record.products.length) };
+    }).finally(function () { openingCustomer = false; });
+  }
+  function importCustomerPdfs(customerId, fileIds) {
+    if (importBusy || openingCustomer) return Promise.reject(new Error('현재 분석이 끝난 후 다시 시도해 주세요.'));
+    var base = clone(draft(WORKSPACE_KEY));
+    if (!base.customerInfo || String(base.customerInfo.id) !== String(customerId)) return Promise.reject(new Error('분석할 고객과 현재 작업표의 고객이 다릅니다.'));
+    importBusy = true; showImportProgress('첨부 PDF를 불러오고 있습니다.');
+    var records = [], refs = [], ids = Array.from(new Set(fileIds));
+    return Promise.all([loadCoverageSynonyms(), ids.reduce(function (job, id, index) {
+      return job.then(function () {
+        showImportProgress((index + 1) + ' / ' + ids.length + ' · 보장분석 중');
+        return api().loadCoveragePdfFile(id, customerId).then(function (source) {
+          refs.push({ id: id, name: source.name, type: 'pdf' });
+          return parseImportFile(new File([source.buffer], source.name, { type: 'application/pdf' }));
+        }).then(function (record) { records.push(record); });
+      });
+    }, Promise.resolve())]).then(function () {
+      if (!records.some(function (record) { return record.rows.length || record.products.length; })) throw new Error('PDF에서 보장 항목을 찾지 못했습니다. 원본 파일을 확인해 주세요.');
+      var oldRefs = (base.source && base.source.files || []).slice();
+      if (!oldRefs.length && base.sourceItemId) oldRefs.push({ id: base.sourceItemId, name: base.source && base.source.name || '' });
+      records.forEach(function (record) { base = mergeImportedRecord(base, record); });
+      var allRefs = oldRefs.concat(refs).filter(function (ref, index, list) { return !ref.id || list.findIndex(function (r) { return r.id === ref.id; }) === index; });
+      base.source = Object.assign({}, base.source, { files: allRefs, name: allRefs.map(function (r) { return r.name || ''; }).filter(Boolean).join(' · ') });
+      base.sourceItemId = allRefs[0] && allRefs[0].id;
+      showImportProgress('분석한 작업표를 저장하고 있습니다.');
+      return api().saveCoverageWorkspaceDraft(base, null).then(function (saved) { reset(WORKSPACE_KEY, saved || base); rerenderTarget(WORKSPACE_KEY); });
+    }).finally(function () { importBusy = false; hideImportProgress(); });
   }
   function visibleProducts(d) { return d.products.filter(function (p) { return !p.hidden || d.showHiddenProducts; }); }
   function summaryHtml(d) {
@@ -674,13 +723,20 @@
     var info = customerHeaderInfo(customerId, d);
     return '<div class="iw-ca-name-entry"><input aria-label="고객명" placeholder="고객명" value="' + esc(info.name || '') + '" oninput="OSInsuworkCoverage.setCustomerInfo(\'' + esc(customerId) + '\',\'name\',this.value)">' + (customerId === WORKSPACE_KEY ? '<button type="button" class="iw-ca-customer-pick" onclick="OSInsuwork.openCoverageCustomerPicker(false)">고객 선택</button>' : '') + '</div><input type="date" aria-label="생년월일" value="' + esc(info.birthDate || '') + '" oninput="OSInsuworkCoverage.setCustomerInfo(\'' + esc(customerId) + '\',\'birthDate\',this.value)"><span class="iw-ca-insurance-age">' + esc(customerAge(info)) + '</span>' + (d.sourceItemId || d.source && (d.source.itemId || (d.source.files || []).length) ? '<button type="button" class="iw-ca-original" onclick="OSInsuworkCoverage.openSources(\'' + esc(customerId) + '\')">원본 파일 보기</button>' : '');
   }
+  function syncWorkspaceCustomerControls() {
+    var panel = panelFor(WORKSPACE_KEY), info = draft(WORKSPACE_KEY).customerInfo || {};
+    if (!panel) return;
+    var save = panel.querySelector('[data-ca-save="customer"]'), extra = panel.querySelector('[data-ca-extra-import]');
+    if (save) { save.textContent = info.id && info.name ? info.name + ' 고객에게 저장' : '고객에게 저장'; save.dataset.defaultLabel = save.textContent; }
+    if (extra) extra.hidden = !info.id;
+  }
   function setCustomerInfo(customerId, key, value) {
     var d = draft(customerId); d.customerInfo = Object.assign({}, customerHeaderInfo(customerId, d)); d.customerInfo[key] = value; if (key === 'name' || key === 'birthDate') delete d.customerInfo.id;
-    var panel = panelFor(customerId), age = panel && panel.querySelector('.iw-ca-insurance-age'); if (age) age.textContent = customerAge(d.customerInfo);
+    var panel = panelFor(customerId), age = panel && panel.querySelector('.iw-ca-insurance-age'); if (age) age.textContent = customerAge(d.customerInfo); if (customerId === WORKSPACE_KEY) syncWorkspaceCustomerControls();
   }
   function selectHeaderCustomer(id) {
     var d = draft(WORKSPACE_KEY); d.customerInfo = id && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(id) : {};
-    var panel = panelFor(WORKSPACE_KEY), header = panel && panel.querySelector('.iw-ca-customer-header'); if (header) header.innerHTML = customerHeaderHtml(WORKSPACE_KEY, d);
+    var panel = panelFor(WORKSPACE_KEY), header = panel && panel.querySelector('.iw-ca-customer-header'); if (header) header.innerHTML = customerHeaderHtml(WORKSPACE_KEY, d); syncWorkspaceCustomerControls();
   }
   function updatePremiumHeader(customerId) {
     var panel = panelFor(customerId), header = panel && panel.querySelector('.iw-ca-premium-summary'); if (header) header.textContent = premiumSummary(visibleProducts(draft(customerId)));
@@ -798,9 +854,11 @@
     var resetButton = '<button type="button" class="iw-btn" data-ca-save="reset" onclick="OSInsuworkCoverage.resetToBaseTemplate()">기본 양식으로 초기화</button>';
     var copyButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + WORKSPACE_KEY + '\',false)">선택 화면 복사</button>';
     var saveButton = '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">보장분석 저장</button>';
+    var customer = draft(WORKSPACE_KEY).customerInfo || {};
     var templateButton = '';
-    var orderedButtons = templateButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">고객에게 저장</button>';
-    return markup.replace(productButton, resetButton + productButton).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
+    var extraImport = '<button type="button" class="iw-btn" data-ca-extra-import' + (customer.id ? '' : ' hidden') + ' onclick="OSInsuwork.openCoverageAttachmentPicker(OSInsuworkCoverage.headerCustomerId())">자료 추가 분석</button>';
+    var orderedButtons = templateButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">' + esc(customer.id && customer.name ? customer.name + ' 고객에게 저장' : '고객에게 저장') + '</button>';
+    return markup.replace(productButton, resetButton + productButton + extraImport).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
   }
   var exposed = {
     toggleCoverageFilters: function (customerId) { var filter = coverageFilter(customerId); filter.open = !filter.open; if (!filter.open) filter.sections = []; rerender(customerId); },
@@ -809,7 +867,7 @@
     startNameResize: startNameResize, resetNameColumn: resetNameColumn,
     resizeNameColumn: resizeNameColumn,
     toggleWorkspaceExpanded: toggleWorkspaceExpanded,
-    html: html, workspaceHtml: workspaceHtml, reset: reset, importFile: importFile,
+    html: html, workspaceHtml: workspaceHtml, reset: reset, importFile: importFile, openCustomerWorkspace: openCustomerWorkspace, importCustomerPdfs: importCustomerPdfs,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); if (key === 'premium') updatePremiumHeader(customerId); },
     setRow: function (customerId, id, key, value) { setPath(customerId, 'row', id, key, value); }, setMergedField: setMergedField,
@@ -828,8 +886,8 @@
     save: function (customerId) { return saveRecord(customerId, false); },
     saveWorkspace: function () { return saveRecord(WORKSPACE_KEY, false); },
     openSources: function (customerId) { return api().openCoverageSources(draft(customerId)); },
-    saveWorkspaceToCustomer: function () { var d = clone(draft(WORKSPACE_KEY)); if (!d.customerInfo || !d.customerInfo.id) return api().openCoverageCustomerPicker(true); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString(); setSaveState(WORKSPACE_KEY, 'saving', '선택 고객에게 저장 중…'); Promise.resolve().then(function () { return api().saveCoverageWorkspaceToCustomer(d); }).then(function () { setSaveState(WORKSPACE_KEY, 'saved', '선택 고객에게 저장 완료'); }).catch(function (e) { var message = e.message || String(e); setSaveState(WORKSPACE_KEY, 'error', /고객/.test(message) ? '표의 고객명에서 저장할 고객을 선택해 주세요' : '저장 실패 · 다시 시도해 주세요'); api().coverageError(message); }); },
-    importExistingPdf: function (customerId, fileId) { Promise.all([api().loadCoveragePdfFile(fileId), loadCoverageSynonyms()]).then(function (results) { var file = results[0]; return loadPdfJs().then(function () { return window.pdfjsLib.getDocument({ data: file.buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return { file: file, record: parsePdfItems(pages, file.name) }; }); }).then(function (result) { var merged = mergeImportedRecord(draft(customerId), result.record); reset(customerId, merged); return api().saveCoverageAnalysis(customerId, merged, null, fileId); }).then(function () { rerender(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
+    saveWorkspaceToCustomer: function () { var d = clone(draft(WORKSPACE_KEY)); if (!d.customerInfo || !d.customerInfo.id) return api().openCoverageCustomerPicker(true); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString(); setSaveState(WORKSPACE_KEY, 'saving', '선택 고객에게 저장 중…'); return Promise.resolve().then(function () { return api().saveCoverageWorkspaceToCustomer(d); }).then(function () { setSaveState(WORKSPACE_KEY, 'saved', '선택 고객에게 저장 완료'); }).catch(function (e) { var message = e.message || String(e); setSaveState(WORKSPACE_KEY, 'error', /고객/.test(message) ? '표의 고객명에서 저장할 고객을 선택해 주세요' : '저장 실패 · 다시 시도해 주세요'); api().coverageError(message); }); },
+    importExistingPdf: function (customerId, fileId) { return api().openCustomerCoverage(customerId, fileId); },
     copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function () { api().coverageNotice('선택한 보장분석 표를 이미지로 복사했습니다. 카카오톡에 붙여넣어 주세요.'); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
   };
   window.OSInsuworkCoverage = exposed;
