@@ -165,7 +165,56 @@
   function isLegacyPdfNoise(row) {
     if ((row.sourceDetails || []).length || Object.values(row.values || {}).some(hasEnrolledAmount)) return false;
     var name = String(row.name || ''), units = name.match(/(?:^|\s)(?:만|억|원)(?=\s|$)/g) || [];
-    return units.length >= 2 || (units.length && /충분|부족|미가입|^정액\s|^실손\s/.test(name)) || /^(?:--[\s~:.-]*|※ 기준담보\/권장금액|수도GA사업단|\(세 [남여]자\)|원$)/.test(name) || /가입일자 : --|월납\/년\/세만기/.test(name);
+    if (!name.trim()) return !!String(row.total || '').trim(); // Keep intentional empty template rows.
+    return units.length >= 2 || /^(?:[\s억만원()+.,~%-]+)$/.test(name) ||
+      /(?:충분|부족|미가입)/.test(name) && /[+-]|(?:만|억)/.test(name) ||
+      /(?:--|\.\.\s*~)|(?:년납|월납).*?(?:년|세)|년납\/세|^세 만기$|건\s+원\s+건/.test(name) ||
+      /(?:상해|질병)%|\(회한\)|연간회한|\(주미만|~\s*급치아/.test(name) ||
+      /^(?:한화손보|삼성화재|DB손보|현대해상|메리츠화재)$/.test(name.trim()) ||
+      /(?:종합보험|운전자보험|실손의료비보험|한화생명 세까지|무배당 메리츠)/.test(name) ||
+      /^(?:※ 기준담보\/권장금액|수도GA사업단|\(세 [남여]자\))|가입일자 : --|월납\/년\/세만기/.test(name);
+  }
+  // Placement only: original rider names and scope are never rewritten here.
+  function importedPlacement(name) {
+    var key = String(name || '').replace(/\s/g, '');
+    var rules = [
+      [/^(?:5대)?골절.*진단/, '골절·화상', '골절진단'],
+      [/^(?:5대)?골절.*수술/, '골절·화상', '골절수술'],
+      [/^깁스치료/, '골절·화상', '깁스치료'],
+      [/^(?:중대한|중증|치명적)?화상|^치명적화상부식/, '골절·화상', '화상진단'],
+      [/가족.*배상책임|일상생활.*배상책임/, '배상책임', ''],
+      [/보복운전|교통사고|자동차사고/, '운전자', ''],
+      [/후유장해|장해연금/, '장해', ''],
+      [/^허혈(?:성)?심장질환.*수술/, '심장', '치료비1'],
+      [/^뇌혈관질환.*수술/, '뇌', '치료비1']
+    ];
+    for (var i = 0; i < rules.length; i++) if (rules[i][0].test(key)) return { section: rules[i][1], group: rules[i][2] };
+    return null;
+  }
+  function placeImportedRows(record) {
+    var templates = record.rows.filter(function (row) { return !(row.sourceDetails || []).length && row.group; });
+    record.rows.forEach(function (row) {
+      if (!(row.sourceDetails || []).length || (row.group && row.group !== '분류 확인' && row.section !== '기타')) return;
+      var placement = importedPlacement(row.name);
+      if (placement) {
+        var section = placement.section;
+        if (section === '배상책임' && !record.rows.some(function (r) { return r.section === section; }) && record.rows.some(function (r) { return r.section === '일상'; })) section = '일상';
+        row.section = section;
+        var key = String(row.name).replace(/\s/g, '');
+        var group = placement.group;
+        if (section === '장해') group = /교통/.test(key) ? '교통장해' : /질병/.test(key) ? '질병후유장해' : /재해/.test(key) ? '재해장해' : /상해/.test(key) ? '상해후유장해' : '';
+        if (!group) { var anchor = templates.find(function (r) { return r.section === section && coverageMatchKey(r.name) === coverageMatchKey(row.name); }); if (anchor) group = anchor.group; }
+        row.group = group || '분류 확인';
+      } else if (!row.group) row.group = '분류 확인';
+    });
+    // Keep each group together, using the form's existing order within each section.
+    var ranks = {}, sections = [];
+    record.rows.forEach(function (row) { if (sections.indexOf(row.section) < 0) sections.push(row.section); var groups = ranks[row.section] || (ranks[row.section] = []); if (groups.indexOf(row.group) < 0) groups.push(row.group); });
+    record.rows = record.rows.map(function (row, i) { return {row:row,i:i}; }).sort(function (a,b) {
+      if (a.row.section !== b.row.section) return sectionOrder(a.row.section) - sectionOrder(b.row.section) || sections.indexOf(a.row.section) - sections.indexOf(b.row.section);
+      var groups = ranks[a.row.section], ar = a.row.group === '분류 확인' ? 10000 : groups.indexOf(a.row.group), br = b.row.group === '분류 확인' ? 10000 : groups.indexOf(b.row.group);
+      return ar-br || a.i-b.i;
+    }).map(function (item) { return item.row; });
   }
   function normalize(record) {
     var next = Object.assign(blankRecord(), clone(record));
@@ -232,6 +281,7 @@
     cancerRows.sort(function (a, b) { return (Object.prototype.hasOwnProperty.call(cancerOrder, a.group) ? cancerOrder[a.group] : 99) - (Object.prototype.hasOwnProperty.call(cancerOrder, b.group) ? cancerOrder[b.group] : 99); });
     cancerPositions.forEach(function (position, index) { next.rows[position] = cancerRows[index]; });
     next.rows = next.rows.map(function (row, index) { return { row: row, index: index }; }).sort(function (a, b) { return sectionOrder(a.row.section) - sectionOrder(b.row.section) || (isSilson(a.row.section) && isSilson(b.row.section) ? (parseInt(a.row.group, 10) || 9) - (parseInt(b.row.group, 10) || 9) : 0) || a.index - b.index; }).map(function (item) { return item.row; });
+    placeImportedRows(next);
     return next;
   }
   function draft(customerId, record) {
@@ -276,10 +326,10 @@
     return new Promise(function (resolve, reject) { var s = document.createElement('script'); s.src = src; s.onload = resolve; s.onerror = function () { reject(new Error('분석 모듈을 불러오지 못했습니다.')); }; document.head.appendChild(s); });
   }
   function loadSheetJs() { if (!sheetJsPromise) sheetJsPromise = loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', function () { return !!window.XLSX; }); return sheetJsPromise; }
-  function loadOfficeCrypto() { if (!officeCryptoPromise) officeCryptoPromise = loadScript('/js/vendor/officecrypto.min.js?v=20260913terms1', function () { return !!window.OSOfficeCrypto; }); return officeCryptoPromise; }
+  function loadOfficeCrypto() { if (!officeCryptoPromise) officeCryptoPromise = loadScript('/js/vendor/officecrypto.min.js?v=20260913cleanup1', function () { return !!window.OSOfficeCrypto; }); return officeCryptoPromise; }
   function synonymExactKey(value) { return String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, ''); }
   function loadCoverageSynonyms() {
-    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260913terms1', { cache: 'no-store' }).then(function (response) {
+    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260913cleanup1', { cache: 'no-store' }).then(function (response) {
       if (!response.ok) throw new Error('담보명 동의어 사전을 불러오지 못했습니다.');
       return response.json();
     }).then(function (data) {

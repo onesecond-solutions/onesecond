@@ -31,3 +31,16 @@ test('collapsed saved cancer rows recover original names and per-policy amounts'
 });
 
 test('heart diagnosis rider spelling merges distinct policies but not overlapping values',()=>{const a=setup();const r=a.normalize({rows:[{id:'t',section:'심장',name:'급성심근경색 진단비',values:{a:'1000만'}},{id:'p',section:'심장',name:'급성심근경색증진단담보',values:{a:'',b:'1000만'}}]});assert.equal(r.rows.length,1);assert.equal(r.rows[0].total,'2,000만');assert.equal(Object.keys(r.rows[0].values).length,2);assert.equal(a.normalize(r).rows.length,1);});
+
+test('legacy header fragments quarantine reversibly without discarding legitimate total-only or evidenced benefits',()=>{
+ const a=setup();const bad=['','만','억만','충분 - 미가입 -만','( . )','종합보험 무배당','상해%미만후유장해 - -','만 -- --','년납/세 만기','암치료비(연간회한)'];
+ const r=a.normalize({rows:bad.map((name,i)=>({id:'bad'+i,name,total:'2601',values:{}})).concat([{name:'신규 특약',total:'300만'},{name:'',total:''},{name:'암치료비(연간회한)',total:'100만',values:{p:'100만'},sourceDetails:[{provider:'kb-detail'}]}])});
+ assert.equal(r.legacyRejectedRows.length,bad.length);assert.equal(r.rows.length,3);assert.equal(a.normalize(r).legacyRejectedRows.length,bad.length);
+});
+test('lower imported riders keep original names and amounts under stable template groups',()=>{
+ const a=setup();const names=['5대골절진단담보','깁스치료담보','골절진단비(치아포함)','보복운전피해위로금','해석할수없는새특약'];
+ const r=a.normalize({rows:[{id:'t',name:'5대골절 진단비',section:'골절·화상',group:'골절진단',values:{}}].concat(names.map((name,i)=>({id:'p'+i,name,section:'기타',group:'',values:{p:'20만'},sourceDetails:[{provider:'kb-detail',companyName:name}]})))});
+ names.forEach(name=>assert.ok(r.rows.some(row=>row.name===name&&row.values.p==='20만')));
+ assert.equal(r.rows.find(row=>row.name===names[0]).group,'골절진단');assert.equal(r.rows.find(row=>row.name===names[1]).group,'깁스치료');assert.equal(r.rows.find(row=>row.name===names[4]).group,'분류 확인');
+ assert.equal(JSON.stringify(a.normalize(r)),JSON.stringify(r));
+});
