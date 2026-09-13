@@ -370,25 +370,57 @@
     products.forEach(function (p) { delete p.sourceColumn; });
     var record = makeRecord(fileName, 'xlsx', products, rows); record.customerInfo = workbookCustomerInfo(workbook, fileName); return record;
   }
-  function parsePdfItems(pages, fileName) {
-    var lines = [];
-    pages.forEach(function (items) {
-      var buckets = {};
-      items.forEach(function (item) { var y = Math.round((item.transform && item.transform[5]) || 0); (buckets[y] || (buckets[y] = [])).push(item); });
-      Object.keys(buckets).sort(function (a, b) { return Number(b) - Number(a); }).forEach(function (y) { lines.push(buckets[y].sort(function (a, b) { return ((a.transform && a.transform[4]) || 0) - ((b.transform && b.transform[4]) || 0); }).map(function (i) { return i.str; }).join(' ').trim()); });
+  // KB GA report v1: coordinates are normalized to the observed A4 layout.
+  // Summary/diagnosis pages are deliberately excluded: their first amount is a recommendation.
+  function parseKbPdf(pages, fileName) {
+    var products = [], rows = [], seen = new Set(), detailPages = 0;
+    pages.forEach(function (page, pageIndex) {
+      var items = (page.items || page).filter(function (i) { return i.str && i.str.trim(); }).map(function (i) {
+        return { text: i.str.trim(), x: i.transform[4] * 595 / (page.width || 595), y: i.transform[5] * 842 / (page.height || 842) };
+      });
+      if (!items.some(function (i) { return /상품별\s*가입담보상세/.test(i.text); })) return;
+      detailPages++;
+      function area(x1, x2, y1, y2) { return items.filter(function (i) { return i.x >= x1 && i.x < x2 && i.y >= y1 && i.y <= y2; }).sort(function (a, b) { return Math.abs(a.y - b.y) > 3 ? b.y - a.y : a.x - b.x; }).map(function (i) { return i.text; }).join(' ').trim(); }
+      var company = area(30, 400, 746, 758), productName = area(30, 570, 714, 740).replace(/\s*\(\d+\/\d+\)\s*$/, ''), date = area(400, 570, 746, 758).match(/\d{4}-\d{2}-\d{2}/), premium = area(480, 575, 663, 678).replace(/\s/g, '');
+      var markers = items.filter(function (i) { return i.x >= 30 && i.x < 58 && i.y > 65 && i.y < 650 && /^\d+$/.test(i.text); }).sort(function (a,b) { return b.y-a.y; });
+      if (!company || !productName || !date || !/^[\d,]+원$/.test(premium) || !markers.length) throw new Error('KB PDF 상세표 형식이 달라 분석을 중단했습니다. 기존 작업표는 유지됩니다.');
+      var key = company + '|' + productName + '|' + date[0], product = products.find(function (p) { return p.contractKey === key; });
+      if (!product) { product = { id: uid('product'), company: company, product: productName, premium: premium, payment: area(400,575,686,701), contractDate: date[0], contractKey: key, coverageAuthority: 'kb-detail' }; products.push(product); }
+      markers.forEach(function (marker, index) {
+        var bottom = index + 1 < markers.length ? (marker.y + markers[index + 1].y) / 2 : marker.y - 9;
+        var companyName = area(88, 362, bottom, marker.y + 5), creditName = area(362, 510, bottom, marker.y + 5), amount = area(510, 575, bottom, marker.y + 5).replace(/\s/g, '');
+        if (!companyName || !/^(?:[\d,]+억)?(?:[\d,]+만)?(?:[\d,]+원?)?$/.test(amount) || !amount) throw new Error('KB PDF 상세 담보 또는 가입금액을 읽지 못했습니다. 기존 작업표는 유지됩니다.');
+        var identity = key + '|' + marker.text;
+        if (seen.has(identity)) return;
+        seen.add(identity);
+        var cleaned = companyName.replace(/^간편고지\([^)]*\)\s*/, '').trim(), mappingName = cleaned;
+        // Only known individual treatments lose administrative suffixes. Coverage restrictions stay in sourceDetails.
+        var treatment = cleaned.match(/^(카티\(CAR-T\)항암약물허가치료비|표적항암약물허가치료비|항암세기조절방사선치료비|항암양성자방사선치료비|항암중입자방사선치료비|항암방사선약물치료비)(?:\(|$)/i);
+        if (treatment) mappingName = treatment[1];
+        else if (/^(암진단비|암수술비|질병사망(?:\(\d+\))?|상해사망후유장해)$/.test(cleaned) && creditName) mappingName = creditName;
+        var synonym = coverageSynonym(mappingName), name = synonym ? synonym.canonical : mappingName;
+        var section = synonym ? synonym.section : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
+        var existing = rows.find(function (r) { return r.name === name && !Object.prototype.hasOwnProperty.call(r.values, product.id); });
+        var detail = { provider: 'kb-detail', page: pageIndex + 1, number: marker.text, companyName: companyName, creditName: creditName, amount: amount, contractKey: key };
+        if (!existing) { existing = { id: uid('coverage'), section: section, group: synonym && synonym.group || '', name: name, total: '', values: {}, sourceNames: [], sourceDetails: [], valueSources: {} }; rows.push(existing); }
+        existing.values[product.id] = amount; existing.valueSources[product.id] = 'kb-detail'; existing.sourceNames.push(companyName); existing.sourceDetails.push(detail);
+      });
     });
-    var sections = ['암', '뇌', '뇌혈관', '심장', '실손', '치아', '운전', '재산', '사망', '수술', '입원', '장애', '간병', '치매', '일상', '진단'];
-    var section = '', rows = [];
-    lines.filter(Boolean).forEach(function (line) {
-      var found = sections.find(function (s) { return line === s || line.indexOf(s + ' ') === 0; });
-      if (found && line.length < 15) { section = found; return; }
-      if (!section || line.length < 2 || /^(페이지|고객|보험료|보험회사|상품명)/.test(line)) return;
-      var amounts = line.match(/(?:MAX\s*)?[\d,]+(?:만원|천원|원)?/gi) || [];
-      if (!amounts.length && !/(진단비|치료비|수술비|입원|후유장해|배상|사망|간병)/.test(line)) return;
-      rows.push({ id: uid('coverage'), section: section, group: '', name: line.replace(/(?:MAX\s*)?[\d,]+(?:만원|천원|원)?/gi, '').trim().slice(0, 120), recommended: '', status: '', total: amounts[0] || '', difference: '', values: {}, hidden: false, selected: false });
+    if (!detailPages) return null;
+    var result = makeRecord(fileName, 'pdf', products, rows);
+    result.source.provider = 'kb-detail'; result.source.parserVersion = 1;
+    var firstDetail = pages.find(function (p) { return (p.items || p).some(function (i) { return /상품별\s*가입담보상세/.test(i.str); }); });
+    var first = firstDetail.items || firstDetail;
+    result.customerInfo = extractedCustomerInfo(first.map(function(i) { return i.str; }), fileName);
+    var named = first.find(function (i) { return i.transform[4] >= 25 && i.transform[4] < 60 && i.transform[5] > 780 && /^[가-힣A-Za-z○●*Ｏ]{2,20}$/.test(i.str); });
+    if (named) result.customerInfo.name = named.str;
+    return result;
+  }
+  function readPdfPages(file) {
+    return loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) {
+      try { var pages = []; for (var i = 1; i <= pdf.numPages; i++) { var page = await pdf.getPage(i); pages.push({items: (await page.getTextContent()).items || [], width: page.view[2] - page.view[0], height: page.view[3] - page.view[1]}); } return pages; }
+      finally { if (pdf.destroy) await pdf.destroy(); }
     });
-    if (!rows.length) throw new Error('PDF에서 표를 자동 인식하지 못했습니다. 스캔 PDF라면 OCR 처리 후 직접 행을 추가해 주세요.');
-    return { version: 1, customerInfo: extractedCustomerInfo(lines, fileName), source: { name: fileName, type: 'pdf', importedAt: new Date().toISOString(), needsReview: true }, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: new Date().toISOString() };
   }
   function matchKey(value) {
     var key = String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, '').replace(/질환/g, '').replace(/의료비/g, '실손비').replace(/일반암진단비|암진단비(?:ⅱ|ii)?유사암제외/g, '일반암진단').replace(/소액유사암/g, '유사암').replace(/항암약물방사선/g, '항암방사선약물').replace(/허가치료/g, '치료').replace(/암수술비/g, '암수술');
@@ -413,7 +445,7 @@
   function conflictText(row) { return (row.importConflicts || []).map(function (item) { return '금액 확인: ' + item.kept + ' / 원본 ' + item.incoming + ' (' + item.source + ')'; }).join(' · '); }
   function productMatchKey(value) { return synonymExactKey(value).replace(/^(?:무배당|무)/, ''); }
   function mergeImportedRecord(baseRecord, importedRecord) {
-    var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {}, productOccurrences = {}, usedRows = new Set();
+    var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {}, productOccurrences = {}, usedRows = new Set(), blockedProducts = new Set();
     base.customerInfo = mergeCustomerInfo(base.customerInfo, imported.customerInfo);
     function templateSection(section, name) {
       var present = new Set(base.rows.map(function (r) { return r.section; }));
@@ -434,11 +466,24 @@
         var partialMatches = base.products.filter(function (product) { return productMatchKey(product.product) === productMatchKey(incoming.product) && (!product.company || !incoming.company); });
         if (partialMatches.length === 1 && occurrence === 0) existing = partialMatches[0];
       }
+      if (existing && existing.coverageAuthority === 'kb-detail' && incoming.coverageAuthority !== 'kb-detail') blockedProducts.add(incoming.id);
+      if (existing && incoming.coverageAuthority === 'kb-detail') {
+        // Replace imported values for this exact contract; preserve the template and other contracts.
+        base.rows.forEach(function (r) { if (Object.prototype.hasOwnProperty.call(r.values, existing.id)) { delete r.values[existing.id]; r.total = ''; } });
+        ['company', 'product', 'premium', 'payment', 'contractDate', 'contractKey', 'coverageAuthority'].forEach(function (field) { if (incoming[field]) existing[field] = incoming[field]; });
+      }
       if (!existing) { existing = clone(incoming); existing.id = uid('product'); base.products.push(existing); }
       else { ['company', 'product', 'renewal', 'premium', 'payment', 'generation'].forEach(function (field) { if (!existing[field] && incoming[field]) existing[field] = incoming[field]; }); }
       productIds[incoming.id] = existing.id;
     });
     imported.rows.forEach(function (incoming) {
+      if (blockedProducts.size) {
+        incoming = clone(incoming);
+        Object.keys(incoming.values || {}).forEach(function (id) { if (blockedProducts.has(id)) delete incoming.values[id]; });
+        incoming.total = '';
+        if (!Object.values(incoming.values).some(hasEnrolledAmount)) return;
+      }
+
       var synonym = coverageSynonym(incoming.name), targetSection = templateSection(synonym && synonym.section || incoming.section, incoming.name), nameKey = coverageMatchKey(incoming.name);
       var candidates = nameKey ? base.rows.filter(function (row) { return !usedRows.has(row.id) && coverageMatchKey(row.name) === nameKey && (!isSilson(targetSection) || (isSilson(row.section) && (row.group === incoming.group || (row.group === '세대 확인' && !hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))))); }) : [];
       var existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(targetSection); }) || (candidates.length === 1 ? candidates[0] : null);
@@ -459,6 +504,10 @@
       }
       if (isSilson(targetSection) && incoming.group !== '세대 확인') existing.group = incoming.group;
       usedRows.add(existing.id);
+      if (incoming.sourceDetails) existing.sourceDetails = (existing.sourceDetails || []).filter(function (d) { return !incoming.sourceDetails.some(function (n) { return n.contractKey === d.contractKey && n.number === d.number; }); }).concat(clone(incoming.sourceDetails));
+      existing.valueSources = existing.valueSources || {};
+      Object.keys(incoming.valueSources || {}).forEach(function (id) { if (productIds[id]) existing.valueSources[productIds[id]] = incoming.valueSources[id]; });
+
       existing.total = mergeAmount(existing, 'total', existing.total, incoming.total, imported.source);
       if (incoming.recommended !== '') existing.recommended = incoming.recommended;
       if (incoming.status !== '') existing.status = incoming.status;
@@ -523,11 +572,13 @@
     var ext = file.name.split('.').pop().toLowerCase();
     var passwordHint = {};
     if (/^xlsx?$/.test(ext)) return loadSheetJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return decryptWorkbook(buffer, file.name, passwordHint); }).then(function (buffer) { return applyWorkbookPasswordBirth(parseWorkbook(buffer, file.name), passwordHint); }).finally(function () { delete passwordHint.birthSix; });
-    return Promise.resolve().then(function () { return api().extractCoverageFile(file); }).then(function (data) { return recordFromStructured(data, file.name, ext); }).catch(function (error) {
-      if (ext !== 'pdf') throw error;
-      return loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); });
+    function structured() { return Promise.resolve().then(function () { return api().extractCoverageFile(file); }).then(function (data) { return recordFromStructured(data, file.name, ext); }); }
+    if (ext !== 'pdf') return structured();
+    return loadCoverageSynonyms().then(function () { return readPdfPages(file).catch(function () { return null; }); }).then(function (pages) {
+      var kb = pages && parseKbPdf(pages, file.name); return kb || structured();
     });
   }
+
   function importFile(customerId, input) {
     var files = Array.from(input && input.files || []); if (!files.length) return;
     if (importBusy || openingCustomer) { input.value = ''; return; }
