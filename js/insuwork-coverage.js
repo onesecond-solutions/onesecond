@@ -398,8 +398,14 @@
         var treatment = cleaned.match(/^(카티\(CAR-T\)항암약물허가치료비|표적항암약물허가치료비|항암세기조절방사선치료비|항암양성자방사선치료비|항암중입자방사선치료비|항암방사선약물치료비)(?:\(|$)/i);
         if (treatment) mappingName = treatment[1];
         else if (/^(암진단비|암수술비|질병사망(?:\(\d+\))?|상해사망후유장해)$/.test(cleaned) && creditName) mappingName = creditName;
+        if (!treatment) {
+          var administrative = mappingName.replace(/(?:\(갱신형\))?(?:담보)?$/, '');
+          if (coverageSynonym(administrative)) mappingName = administrative;
+          // Composite company names require the row's specific credit label to distinguish benefits.
+          if (/상해사망후유장해|상해질병후유장해|상해\+질병|2대질환/.test(cleaned) && creditName && !/기타|고액항암/.test(creditName)) mappingName = creditName;
+        }
         var synonym = coverageSynonym(mappingName), name = synonym ? synonym.canonical : mappingName;
-        var section = synonym ? synonym.section : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
+        var section = synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
         var existing = rows.find(function (r) { return r.name === name && !Object.prototype.hasOwnProperty.call(r.values, product.id); });
         var detail = { provider: 'kb-detail', page: pageIndex + 1, number: marker.text, companyName: companyName, creditName: creditName, amount: amount, contractKey: key };
         if (!existing) { existing = { id: uid('coverage'), section: section, group: synonym && synonym.group || '', name: name, total: '', values: {}, sourceNames: [], sourceDetails: [], valueSources: {} }; rows.push(existing); }
@@ -513,6 +519,14 @@
       if (incoming.status !== '') existing.status = incoming.status;
       if (incoming.difference !== '') existing.difference = incoming.difference;
       Object.keys(incoming.values || {}).forEach(function (incomingProductId) { var targetProductId = productIds[incomingProductId]; if (targetProductId && incoming.values[incomingProductId] !== '') existing.values[targetProductId] = mergeAmount(existing, targetProductId, existing.values[targetProductId], incoming.values[incomingProductId], imported.source); });
+    });
+    if (imported.source && imported.source.provider === 'kb-detail') base.rows.forEach(function (row) {
+      if (!Object.values(row.valueSources || {}).some(function (source) { return source === 'kb-detail'; })) return;
+      var amounts = Object.values(row.values || {}).filter(hasEnrolledAmount).map(amountKey);
+      if (amounts.length && amounts.every(function (amount) { return /^\d+(?:\.\d+)?$/.test(amount); })) {
+        var total = amounts.reduce(function (sum, amount) { return sum + Number(amount); }, 0);
+        row.total = total % 10000 === 0 ? (total / 10000).toLocaleString('ko-KR') + '만' : total.toLocaleString('ko-KR') + '원';
+      } else if (!amounts.length) row.total = '';
     });
     base.source = clone(imported.source); base.updatedAt = new Date().toISOString(); delete base._starter; return normalize(base);
   }
