@@ -1337,7 +1337,7 @@
     if (selected && rows.indexOf(selected) >= state.customersRenderLimit) rows = [selected].concat(rows.filter(function (item) { return item !== selected; }).slice(0, state.customersRenderLimit - 1));
     else rows = rows.slice(0, state.customersRenderLimit);
     var header = '<div class="iw-consult-columns" style="' + gridStyle + '">' + columns.map(function (column) { return '<span' + (column.key === 'name' ? ' class="iw-contract-name-head"' : '') + '>' + column.label + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
-    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '상담내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong class="iw-contract-name-cell">' + kakaoBulkToggleHtml('customer', item.id, values.name) + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span>' + familyBadgeHtml(item) + '</strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>'; }).join('');
+    var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '상담내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong class="iw-contract-name-cell">' + kakaoBulkToggleHtml('customer', item.id, values.name) + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span>' + familyBadgeHtml(item) + '</strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + (canUseCoverageAnalysis() ? '<span role="button" tabindex="0" class="iw-btn iw-consult-action-spacer" aria-label="' + esc(item.name || '고객') + ' 보장분석" onclick="event.stopPropagation();OSInsuwork.openCustomerCoverage(\'' + esc(item.id) + '\')" onkeydown="if(event.key===&quot;Enter&quot;||event.key===&quot; &quot;){event.preventDefault();event.stopPropagation();OSInsuwork.openCustomerCoverage(\'' + esc(item.id) + '\')}">보장분석</span>' : '<span class="iw-consult-action-spacer" aria-hidden="true"></span>') + '</button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
     var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
     return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>계약관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + kakaoBulkBarHtml('customer', rows) + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
@@ -3703,16 +3703,47 @@
     var customerId = record.customerInfo && record.customerInfo.id;
     if (!(state.data.customers || []).some(function (c) { return String(c.id) === String(customerId); })) customerId = null;
     if (!customerId) return Promise.reject(new Error('저장할 고객을 먼저 선택해 주세요.'));
-    return saveCoverageAnalysis(customerId, record, null, null).then(function (saved) { openCustomerFromEvent(customerId); if (typeof window.toast === 'function') window.toast('선택한 고객 카드에 보장분석·보험비교를 저장했습니다.'); return saved; });
+    return saveCoverageAnalysis(customerId, record, null, null).then(function (saved) { if (typeof window.toast === 'function') window.toast('선택한 고객 카드에 보장분석·보험비교를 저장했습니다.'); return saved; });
+  }
+  function customerCoveragePdfFiles(customerId) {
+    var roots = new Set((state.data.items || []).filter(function (entry) {
+      var p = entry.legacy_payload || {};
+      if (entry.owner_id !== currentUserId() || entry.deleted_at) return false;
+      if (String(p.customer_id || '') === String(customerId)) return true;
+      return p.attachment_root && p.consultation_id && (state.data.consultations || []).some(function (c) { return String(c.id) === String(p.consultation_id) && String(c.customer_id) === String(customerId); });
+    }).map(function (entry) { return String(entry.id); }));
+    return (state.data.items || []).filter(function (file) {
+      var p = file.legacy_payload || {};
+      return file.owner_id === currentUserId() && !file.deleted_at && file.storage_path && (/pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf') && (String(p.customer_id || '') === String(customerId) || roots.has(String(file.parent_id || '')));
+    });
+  }
+  function openCustomerCoverage(customerId, fileId) {
+    if (!canUseCoverageAnalysis() || !window.OSInsuworkCoverage || !getCoverageCustomerInfo(customerId)) return;
+    var item = coverageAnalysisItem(customerId), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    var workingItem = coverageWorkingItem(), working = workingItem && workingItem.legacy_payload && workingItem.legacy_payload.coverage_analysis;
+    return window.OSInsuworkCoverage.openCustomerWorkspace(customerId, record, working).then(function () {
+      forceCloseDialog(); go('coverage-analysis');
+      if (fileId || !record) openCoverageAttachmentPicker(customerId, fileId);
+    }).catch(function (error) { coverageError(error.message || String(error)); });
+  }
+  function openCoverageAttachmentPicker(customerId, preselectedId) {
+    if (!canUseCoverageAnalysis() || !getCoverageCustomerInfo(customerId)) return;
+    var files = customerCoveragePdfFiles(customerId), customer = getCoverageCustomerInfo(customerId);
+    var choices = files.map(function (file) { return '<label style="display:flex;gap:10px;align-items:center;margin:10px 0"><input type="checkbox" name="coverage-pdf" value="' + esc(file.id) + '"' + (preselectedId === file.id || files.length === 1 ? ' checked' : '') + '><span>' + esc(file.title || '보장분석.pdf') + '</span></label>'; }).join('');
+    dialog('<div class="iw-form"><h2>' + esc(customer.name || '고객') + ' · 자료 추가 분석</h2><p>분석할 PDF를 선택하세요. 기존 표에 보완하며 원본 파일은 그대로 연결합니다.</p><div id="iw-ca-attachment-choices">' + (choices || '<p>첨부된 PDF가 없습니다. 보장분석 화면의 파일 불러오기를 이용해 주세요.</p>') + '</div><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">닫기</button>' + (files.length ? '<button type="button" class="iw-btn primary" onclick="OSInsuwork.analyzeCoverageAttachments(\'' + esc(customerId) + '\')">선택 자료 분석</button>' : '') + '</div></div>');
+  }
+  function analyzeCoverageAttachments(customerId) {
+    if (!canUseCoverageAnalysis()) return;
+    var allowed = new Set(customerCoveragePdfFiles(customerId).map(function (file) { return String(file.id); }));
+    var ids = Array.from(document.querySelectorAll('#iw-ca-attachment-choices input:checked')).map(function (input) { return input.value; });
+    if (!ids.length || ids.some(function (id) { return !allowed.has(id); })) return coverageError('분석할 고객 PDF를 선택해 주세요.');
+    forceCloseDialog();
+    return window.OSInsuworkCoverage.importCustomerPdfs(customerId, ids).then(function () { coverageNotice('분석한 작업표를 저장했습니다. 정리 후 고객에게 저장해 주세요.'); }).catch(function (error) { coverageError(error.message || String(error)); });
   }
   function coverageAnalysisSectionHtml(customerId) {
     if (!canUseCoverageAnalysis() || !window.OSInsuworkCoverage || !customerId) return '';
-    var item = coverageAnalysisItem(customerId), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
-    if (!record) {
-      var templateItem = coverageWorkspaceItem(), template = templateItem && templateItem.legacy_payload && templateItem.legacy_payload.coverage_analysis;
-      if (template) { record = JSON.parse(JSON.stringify(template)); delete record.customerInfo; record.source = null; record.sourceItemId = null; record.updatedAt = ''; record._templateSeed = true; }
-    }
-    return window.OSInsuworkCoverage.html(customerId, record || null);
+    var item = coverageAnalysisItem(customerId), saved = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    return '<section><h3>보장분석·보험비교</h3><p>' + (saved ? esc(coverageAnalysisSummary(saved)) : '첨부 PDF로 고객 보장을 분석하고 비교표를 정리합니다.') + '</p><button type="button" class="iw-btn" onclick="OSInsuwork.openCustomerCoverage(\'' + esc(customerId) + '\')">' + (saved ? '보장분석 이어서 보기' : '보장분석 시작') + '</button></section>';
   }
   function rerenderCoverageAnalysis(customerId) {
     if (!canUseCoverageAnalysis()) return;
@@ -3739,10 +3770,10 @@
     var ready = existing ? updateOne('insuwork_items?id=eq.' + encodeURIComponent(existing.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), body) : writeOne('insuwork_items', Object.assign({ id: rootId, created_at: new Date().toISOString() }, body));
     return ready.then(function (saved) { upsertWorkspaceItem(saved); return uploadCoverageSources(sourceFile, function (file) { return uploadCoverageSource(customerId, rootId, file); }).then(function (source) { if (!source) return next; next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id, files: source.files }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'customer', customer_id: customerId, coverage_analysis_record: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석·보험비교를 저장했습니다.'); return savedRecord; });
   }
-  function loadCoveragePdfFile(fileId) {
+  function loadCoveragePdfFile(fileId, customerId) {
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
     var file = (state.data.items || []).find(function (entry) { return String(entry.id) === String(fileId); });
-    if (!file || !file.storage_path || !(/pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf')) return Promise.reject(new Error('PDF 원본을 확인하지 못했습니다.'));
+    if (!file || file.owner_id !== currentUserId() || file.deleted_at || (customerId && !customerCoveragePdfFiles(customerId).some(function (entry) { return String(entry.id) === String(fileId); })) || !file.storage_path || !(/pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf')) return Promise.reject(new Error('PDF 원본을 확인하지 못했습니다.'));
     return signStoragePath(file.storage_path).then(function (url) { return fetch(url); }).then(function (response) { if (!response.ok) throw new Error('PDF 원본을 불러오지 못했습니다.'); return response.arrayBuffer(); }).then(function (buffer) { return { name: file.title || '보장분석.pdf', buffer: buffer }; });
   }
   function extractCoverageFile(file) {
@@ -5252,7 +5283,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, getCoverageCustomerInfo: getCoverageCustomerInfo, openCoverageCustomerPicker: openCoverageCustomerPicker, chooseCoverageCustomer: chooseCoverageCustomer, openCoverageSources: openCoverageSources, openCoverageSource: openCoverageSource, coverageInsuranceAge: insuranceAge, canEditCoverageTemplate: canEditCoverageTemplate, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, getCoverageCustomerInfo: getCoverageCustomerInfo, openCoverageCustomerPicker: openCoverageCustomerPicker, chooseCoverageCustomer: chooseCoverageCustomer, openCoverageSources: openCoverageSources, openCoverageSource: openCoverageSource, coverageInsuranceAge: insuranceAge, canEditCoverageTemplate: canEditCoverageTemplate, openCustomerCoverage: openCustomerCoverage, openCoverageAttachmentPicker: openCoverageAttachmentPicker, analyzeCoverageAttachments: analyzeCoverageAttachments, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, setAzViewingRoomAccess: setAzViewingRoomAccess, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
