@@ -3579,8 +3579,6 @@
   function coverageWorkspaceRecord() {
     var item = coverageWorkingItem(), working = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
     var template = getCoverageBaseTemplate();
-    // The form editor may have explicitly saved a newer template than their working copy.
-    if (canEditCoverageTemplate() && template && working && String(template.updatedAt || '') > String(working.updatedAt || '')) return template;
     return working || template;
   }
   var coverageTemplateHistory = [];
@@ -3591,7 +3589,7 @@
     dialog('<div class="iw-form"><h2>기본 양식 이전 버전</h2><p>저장 이력을 불러오는 중…</p></div>');
     return api('insuwork_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&parent_id=eq.' + encodeURIComponent(template.id) + '&deleted_at=is.null&legacy_payload->>coverage_analysis_history=eq.true&order=created_at.desc&limit=500&select=id,owner_id,parent_id,legacy_payload,created_at').then(function (rows) {
       coverageTemplateHistory = rows || [];
-      dialog('<div class="iw-form"><h2>기본 양식 이전 버전</h2><p>버전을 선택해 담보 구성을 확인한 후 복원합니다. 복원 전 현재 양식과 작업표도 이전 버전으로 보관됩니다.</p>' + coverageTemplateHistory.map(function (item) {
+      dialog('<div class="iw-form"><h2>기본 양식 이전 버전</h2><p>이전 양식을 편집 화면으로 불러온 후 변경 내역을 확인하고 저장합니다. 현재 작업표는 바뀌지 않습니다.</p>' + coverageTemplateHistory.map(function (item) {
         var payload = item.legacy_payload || {}, record = payload.coverage_analysis || {}, source = record.source && record.source.name || '불러온 파일 없음';
         var sections = Array.from(new Set((record.rows || []).map(function (row) { return row.section; }))).join(' · ');
         return '<button type="button" class="iw-btn" style="display:block;width:100%;height:auto;text-align:left;margin-bottom:8px;white-space:normal" data-history-id="' + esc(item.id) + '" onclick="OSInsuwork.previewCoverageTemplateHistory(this.dataset.historyId)">' + esc(new Date(payload.replaced_at || item.created_at).toLocaleString('ko-KR')) + ' 저장 전 · 담보 ' + (record.rows || []).length + '개<br>' + esc(source) + '<br>' + esc(sections) + '</button>';
@@ -3603,19 +3601,14 @@
     var item = coverageTemplateHistory.find(function (entry) { return entry.id === id && entry.owner_id === currentUserId(); });
     if (!item) return;
     var record = item.legacy_payload.coverage_analysis || {};
-    dialog('<div class="iw-form"><h2>복원할 기본 양식</h2><p>' + esc(new Date(item.legacy_payload.replaced_at || item.created_at).toLocaleString('ko-KR')) + ' 저장 전 · ' + (record.rows || []).length + '개 담보</p><p>원본: ' + esc(record.source && record.source.name || '없음') + '</p><div style="max-height:55vh;overflow:auto"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>합계금액</th></tr></thead><tbody>' + (record.rows || []).map(function (row) { return '<tr><td>' + esc(row.section) + '</td><td>' + esc(row.group) + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.total) + '</td></tr>'; }).join('') + '</tbody></table></div><p id="iw-ca-restore-status" role="status"></p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.openCoverageTemplateHistory()">목록으로</button><button type="button" class="iw-btn primary" data-history-id="' + esc(id) + '" onclick="OSInsuwork.restoreCoverageTemplateHistory(this.dataset.historyId,this)">이 버전으로 양식·작업표 복원</button></div></div>');
+    dialog('<div class="iw-form"><h2>복원할 기본 양식</h2><p>' + esc(new Date(item.legacy_payload.replaced_at || item.created_at).toLocaleString('ko-KR')) + ' 저장 전 · ' + (record.rows || []).length + '개 담보</p><p>원본: ' + esc(record.source && record.source.name || '없음') + '</p><div style="max-height:55vh;overflow:auto"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>합계금액</th></tr></thead><tbody>' + (record.rows || []).map(function (row) { return '<tr><td>' + esc(row.section) + '</td><td>' + esc(row.group) + '</td><td>' + esc(row.name) + '</td><td>' + esc(row.total) + '</td></tr>'; }).join('') + '</tbody></table></div><p id="iw-ca-restore-status" role="status"></p><div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.openCoverageTemplateHistory()">목록으로</button><button type="button" class="iw-btn primary" data-history-id="' + esc(id) + '" onclick="OSInsuwork.restoreCoverageTemplateHistory(this.dataset.historyId,this)">이 양식을 편집 화면으로 불러오기</button></div></div>');
   }
   function restoreCoverageTemplateHistory(id, button) {
-    if (!canEditCoverageTemplate() || button && button.disabled) return;
+    if (!canEditCoverageTemplate() || button && button.disabled || !window.OSInsuworkCoverageTemplate) return;
     var item = coverageTemplateHistory.find(function (entry) { return entry.id === id && entry.owner_id === currentUserId(); });
     if (!item || !item.legacy_payload.coverage_analysis) return;
-    if (button) button.disabled = true;
-    var status = document.getElementById('iw-ca-restore-status'); if (status) status.textContent = '이전 버전 보관 및 복원 중…';
-    var record = JSON.parse(JSON.stringify(item.legacy_payload.coverage_analysis)); record.updatedAt = new Date().toISOString();
-    return saveCoverageWorkspaceAnalysis(record, null).then(function () { return saveCoverageWorkspaceDraft(record, null); }).then(function () {
-      window.OSInsuworkCoverage.reset('__coverage_workspace__', record); forceCloseDialog(); rerenderCoverageWorkspace();
-      coverageNotice('선택한 이전 버전으로 기본 양식과 작업표를 복원했습니다.');
-    }).catch(function (error) { if (button) button.disabled = false; if (status) status.textContent = '복원을 마치지 못했습니다. 다시 시도해 주세요.'; coverageError(error.message || String(error)); });
+    forceCloseDialog();
+    window.OSInsuworkCoverageTemplate.edit(JSON.parse(JSON.stringify(item.legacy_payload.coverage_analysis)));
   }
   function getCoverageCustomerInfo(id) {
     if (!canUseCoverageAnalysis()) return null;
@@ -3628,7 +3621,7 @@
     if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
     var record = coverageWorkspaceRecord(), headerCustomerId = window.OSInsuworkCoverage.headerCustomerId(record);
     var customerOptions = (state.data.customers || []).slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'ko'); }).map(function (customer) { return '<option value="' + esc(customer.id) + '"' + (String(customer.id) === String(headerCustomerId) ? ' selected' : '') + '>' + esc(customer.name || '(이름 없음)') + (customer.phone || customer.phone_raw ? ' · ' + esc(phoneText(customer.phone || customer.phone_raw)) : '') + '</option>'; }).join('');
-    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석·보험비교</h2><p class="iw-subtitle">자료를 불러와 보장 현황을 비교하고, 작업표 또는 선택한 고객에게 저장합니다.</p></div></div>'
+    return '<div class="iw-toolbar iw-ca-page-head"><div><h2>보장분석·보험비교</h2><p class="iw-subtitle">자료를 불러와 보장 현황을 비교하고, 작업표 또는 선택한 고객에게 저장합니다.</p></div>' + (canEditCoverageTemplate() ? '<button type="button" class="iw-btn" onclick="OSInsuworkCoverageTemplate.open()">양식 관리 ⚙</button>' : '') + '</div>'
       + '<div class="iw-ca-page-guide"><div><strong>보장분석 작업표</strong><span>초기화하면 저장된 기본 양식으로 새로 시작합니다. 내 작업표 저장과 고객별 저장은 기본 양식을 변경하지 않습니다.</span></div><label class="iw-ca-customer-target"><span>고객별 저장 대상</span><select id="iw-ca-target-customer" onchange="OSInsuworkCoverage.selectHeaderCustomer(this.value)"><option value="">고객을 선택하세요</option>' + customerOptions + '</select></label></div>'
       + window.OSInsuworkCoverage.workspaceHtml(record || null);
   }

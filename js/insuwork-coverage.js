@@ -729,7 +729,7 @@
     var resetButton = '<button type="button" class="iw-btn" data-ca-save="reset" onclick="OSInsuworkCoverage.resetToBaseTemplate()">기본 양식으로 초기화</button>';
     var copyButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.copySelected(\'' + WORKSPACE_KEY + '\',false)">선택 화면 복사</button>';
     var saveButton = '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">보장분석 저장</button>';
-    var templateButton = api().canEditCoverageTemplate && api().canEditCoverageTemplate() ? '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">기본 양식 저장</button>' : '';
+    var templateButton = '';
     var orderedButtons = templateButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">선택 고객에게 저장</button>';
     return markup.replace(productButton, resetButton + productButton).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
   }
@@ -756,11 +756,131 @@
     selectSection: function (customerId, section, checked) { var d = draft(customerId); d.rows.forEach(function (r) { if (r.section === section) r.selected = checked; }); rerender(customerId); },
     moveSection: moveSection, moveProduct: moveProduct,
     resetToBaseTemplate: resetToBaseTemplate,
-    save: function (customerId) { return saveRecord(customerId, customerId === WORKSPACE_KEY); },
+    save: function (customerId) { return saveRecord(customerId, false); },
     saveWorkspace: function () { return saveRecord(WORKSPACE_KEY, false); },
     saveWorkspaceToCustomer: function () { var d = clone(draft(WORKSPACE_KEY)); delete d._starter; delete d._templateSeed; delete d.sourceItemId; d.source = null; d.updatedAt = new Date().toISOString(); setSaveState(WORKSPACE_KEY, 'saving', '선택 고객에게 저장 중…'); Promise.resolve().then(function () { return api().saveCoverageWorkspaceToCustomer(d); }).then(function () { setSaveState(WORKSPACE_KEY, 'saved', '선택 고객에게 저장 완료'); }).catch(function (e) { var message = e.message || String(e); setSaveState(WORKSPACE_KEY, 'error', /고객/.test(message) ? '고객을 먼저 선택해 주세요 · 전체 화면 밖에서 선택할 수 있습니다' : '저장 실패 · 다시 시도해 주세요'); api().coverageError(message); }); },
     importExistingPdf: function (customerId, fileId) { Promise.all([api().loadCoveragePdfFile(fileId), loadCoverageSynonyms()]).then(function (results) { var file = results[0]; return loadPdfJs().then(function () { return window.pdfjsLib.getDocument({ data: file.buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return { file: file, record: parsePdfItems(pages, file.name) }; }); }).then(function (result) { var merged = mergeImportedRecord(draft(customerId), result.record); reset(customerId, merged); return api().saveCoverageAnalysis(customerId, merged, null, fileId); }).then(function () { rerender(customerId); }).catch(function (e) { api().coverageError(e.message || String(e)); }); },
     copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function () { api().coverageNotice('선택한 보장분석 표를 이미지로 복사했습니다. 카카오톡에 붙여넣어 주세요.'); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
   };
   window.OSInsuworkCoverage = exposed;
+})();
+
+// Template editing owns a separate draft and never resets or saves the customer workspace.
+(function () {
+  'use strict';
+  var session = null, box = null;
+  function api() { return window.OSInsuwork || {}; }
+  function allowed() { return api().canEditCoverageTemplate && api().canEditCoverageTemplate(); }
+  function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function clean(record) {
+    var result = clone(record || { rows: [], products: [] });
+    delete result.customerInfo; delete result.sourceItemId; delete result._starter; delete result._templateSeed;
+    result.source = null; result.products = []; result.showHiddenProducts = false;
+    result.rows = (result.rows || []).map(function (row) {
+      return { id: row.id || crypto.randomUUID(), section: row.section || '', group: row.group || '', name: row.name || '', hidden: !!row.hidden, selected: false, values: {}, total: '', recommended: '', status: '', difference: '' };
+    });
+    return result;
+  }
+  function label(row) { return [row.section, row.group, row.name].join(' / ') + (row.hidden ? ' (숨김)' : ''); }
+  function changes(before, after) {
+    var old = new Map(before.rows.map(function (r) { return [String(r.id), r]; }));
+    var next = new Map(after.rows.map(function (r) { return [String(r.id), r]; }));
+    var result = [];
+    before.rows.forEach(function (r) { if (!next.has(String(r.id))) result.push({ type: '삭제', text: label(r) }); });
+    after.rows.forEach(function (r) {
+      var prior = old.get(String(r.id));
+      if (!prior) result.push({ type: '추가', text: label(r) });
+      else if (label(prior) !== label(r)) result.push({ type: '수정', text: label(prior) + ' → ' + label(r) });
+    });
+    var oldOrder = before.rows.filter(function (r) { return next.has(String(r.id)); }).map(function (r) { return String(r.id); });
+    var newOrder = after.rows.filter(function (r) { return old.has(String(r.id)); }).map(function (r) { return String(r.id); });
+    if (JSON.stringify(oldOrder) !== JSON.stringify(newOrder)) result.push({ type: '순서', text: '기존 담보의 표시 순서 변경' });
+    return result;
+  }
+  function show(content) {
+    if (!allowed()) return;
+    if (!box || !box.isConnected) {
+      var root = document.getElementById('v-insuwork'); if (!root) return;
+      box = document.createElement('dialog'); box.className = 'iw-ca-template-dialog'; box.setAttribute('aria-labelledby', 'iw-ca-template-title');
+      box.addEventListener('cancel', function (event) { event.preventDefault(); close(); });
+      root.appendChild(box);
+    }
+    box.innerHTML = '<div class="iw-ca-template-body">' + content + '</div>';
+    if (!box.open) box.showModal();
+  }
+  function button(text, action, primary) { return '<button type="button" class="iw-btn' + (primary ? ' primary' : '') + '" onclick="OSInsuworkCoverageTemplate.' + action + '">' + text + '</button>'; }
+  function close() {
+    if (session && session.busy) return;
+    if (session && changes(session.base, session.draft).length && !window.confirm('저장하지 않은 기본 양식 변경을 버리고 닫을까요?')) return;
+    session = null; if (box) { box.close(); box.remove(); box = null; }
+  }
+  function open() {
+    if (!allowed() || session) return;
+    show('<h2 id="iw-ca-template-title">양식 관리</h2><p>기본 양식의 담보 구성을 관리합니다.</p><div class="iw-ca-template-actions">' + button('기본 양식 편집', 'edit()', true) + button('이전 양식 확인', 'history()') + button('닫기', 'close()') + '</div>');
+  }
+  function edit(snapshot) {
+    if (!allowed() || session && session.busy) return;
+    var saved = api().getCoverageBaseTemplate();
+    if (!saved) return api().coverageError('저장된 기본 양식이 없습니다.');
+    var base = clean(saved);
+    session = { base: base, draft: snapshot ? clean(snapshot) : clone(base), original: JSON.stringify(saved), busy: false, reviewed: null };
+    render();
+  }
+  function render() {
+    if (!allowed() || !session || session.busy) return;
+    session.reviewed = null;
+    show('<h2 id="iw-ca-template-title">기본 양식 편집</h2><p>저장된 기본 양식의 분류·담보명·순서를 편집합니다. 고객 정보·상품·가입금액은 포함하지 않습니다.</p>' +
+      '<div class="iw-ca-template-scroll"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>표시</th><th>순서·추가·삭제</th></tr></thead><tbody>' + session.draft.rows.map(function (r, i) {
+        return '<tr>' + ['section', 'group', 'name'].map(function (key) { return '<td><textarea rows="1" aria-label="' + ({ section: '대분류', group: '중분류', name: '담보명' }[key]) + ' ' + (i + 1) + '" oninput="OSInsuworkCoverageTemplate.set(' + i + ',\'' + key + '\',this.value)">' + esc(r[key]) + '</textarea></td>'; }).join('') +
+          '<td><input type="checkbox" aria-label="담보 ' + (i + 1) + ' 표시"' + (!r.hidden ? ' checked' : '') + ' onchange="OSInsuworkCoverageTemplate.set(' + i + ',\'hidden\',!this.checked)"></td><td class="iw-ca-template-row-actions">' +
+          button('↑', 'move(' + i + ',-1)') + button('↓', 'move(' + i + ',1)') + button('+', 'add(' + i + ')') + button('×', 'remove(' + i + ')') + '</td></tr>';
+      }).join('') + '</tbody></table></div><div class="iw-ca-template-actions">' + button('담보 추가', 'add()') + button('취소', 'close()') + button('변경 내역 확인', 'review()', true) + '</div>');
+  }
+  function set(index, key, value) {
+    if (!allowed() || !session || session.busy || session.reviewed || ['section', 'group', 'name', 'hidden'].indexOf(key) < 0 || !session.draft.rows[index]) return;
+    session.draft.rows[index][key] = value;
+  }
+  function mutate(action) {
+    if (!allowed() || !session || session.busy || session.reviewed) return;
+    var scroll = box && box.querySelector('.iw-ca-template-scroll'), top = scroll ? scroll.scrollTop : 0;
+    action(session.draft.rows); render();
+    scroll = box && box.querySelector('.iw-ca-template-scroll'); if (scroll) scroll.scrollTop = top;
+  }
+  function review() {
+    if (!allowed() || !session || session.busy) return;
+    var diff = changes(session.base, session.draft);
+    session.reviewed = clone(session.draft);
+    show('<h2 id="iw-ca-template-title">기본 양식 변경 내역</h2><p>변경 ' + diff.length + '건 · 담보 ' + session.base.rows.length + '개 → ' + session.draft.rows.length + '개</p>' +
+      '<div class="iw-ca-template-scroll">' + (diff.length ? '<ul>' + diff.map(function (d) { return '<li><strong>' + esc(d.type) + '</strong> ' + esc(d.text) + '</li>'; }).join('') + '</ul>' : '<p>변경한 내용이 없습니다.</p>') +
+      '</div><p>저장하면 앞으로 초기화할 때 사용할 기본 양식이 바뀝니다. 저장 전 양식은 자동 보관되며 현재 작업표는 유지됩니다.</p><p id="iw-ca-template-status" role="status"></p><div class="iw-ca-template-actions">' + button('편집으로 돌아가기', 'back()') + (diff.length ? button('기본 양식 저장', 'save()', true) : '') + button('닫기', 'close()') + '</div>');
+  }
+  async function save() {
+    if (!allowed() || !session || session.busy || !session.reviewed || !changes(session.base, session.reviewed).length) return;
+    var active = session, status = box && box.querySelector('#iw-ca-template-status');
+    if (JSON.stringify(api().getCoverageBaseTemplate()) !== active.original) {
+      if (status) status.textContent = '기본 양식이 다른 작업에서 변경되었습니다. 편집 내용을 확인한 후 닫고 최신 양식을 다시 열어 주세요.';
+      return;
+    }
+    active.busy = true;
+    if (box) box.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    if (status) status.textContent = '이전 양식 보관 및 저장 중…';
+    try {
+      var next = clean(active.reviewed); next.updatedAt = new Date().toISOString();
+      await api().saveCoverageWorkspaceAnalysis(next, null);
+      session = null;
+      show('<h2 id="iw-ca-template-title">기본 양식 저장됨</h2><p>이전 양식을 보관하고 변경한 기본 양식을 저장했습니다. 현재 작업표는 그대로 유지됩니다.</p><div class="iw-ca-template-actions">' + button('닫기', 'close()', true) + '</div>');
+    } catch (error) {
+      active.busy = false;
+      if (box) box.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+      if (status) status.textContent = '저장 실패: ' + (error.message || String(error)) + ' · 편집 내용은 유지됩니다.';
+    }
+  }
+  window.OSInsuworkCoverageTemplate = {
+    open: open, edit: edit, close: close, set: set, review: review, save: save, back: render,
+    history: function () { if (!allowed() || session) return; close(); return api().openCoverageTemplateHistory(); },
+    add: function (index) { mutate(function (rows) { var prior = rows[index] || {}; rows.splice(index == null ? rows.length : index + 1, 0, { id: crypto.randomUUID(), section: prior.section || '', group: prior.group || '', name: '', hidden: false, values: {}, total: '' }); }); },
+    remove: function (index) { mutate(function (rows) { if (rows[index]) rows.splice(index, 1); }); },
+    move: function (index, offset) { mutate(function (rows) { var target = index + offset; if (rows[index] && target >= 0 && target < rows.length) rows.splice(target, 0, rows.splice(index, 1)[0]); }); }
+  };
 })();
