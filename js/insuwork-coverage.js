@@ -304,10 +304,41 @@
     }
     return makeRecord(fileName, 'xlsx', products, rows);
   }
+  function normalizedBirthDate(value) {
+    var text = cellText(value), match = text.match(/(?:^|\D)((?:19|20)\d{2})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})(?:일|\D|$)/) || text.match(/^((?:19|20)\d{2})(\d{2})(\d{2})$/);
+    if (!match) return '';
+    var year = +match[1], month = +match[2], day = +match[3], date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day || date > new Date()) return '';
+    return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+  }
+  function extractedCustomerInfo(lines, fileName) {
+    var info = {}, nameChars = '[가-힣A-Za-z○●*Ｏ]{2,20}';
+    (lines || []).forEach(function (line) {
+      var text = cellText(line), named = text.match(new RegExp('(?:고객명|피보험자명|성명)\\s*[:：]?\\s*(' + nameChars + ')')) || text.match(new RegExp('^(' + nameChars + '?)(?:님|고객님)?\\s*(?:고객님의?\\s*)?(?:보장\\s*(?:분석|진단)|보험료\\s*현황|보험\\s*계약)'));
+      if (!named) named = text.match(new RegExp('^(' + nameChars + ')\\s+(?:여성|남성|여자|남자)\\s+(?:19|20)\\d{2}')) ;
+      if (!info.name && named) info.name = named[1].replace(/(?:고객님|님)$/, '');
+      var birth = text.match(/(?:생년월일|출생일|생일|남성|여성|남자|여자)\s*[:：]?\s*((?:19|20)\d{2}\s*[.\-/년]\s*\d{1,2}\s*[.\-/월]\s*\d{1,2}일?)/) || text.match(/(?:생년월일|출생일)\s*[:：]?\s*((?:19|20)\d{6})/);
+      if (!info.birthDate && birth) info.birthDate = normalizedBirthDate(birth[1]);
+    });
+    if (!info.name) { var namedFile = String(fileName || '').match(new RegExp('^(' + nameChars + '?)(?:님)?[_ ]+보장(?:분석|진단)')); if (namedFile) info.name = namedFile[1]; }
+    return info;
+  }
+  function workbookCustomerInfo(workbook, fileName) {
+    var lines = [];
+    workbook.SheetNames.forEach(function (name) { var grid = window.XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: '', raw: false }); grid.forEach(function (row) { lines.push(row.map(cellText).join(' ')); }); });
+    return extractedCustomerInfo(lines, fileName);
+  }
+  function mergeCustomerInfo(base, incoming) {
+    var next = Object.assign({}, base || {}), info = incoming || {};
+    if (next.birthDate && info.birthDate && next.birthDate !== info.birthDate || next.name && info.name && next.name !== info.name && !/[○●*ＯO]/.test(next.name + info.name)) throw new Error('서로 다른 고객 정보가 발견되었습니다. 원본을 확인하고 다른 고객 자료라면 기본 양식으로 초기화한 후 불러와 주세요.');
+    if (!next.name && info.name) next.name = info.name;
+    if (!next.birthDate && info.birthDate) next.birthDate = info.birthDate;
+    return next;
+  }
   function parseWorkbook(buffer, fileName) {
     var workbook = window.XLSX.read(buffer, { type: 'array', cellDates: true });
     var specialized = parseBanksaladWorkbook(workbook, fileName) || parseBomappWorkbook(workbook, fileName);
-    if (specialized) return specialized;
+    if (specialized) { specialized.customerInfo = workbookCustomerInfo(workbook, fileName); return specialized; }
     var sheet = workbook.Sheets[workbook.SheetNames[0]];
     var grid = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
     var headerIndex = grid.findIndex(function (row) { var joined = row.map(cellText).join('|'); return (joined.indexOf('보장구분') >= 0 || joined.indexOf('대분류') >= 0) && (joined.indexOf('주요특약') >= 0 || joined.indexOf('담보') >= 0); });
@@ -337,7 +368,7 @@
       rows.push({ id: uid('coverage'), section: section, group: group, name: name, recommended: '', status: '', total: totalColumn >= 0 ? cellText(row[totalColumn]) : '', difference: '', values: values, hidden: false, selected: false });
     }
     products.forEach(function (p) { delete p.sourceColumn; });
-    return makeRecord(fileName, 'xlsx', products, rows);
+    var record = makeRecord(fileName, 'xlsx', products, rows); record.customerInfo = workbookCustomerInfo(workbook, fileName); return record;
   }
   function parsePdfItems(pages, fileName) {
     var lines = [];
@@ -357,7 +388,7 @@
       rows.push({ id: uid('coverage'), section: section, group: '', name: line.replace(/(?:MAX\s*)?[\d,]+(?:만원|천원|원)?/gi, '').trim().slice(0, 120), recommended: '', status: '', total: amounts[0] || '', difference: '', values: {}, hidden: false, selected: false });
     });
     if (!rows.length) throw new Error('PDF에서 표를 자동 인식하지 못했습니다. 스캔 PDF라면 OCR 처리 후 직접 행을 추가해 주세요.');
-    return { version: 1, source: { name: fileName, type: 'pdf', importedAt: new Date().toISOString(), needsReview: true }, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: new Date().toISOString() };
+    return { version: 1, customerInfo: extractedCustomerInfo(lines, fileName), source: { name: fileName, type: 'pdf', importedAt: new Date().toISOString(), needsReview: true }, showSummary: false, showHiddenProducts: false, products: [], rows: rows, updatedAt: new Date().toISOString() };
   }
   function matchKey(value) {
     var key = String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, '').replace(/질환/g, '').replace(/의료비/g, '실손비').replace(/일반암진단비|암진단비(?:ⅱ|ii)?유사암제외/g, '일반암진단').replace(/소액유사암/g, '유사암').replace(/항암약물방사선/g, '항암방사선약물').replace(/허가치료/g, '치료').replace(/암수술비/g, '암수술');
@@ -383,6 +414,7 @@
   function productMatchKey(value) { return synonymExactKey(value).replace(/^(?:무배당|무)/, ''); }
   function mergeImportedRecord(baseRecord, importedRecord) {
     var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {}, productOccurrences = {}, usedRows = new Set();
+    base.customerInfo = mergeCustomerInfo(base.customerInfo, imported.customerInfo);
     function templateSection(section, name) {
       var present = new Set(base.rows.map(function (r) { return r.section; }));
       if (/^(치매[·\s]?간병|간병)$/.test(section)) {
@@ -459,7 +491,9 @@
       if (!products.length && !total && row.values && row.values.length === 1) total = cellText(row.values[0]);
       return { id: uid('coverage'), section: sectionName(row.section), group: cellText(row.group), name: cellText(row.name), recommended: cellText(row.recommended), status: cellText(row.status), total: total, difference: '', values: values, hidden: false, selected: false };
     }).filter(function (row) { return row.name && !/^(?:총\s*보험료|월\s*보험료|납입(?:완료|예정)|총\s*납입|보유\s*계약|마이데이터)/.test(row.name); });
-    return makeRecord(fileName, type, products, rows);
+    var record = makeRecord(fileName, type, products, rows), info = data && data.customerInfo || {};
+    record.customerInfo = { name: cellText(info.name) || extractedCustomerInfo([], fileName).name || '', birthDate: normalizedBirthDate(info.birthDate) };
+    return record;
   }
   function parseImportFile(file) {
     var ext = file.name.split('.').pop().toLowerCase();
@@ -483,9 +517,10 @@
       return parseImportFile(file).then(function (record) { records.push(record); });
     }); }, Promise.resolve());
     return Promise.all([job, loadCoverageSynonyms()]).then(function () {
-      if (!records.some(function (record) { return record.rows.length || record.products.length; })) throw new Error('파일에서 보장 항목이나 계약 정보를 읽지 못했습니다.');
+      if (!records.some(function (record) { return record.rows.length || record.products.length || record.customerInfo && (record.customerInfo.name || record.customerInfo.birthDate); })) throw new Error('파일에서 보장 항목이나 계약 정보를 읽지 못했습니다.');
       showImportProgress('기본 양식에 금액을 연결하고 저장하고 있습니다.');
-      var merged = draft(customerId);
+      var merged = clone(draft(customerId));
+      if (customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo) merged.customerInfo = customerHeaderInfo(customerId, merged);
       records.forEach(function (record) { merged = mergeImportedRecord(merged, record); });
       merged.source = Object.assign({}, merged.source, { name: files.map(function (file) { return file.name; }).join(' · '), files: records.map(function (record) { return record.source; }) });
       merged.source.notes = records.filter(function (record) { return !record.rows.length && !record.products.length; }).map(function (record) { return record.source.name + ': 보장·계약 항목 없음 (원본 보관)'; });
@@ -591,7 +626,7 @@
     rerender(customerId);
   }
   function customerHeaderInfo(customerId, record) {
-    return record.customerInfo || (customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(customerId) : null) || {};
+    return Object.assign({}, customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(customerId) || {} : {}, record.customerInfo || {});
   }
   function customerAge(info) { var age = api().coverageInsuranceAge ? api().coverageInsuranceAge(info.birthDate || '') : ''; return age === '' ? '보험나이 확인' : '보험나이 ' + age + '세'; }
   function premiumSummary(products) {
