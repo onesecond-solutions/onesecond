@@ -315,6 +315,7 @@
     var info = {}, nameChars = '[가-힣A-Za-z○●*Ｏ]{2,20}';
     (lines || []).forEach(function (line) {
       var text = cellText(line), named = text.match(new RegExp('(?:고객명|피보험자명|성명)\\s*[:：]?\\s*(' + nameChars + ')')) || text.match(new RegExp('^(' + nameChars + '?)(?:님|고객님)?\\s*(?:고객님의?\\s*)?(?:보장\\s*(?:분석|진단)|보험료\\s*현황|보험\\s*계약)'));
+      if (!named) named = text.match(new RegExp('^(' + nameChars + ')\\s+(?:여성|남성|여자|남자)\\s+(?:19|20)\\d{2}')) ;
       if (!info.name && named) info.name = named[1].replace(/(?:고객님|님)$/, '');
       var birth = text.match(/(?:생년월일|출생일|생일|남성|여성|남자|여자)\s*[:：]?\s*((?:19|20)\d{2}\s*[.\-/년]\s*\d{1,2}\s*[.\-/월]\s*\d{1,2}일?)/) || text.match(/(?:생년월일|출생일)\s*[:：]?\s*((?:19|20)\d{6})/);
       if (!info.birthDate && birth) info.birthDate = normalizedBirthDate(birth[1]);
@@ -518,7 +519,8 @@
     return Promise.all([job, loadCoverageSynonyms()]).then(function () {
       if (!records.some(function (record) { return record.rows.length || record.products.length || record.customerInfo && (record.customerInfo.name || record.customerInfo.birthDate); })) throw new Error('파일에서 보장 항목이나 계약 정보를 읽지 못했습니다.');
       showImportProgress('기본 양식에 금액을 연결하고 저장하고 있습니다.');
-      var merged = draft(customerId);
+      var merged = clone(draft(customerId));
+      if (customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo) merged.customerInfo = customerHeaderInfo(customerId, merged);
       records.forEach(function (record) { merged = mergeImportedRecord(merged, record); });
       merged.source = Object.assign({}, merged.source, { name: files.map(function (file) { return file.name; }).join(' · '), files: records.map(function (record) { return record.source; }) });
       merged.source.notes = records.filter(function (record) { return !record.rows.length && !record.products.length; }).map(function (record) { return record.source.name + ': 보장·계약 항목 없음 (원본 보관)'; });
@@ -624,7 +626,7 @@
     rerender(customerId);
   }
   function customerHeaderInfo(customerId, record) {
-    return record.customerInfo || (customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(customerId) : null) || {};
+    return Object.assign({}, customerId !== WORKSPACE_KEY && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(customerId) || {} : {}, record.customerInfo || {});
   }
   function customerAge(info) { var age = api().coverageInsuranceAge ? api().coverageInsuranceAge(info.birthDate || '') : ''; return age === '' ? '보험나이 확인' : '보험나이 ' + age + '세'; }
   function premiumSummary(products) {
