@@ -86,7 +86,9 @@
     var name = String(value || ''), key = name.replace(/\s/g, '');
     if (/하이클래스/.test(key) || /비급여암주요치료비/.test(key)) return '비급여 암주요 치료비';
     if (/암주요치료비/.test(key)) return '암주요 치료비(급여, 비급여 포함)';
-    return name.replace(/급성심근경색증/g, '급성심근경색').replace(/허혈심장질환/g, '허혈성심장질환');
+    name = name.replace(/급성심근경색증/g, '급성심근경색').replace(/허혈심장질환/g, '허혈성심장질환');
+    var heart = name.replace(/\s/g, '').match(/^(급성심근경색|허혈성심장질환)진단(?:비)?(?:담보)?(?:\(갱신형\))?$/);
+    return heart ? heart[1] + ' 진단비' : name;
   }
   function cancerMiddleGroup(name) {
     var text = String(name || '').replace(/\s+/g, '');
@@ -171,11 +173,14 @@
     next.rows = (next.rows || []).map(function (r) { var row = Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, r); var canonical = ownerCoverageName(row.name); if (canonical !== row.name) { row.sourceNames = Array.from(new Set((row.sourceNames || []).concat(row.name))); row.name = canonical; } if (/암주요치료비/.test(row.name.replace(/\s/g, ''))) { row.section = '암'; row.group = '치료비3'; } if (row.section === '운전') row.section = '운전자'; if (row.section === '암') { var cancerGroup = cancerMiddleGroup(row.name); if (cancerGroup) row.group = cancerGroup; else if (/^치료비\s*[123]$/.test(row.group)) row.group = row.group.replace(/\s+/g, ''); } return row; });
     var mappedOwnerRows = new Set();
     next.rows.forEach(function (row) {
-      if (!/암주요치료비|급성심근경색|허혈성심장질환/.test(row.name.replace(/\s/g, '')) || (!hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))) return;
-      var target = next.rows.find(function (candidate) { return candidate !== row && !mappedOwnerRows.has(candidate) && candidate.section === row.section && coverageMatchKey(candidate.name) === coverageMatchKey(row.name) && !hasEnrolledAmount(candidate.total) && !Object.values(candidate.values).some(hasEnrolledAmount) && !(candidate.sourceDetails || []).length; });
+      if (mappedOwnerRows.has(row) || !/암주요치료비|급성심근경색|허혈성심장질환/.test(row.name.replace(/\s/g, '')) || (!hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))) return;
+      var target = next.rows.find(function (candidate) { return candidate !== row && !mappedOwnerRows.has(candidate) && candidate.section === row.section && coverageMatchKey(candidate.name) === coverageMatchKey(row.name) && ((!hasEnrolledAmount(candidate.total) && !Object.values(candidate.values).some(hasEnrolledAmount) && !(candidate.sourceDetails || []).length) || (/^(급성심근경색|허혈성심장질환) 진단비$/.test(row.name) && Object.values(candidate.values).some(hasEnrolledAmount) && Object.keys(row.values).filter(function (id) { return hasEnrolledAmount(row.values[id]); }).every(function (id) { return !hasEnrolledAmount(candidate.values[id]); }))); });
       if (!target) return;
       var targetId = target.id, targetHidden = target.hidden, targetSelected = target.selected;
-      Object.assign(target, row, { id: targetId, hidden: targetHidden, selected: targetSelected });
+      var combinedValues = Object.assign({}, target.values); Object.keys(row.values).forEach(function (id) { if (hasEnrolledAmount(row.values[id]) || !hasEnrolledAmount(combinedValues[id])) combinedValues[id] = row.values[id]; }); var details = (target.sourceDetails || []).concat(row.sourceDetails || []), sources = Object.assign({}, target.valueSources, row.valueSources), names = Array.from(new Set((target.sourceNames || []).concat(row.sourceNames || [])));
+      Object.assign(target, row, { id: targetId, hidden: targetHidden, selected: targetSelected, values: combinedValues, sourceDetails: details, valueSources: sources, sourceNames: names });
+      var amounts = Object.values(combinedValues).filter(hasEnrolledAmount).map(amountKey);
+      if (amounts.length && amounts.every(function (value) { return /^\d+(?:\.\d+)?$/.test(value); })) { var total = amounts.reduce(function (sum, value) { return sum + Number(value); }, 0); target.total = total % 10000 === 0 ? (total / 10000).toLocaleString('ko-KR') + '만' : total.toLocaleString('ko-KR') + '원'; }
       mappedOwnerRows.add(row);
     });
     next.rows = next.rows.filter(function (row) { return !mappedOwnerRows.has(row); });

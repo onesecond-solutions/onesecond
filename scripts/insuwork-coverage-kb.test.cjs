@@ -31,3 +31,5 @@ test('owner heart aliases and cancer taxonomy map to saved template, preserving 
 });
 
 test('saved imported owner terms populate empty form rows without resetting work',()=>{const a=setup();const r=a.normalize({rows:[{id:'form',section:'암',group:'치료비3',name:'비급여 암주요 치료비',values:{}},{id:'imported',section:'기타',name:'종합병원하이클래스암주요치료비(수술)',values:{p:'300만'},sourceDetails:[{provider:'kb-detail',number:'1'}]}]});assert.equal(r.rows.length,1);assert.equal(r.rows[0].id,'form');assert.equal(r.rows[0].values.p,'300만');assert.equal(r.rows[0].sourceDetails.length,1);assert.equal(a.normalize(r).rows.length,1);});
+
+test('heart diagnosis rider spelling merges distinct policies but not overlapping values',()=>{const a=setup();const r=a.normalize({rows:[{id:'t',section:'심장',name:'급성심근경색 진단비',values:{a:'1000만'}},{id:'p',section:'심장',name:'급성심근경색증진단담보',values:{a:'',b:'1000만'}}]});assert.equal(r.rows.length,1);assert.equal(r.rows[0].total,'2,000만');assert.equal(Object.keys(r.rows[0].values).length,2);assert.equal(a.normalize(r).rows.length,1);});
