@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const { webcrypto } = require('node:crypto');
 let savedWorkspace = null;
-const context = {window:{OSInsuwork:{canEditCoverageTemplate:()=>true,saveCoverageWorkspaceAnalysis:async(record)=>{savedWorkspace=record;return record;},rerenderCoverageWorkspace(){},coverageError(error){throw new Error(error);}}},document:{addEventListener(){},querySelectorAll(){return[];}},crypto:webcrypto,console,queueMicrotask,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};
+const context = {window:{OSInsuwork:{canEditCoverageTemplate:()=>true,saveCoverageWorkspaceDraft:async(record)=>{savedWorkspace=record;return record;},rerenderCoverageWorkspace(){},coverageError(error){throw new Error(error);}}},document:{addEventListener(){},querySelectorAll(){return[];}},crypto:webcrypto,console,queueMicrotask,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('js/insuwork-coverage.js','utf8').replace('window.OSInsuworkCoverage = exposed;', 'window.OSInsuworkCoverage = exposed; window.testing = {normalize,mergeImportedRecord,loadCoverageSynonyms,coverageSynonym,mergedSpan};'),context);
 const api=context.window.testing;
@@ -40,7 +40,7 @@ test('workspace saves the latest input values and clearly separates template and
  const record={products:[{id:'p1',company:'기존 보험사',product:'기존 상품'}],rows:[{id:'r1',section:'암',group:'진단비',name:'일반암 진단비',total:'',values:{p1:''}}]};
  const markup=context.window.OSInsuworkCoverage.workspaceHtml(record);
  assert.match(markup,/oninput="OSInsuworkCoverage\.setProduct/);
- assert.match(markup,/class="iw-btn primary" data-ca-save="template"[^>]*>기본 양식 저장/);
+ assert.doesNotMatch(markup,/>기본 양식 저장</);
  assert.match(markup,/data-ca-save="customer"[^>]*>선택 고객에게 저장/);
  context.window.OSInsuworkCoverage.setProduct(key,'p1','company','수정 보험사');
  context.window.OSInsuworkCoverage.setRow(key,'r1','total','1억원');
@@ -50,5 +50,5 @@ test('workspace saves the latest input values and clearly separates template and
  assert.equal(savedWorkspace.products[0].company,'수정 보험사');
  assert.equal(savedWorkspace.rows[0].total,'1억원');
  assert.equal(savedWorkspace.rows[0].values.p1,'5천만원');
- assert.match(context.window.OSInsuworkCoverage.workspaceHtml(savedWorkspace),/기본 양식 저장 완료/);
+ assert.match(context.window.OSInsuworkCoverage.workspaceHtml(savedWorkspace),/작업표 저장 완료/);
 });
