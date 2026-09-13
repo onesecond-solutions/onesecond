@@ -176,6 +176,13 @@
         return part;
       });
     });
+    var mappedCombined = new Set();
+    next.rows.forEach(function (part) {
+      if (!part.sharedLimit) return;
+      var target = next.rows.find(function (row) { return row !== part && !row.sharedLimit && isSilson(row.section) && coverageMatchKey(row.name) === coverageMatchKey(part.name) && !hasEnrolledAmount(row.total) && !Object.values(row.values || {}).some(hasEnrolledAmount); });
+      if (target) { ['values', 'total', 'group', 'sourceNames', 'sourceDetails', 'valueSources', 'sharedLimit'].forEach(function (key) { if (part[key] !== undefined) target[key] = clone(part[key]); }); mappedCombined.add(part); }
+    });
+    next.rows = next.rows.filter(function (row) { return !mappedCombined.has(row); });
     next.rows = normalizeSilsonRows(next.rows, next.products);
     var cancerPositions = [], cancerRows = [], cancerOrder = { '진단비': 0, '치료비1': 1, '치료비2': 2, '치료비3': 3 };
     next.rows.forEach(function (row, index) { if (row.section === '암') { cancerPositions.push(index); cancerRows.push(row); } });
@@ -912,6 +919,7 @@
   }
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var info = customerHeaderInfo(customerId, d); var lines = [[[info.name || '고객명', info.birthDate || '생년월일 확인', customerAge(info)].join(' · '), '', '담보', '합계금액 · 합계보험료 ' + premiumSummary(products)].concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name, r.total].concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   function saveRecord(customerId, asTemplate) {
+    if ((saveStates[String(customerId || '')] || {}).tone === 'saving') return Promise.resolve();
     var d = clone(draft(customerId)); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString();
     setSaveState(customerId, 'saving', '저장 중…');
     return Promise.resolve().then(function () {
@@ -921,6 +929,7 @@
       if (saved) reset(customerId, saved);
       setSaveState(customerId, 'saved', asTemplate ? '기본 양식 저장 완료' : customerId === WORKSPACE_KEY ? '작업표 저장 완료' : '보장분석 저장 완료');
       rerenderTarget(customerId);
+      if (customerId === WORKSPACE_KEY && !asTemplate && api().coverageNotice) api().coverageNotice('작업표를 저장했습니다.');
     }).catch(function (e) { setSaveState(customerId, 'error', '저장 실패 · 다시 시도해 주세요'); api().coverageError(e.message || String(e)); });
   }
   function resetToBaseTemplate() {
