@@ -581,13 +581,18 @@
     var width = values.reduce(function (largest, value) { var measured = Array.from(String(value)).reduce(function (sum, ch) { return sum + (/[^\x00-\xff]/.test(ch) ? 14 : 8); }, 0) + 32; return Math.max(largest, measured); }, minimum);
     return Math.max(minimum, Math.min(maximum, width));
   }
-  function nameColumnWidth(record, textarea) {
+  function nameWidthRows(customerId, record) {
+    var sections = coverageFilter(customerId).sections;
+    return record.rows.filter(function (row) { return !sections.length || sections.indexOf(row.section || '') >= 0; });
+  }
+  function nameColumnWidth(record, textarea, visibleRows) {
     if (record.nameColumnWidth > 0) return Math.max(80, record.nameColumnWidth);
-    if (!textarea) return textColumnWidth(record.rows, 'name', '담보', 100, Infinity);
+    var rows = visibleRows || record.rows;
+    if (!textarea) return textColumnWidth(rows, 'name', '담보', 100, Infinity);
     var style = getComputedStyle(textarea), canvas = document.createElement('canvas'), context = canvas.getContext('2d');
     context.font = style.font;
     var spacing = parseFloat(style.letterSpacing) || 0;
-    var width = record.rows.reduce(function (max, row) {
+    var width = rows.reduce(function (max, row) {
       return String(row.name || '').split(/\r\n|\r|\n/).reduce(function (longest, line) {
         return Math.max(longest, context.measureText(line).width + Math.max(0, Array.from(line).length - 1) * spacing);
       }, max);
@@ -600,7 +605,7 @@
   }
   function syncNameColumn(customerId, editedField) {
     var panel = panelFor(customerId), textarea = panel && panel.querySelector('.iw-ca-name-cell textarea');
-    if (textarea) { var section = panel.closest('.iw-coverage-analysis'), width = nameColumnWidth(draft(customerId), textarea) + 'px'; if (section.style.getPropertyValue('--iw-ca-name-w') !== width) section.style.setProperty('--iw-ca-name-w', width); if (editedField) fitNameRows(editedField); else panel.querySelectorAll('.iw-ca-name-cell textarea').forEach(fitNameRows); }
+    if (textarea) { var section = panel.closest('.iw-coverage-analysis'), width = nameColumnWidth(draft(customerId), textarea, nameWidthRows(customerId, draft(customerId))) + 'px'; if (section.style.getPropertyValue('--iw-ca-name-w') !== width) section.style.setProperty('--iw-ca-name-w', width); if (editedField) fitNameRows(editedField); else panel.querySelectorAll('.iw-ca-name-cell textarea').forEach(fitNameRows); }
   }
   function resizeNameColumn(customerId, rowId, textarea) {
     setPath(customerId, 'row', rowId, 'name', textarea.value);
@@ -686,7 +691,7 @@
     var d = draft(customerId, record), products = visibleProducts(d), hiddenCount = d.products.filter(function (p) { return p.hidden; }).length, freezeColumns = d.freezeColumns !== false;
     var activeFilter = coverageFilter(customerId);
     activeFilter.sections = activeFilter.sections.filter(function (section) { return d.rows.some(function (row) { return (row.section || '') === section; }); });
-    var columnStyle = '--iw-ca-product-count:' + Math.max(1, products.length) + ';--iw-ca-section-w:' + textColumnWidth(d.rows, 'section', '대분류', 82, 150) + 'px;--iw-ca-group-w:' + textColumnWidth(d.rows, 'group', '중분류', 86, 150) + 'px;--iw-ca-name-w:' + nameColumnWidth(d) + 'px;--iw-ca-total-w:' + textColumnWidth(d.rows, 'total', '합계금액', 96, 180) + 'px';
+    var columnStyle = '--iw-ca-product-count:' + Math.max(1, products.length) + ';--iw-ca-section-w:' + textColumnWidth(d.rows, 'section', '대분류', 82, 150) + 'px;--iw-ca-group-w:' + textColumnWidth(d.rows, 'group', '중분류', 86, 150) + 'px;--iw-ca-name-w:' + nameColumnWidth(d, null, nameWidthRows(customerId, d)) + 'px;--iw-ca-total-w:' + textColumnWidth(d.rows, 'total', '합계금액', 96, 180) + 'px';
     var productHeaders = products.map(function (p) { var label = [p.company, p.product].filter(Boolean).join(' · ') || '이 회사·상품'; return '<th draggable="true" ondragover="event.preventDefault()" ondrop="OSInsuworkCoverage.moveProduct(\'' + esc(customerId) + '\',event.dataTransfer.getData(\'text/plain\'),\'' + esc(p.id) + '\')" ondragstart="event.dataTransfer.setData(\'text/plain\',\'' + esc(p.id) + '\')" class="iw-ca-product' + (p.hidden ? ' is-hidden' : '') + '"><button type="button" class="iw-ca-product-remove" title="회사·상품 열 삭제" aria-label="' + esc(label) + ' 열 삭제" draggable="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();OSInsuworkCoverage.removeProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\')">×</button><input value="' + esc(p.company) + '" placeholder="보험사" aria-label="보험사" oninput="OSInsuworkCoverage.setProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\',\'company\',this.value)"><textarea rows="1" wrap="soft" placeholder="상품명" aria-label="상품명" oninput="OSInsuworkCoverage.setProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\',\'product\',this.value)">' + esc(p.product) + '</textarea><input value="' + esc(p.premium) + '" placeholder="보험료" aria-label="보험료" oninput="OSInsuworkCoverage.setProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\',\'premium\',this.value)"><div class="iw-ca-product-actions"><button type="button" onclick="OSInsuworkCoverage.toggleProduct(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\')">' + (p.hidden ? '다시 표시' : '상품 숨기기') + '</button>' + (!p.hidden && p.company ? '<button type="button" onclick="OSInsuworkCoverage.hideCompany(\'' + esc(customerId) + '\',\'' + esc(p.id) + '\')">보험사 전체 숨기기</button>' : '') + '</div></th>'; }).join('');
     var sectionOrdinal = -1, lastSection = null;
     var body = d.rows.map(function (r, index) {
