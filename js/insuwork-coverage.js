@@ -468,11 +468,35 @@
     base.source = clone(imported.source); base.updatedAt = new Date().toISOString(); delete base._starter; return normalize(base);
   }
   function isEncryptedOffice(buffer) { var b = new Uint8Array(buffer); return b.length > 8 && b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0; }
-  function decryptWorkbook(buffer, fileName) {
+  function workbookPasswordKind(fileName) {
+    if (/뱅크\s*샐러드|banksalad/i.test(fileName)) return 'banksalad';
+    if (/보맵|bomapp/i.test(fileName)) return 'bomapp';
+    return '';
+  }
+  function applyWorkbookPasswordBirth(record, hint) {
+    if (!hint.birthSix) return record;
+    var info = record.customerInfo || (record.customerInfo = {});
+    if (info.birthDate) {
+      if (info.birthDate.replace(/-/g, '').slice(2) !== hint.birthSix) throw new Error('입력한 생년월일과 문서의 고객 생년월일이 다릅니다. 고객 정보를 확인해 주세요.');
+      return record;
+    }
+    // Six digits alone do not distinguish 19xx from 20xx. Never guess the century.
+    var year = window.prompt('뱅크샐러드 파일에서 출생연도를 확인할 수 없습니다.\n고객의 출생연도 4자리를 입력해 주세요. 취소하면 생년월일은 직접 입력할 수 있습니다.');
+    if (year == null || year === '') return record;
+    year = year.trim();
+    var birth = /^(19|20)\d{2}$/.test(year) && year.slice(2) === hint.birthSix.slice(0, 2) ? normalizedBirthDate(year + hint.birthSix.slice(2)) : '';
+    if (!birth) throw new Error('출생연도가 입력한 생년월일과 맞지 않거나 날짜가 올바르지 않습니다.');
+    info.birthDate = birth;
+    return record;
+  }
+  function decryptWorkbook(buffer, fileName, hint) {
     if (!isEncryptedOffice(buffer)) return Promise.resolve(buffer);
-    var password = window.prompt(fileName + '\n파일 비밀번호를 입력해 주세요. 비밀번호는 저장되지 않습니다.');
+    var kind = workbookPasswordKind(fileName);
+    var guidance = kind === 'banksalad' ? '뱅크샐러드 · 고객 생년월일 6자리(YYMMDD)를 입력해 주세요.' : kind === 'bomapp' ? '보맵 · 파일을 내려받은 본인의 사번을 입력해 주세요.' : '파일 비밀번호를 입력해 주세요.\n뱅크샐러드: 고객 생년월일 6자리 / 보맵: 본인 사번';
+    var password = window.prompt(fileName + '\n' + guidance + '\n비밀번호는 저장되지 않습니다.');
     if (password == null || password === '') return Promise.reject(new Error('암호화 엑셀을 열려면 비밀번호가 필요합니다.'));
-    return loadOfficeCrypto().then(function () { return window.OSOfficeCrypto.decrypt(window.Buffer.from(new Uint8Array(buffer)), { password: password }); }).then(function (output) { return new Uint8Array(output).buffer; }).catch(function (error) { if (/password|incorrect/i.test(error && error.message || '')) throw new Error('엑셀 비밀번호가 맞지 않습니다.'); throw error; });
+    if (kind === 'banksalad' && !/^\d{6}$/.test(password)) return Promise.reject(new Error('고객 생년월일을 숫자 6자리(YYMMDD)로 입력해 주세요.'));
+    return loadOfficeCrypto().then(function () { return window.OSOfficeCrypto.decrypt(window.Buffer.from(new Uint8Array(buffer)), { password: password }); }).then(function (output) { if (hint && kind === 'banksalad') hint.birthSix = password; return new Uint8Array(output).buffer; }).catch(function (error) { if (/password|incorrect/i.test(error && error.message || '')) throw new Error('엑셀 비밀번호가 맞지 않습니다.'); throw error; });
   }
   function recordFromStructured(data, fileName, type) {
     var sourceProducts = data && data.products || [], productColumns = [];
@@ -497,7 +521,8 @@
   }
   function parseImportFile(file) {
     var ext = file.name.split('.').pop().toLowerCase();
-    if (/^xlsx?$/.test(ext)) return loadSheetJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return decryptWorkbook(buffer, file.name); }).then(function (buffer) { return parseWorkbook(buffer, file.name); });
+    var passwordHint = {};
+    if (/^xlsx?$/.test(ext)) return loadSheetJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return decryptWorkbook(buffer, file.name, passwordHint); }).then(function (buffer) { return applyWorkbookPasswordBirth(parseWorkbook(buffer, file.name), passwordHint); }).finally(function () { delete passwordHint.birthSix; });
     return Promise.resolve().then(function () { return api().extractCoverageFile(file); }).then(function (data) { return recordFromStructured(data, file.name, ext); }).catch(function (error) {
       if (ext !== 'pdf') throw error;
       return loadPdfJs().then(function () { return file.arrayBuffer(); }).then(function (buffer) { return window.pdfjsLib.getDocument({ data: buffer }).promise; }).then(async function (pdf) { var pages = []; for (var i = 1; i <= Math.min(pdf.numPages, 30); i++) pages.push((await (await pdf.getPage(i)).getTextContent()).items || []); return parsePdfItems(pages, file.name); });
