@@ -530,7 +530,7 @@
   }
   function importFile(customerId, input) {
     var files = Array.from(input && input.files || []); if (!files.length) return;
-    if (importBusy) { input.value = ''; return; }
+    if (importBusy || openingCustomer) { input.value = ''; return; }
     if (files.some(function (file) { return !/\.(xlsx?|pdf|png|jpe?g|webp)$/i.test(file.name); })) { api().coverageError('엑셀, PDF 또는 이미지 파일을 선택해 주세요.'); input.value = ''; return; }
     // Structured spreadsheets take precedence over OCR; other sources fill gaps, never add the same amount twice.
     files.sort(function (a, b) { return Number(!/\.xlsx?$/i.test(a.name)) - Number(!/\.xlsx?$/i.test(b.name)); });
@@ -560,7 +560,7 @@
     var info = api().getCoverageCustomerInfo(customerId);
     if (!info) return Promise.reject(new Error('고객 정보를 확인하지 못했습니다.'));
     var current = drafts[WORKSPACE_KEY] || (existingWorking ? normalize(existingWorking) : null);
-    if (current && current.customerInfo && String(current.customerInfo.id) === String(customerId)) return Promise.resolve();
+    if (current && current.customerInfo && String(current.customerInfo.id) === String(customerId)) return Promise.resolve({ hasAnalysis: !!(current.source || current.products.length) });
     openingCustomer = true;
     var preserve = Promise.resolve().then(function () { return current ? api().saveCoverageWorkspaceDraft(clone(current), null) : null; });
     return Promise.resolve(preserve).then(function () {
@@ -574,6 +574,7 @@
       record.customerInfo = Object.assign({}, info, record.customerInfo || {}, { id: customerId });
       delete record._starter; delete record._templateSeed;
       reset(WORKSPACE_KEY, record); coverageFilter(WORKSPACE_KEY).sections = []; delete saveStates[WORKSPACE_KEY];
+      return { hasAnalysis: !!(record.source || record.products.length) };
     }).finally(function () { openingCustomer = false; });
   }
   function importCustomerPdfs(customerId, fileIds) {
@@ -722,13 +723,20 @@
     var info = customerHeaderInfo(customerId, d);
     return '<div class="iw-ca-name-entry"><input aria-label="고객명" placeholder="고객명" value="' + esc(info.name || '') + '" oninput="OSInsuworkCoverage.setCustomerInfo(\'' + esc(customerId) + '\',\'name\',this.value)">' + (customerId === WORKSPACE_KEY ? '<button type="button" class="iw-ca-customer-pick" onclick="OSInsuwork.openCoverageCustomerPicker(false)">고객 선택</button>' : '') + '</div><input type="date" aria-label="생년월일" value="' + esc(info.birthDate || '') + '" oninput="OSInsuworkCoverage.setCustomerInfo(\'' + esc(customerId) + '\',\'birthDate\',this.value)"><span class="iw-ca-insurance-age">' + esc(customerAge(info)) + '</span>' + (d.sourceItemId || d.source && (d.source.itemId || (d.source.files || []).length) ? '<button type="button" class="iw-ca-original" onclick="OSInsuworkCoverage.openSources(\'' + esc(customerId) + '\')">원본 파일 보기</button>' : '');
   }
+  function syncWorkspaceCustomerControls() {
+    var panel = panelFor(WORKSPACE_KEY), info = draft(WORKSPACE_KEY).customerInfo || {};
+    if (!panel) return;
+    var save = panel.querySelector('[data-ca-save="customer"]'), extra = panel.querySelector('[data-ca-extra-import]');
+    if (save) { save.textContent = info.id && info.name ? info.name + ' 고객에게 저장' : '고객에게 저장'; save.dataset.defaultLabel = save.textContent; }
+    if (extra) extra.hidden = !info.id;
+  }
   function setCustomerInfo(customerId, key, value) {
     var d = draft(customerId); d.customerInfo = Object.assign({}, customerHeaderInfo(customerId, d)); d.customerInfo[key] = value; if (key === 'name' || key === 'birthDate') delete d.customerInfo.id;
-    var panel = panelFor(customerId), age = panel && panel.querySelector('.iw-ca-insurance-age'); if (age) age.textContent = customerAge(d.customerInfo);
+    var panel = panelFor(customerId), age = panel && panel.querySelector('.iw-ca-insurance-age'); if (age) age.textContent = customerAge(d.customerInfo); if (customerId === WORKSPACE_KEY) syncWorkspaceCustomerControls();
   }
   function selectHeaderCustomer(id) {
     var d = draft(WORKSPACE_KEY); d.customerInfo = id && api().getCoverageCustomerInfo ? api().getCoverageCustomerInfo(id) : {};
-    var panel = panelFor(WORKSPACE_KEY), header = panel && panel.querySelector('.iw-ca-customer-header'); if (header) header.innerHTML = customerHeaderHtml(WORKSPACE_KEY, d);
+    var panel = panelFor(WORKSPACE_KEY), header = panel && panel.querySelector('.iw-ca-customer-header'); if (header) header.innerHTML = customerHeaderHtml(WORKSPACE_KEY, d); syncWorkspaceCustomerControls();
   }
   function updatePremiumHeader(customerId) {
     var panel = panelFor(customerId), header = panel && panel.querySelector('.iw-ca-premium-summary'); if (header) header.textContent = premiumSummary(visibleProducts(draft(customerId)));
@@ -848,8 +856,8 @@
     var saveButton = '<button type="button" class="iw-btn primary" data-ca-save="template" onclick="OSInsuworkCoverage.save(\'' + WORKSPACE_KEY + '\')">보장분석 저장</button>';
     var customer = draft(WORKSPACE_KEY).customerInfo || {};
     var templateButton = '';
-    var extraImport = customer.id ? '<button type="button" class="iw-btn" onclick="OSInsuwork.openCoverageAttachmentPicker(\'' + esc(customer.id) + '\')">자료 추가 분석</button>' : '';
-    var orderedButtons = templateButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">' + esc(customer.name ? customer.name + ' 고객에게 저장' : '고객에게 저장') + '</button>';
+    var extraImport = '<button type="button" class="iw-btn" data-ca-extra-import' + (customer.id ? '' : ' hidden') + ' onclick="OSInsuwork.openCoverageAttachmentPicker(OSInsuworkCoverage.headerCustomerId())">자료 추가 분석</button>';
+    var orderedButtons = templateButton + '<button type="button" class="iw-btn" data-ca-save="workspace" onclick="OSInsuworkCoverage.saveWorkspace()">작업표 저장</button>' + copyButton + '<button type="button" class="iw-btn" data-ca-save="customer" onclick="OSInsuworkCoverage.saveWorkspaceToCustomer()">' + esc(customer.id && customer.name ? customer.name + ' 고객에게 저장' : '고객에게 저장') + '</button>';
     return markup.replace(productButton, resetButton + productButton + extraImport).replace(copyButton + saveButton, orderedButtons).replace('<h3>보장분석 표</h3>', '<h3>보장분석·보험비교 표</h3>').replace('등록된 보장분석 없음', '등록된 보장분석·보험비교 없음');
   }
   var exposed = {

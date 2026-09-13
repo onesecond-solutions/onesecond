@@ -3721,9 +3721,9 @@
     if (!canUseCoverageAnalysis() || !window.OSInsuworkCoverage || !getCoverageCustomerInfo(customerId)) return;
     var item = coverageAnalysisItem(customerId), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
     var workingItem = coverageWorkingItem(), working = workingItem && workingItem.legacy_payload && workingItem.legacy_payload.coverage_analysis;
-    return window.OSInsuworkCoverage.openCustomerWorkspace(customerId, record, working).then(function () {
+    return window.OSInsuworkCoverage.openCustomerWorkspace(customerId, record, working).then(function (opened) {
       forceCloseDialog(); go('coverage-analysis');
-      if (fileId || !record) openCoverageAttachmentPicker(customerId, fileId);
+      if (fileId || !record && !(opened && opened.hasAnalysis)) openCoverageAttachmentPicker(customerId, fileId);
     }).catch(function (error) { coverageError(error.message || String(error)); });
   }
   function openCoverageAttachmentPicker(customerId, preselectedId) {
