@@ -831,9 +831,9 @@
     if (!allowed() || !session || session.busy) return;
     session.reviewed = null;
     show('<h2 id="iw-ca-template-title">기본 양식 편집</h2><p>저장된 기본 양식의 분류·담보명·순서를 편집합니다. 고객 정보·상품·가입금액은 포함하지 않습니다.</p>' +
-      '<div class="iw-ca-template-scroll"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>표시</th><th>순서·추가·삭제</th></tr></thead><tbody>' + session.draft.rows.map(function (r, i) {
+      '<div class="iw-ca-template-scroll"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>순서·추가·삭제</th></tr></thead><tbody>' + session.draft.rows.map(function (r, i) {
         return '<tr>' + ['section', 'group', 'name'].map(function (key) { return '<td><textarea rows="1" aria-label="' + ({ section: '대분류', group: '중분류', name: '담보명' }[key]) + ' ' + (i + 1) + '" oninput="OSInsuworkCoverageTemplate.set(' + i + ',\'' + key + '\',this.value)">' + esc(r[key]) + '</textarea></td>'; }).join('') +
-          '<td><input type="checkbox" aria-label="담보 ' + (i + 1) + ' 표시"' + (!r.hidden ? ' checked' : '') + ' onchange="OSInsuworkCoverageTemplate.set(' + i + ',\'hidden\',!this.checked)"></td><td class="iw-ca-template-row-actions">' +
+          '<td class="iw-ca-template-row-actions">' +
           button('↑', 'move(' + i + ',-1)') + button('↓', 'move(' + i + ',1)') + button('+', 'add(' + i + ')') + button('×', 'remove(' + i + ')') + '</td></tr>';
       }).join('') + '</tbody></table></div><div class="iw-ca-template-actions">' + button('담보 추가', 'add()') + button('취소', 'close()') + button('변경 내역 확인', 'review()', true) + '</div>');
   }
