@@ -14,7 +14,7 @@ test('workspace has one heading, source button below age, and no filename or emp
   const { ui } = setup();
   ui.reset(key, { source: { name: '원본.xlsx', files: [{ id: 'file' }] }, rows: [], products: [] });
   const html = ui.workspaceHtml();
-  assert.equal((html.match(/<h3>/g) || []).length, 1);
+  assert.equal((html.match(/<h2>/g) || []).length, 1);
   assert.doesNotMatch(html, /원본.xlsx|등록된 보장분석|iw-ca-page-guide/);
   assert.ok(html.indexOf('iw-ca-insurance-age') < html.indexOf('원본 파일 보기'));
   assert.match(html, /고객 선택/);
