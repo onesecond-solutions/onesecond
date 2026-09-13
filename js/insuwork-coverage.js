@@ -169,6 +169,16 @@
       next.rows = next.rows.filter(function (row) { return !isLegacyPdfNoise(row); });
     }
     next.rows = (next.rows || []).map(function (r) { var row = Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, r); var canonical = ownerCoverageName(row.name); if (canonical !== row.name) { row.sourceNames = Array.from(new Set((row.sourceNames || []).concat(row.name))); row.name = canonical; } if (/암주요치료비/.test(row.name.replace(/\s/g, ''))) { row.section = '암'; row.group = '치료비3'; } if (row.section === '운전') row.section = '운전자'; if (row.section === '암') { var cancerGroup = cancerMiddleGroup(row.name); if (cancerGroup) row.group = cancerGroup; else if (/^치료비\s*[123]$/.test(row.group)) row.group = row.group.replace(/\s+/g, ''); } return row; });
+    var mappedOwnerRows = new Set();
+    next.rows.forEach(function (row) {
+      if (!/암주요치료비|급성심근경색|허혈성심장질환/.test(row.name.replace(/\s/g, '')) || (!hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))) return;
+      var target = next.rows.find(function (candidate) { return candidate !== row && !mappedOwnerRows.has(candidate) && candidate.section === row.section && coverageMatchKey(candidate.name) === coverageMatchKey(row.name) && !hasEnrolledAmount(candidate.total) && !Object.values(candidate.values).some(hasEnrolledAmount) && !(candidate.sourceDetails || []).length; });
+      if (!target) return;
+      var targetId = target.id, targetHidden = target.hidden, targetSelected = target.selected;
+      Object.assign(target, row, { id: targetId, hidden: targetHidden, selected: targetSelected });
+      mappedOwnerRows.add(row);
+    });
+    next.rows = next.rows.filter(function (row) { return !mappedOwnerRows.has(row); });
     next.rows = next.rows.flatMap(function (row) {
       if (!(row.sourceDetails || []).some(function (d) { return d.provider === 'kb-detail'; })) return [row];
       var combined = row.name.match(/^상해\+질병.*(입원|통원)의료비$/);

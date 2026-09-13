@@ -29,3 +29,5 @@ test('owner heart aliases and cancer taxonomy map to saved template, preserving 
  assert.ok(saved.rows.some(x=>x.name==='급성심근경색 진단비'));
  assert.equal(a.normalize(saved).rows.length,3);
 });
+
+test('saved imported owner terms populate empty form rows without resetting work',()=>{const a=setup();const r=a.normalize({rows:[{id:'form',section:'암',group:'치료비3',name:'비급여 암주요 치료비',values:{}},{id:'imported',section:'기타',name:'종합병원하이클래스암주요치료비(수술)',values:{p:'300만'},sourceDetails:[{provider:'kb-detail',number:'1'}]}]});assert.equal(r.rows.length,1);assert.equal(r.rows[0].id,'form');assert.equal(r.rows[0].values.p,'300만');assert.equal(r.rows[0].sourceDetails.length,1);assert.equal(a.normalize(r).rows.length,1);});
