@@ -14,7 +14,7 @@ test('workspace double-save persists once and emits one success notice',async()=
 
 test('cancer category keeps complete company rider names separate from template labels',async()=>{
  const a=setup();await a.loadCoverageSynonyms();
- const names=['종합병원암주요치료비(수술)(연간1회한)','종합병원하이클래스암주요치료비(항암약물)','간편고지(3.N.5) 종합병원암주요치료비(중환자실)'];
+ const names=['종합병원암(유사암제외)주요치료비(수술)(연간1회한)','종합병원하이클래스암주요치료비(항암약물)','간편고지(3.N.5) 종합병원암주요치료비(중환자실)'];
  const kb=a.parseKbPdf([page(1,names.map((name,i)=>[i+1,name,'기타','300만']))],'report.pdf');
  const base={products:[],rows:[{id:'form',section:'암',name:'암주요 치료비(급여, 비급여 포함)',values:{}}]};
  const r=a.mergeImportedRecord(base,kb);

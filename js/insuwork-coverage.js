@@ -90,7 +90,7 @@
     return heart ? heart[1] + ' 진단비' : name;
   }
   function majorCancerCategory(name) {
-    var key = String(name || '').replace(/\s/g, '');
+    var key = String(name || '').replace(/\s/g, '').replace(/\([^)]*\)/g, '');
     if (/하이클래스|비급여암주요치료비/.test(key)) return '비급여 암주요치료비';
     if (/암주요치료비/.test(key)) return '암주요치료비';
     return '';
