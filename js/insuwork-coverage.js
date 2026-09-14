@@ -602,6 +602,14 @@
         if (seen.has(identity)) return;
         seen.add(identity);
         var cleaned = companyName.replace(/^간편고지\([^)]*\)\s*/, '').trim(), mappingName = cleaned;
+        // KB's explicit benefit type is authoritative; abbreviated company labels may omit 의료비.
+        var isKbSilson = area(58, 88, bottom, marker.y + 5).replace(/\s/g, '') === '실손';
+        if (isKbSilson) {
+          var medicalLabel = (creditName || companyName).replace(/\s/g, '');
+          var medical = medicalLabel.match(/^(상해|질병)(?:\([^)]*\))?의료비\(입원\+통원\)$/);
+          var kbMedicalNames = { '비급여도수,체외충격파,증식치료': '비급여 도수·체외충격파·증식치료', '비급여주사제': '비급여 주사료', '비급여MRI검사': '비급여 MRI·MRA' };
+          mappingName = medical ? medical[1] + ' 의료비(입원·통원)' : kbMedicalNames[medicalLabel] || creditName || companyName;
+        }
         // Only known individual treatments lose administrative suffixes. Coverage restrictions stay in sourceDetails.
         var treatment = cleaned.match(/^(카티\(CAR-T\)항암약물허가치료비|표적항암약물허가치료비|항암세기조절방사선치료비|항암양성자방사선치료비|항암중입자방사선치료비|항암방사선약물치료비)(?:\(|$)/i);
         if (treatment) mappingName = treatment[1];
@@ -616,7 +624,7 @@
         var ownerAdministrative = mappingName.replace(/(?:\(갱신형\))?(?:담보)?$/, '');
         if (coverageSynonym(ownerAdministrative)) mappingName = ownerAdministrative;
         var synonym = majorCancerCategory(mappingName) ? null : coverageSynonym(mappingName), name = synonym ? synonym.canonical : mappingName;
-        var section = synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
+        var section = isKbSilson ? '실손' : synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
         var existing = rows.find(function (r) { return r.name === name && !Object.prototype.hasOwnProperty.call(r.values, product.id); });
         var detail = { provider: 'kb-detail', page: pageIndex + 1, number: marker.text, companyName: companyName, creditName: creditName, amount: amount, contractKey: key };
         if (!existing) { existing = { id: uid('coverage'), section: section, group: synonym && synonym.group || '', name: name, total: '', values: {}, sourceNames: [], sourceDetails: [], valueSources: {} }; rows.push(existing); }

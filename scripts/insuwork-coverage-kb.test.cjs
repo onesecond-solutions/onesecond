@@ -1,6 +1,16 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), {webcrypto} = require('node:crypto');
 function setup(){const c={window:{},document:{addEventListener(){},querySelector(){return null},querySelectorAll(){return []}},crypto:webcrypto,console,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};vm.createContext(c);vm.runInContext(fs.readFileSync('js/insuwork-coverage.js','utf8').replace('window.OSInsuworkCoverage = exposed;','window.testing={parseKbPdf,loadCoverageSynonyms,mergeImportedRecord,normalize,saveRecord,reset};'),c);c.window.testing.env=c.window;return c.window.testing;}
 const item=(str,x,y)=>({str,transform:[9,0,0,9,x,y]});
+test('KB explicit silson type maps abbreviated labels to template without changing limits',async()=>{
+ const a=setup();await a.loadCoverageSynonyms();
+ const names=['상해 의료비(입원·통원)','질병 의료비(입원·통원)','비급여 도수·체외충격파·증식치료','비급여 주사료','비급여 MRI·MRA'];
+ const input=page(1,[[1,'상해(일반상해,전체상해를 의미)','상해(일반상해,전체상해를 의미)의료비(입원+통원)','5,000만'],[2,'질병(전체질병을 의미)','질병(전체질병을 의미)의료비(입원+통원)','5,000만'],[3,'비급여도수, 체외충격파, 증식치료','비급여도수, 체외충격파, 증식치료','350만'],[4,'비급여 주사제','비급여 주사제','250만'],[5,'비급여 MRI 검사','비급여 MRI 검사','300만']]);
+ input.items.forEach(i=>{if(i.str==='정액')i.str='실손'});
+ const kb=a.parseKbPdf([input],'report.pdf');assert.ok(kb.rows.every(r=>r.section==='실손'));
+ const base={preserveTemplateLayout:true,products:[],rows:names.map((name,i)=>({id:'t'+i,section:'실손',group:'사용자 분류',name,values:{}}))};
+ const merged=a.mergeImportedRecord(base,kb);assert.equal(merged.rows.length,5);merged.rows.forEach((r,i)=>{assert.equal(r.id,'t'+i);assert.equal(r.name,names[i]);assert.equal(r.group,'사용자 분류');assert.equal(r.values[merged.products[0].id],['5,000만','5,000만','350만','250만','300만'][i]);});
+ assert.equal(a.mergeImportedRecord(merged,kb).rows.length,5);
+});
 function page(number,rows){return {width:595,height:842,items:[item('상품별 가입담보상세',135,801),item('테스트',32,801),item('보험사A',42,752),item('가입일자 : 2026-04-30',450,752),item('시험보험 (2604) ('+number+'/2)',42,728.5),item('월납/20년/90세만기',414,692),item('81,176',519,670),item('원',556,670),...rows.flatMap((r,i)=>[item(String(r[0]),38,629-i*17),item('정액',65,629-i*17),item(r[1],92,629-i*17),item(r[2],367,629-i*17),item(r[3],529,629-i*17)])]};}
 const data=[page(1,[[1,'간편고지(3.N.5) 카티(CAR-T)항암약물허가치료비(최초1회한)(갱신형)','고액항암치료비','5,000만'],[2,'간편고지(3.N.5) 표적항암약물허가치료비(최초1회한)(갱신형)','고액항암치료비','2,000만'],[3,'간편고지(3.N.5) 항암세기조절방사선치료비(최초1회한)','고액항암치료비','2,000만'],[4,'간편고지(3.N.5) 항암양성자방사선치료비(최초1회한)','고액항암치료비','2,000만']]),page(2,[[5,'간편고지(3.N.5) 항암중입자방사선치료비(최초1회한)','기타 인보험(정액)담보','5,000만']])];
 test('KB unavailable premium retains policy and rider amounts; unreadable premium still stops',()=>{
