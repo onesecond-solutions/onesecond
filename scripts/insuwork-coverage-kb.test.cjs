@@ -1,6 +1,13 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), {webcrypto} = require('node:crypto');
 function setup(){const c={window:{},document:{addEventListener(){},querySelector(){return null},querySelectorAll(){return []}},crypto:webcrypto,console,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};vm.createContext(c);vm.runInContext(fs.readFileSync('js/insuwork-coverage.js','utf8').replace('window.OSInsuworkCoverage = exposed;','window.testing={parseKbPdf,loadCoverageSynonyms,mergeImportedRecord,normalize,saveRecord,reset};'),c);c.window.testing.env=c.window;return c.window.testing;}
 const item=(str,x,y)=>({str,transform:[9,0,0,9,x,y]});
+test('KB hospitalization keeps hospital, room and day restrictions in separate detail rows',async()=>{
+ const a=setup();await a.loadCoverageSynonyms();const names=['질병입원일당(1일이상)','상급종합병원1인실(특실포함)질병입원일당(1일이상30일한도)','교통상해입원비(1일-180일)'];
+ const r=a.parseKbPdf([page(1,names.map((n,i)=>[i+1,n,'입원일당',i?'40만':'2만']))],'report.pdf');
+ assert.equal(r.rows.length,3);r.rows.forEach((row,i)=>{assert.equal(row.section,'입원');assert.equal(row.name,names[i]);assert.equal(row.sourceDetails[0].companyName,names[i]);});
+ const base={preserveTemplateLayout:true,products:[],rows:[{id:'basic',section:'입원',group:'일당',name:'질병입원일당',values:{}}]};
+ const merged=a.mergeImportedRecord(base,r);assert.equal(merged.rows.length,4);assert.equal(Object.keys(merged.rows[0].values).length,0);
+});
 test('KB explicit silson type maps abbreviated labels to template without changing limits',async()=>{
  const a=setup();await a.loadCoverageSynonyms();
  const names=['상해 의료비(입원·통원)','질병 의료비(입원·통원)','비급여 도수·체외충격파·증식치료','비급여 주사료','비급여 MRI·MRA'];
