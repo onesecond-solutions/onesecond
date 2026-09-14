@@ -327,6 +327,10 @@
   function upsertTask(task) {
     if (!task || !task.id) return;
     state.data.events = [task].concat(state.data.events.filter(function (entry) { return String(entry.id) !== String(task.id); }));
+    if (periodCare && periodCare.owner === currentUserId()) {
+      periodCare.rows = periodCare.rows.filter(function (entry) { return String(entry.id) !== String(task.id); });
+      if (isCareTask(task) && !task.deleted_at) periodCare.rows.push(task);
+    }
   }
 
   function ensureShell() {
@@ -4743,6 +4747,7 @@
       if (!ok) return;
       softDelete('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
         state.data.events = state.data.events.filter(function (entry) { return String(entry.id) !== String(id); });
+        if (periodCare && periodCare.owner === currentUserId()) periodCare.rows = periodCare.rows.filter(function (entry) { return String(entry.id) !== String(id); });
         closeDialog(); renderContent();
         if (typeof window.toast === 'function') window.toast('일정을 삭제했습니다.');
       }).catch(saveError);
