@@ -55,16 +55,14 @@
     var panel = panelFor(WORKSPACE_KEY), button = panel && panel.closest('.iw-coverage-analysis').querySelector('.iw-ca-fullscreen-toggle');
     if (button) button.focus({ preventScroll: true });
   }
-  // Arrow keys navigate editable table cells; F2 enables normal text editing.
+  // Preserve native caret movement; only Alt+Arrow navigates table cells.
   function coverageCellKeydown(event) {
     var field = event.target;
     if (!field || !field.matches || !field.matches('input:not([type]),input[type="text"],textarea')) return;
     var table = field.closest('#v-insuwork .iw-ca-table-wrap table, #v-insuwork .iw-ca-template-scroll table');
     if (!table || !field.closest('td,th') || field.closest('.iw-ca-customer-header')) return;
     if (event.isComposing || event.keyCode === 229) return;
-    if (event.key === 'F2') { event.preventDefault(); field.dataset.caTextEdit = 'true'; return; }
-    if (event.key === 'Escape' && field.dataset.caTextEdit) { delete field.dataset.caTextEdit; event.preventDefault(); event.stopPropagation(); field.select(); return; }
-    if (!/^Arrow(Left|Right|Up|Down)$/.test(event.key) || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || field.dataset.caTextEdit) return;
+    if (!/^Arrow(Left|Right|Up|Down)$/.test(event.key) || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     var grid = [], locations = [], active;
     Array.from(table.rows).forEach(function (row, y) {
       grid[y] = grid[y] || []; var x = 0;
@@ -94,9 +92,7 @@
     if (candidates[0]) { var next = candidates[0].field; next.focus(); next.select(); next.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
   }
   document.addEventListener('keydown', coverageCellKeydown);
-  document.addEventListener('focusout', function (event) { if (event.target && event.target.dataset) delete event.target.dataset.caTextEdit; });
   document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape' && event.target && event.target.dataset && event.target.dataset.caTextEdit) return;
     if (event.key === 'Escape' && importBusy) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (event.key === 'Escape' && document.querySelector && document.querySelector('#v-insuwork dialog[open], #iw-preview.open')) return;
     if (event.key === 'Escape' && workspaceExpanded && panelFor(WORKSPACE_KEY)) { event.preventDefault(); event.stopImmediatePropagation(); toggleWorkspaceExpanded(); }
