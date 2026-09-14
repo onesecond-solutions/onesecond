@@ -306,7 +306,9 @@
   }
   function upsertCustomer(customer) {
     if (!customer || !customer.id) return;
-    state.data.customers = [customer].concat(state.data.customers.filter(function (entry) { return String(entry.id) !== String(customer.id); }));
+    var index = state.data.customers.findIndex(function (entry) { return String(entry.id) === String(customer.id); });
+    if (index >= 0) state.data.customers[index] = customer;
+    else state.data.customers.unshift(customer);
   }
   function moveCustomerToTrashLocal(id) {
     var index = state.data.customers.findIndex(function (entry) { return String(entry.id) === String(id); });
@@ -322,8 +324,17 @@
   }
   function upsertConsultation(consultation) {
     if (!consultation || !consultation.id) return;
-    state.data.consultations = [consultation].concat(state.data.consultations.filter(function (entry) { return String(entry.id) !== String(consultation.id); }));
+    var index = state.data.consultations.findIndex(function (entry) { return String(entry.id) === String(consultation.id); });
+    if (index >= 0) state.data.consultations[index] = consultation;
+    else state.data.consultations.unshift(consultation);
   }
+  function stableRecordOrder(a, b, customer) {
+    var ad = String((customer ? customerProfile(a).contract_date : a.consulted_at) || a.created_at || '').slice(0, 10);
+    var bd = String((customer ? customerProfile(b).contract_date : b.consulted_at) || b.created_at || '').slice(0, 10);
+    return bd.localeCompare(ad) || String(b.created_at || '').localeCompare(String(a.created_at || '')) || String(a.id || '').localeCompare(String(b.id || ''));
+  }
+  function customerListOrder(a, b) { return stableRecordOrder(a, b, true); }
+  function consultationListOrder(a, b) { return stableRecordOrder(a, b, false); }
   function upsertTask(task) {
     if (!task || !task.id) return;
     state.data.events = [task].concat(state.data.events.filter(function (entry) { return String(entry.id) !== String(task.id); }));
@@ -1395,7 +1406,7 @@
     var nameQ = searchNorm(state.customerNameQuery);
     var customerMatches = nameQ ? familyExpandedMatches(function (item) { return isManagedCustomer(item) && searchNorm((item.name || '') + ' ' + (item.phone || item.phone_raw || '')).indexOf(nameQ) >= 0; }) : null;
     var baseRows = state.data.customers.filter(function (item) { if (!isManagedCustomer(item)) return false; if (customerMatches && !customerMatches.expanded[String(item.id)]) return false; return true; });
-    baseRows.sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); });
+    baseRows.sort(customerListOrder);
     var counts = customerStageCounts(baseRows);
     var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = customerDisplayStatus(item); return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
     rows = periodRows('customer', rows);
@@ -1485,6 +1496,7 @@
     var configuredColumns = consultColumns(), gridStyle = '--iw-consult-template:' + consultGridTemplate(configuredColumns);
     var nameQ = searchNorm(state.consultNameQuery);
     var baseRows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id]; if (!customer) return false; if (nameQ && searchNorm((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
+    baseRows.sort(consultationListOrder);
     var counts = consultationStageCounts(baseRows, customers);
     var rows = baseRows.filter(function (item) { var customer = customers[item.customer_id], profile = customerProfile(customer), status = consultationStatus(item, customer); return (state.consultationStatusFilter === 'all' || status === state.consultationStatusFilter) && matches((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + (item.memo || '') + ' ' + status); });
     rows = periodRows('consultation', rows);
@@ -5310,11 +5322,7 @@
       if (date < today) return;
       if (!careByCustomer[key] || date < careByCustomer[key].date) careByCustomer[key] = { date: date, title: event.title || '' };
     });
-    return state.data.customers.filter(isManagedCustomer).sort(function (a, b) {
-      var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10);
-      var bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10);
-      return bd.localeCompare(ad);
-    }).map(function (customer) {
+    return state.data.customers.filter(isManagedCustomer).sort(customerListOrder).map(function (customer) {
       var key = String(customer.id);
       var care = careByCustomer[key];
       var profile = customerProfile(customer);
@@ -5341,7 +5349,7 @@
     state.data.customers.forEach(function (customer) { customersById[String(customer.id)] = customer; });
     return state.data.consultations.filter(function (item) {
       return !!customersById[String(item.customer_id)];
-    }).map(function (item) {
+    }).sort(consultationListOrder).map(function (item) {
       var customer = customersById[String(item.customer_id)] || {};
       var profile = customerProfile(customer);
       var status = consultationStatus(item, customer);
