@@ -55,14 +55,43 @@
     var panel = panelFor(WORKSPACE_KEY), button = panel && panel.closest('.iw-coverage-analysis').querySelector('.iw-ca-fullscreen-toggle');
     if (button) button.focus({ preventScroll: true });
   }
-  // Preserve native caret movement; only Alt+Arrow navigates table cells.
+  // Excel-style selection and explicit in-cell editing.
+  function coverageKeyboardField(field) {
+    return field && field.matches && field.matches('input:not([type]),input[type="text"],textarea') && field.closest('#v-insuwork .iw-ca-table-wrap table, #v-insuwork .iw-ca-template-scroll table') && !field.closest('.iw-ca-customer-header');
+  }
+  document.addEventListener('focusin', function (event) {
+    var field = event.target; if (!coverageKeyboardField(field)) return;
+    field.dataset.caOriginal = field.value; field.select();
+  });
+  document.addEventListener('click', function (event) {
+    var field = event.target; if (!coverageKeyboardField(field)) return;
+    if (event.detail === 1 && !field.dataset.caEditing) field.select();
+  });
+  document.addEventListener('dblclick', function (event) {
+    if (coverageKeyboardField(event.target)) event.target.dataset.caEditing = 'true';
+  });
+  document.addEventListener('focusout', function (event) {
+    if (coverageKeyboardField(event.target)) { delete event.target.dataset.caEditing; delete event.target.dataset.caOriginal; }
+  });
   function coverageCellKeydown(event) {
     var field = event.target;
     if (!field || !field.matches || !field.matches('input:not([type]),input[type="text"],textarea')) return;
     var table = field.closest('#v-insuwork .iw-ca-table-wrap table, #v-insuwork .iw-ca-template-scroll table');
     if (!table || !field.closest('td,th') || field.closest('.iw-ca-customer-header')) return;
     if (event.isComposing || event.keyCode === 229) return;
-    if (!/^Arrow(Left|Right|Up|Down)$/.test(event.key) || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key === 'F2') { event.preventDefault(); field.dataset.caEditing = 'true'; field.setSelectionRange(field.value.length, field.value.length); return; }
+    if (event.key === 'Escape') {
+      event.preventDefault(); event.stopPropagation();
+      if (field.dataset.caOriginal !== undefined) { field.value = field.dataset.caOriginal; field.dispatchEvent(new Event('input', { bubbles: true })); }
+      delete field.dataset.caEditing; field.select(); return;
+    }
+    var key = event.key;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (key === 'Enter') key = event.shiftKey ? 'ArrowUp' : 'ArrowDown';
+    else if (key === 'Tab') key = event.shiftKey ? 'ArrowLeft' : 'ArrowRight';
+    else if (field.dataset.caEditing || event.shiftKey || !/^Arrow(Left|Right|Up|Down)$/.test(key)) return;
+    delete field.dataset.caEditing;
+    field.dataset.caOriginal = field.value;
     var grid = [], locations = [], active;
     Array.from(table.rows).forEach(function (row, y) {
       grid[y] = grid[y] || []; var x = 0;
@@ -79,7 +108,7 @@
       });
     });
     if (!active) return;
-    var horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight', sign = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+    var horizontal = key === 'ArrowLeft' || key === 'ArrowRight', sign = key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1;
     var candidates = locations.filter(function (loc) {
       if (horizontal) return loc.y === active.y && (loc.x - active.x) * sign > 0;
       return loc.x === active.x && ((loc.y - active.y) * sign > 0 || (loc.y === active.y && (loc.index - active.index) * sign > 0));
@@ -88,11 +117,17 @@
       if (horizontal) return Math.abs(a.x - active.x) - Math.abs(b.x - active.x) || Math.abs(a.index - active.index) - Math.abs(b.index - active.index);
       return Math.abs(a.y - active.y) - Math.abs(b.y - active.y) || (a.index - b.index) * sign;
     });
+    if (event.key === 'Tab' && !candidates.length) {
+      var index = locations.findIndex(function (loc) { return loc.field === field; });
+      if (locations[index + sign]) candidates.push(locations[index + sign]);
+      else return;
+    }
     event.preventDefault(); event.stopPropagation();
     if (candidates[0]) { var next = candidates[0].field; next.focus(); next.select(); next.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
   }
   document.addEventListener('keydown', coverageCellKeydown);
   document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && coverageKeyboardField(event.target)) return;
     if (event.key === 'Escape' && importBusy) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (event.key === 'Escape' && document.querySelector && document.querySelector('#v-insuwork dialog[open], #iw-preview.open')) return;
     if (event.key === 'Escape' && workspaceExpanded && panelFor(WORKSPACE_KEY)) { event.preventDefault(); event.stopImmediatePropagation(); toggleWorkspaceExpanded(); }
