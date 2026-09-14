@@ -55,7 +55,48 @@
     var panel = panelFor(WORKSPACE_KEY), button = panel && panel.closest('.iw-coverage-analysis').querySelector('.iw-ca-fullscreen-toggle');
     if (button) button.focus({ preventScroll: true });
   }
+  // Arrow keys navigate editable table cells; F2 enables normal text editing.
+  function coverageCellKeydown(event) {
+    var field = event.target;
+    if (!field || !field.matches || !field.matches('input:not([type]),input[type="text"],textarea')) return;
+    var table = field.closest('#v-insuwork .iw-ca-table-wrap table, #v-insuwork .iw-ca-template-scroll table');
+    if (!table || !field.closest('td,th') || field.closest('.iw-ca-customer-header')) return;
+    if (event.isComposing || event.keyCode === 229) return;
+    if (event.key === 'F2') { event.preventDefault(); field.dataset.caTextEdit = 'true'; return; }
+    if (event.key === 'Escape' && field.dataset.caTextEdit) { delete field.dataset.caTextEdit; event.preventDefault(); event.stopPropagation(); field.select(); return; }
+    if (!/^Arrow(Left|Right|Up|Down)$/.test(event.key) || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || field.dataset.caTextEdit) return;
+    var grid = [], locations = [], active;
+    Array.from(table.rows).forEach(function (row, y) {
+      grid[y] = grid[y] || []; var x = 0;
+      Array.from(row.cells).forEach(function (cell) {
+        while (grid[y][x]) x++;
+        var start = x;
+        for (var dy = 0; dy < cell.rowSpan; dy++) {
+          grid[y + dy] = grid[y + dy] || [];
+          for (var dx = 0; dx < cell.colSpan; dx++) grid[y + dy][start + dx] = cell;
+        }
+        var fields = Array.from(cell.querySelectorAll('input:not([type]),input[type="text"],textarea')).filter(function (input) { return !input.disabled && !input.readOnly && input.getClientRects().length && !input.closest('.iw-ca-customer-header'); });
+        fields.forEach(function (input, index) { var loc = { field: input, x: start, y: y, index: index, cell: cell }; locations.push(loc); if (input === field) active = loc; });
+        x += cell.colSpan;
+      });
+    });
+    if (!active) return;
+    var horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight', sign = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+    var candidates = locations.filter(function (loc) {
+      if (horizontal) return loc.y === active.y && (loc.x - active.x) * sign > 0;
+      return loc.x === active.x && ((loc.y - active.y) * sign > 0 || (loc.y === active.y && (loc.index - active.index) * sign > 0));
+    });
+    candidates.sort(function (a, b) {
+      if (horizontal) return Math.abs(a.x - active.x) - Math.abs(b.x - active.x) || Math.abs(a.index - active.index) - Math.abs(b.index - active.index);
+      return Math.abs(a.y - active.y) - Math.abs(b.y - active.y) || (a.index - b.index) * sign;
+    });
+    event.preventDefault(); event.stopPropagation();
+    if (candidates[0]) { var next = candidates[0].field; next.focus(); next.select(); next.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+  }
+  document.addEventListener('keydown', coverageCellKeydown);
+  document.addEventListener('focusout', function (event) { if (event.target && event.target.dataset) delete event.target.dataset.caTextEdit; });
   document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && event.target && event.target.dataset && event.target.dataset.caTextEdit) return;
     if (event.key === 'Escape' && importBusy) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (event.key === 'Escape' && document.querySelector && document.querySelector('#v-insuwork dialog[open], #iw-preview.open')) return;
     if (event.key === 'Escape' && workspaceExpanded && panelFor(WORKSPACE_KEY)) { event.preventDefault(); event.stopImmediatePropagation(); toggleWorkspaceExpanded(); }
