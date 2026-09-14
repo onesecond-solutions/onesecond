@@ -407,7 +407,7 @@
   function loadOfficeCrypto() { if (!officeCryptoPromise) officeCryptoPromise = loadScript('/js/vendor/officecrypto.min.js?v=20260913cleanup1', function () { return !!window.OSOfficeCrypto; }); return officeCryptoPromise; }
   function synonymExactKey(value) { return String(value || '').toLowerCase().replace(/[\s·ㆍ,._()\-\/]/g, ''); }
   function loadCoverageSynonyms() {
-    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260913cleanup1', { cache: 'no-store' }).then(function (response) {
+    if (!coverageSynonymsPromise) coverageSynonymsPromise = fetch('/data/coverage_synonyms.json?v=20260914cancer1', { cache: 'no-store' }).then(function (response) {
       if (!response.ok) throw new Error('담보명 동의어 사전을 불러오지 못했습니다.');
       return response.json();
     }).then(function (data) {
