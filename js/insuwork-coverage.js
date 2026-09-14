@@ -589,7 +589,9 @@
       function area(x1, x2, y1, y2) { return items.filter(function (i) { return i.x >= x1 && i.x < x2 && i.y >= y1 && i.y <= y2; }).sort(function (a, b) { return Math.abs(a.y - b.y) > 3 ? b.y - a.y : a.x - b.x; }).map(function (i) { return i.text; }).join(' ').trim(); }
       var company = area(30, 400, 746, 758), productName = area(30, 570, 714, 740).replace(/\s*\(\d+\/\d+\)\s*$/, ''), date = area(400, 570, 746, 758).match(/\d{4}-\d{2}-\d{2}/), premium = area(480, 575, 663, 678).replace(/\s/g, '');
       var markers = items.filter(function (i) { return i.x >= 30 && i.x < 58 && i.y > 65 && i.y < 650 && /^\d+$/.test(i.text); }).sort(function (a,b) { return b.y-a.y; });
-      if (!company || !productName || !date || !/^[\d,]+원$/.test(premium) || !markers.length) throw new Error('KB PDF 상세표 형식이 달라 분석을 중단했습니다. 기존 작업표는 유지됩니다.');
+      if (!company || !productName || !date || !markers.length) throw new Error('KB PDF ' + (pageIndex + 1) + '쪽의 상품 정보 또는 담보 행을 읽지 못했습니다. 기존 작업표는 유지됩니다.');
+      // Missing premium is source data, not a malformed policy. Keep its riders and do not invent zero.
+      if (!/^[\d,]+원$/.test(premium) && premium !== '보험료미제공') throw new Error('KB PDF ' + (pageIndex + 1) + '쪽의 보험료 표기를 읽지 못했습니다. 기존 작업표는 유지됩니다.');
       var key = company + '|' + productName + '|' + date[0], product = products.find(function (p) { return p.contractKey === key; });
       if (!product) { product = { id: uid('product'), company: company, product: productName, premium: premium, payment: area(400,575,686,701), contractDate: date[0], contractKey: key, coverageAuthority: 'kb-detail' }; products.push(product); }
       markers.forEach(function (marker, index) {
