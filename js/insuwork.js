@@ -327,6 +327,10 @@
   function upsertTask(task) {
     if (!task || !task.id) return;
     state.data.events = [task].concat(state.data.events.filter(function (entry) { return String(entry.id) !== String(task.id); }));
+    if (periodCare && periodCare.owner === currentUserId()) {
+      periodCare.rows = periodCare.rows.filter(function (entry) { return String(entry.id) !== String(task.id); });
+      if (isCareTask(task) && !task.deleted_at) periodCare.rows.push(task);
+    }
   }
 
   function ensureShell() {
@@ -684,7 +688,7 @@
      "전문 디자이너의 손길"이 필요한 자리(대표 표현)는 클릭 시 여는 iw-help-popup 하나로 집중한다. */
   var HELP_CONTENT = {
     calendar: { title: '캘린더 보여주기', preview: '같은 종류 일정이 2개 이상이면 +n개 더보기로 모아 보여줘요.', body: '상담 일정, 고객 케어, 보험상령일 등 동일한 종류의 일정이 2개 이상인 경우 <strong>+n개 더보기</strong>로 보여지며, 마우스를 올려두면 미리보기, 클릭하면 하루 일정 보기로 화면 전환 됩니다.' },
-    customers: { title: '케어일정 자동 생성', preview: '청약완료로 등록하면 케어 일정이 자동으로 만들어져요.', body: '청약완료로 등록하면 청약일 기준 <strong>31·91·181·365일 케어 일정</strong>과, 이후 매년 청약 기념일이 캘린더에 자동으로 만들어집니다.<br>별도 설정은 필요 없습니다.' },
+    customers: { title: '케어일정 자동 생성', preview: '청약완료로 등록하면 케어 일정이 자동으로 만들어져요.', body: '청약완료로 등록하면 청약일 기준 <strong>31·91·181·365일 케어 일정</strong>이 캘린더에 만들어집니다. 청약일은 최초 날짜에만 표시하며 매년 반복하지 않습니다.<br>별도 설정은 필요 없습니다.' },
     consultations: { title: '상담 플로우 기능', preview: '상담상태별로 통계 카드에 자동 집계돼요.', body: '상담상태 결과값에 따라 통계 카드에 수치화되고, 카드 클릭하면 해당 고객리스트만 보여주며, 상담상태 결과값이 <strong>청약완료</strong>가 되면 계약관리 화면으로 자동 저장됩니다.' }
   };
   function helpBadgeHtml(key) {
@@ -998,12 +1002,6 @@
       offsetDates[date] = true;
       targets.push({ legacyId: customer.id + ':' + step[0] + suffix, date: date, title: name + ' ' + step[1] + ' 케어' + titleSuffix, description: name + ' 고객 ' + applyLabel + ' 기준 ' + step[1] + ' 확인 일정입니다.' + (phone ? ' 연락처: ' + phone : '') });
     });
-    var contractYear = parseDate(base).getFullYear(), currentYear = new Date().getFullYear();
-    for (var year = contractYear + 1; year <= currentYear + 2; year++) {
-      var annivDate = careAnniversaryDate(base, year);
-      if (offsetDates[annivDate]) continue;
-      targets.push({ legacyId: customer.id + ':anniversary:' + year + suffix, date: annivDate, title: name + ' 청약 기념일' + titleSuffix, description: name + ' 고객 청약 기념일입니다. (' + applyLabel + ')' + (phone ? ' 연락처: ' + phone : '') });
-    }
     return targets;
   }
   function syncCareTasksForCustomer(customer, knownRows) {
@@ -1092,7 +1090,7 @@
   function applicationCalendarEventsForYear(year) {
     var out = [];
     state.data.customers.forEach(function (customer) {
-      contractDatesOf(customer).forEach(function (date) {
+      contractDatesOf(customer).slice(0, 1).forEach(function (date) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date.slice(0, 4) !== String(year)) return;
         var name = customer.name || '고객', phone = phoneText(customer.phone || customer.phone_raw || '');
         out.push({ id: 'application-' + customer.id + '-' + date, customer_id: customer.id, event_date: date, event_end_date: date, title: name + ' 청약', event_type: 'application', description: name + ' 고객 청약일자입니다.' + (phone ? ' 연락처: ' + phone : ''), builtin: true });
@@ -1144,7 +1142,8 @@
     [selected.getFullYear() - 1, selected.getFullYear(), selected.getFullYear() + 1, cursor.getFullYear() - 1, cursor.getFullYear(), cursor.getFullYear() + 1].forEach(function (year) { years[year] = true; });
     return Object.keys(years).reduce(function (rows, year) { year = Number(year); return rows.concat(builtinCalendarEvents(year), insuranceAgeCalendarEventsForYear(year), birthdayCalendarEventsForYear(year), applicationCalendarEventsForYear(year)); }, []);
   }
-  function allEvents() { return state.data.events.concat(builtInEventsAroundCalendar()); }
+  function obsoleteApplicationAnniversary(event) { return event.legacy_source === 'care_auto' && String(event.legacy_id || '').indexOf(':anniversary:') >= 0; }
+  function allEvents() { return state.data.events.filter(function (event) { return !obsoleteApplicationAnniversary(event); }).concat(builtInEventsAroundCalendar()); }
 
   function publicLandingHtml() {
     var concepts = [
@@ -1310,6 +1309,72 @@
     rows.forEach(function (item) { var status = customerDisplayStatus(item); if (counts.hasOwnProperty(status)) counts[status]++; });
     return counts;
   }
+  var periodFilters = {}, periodResults = {}, periodSignatures = {}, periodCare = { owner: '', rows: [], status: '' };
+  function periodFilter(area) { return periodFilters[area] || (periodFilters[area] = { basis: 'date', preset: 'all', start: '', end: '' }); }
+  function periodRange(filter) {
+    var today = ymd(new Date()), now = parseDate(today), year = now.getFullYear(), month = now.getMonth();
+    if (filter.preset === 'today') return [today, today];
+    if (filter.preset === 'week') return [addDays(today, -6), today];
+    if (filter.preset === 'month') return [ymd(new Date(year, month, 1)), ymd(new Date(year, month + 1, 0))];
+    if (filter.preset === 'lastMonth') return [ymd(new Date(year, month - 1, 1)), ymd(new Date(year, month, 0))];
+    if (filter.preset === 'custom') return [filter.start, filter.end];
+    return ['', ''];
+  }
+  function loadPeriodCare() {
+    var owner = currentUserId(), cache = { owner: owner, rows: [], status: 'loading' }; periodCare = cache;
+    function page(offset) {
+      return api('insuwork_tasks?owner_id=eq.' + encodeURIComponent(owner) + '&deleted_at=is.null&legacy_source=eq.care_auto&order=id.asc&limit=500&offset=' + offset + '&select=id,customer_id,task_date,completed_at,legacy_source,legacy_id').then(function (rows) {
+        cache.rows = cache.rows.concat(rows); return rows.length === 500 ? page(offset + 500) : null;
+      });
+    }
+    return page(0).then(function () { cache.status = 'ready'; }).catch(function () { cache.status = 'error'; }).finally(function () { if (periodCare === cache) renderContent(); });
+  }
+  function setListPeriod(area, key, value) {
+    if (!canEditCoverageTemplate() || ['customer', 'consultation'].indexOf(area) < 0) return;
+    var filter = periodFilter(area);
+    if (key === 'basis' && ['date', 'care', 'birthday'].indexOf(value) >= 0) filter.basis = area === 'consultation' ? 'date' : value;
+    else if (key === 'preset' && ['today', 'week', 'month', 'lastMonth', 'all', 'custom'].indexOf(value) >= 0) { filter.preset = value; if (value === 'custom' && !filter.start) filter.start = filter.end = ymd(new Date()); }
+    else if (key === 'start' || key === 'end') filter[key] = value;
+    setKakaoBulkState(area, []);
+    if (area === 'customer') { state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; }
+    else { state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; }
+    if (filter.basis === 'care') loadPeriodCare();
+    renderContent();
+  }
+  function periodRows(area, rows) {
+    var filter = periodFilter(area), range = periodRange(filter), enabled = canEditCoverageTemplate();
+    var signature = JSON.stringify([currentUserId(), filter, state.query, area === 'customer' ? state.customerNameQuery : state.consultNameQuery, area === 'customer' ? state.customerStatusFilter : state.consultationStatusFilter]);
+    if (periodSignatures[area] !== signature) { setKakaoBulkState(area, []); periodSignatures[area] = signature; }
+    function inside(date) { return !!date && (!range[0] || date >= range[0]) && (!range[1] || date <= range[1]); }
+    if (enabled) rows = rows.filter(function (item) {
+      if (filter.preset === 'custom' && (!range[0] || !range[1] || range[0] > range[1])) return false;
+      if (area === 'customer' && filter.basis === 'care') {
+        if (periodCare.owner !== currentUserId() || periodCare.status !== 'ready') return false;
+        return periodCare.rows.some(function (event) { return String(event.customer_id) === String(item.id) && !event.completed_at && !obsoleteApplicationAnniversary(event) && inside(String(event.task_date || '').slice(0, 10)); });
+      }
+      if (filter.preset === 'all') return true;
+      if (area === 'customer' && filter.basis === 'birthday') {
+        var birth = String(customerProfile(item).birth_date || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(birth)) return false;
+        for (var year = Number(range[0].slice(0, 4)); year <= Number(range[1].slice(0, 4)); year++) { if (inside(careAnniversaryDate(birth, year))) return true; } return false;
+      }
+      var date = area === 'customer' ? contractDatesOf(item)[0] : String(item.consulted_at || item.created_at || '').slice(0, 10);
+      return inside(date);
+    });
+    periodResults[area] = rows.map(function (item) { return String(item.id); });
+    setKakaoBulkState(area, kakaoBulkState(area).filter(function (id) { return periodResults[area].indexOf(id) >= 0; }));
+    return rows;
+  }
+  function periodBarHtml(area, count) {
+    if (!canEditCoverageTemplate()) return '';
+    var filter = periodFilter(area), range = periodRange(filter);
+    function change(key) { return 'OSInsuwork.setListPeriod(\'' + area + '\',\'' + key + '\',this.value)'; }
+    var basis = area === 'customer' ? '<select aria-label="조회 기준" onchange="' + change('basis') + '">' + [['date', '최초 청약일'], ['care', '케어 예정일'], ['birthday', '생일']].map(function (entry) { return '<option value="' + entry[0] + '"' + (entry[0] === filter.basis ? ' selected' : '') + '>' + entry[1] + '</option>'; }).join('') + '</select>' : '<strong>등록일</strong>';
+    var buttons = [['today', '오늘'], ['week', '최근 7일'], ['month', '이번 달'], ['lastMonth', '지난달'], ['all', '전체'], ['custom', '사용자 정의']].map(function (entry) { return '<button type="button" class="iw-btn' + (filter.preset === entry[0] ? ' primary' : '') + '" aria-pressed="' + (filter.preset === entry[0]) + '" onclick="OSInsuwork.setListPeriod(\'' + area + '\',\'preset\',\'' + entry[0] + '\')">' + entry[1] + '</button>'; }).join('');
+    var dates = filter.preset === 'custom' ? '<input type="date" aria-label="조회 시작일" value="' + esc(filter.start) + '" onchange="' + change('start') + '"> ~ <input type="date" aria-label="조회 종료일" value="' + esc(filter.end) + '" onchange="' + change('end') + '">' : '';
+    var note = filter.basis === 'care' ? (periodCare.status === 'loading' ? '케어 일정 조회 중…' : periodCare.status === 'error' ? '조회 실패. 케어 예정일을 다시 선택해 주세요.' : '미완료 케어 기준 · 같은 고객은 한 번만 표시') : '';
+    if (filter.preset === 'custom' && (!range[0] || !range[1] || range[0] > range[1])) note = '시작일과 종료일을 확인해 주세요.';
+    return '<div class="iw-period-bar">' + basis + buttons + dates + '<span>조회 ' + count + '명</span><small>' + esc(note || (range[0] ? range[0] + ' ~ ' + range[1] : '전체 기간')) + '</small></div>';
+  }
   function kakaoBulkState(area) { return area === 'customer' ? state.kakaoSelectedCustomers : state.kakaoSelectedConsultations; }
   function setKakaoBulkState(area, ids) { if (area === 'customer') state.kakaoSelectedCustomers = ids; else state.kakaoSelectedConsultations = ids; }
   function kakaoBulkSelected(area, id) { return kakaoBulkState(area).indexOf(String(id)) >= 0; }
@@ -1322,7 +1387,7 @@
     var ids = rows.map(function (entry) { return String(entry.id); });
     var selected = kakaoBulkState(area).filter(function (id) { return ids.indexOf(String(id)) >= 0; });
     var areaLabel = area === 'customer' ? '계약관리' : '상담관리';
-    return '<div class="iw-kakao-bulkbar"><span>' + esc(areaLabel) + ' 선택 ' + selected.length + '명</span><button type="button" class="iw-btn" onclick="OSInsuwork.selectAllKakaoBulk(\'' + esc(area) + '\')">현재 목록 전체선택</button><button type="button" class="iw-btn" onclick="OSInsuwork.clearKakaoBulk(\'' + esc(area) + '\')">선택해제</button><button type="button" class="iw-btn iw-kakao-btn" onclick="OSInsuwork.openKakaoBulkDraft(\'' + esc(area) + '\')" ' + (selected.length ? '' : 'disabled') + '>카카오톡 발송하기</button></div>';
+    return '<div class="iw-kakao-bulkbar"><span>' + esc(areaLabel) + ' 선택 ' + selected.length + '명</span><button type="button" class="iw-btn" onclick="OSInsuwork.selectAllKakaoBulk(\'' + esc(area) + '\')">조회 결과 전체선택</button><button type="button" class="iw-btn" onclick="OSInsuwork.clearKakaoBulk(\'' + esc(area) + '\')">선택해제</button><button type="button" class="iw-btn iw-kakao-btn" onclick="OSInsuwork.openKakaoBulkDraft(\'' + esc(area) + '\')" ' + (selected.length ? '' : 'disabled') + '>카카오톡 발송하기</button></div>';
   }
   function customersHtml() {
     var columns = [{ key: 'date', label: '청약일자', width: 86 }, { key: 'name', label: '이름', width: 140 }, { key: 'birth', label: '생년월일', width: 92 }, { key: 'genderAge', label: '성별(보험나이)', width: 104 }, { key: 'phone', label: '전화번호', width: 116 }, { key: 'summary', label: '상담내용', width: 308, flex: true }, { key: 'status', label: '고객상태', width: 102 }];
@@ -1333,6 +1398,8 @@
     baseRows.sort(function (a, b) { var ad = String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10), bd = String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10); return bd.localeCompare(ad); });
     var counts = customerStageCounts(baseRows);
     var rows = baseRows.filter(function (item) { var profile = customerProfile(item), note = profile.note || '', status = customerDisplayStatus(item); return (state.customerStatusFilter === 'all' || status === state.customerStatusFilter) && matches((item.name || '') + ' ' + (item.phone || item.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + note + ' ' + status); });
+    rows = periodRows('customer', rows);
+    var periodHtml = periodBarHtml('customer', rows.length), bulkHtml = kakaoBulkBarHtml('customer', rows);
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedCustomerDetail); });
     if (!selected && state.selectedCustomerDetail) state.selectedCustomerDetail = null;
     var totalRowCount = rows.length;
@@ -1342,7 +1409,7 @@
     var body = rows.map(function (item) { var profile = customerProfile(item), date = String(profile.contract_date || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, ymd(new Date())), note = profile.note || '', status = customerDisplayStatus(item); var values = { date: date, name: item.name || '(이름 없음)', birth: profile.birth_date || '', genderAge: (profile.gender || '-') + (age === '' ? '' : ' (' + age + '세)'), phone: phoneText(item.phone || item.phone_raw || ''), summary: stripHtml(note), status: status }; return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedCustomerDetail) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectCustomerDetail(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(note || '상담내용이 없습니다.')) + '">' + columns.map(function (column) { if (column.key === 'name') return '<strong class="iw-contract-name-cell">' + kakaoBulkToggleHtml('customer', item.id, values.name) + favoriteButton('customer', item.id, values.name, (values.phone || status)) + '<span>' + esc(values[column.key]) + '</span>' + familyBadgeHtml(item) + '</strong>'; return '<span class="iw-consult-cell iw-consult-' + esc(column.key) + '">' + esc(values[column.key]) + '</span>'; }).join('') + (canUseCoverageAnalysis() ? '<span role="button" tabindex="0" class="iw-btn iw-consult-action-spacer" aria-label="' + esc(item.name || '고객') + ' 보장분석" onclick="event.stopPropagation();OSInsuwork.openCustomerCoverage(\'' + esc(item.id) + '\')" onkeydown="if(event.key===&quot;Enter&quot;||event.key===&quot; &quot;){event.preventDefault();event.stopPropagation();OSInsuwork.openCustomerCoverage(\'' + esc(item.id) + '\')}">보장분석</span>' : '<span class="iw-consult-action-spacer" aria-hidden="true"></span>') + '</button>'; }).join('');
     var detail = selected ? customerDetailHtml(selected) : '';
     var stats = statFilterBarHtml({ kind: 'customer', stages: CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]), activeStatus: state.customerStatusFilter, counts: counts, nameQuery: state.customerNameQuery, nameInputId: 'iw-customer-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterCustomerStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addCustomer()">+ 고객 등록</button>' });
-    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>계약관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + kakaoBulkBarHtml('customer', rows) + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
+    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>계약관리' + helpBadgeHtml('customers') + '</h2></div>' + stats + periodHtml + bulkHtml + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master"><div class="iw-consult-list" role="list">' + header + '<div class="iw-consult-rows">' + body + (rows.length ? '' : '<div class="iw-empty">등록된 고객이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreCustomers()') + '</div></section>' + detail + '</div></div>';
   }
   function familyCandidates(customer) {
     var note = stripHtml(customerProfile(customer).note || ''), kin = /(배우자|남편|아내|부모|아버지|어머니|엄마|아빠|아들|딸|자녀|형제|자매)/;
@@ -1420,6 +1487,8 @@
     var baseRows = state.data.consultations.filter(function (item) { var customer = customers[item.customer_id]; if (!customer) return false; if (nameQ && searchNorm((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '')).indexOf(nameQ) < 0) return false; return true; });
     var counts = consultationStageCounts(baseRows, customers);
     var rows = baseRows.filter(function (item) { var customer = customers[item.customer_id], profile = customerProfile(customer), status = consultationStatus(item, customer); return (state.consultationStatusFilter === 'all' || status === state.consultationStatusFilter) && matches((customer.name || '') + ' ' + (customer.phone || customer.phone_raw || '') + ' ' + (profile.birth_date || '') + ' ' + (item.memo || '') + ' ' + status); });
+    rows = periodRows('consultation', rows);
+    var periodHtml = periodBarHtml('consultation', rows.length), bulkHtml = kakaoBulkBarHtml('consultation', rows);
     var selected = rows.find(function (item) { return String(item.id) === String(state.selectedConsultation); });
     if (!selected && state.selectedConsultation) state.selectedConsultation = null;
     var totalRowCount = rows.length;
@@ -1432,7 +1501,7 @@
     }).join('') + (rows.length ? '' : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreConsultations()') + '</div>';
     var detail = selected ? consultationDetailHtml(selected, customers[selected.customer_id] || {}) : '';
     var stats = statFilterBarHtml({ kind: 'consult', stages: CONSULT_STAGES, activeStatus: state.consultationStatusFilter, counts: counts, nameQuery: state.consultNameQuery, nameInputId: 'iw-consult-name-input', namePlaceholder: '고객명·전화번호 검색', onStage: 'OSInsuwork.filterConsultationStatus', registerHtml: '<button class="iw-btn primary" onclick="OSInsuwork.addConsultation()">+ 상담 등록</button>' });
-    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>상담관리' + helpBadgeHtml('consultations') + '</h2></div>' + stats + kakaoBulkBarHtml('consultation', rows) + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master">' + list + '</section>' + detail + '</div></div>';
+    return '<div class="iw-consult-screen">' + statusHtml() + '<div class="iw-toolbar"><h2>상담관리' + helpBadgeHtml('consultations') + '</h2></div>' + stats + periodHtml + bulkHtml + favoritesFabHtml() + '<div class="iw-consult-layout' + (selected ? ' has-detail' : '') + '"><section class="iw-consult-master">' + list + '</section>' + detail + '</div></div>';
   }
   function manageConsultColumns() {
     var columns = consultColumns(), rows = columns.map(function (column, index) { return '<div class="iw-column-setting"><span>' + esc(column.label) + '</span><button type="button" onclick="OSInsuwork.moveConsultColumn(' + index + ',-1)"' + (index === 0 ? ' disabled' : '') + '>←</button><button type="button" onclick="OSInsuwork.moveConsultColumn(' + index + ',1)"' + (index === columns.length - 1 ? ' disabled' : '') + '>→</button>' + (column.custom ? '<button type="button" class="danger" onclick="OSInsuwork.deleteConsultColumn(\'' + esc(column.key) + '\')">삭제</button>' : '') + '</div>'; }).join('');
@@ -4678,6 +4747,7 @@
       if (!ok) return;
       softDelete('insuwork_tasks?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()) + '&deleted_at=is.null').then(function () {
         state.data.events = state.data.events.filter(function (entry) { return String(entry.id) !== String(id); });
+        if (periodCare && periodCare.owner === currentUserId()) periodCare.rows = periodCare.rows.filter(function (entry) { return String(entry.id) !== String(id); });
         closeDialog(); renderContent();
         if (typeof window.toast === 'function') window.toast('일정을 삭제했습니다.');
       }).catch(saveError);
@@ -4909,14 +4979,14 @@
     renderContent();
   }
   function selectAllKakaoBulk(area) {
-    var nodes = Array.prototype.slice.call(document.querySelectorAll('#v-insuwork .iw-kakao-select[data-kakao-area="' + area + '"]'));
-    setKakaoBulkState(area, nodes.map(function (node) { return String(node.getAttribute('data-kakao-id') || ''); }).filter(Boolean));
+    if (!canUseKakaoPilot()) return;
+    setKakaoBulkState(area, (periodResults[area] || []).slice());
     renderContent();
   }
   function clearKakaoBulk(area) { setKakaoBulkState(area, []); renderContent(); }
   function kakaoBulkTargets(area) {
     var kind = area === 'customer' ? 'customer' : 'consultation';
-    return kakaoBulkState(area).map(function (id) { return kakaoTarget(kind, id); }).filter(Boolean);
+    return kakaoBulkState(area).filter(function (id) { return (periodResults[area] || []).indexOf(id) >= 0; }).map(function (id) { return kakaoTarget(kind, id); }).filter(Boolean);
   }
   function openKakaoBulkDraft(area) {
     if (!canUseKakaoPilot()) return;
@@ -5391,7 +5461,7 @@
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, editPublicLibraryItem: editPublicLibraryItem, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
-    addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, queueCustomerAddressSearch: queueCustomerAddressSearch, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, showSearchImageHover: showSearchImageHover, hideSearchImageHover: hideSearchImageHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, uploadKakaoBusinessCard: uploadKakaoBusinessCard, toggleKakaoHub: toggleKakaoHub, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
+    setListPeriod: setListPeriod, addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, queueCustomerAddressSearch: queueCustomerAddressSearch, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, showSearchImageHover: showSearchImageHover, hideSearchImageHover: hideSearchImageHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, uploadKakaoBusinessCard: uploadKakaoBusinessCard, toggleKakaoHub: toggleKakaoHub, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openAzRoomTool: openAzRoomTool, startChatScrollCapture: startChatScrollCapture, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, openBriefingSearchResult: openBriefingSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
     filterScriptsStage: filterScriptsStage, toggleScriptCard: toggleScriptCard, toggleScriptSection: toggleScriptSection,
     filterNewsPool: filterNewsPool, setNewsScope: setNewsScope, selectNewsCompany: selectNewsCompany, toggleNewsMonth: toggleNewsMonth, openNewsletter: openNewsletter,
