@@ -250,6 +250,7 @@
   function importedPlacement(name) {
     var key = String(name || '').replace(/\s/g, '');
     var rules = [
+      [/^(?!.*간병).*입원(?:일당|비)/, '입원', '입원'],
       [/^(?:5대)?골절.*진단/, '골절·화상', '골절진단'],
       [/^(?:5대)?골절.*수술/, '골절·화상', '골절수술'],
       [/^깁스치료/, '골절·화상', '깁스치료'],
@@ -627,7 +628,7 @@
         var section = isKbSilson ? '실손' : synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /간병/.test(name) ? '간병인' : /입원일당|입원비/.test(companyName + creditName) ? '입원' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
         var existing = rows.find(function (r) { return r.name === name && !Object.prototype.hasOwnProperty.call(r.values, product.id); });
         var detail = { provider: 'kb-detail', page: pageIndex + 1, number: marker.text, companyName: companyName, creditName: creditName, amount: amount, contractKey: key };
-        if (!existing) { existing = { id: uid('coverage'), section: section, group: synonym && synonym.group || '', name: name, total: '', values: {}, sourceNames: [], sourceDetails: [], valueSources: {} }; rows.push(existing); }
+        if (!existing) { existing = { id: uid('coverage'), section: section, group: synonym && synonym.group || (section === '입원' ? '입원' : ''), name: name, total: '', values: {}, sourceNames: [], sourceDetails: [], valueSources: {} }; rows.push(existing); }
         existing.values[product.id] = amount; existing.valueSources[product.id] = 'kb-detail'; existing.sourceNames.push(companyName); existing.sourceDetails.push(detail);
       });
     });
@@ -737,6 +738,7 @@
       // Repair only untouched KB-import labels previously classified as 기타, not owner template labels.
       if ((existing.section === '기타' || existing.section === '운전자') && targetSection === '입원' &&
           (existing.sourceDetails || []).some(function (d) { return d.provider === 'kb-detail' && d.companyName === existing.name; })) existing.section = targetSection;
+      if (targetSection === '입원' && existing.group === '분류 확인' && (existing.sourceDetails || []).some(function (d) { return d.provider === 'kb-detail'; })) existing.group = incoming.group || '입원';
       if (incoming.sharedLimit) existing.sharedLimit = clone(incoming.sharedLimit);
       if (incoming.sourceDetails) existing.sourceDetails = (existing.sourceDetails || []).filter(function (d) { return !incoming.sourceDetails.some(function (n) { return n.contractKey === d.contractKey && n.number === d.number; }); }).concat(clone(incoming.sourceDetails));
       existing.valueSources = existing.valueSources || {};
