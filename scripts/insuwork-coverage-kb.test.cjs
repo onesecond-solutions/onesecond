@@ -1,6 +1,11 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), {webcrypto} = require('node:crypto');
 function setup(){const c={window:{},document:{addEventListener(){},querySelector(){return null},querySelectorAll(){return []}},crypto:webcrypto,console,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};vm.createContext(c);vm.runInContext(fs.readFileSync('js/insuwork-coverage.js','utf8').replace('window.OSInsuworkCoverage = exposed;','window.testing={parseKbPdf,loadCoverageSynonyms,mergeImportedRecord,normalize,saveRecord,reset};'),c);c.window.testing.env=c.window;return c.window.testing;}
 const item=(str,x,y)=>({str,transform:[9,0,0,9,x,y]});
+test('general accident death uses existing owner label and hospitalization needs no classification placeholder',async()=>{
+ const a=setup();await a.loadCoverageSynonyms();const kb=a.parseKbPdf([page(1,[[1,'일반상해사망','상해사망','5,000만'],[2,'상해입원비(1일-180일)','상해입원일당','2만']])],'report.pdf');
+ const r=a.mergeImportedRecord({preserveTemplateLayout:true,products:[],rows:[{id:'death',section:'사망',group:'사망',name:'상해 사망보험금',values:{}}]},kb);
+ assert.equal(r.rows.length,2);assert.equal(r.rows[0].id,'death');assert.equal(r.rows[0].name,'상해 사망보험금');assert.equal(r.rows[0].values[r.products[0].id],'5,000만');assert.equal(r.rows[1].section,'입원');assert.notEqual(r.rows[1].group,'분류 확인');
+});
 test('plain cancer diagnosis aliases fill owner rows without duplicate rows or repeated sums',async()=>{
  const a=setup();await a.loadCoverageSynonyms();const names=['일반암 진단비','소액/유사암 진단비'];
  const base={preserveTemplateLayout:true,products:[],rows:names.map((name,i)=>({id:'owner'+i,section:'암',group:'진단비',name,values:{}}))};
