@@ -216,9 +216,15 @@
       return ar-br || a.i-b.i;
     }).map(function (item) { return item.row; });
   }
-  function normalize(record) {
+  function normalize(record, preserveLayout) {
     var next = Object.assign(blankRecord(), clone(record));
     next.products = (next.products || []).map(function (p) { return Object.assign({ id: uid('product'), company: '', product: '', renewal: '', premium: '', payment: '', hidden: false }, p); });
+    // Saved templates and their working copies are user-authored, not import input.
+    if (preserveLayout || next.preserveTemplateLayout) {
+      next.preserveTemplateLayout = true;
+      next.rows = (next.rows || []).map(function (row) { return Object.assign({ id: uid('coverage'), section: '', group: '', name: '', recommended: '', status: '', total: '', difference: '', values: {}, hidden: false, selected: false }, row); });
+      return next;
+    }
     var rejected = (next.rows || []).filter(isLegacyPdfNoise);
     if (rejected.length) {
       next.legacyRejectedRows = (next.legacyRejectedRows || []).concat(rejected);
@@ -639,7 +645,7 @@
         existing.sourceNames = Array.isArray(existing.sourceNames) ? existing.sourceNames : [];
         if (existing.sourceNames.indexOf(incoming.name) < 0) existing.sourceNames.push(incoming.name);
       }
-      if (isSilson(targetSection) && incoming.group !== '세대 확인') existing.group = incoming.group;
+      if (!base.preserveTemplateLayout && isSilson(targetSection) && incoming.group !== '세대 확인') existing.group = incoming.group;
       usedRows.add(existing.id);
       if (incoming.sharedLimit) existing.sharedLimit = clone(incoming.sharedLimit);
       if (incoming.sourceDetails) existing.sourceDetails = (existing.sourceDetails || []).filter(function (d) { return !incoming.sourceDetails.some(function (n) { return n.contractKey === d.contractKey && n.number === d.number; }); }).concat(clone(incoming.sourceDetails));
@@ -764,7 +770,7 @@
       if (current && current.customerInfo && current.customerInfo.id) customerWorkspaceDrafts[current.customerInfo.id] = clone(current);
       var record = customerWorkspaceDrafts[customerId] || savedRecord;
       if (!record) {
-        record = normalize(api().getCoverageBaseTemplate() || workspaceStarter());
+        record = normalize(api().getCoverageBaseTemplate() || workspaceStarter(), true);
         record.products = []; record.source = null; delete record.sourceItemId; delete record.customerInfo;
         record.rows.forEach(function (row) { row.values = {}; row.total = ''; row.recommended = ''; row.status = ''; row.difference = ''; row.hidden = false; row.selected = false; delete row.importConflicts; delete row.sourceTotal; });
       } else record = clone(record);
@@ -1031,7 +1037,7 @@
   }
   function resetToBaseTemplate() {
     if (importBusy || (saveStates[WORKSPACE_KEY] || {}).tone === 'saving') return;
-    var template = api().getCoverageBaseTemplate(), d = normalize(template || workspaceStarter());
+    var template = api().getCoverageBaseTemplate(), d = normalize(template || workspaceStarter(), true);
     d.products = []; d.source = null; delete d.customerInfo; delete d.sourceItemId; delete d._starter; delete d._templateSeed;
     d.showHiddenProducts = false; d.updatedAt = new Date().toISOString();
     d.rows.forEach(function (row) { row.values = {}; row.total = ''; row.recommended = ''; row.status = ''; row.difference = ''; delete row.sourceTotal; row.hidden = false; row.selected = false; });

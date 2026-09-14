@@ -117,3 +117,18 @@ test('history restore is owner scoped and opens isolated editor without writing 
   assert.equal(currentDraft.rows[0].name, base.rows[0].name);
   assert.deepEqual(historical.legacy_payload.coverage_analysis, base);
 });
+test('reset and reload preserve owner cancer treatment3 labels and custom section order', async () => {
+  const template = { products: [], rows: [
+    {id:'driver',section:'운전자',group:'내 분류',name:'교통사고 벌금',values:{}},
+    {id:'c1',section:'암',group:'치료비3',name:'암주요 치료비(급여 비급여 포함)',values:{}},
+    {id:'c2',section:'암',group:'치료비3',name:'비급여 암주요 치료비',values:{}}
+  ] };
+  let stored;
+  const ui=editor({getCoverageBaseTemplate:()=>clone(template),saveCoverageWorkspaceDraft:async r=>{stored=clone(r)},rerenderCoverageWorkspace(){},coverageError:assert.fail});
+  await ui.resetToBaseTemplate();
+  const layout=r=>r.rows.map(({id,section,group,name})=>({id,section,group,name}));
+  assert.deepEqual(layout(stored),layout(template));
+  const fresh=editor({saveCoverageWorkspaceDraft:async r=>{stored=clone(r)},rerenderCoverageWorkspace(){},coverageError:assert.fail});
+  fresh.reset(key,stored);await fresh.saveWorkspace();
+  assert.deepEqual(layout(stored),layout(template));
+});

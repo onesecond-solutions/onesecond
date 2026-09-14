@@ -15,3 +15,10 @@ let errors=[];const bad=setup({extractCoverageFile:async file=>{if(file.name==='
 bad.ui.reset('__coverage_workspace__',{products:[],rows:[row('original','암','기존담보')]});await bad.ui.importFile('__coverage_workspace__',{files:[{name:'one.png'},{name:'two.png'}],value:'x'});
 assert.equal(saves,1);assert.equal(bad.api.draft('__coverage_workspace__').rows[0].id,'original');assert.deepEqual(errors,['두 번째 실패']);
 });
+test('import fills owner treatment3 rows without reclassifying or reordering template',()=>{
+ const {api}=setup();
+ const base={preserveTemplateLayout:true,products:[],rows:[row('d','운전자','교통사고 벌금'),row('c','암','암주요 치료비(급여 비급여 포함)','','치료비3'),row('n','암','비급여 암주요 치료비','','치료비3')]};
+ const result=api.mergeImportedRecord(base,{products:[],rows:[row('import','암','비급여 암주요 치료비','3000만','비급여 암주요치료비')]});
+ assert.deepEqual(Array.from(result.rows,r=>[r.id,r.section,r.group,r.name]),base.rows.map(r=>[r.id,r.section,r.group,r.name]));
+ assert.equal(result.rows[2].total,'3000만');
+});

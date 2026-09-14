@@ -3582,7 +3582,7 @@
   function canEditCoverageTemplate() { return localPreviewAllowed() || (authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID); }
   function getCoverageBaseTemplate() {
     var item = coverageWorkspaceItem(), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
-    return record ? JSON.parse(JSON.stringify(record)) : null;
+    return record ? Object.assign(JSON.parse(JSON.stringify(record)), { preserveTemplateLayout: true }) : null;
   }
   function coverageWorkspaceRecord() {
     var item = coverageWorkingItem(), working = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
