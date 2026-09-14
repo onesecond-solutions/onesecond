@@ -150,6 +150,14 @@ body:not(.is-insuwork) .iw-global-search{visibility:hidden}
 #v-insuwork .iw-asset-card>small{display:none}
 @media(max-width:720px){#v-insuwork .iw-search-toolbar{align-items:flex-start}#v-insuwork .iw-search-view-actions{width:100%;justify-content:space-between}#v-insuwork .iw-search-view-actions .iw-view-switch button{padding:0 8px}#v-insuwork .iw-search-view-actions .iw-view-switch button span{display:none}}
 @media(hover:none){#v-insuwork .iw-search-image-hover{display:none!important}}
+
+/* Match insurance-issue day cards (240 x 320); shared by all three-mode views. */
+#v-insuwork.iw-expanded-images .iw-assets-grid.large{grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),240px));gap:18px 12px}
+#v-insuwork.iw-expanded-images .iw-assets-grid.large .iw-asset-card{grid-template-rows:auto auto;padding:0;align-content:start}
+#v-insuwork.iw-expanded-images .iw-assets-grid.large .iw-asset-preview{width:100%;height:auto;aspect-ratio:3/4;background:var(--s2);border-radius:var(--radius-md)}
+#v-insuwork.iw-expanded-images .iw-assets-grid.large .iw-asset-preview img{width:100%;height:100%;max-height:none;object-fit:contain;box-sizing:border-box}
+#v-insuwork.iw-expanded-images .iw-search-image-hover{height:min(330px,calc(100vh - 28px));padding:4px}
+#v-insuwork.iw-expanded-images .iw-search-image-hover img{width:100%;height:100%;max-height:100%;object-fit:contain}
 #v-insuwork .iw-body{background:transparent}
 #v-insuwork .iw-nav{border-right:1px solid color-mix(in srgb,var(--s1) 55%,transparent);background:transparent}
 #v-insuwork .iw-main{background:transparent;box-shadow:none}
