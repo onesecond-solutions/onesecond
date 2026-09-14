@@ -2763,18 +2763,49 @@
     }
     node.title = node.title || '카카오톡으로 끌어서 파일 보내기';
   }
+  function refreshStorageFileDrag(node) {
+    var path = node && node.getAttribute('data-storage-path');
+    if (!path || node.getAttribute('data-direct-url')) return Promise.resolve();
+    if (node._fileDragRefresh) return node._fileDragRefresh;
+    node._fileDragRefresh = signStoragePath(path).then(function (url) {
+      if (!node.isConnected) return;
+      prepareFileDrag(node, url);
+      var cached = state.signedUrlCache['myspace/' + path];
+      node.dataset.fileDragExpires = String(cached ? cached.expiresAt : Date.now());
+      window.clearTimeout(node._fileDragTimer);
+      node._fileDragTimer = window.setTimeout(function () {
+        if (node.isConnected) refreshStorageFileDrag(node).catch(function () {});
+      }, Math.max(1000, Number(node.dataset.fileDragExpires) - Date.now() + 1000));
+    }).finally(function () { node._fileDragRefresh = null; });
+    return node._fileDragRefresh;
+  }
   function hydrateFileDrags() {
     document.querySelectorAll('#v-insuwork [data-storage-path], #v-insuwork [data-direct-url]').forEach(function (node) {
       var parent = node.parentElement && node.parentElement.closest('[data-file-drag]');
       if (parent && parent !== node) return;
       var direct = node.getAttribute('data-direct-url'), path = node.getAttribute('data-storage-path');
       if (direct) prepareFileDrag(node, direct);
-      else if (path && window.db && window.db.getToken) signStoragePath(path).then(function (url) { prepareFileDrag(node, url); }).catch(function () {});
+      else if (path && window.db && window.db.getToken) {
+        if (!node._fileDragRefreshBound) {
+          node._fileDragRefreshBound = true;
+          ['pointerenter', 'pointerdown', 'focusin'].forEach(function (type) {
+            node.addEventListener(type, function () { refreshStorageFileDrag(node).catch(function () {}); });
+          });
+        }
+        refreshStorageFileDrag(node).catch(function () {});
+      }
     });
   }
   function fileDragPayload(event, internalId) {
     var node = event && event.currentTarget, transfer = event && event.dataTransfer;
     if (!node || !transfer) return false;
+    if (node.getAttribute('data-storage-path') && !node.getAttribute('data-direct-url') &&
+        (!node.dataset.fileDragExpires || Number(node.dataset.fileDragExpires) <= Date.now())) {
+      refreshStorageFileDrag(node).catch(function () {});
+      event.preventDefault();
+      if (typeof window.toast === 'function') window.toast('파일 주소를 갱신하고 있습니다. 잠시 후 다시 끌어 주세요.');
+      return false;
+    }
     var url = node.dataset.fileDragUrl || node.getAttribute('data-direct-url') || '';
     if (!url && internalId) { transfer.effectAllowed = 'move'; transfer.setData('text/plain', String(internalId)); transfer.setData('application/x-insuwork-asset-id', String(internalId)); return true; }
     if (!url) { event.preventDefault(); if (typeof window.toast === 'function') window.toast('파일을 준비하는 중입니다. 잠시 후 다시 끌어 주세요.'); return false; }
@@ -3405,8 +3436,11 @@
     }).catch(saveError).finally(function () { state.externalImporting = false; setAssetDropOverlay(false); });
   }
   function assetDragStart(event, id, category) {
-    state.draggingAsset = { id: String(id), category: String(category) };
-    if (fileDragPayload(event, id) && event.currentTarget) event.currentTarget.classList.add('is-dragging');
+    state.draggingAsset = null;
+    if (fileDragPayload(event, id) && event.currentTarget) {
+      state.draggingAsset = { id: String(id), category: String(category) };
+      event.currentTarget.classList.add('is-dragging');
+    }
   }
   function assetDragEnd(event) {
     state.draggingAsset = null;
