@@ -1,6 +1,14 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), {webcrypto} = require('node:crypto');
 function setup(){const c={window:{},document:{addEventListener(){},querySelector(){return null},querySelectorAll(){return []}},crypto:webcrypto,console,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('data/coverage_synonyms.json','utf8'))})};vm.createContext(c);vm.runInContext(fs.readFileSync('js/insuwork-coverage.js','utf8').replace('window.OSInsuworkCoverage = exposed;','window.testing={parseKbPdf,loadCoverageSynonyms,mergeImportedRecord,normalize,saveRecord,reset};'),c);c.window.testing.env=c.window;return c.window.testing;}
 const item=(str,x,y)=>({str,transform:[9,0,0,9,x,y]});
+test('plain cancer diagnosis aliases fill owner rows without duplicate rows or repeated sums',async()=>{
+ const a=setup();await a.loadCoverageSynonyms();const names=['일반암 진단비','소액/유사암 진단비'];
+ const base={preserveTemplateLayout:true,products:[],rows:names.map((name,i)=>({id:'owner'+i,section:'암',group:'진단비',name,values:{}}))};
+ const kb=a.parseKbPdf([page(1,[[1,'암진단비(유사암제외)','암진단','3000만'],[2,'유사암진단비','유사암진단','300만']])],'report.pdf');
+ const r=a.mergeImportedRecord(base,kb);assert.equal(r.rows.length,2);r.rows.forEach((row,i)=>{assert.equal(row.id,'owner'+i);assert.equal(row.name,names[i]);assert.equal(row.values[r.products[0].id],i?'300만':'3000만');});
+ assert.equal(a.mergeImportedRecord(r,kb).rows.length,2);
+ const scoped=a.parseKbPdf([page(1,[[1,'특정고액암진단비','고액암진단','1000만']])],'report.pdf');assert.equal(a.mergeImportedRecord(base,scoped).rows.length,3);
+});
 test('KB hospitalization keeps hospital, room and day restrictions in separate detail rows',async()=>{
  const a=setup();await a.loadCoverageSynonyms();const names=['질병입원일당(1일이상)','상급종합병원1인실(특실포함)질병입원일당(1일이상30일한도)','교통상해입원비(1일-180일)'];
  const r=a.parseKbPdf([page(1,names.map((n,i)=>[i+1,n,'입원일당',i?'40만':'2만']))],'report.pdf');
