@@ -1454,7 +1454,7 @@
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwd-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + '<div class="iw-consult-care-fields"' + (status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + coverageAnalysisSectionHtml(customer.id) + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + '<div class="iw-consult-care-fields"' + (canUseCoverageAnalysis() || status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + coverageAnalysisSectionHtml(customer.id) + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -3561,6 +3561,7 @@
       + inlineField('전화번호', '<input id="iwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwf-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
+      + (canUseCoverageAnalysis() ? '<div class="iw-consult-care-fields" id="iwf-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwf-consult-care') + '</div>' : '')
       + '<div class="iw-consult-editor">' + formField('상담내용', richEditorField('iwf-consult-memo', item.memo || '')) + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</div>'
       + '<input id="iwf-consult-customer-id" type="hidden" value="' + esc(customer.id || '') + '"><input id="iwf-consult-id" type="hidden" value="' + esc(item.id || '') + '"></div>';
   }
@@ -4640,7 +4641,7 @@
   }
   function consultationStatusChanged(select, source) {
     if (!select) return;
-    if (source === 'detail') { var careFields = document.getElementById('iwd-consult-care-fields'); if (careFields) careFields.hidden = select.value !== '청약완료'; }
+    if (source === 'detail') { var careFields = document.getElementById('iwd-consult-care-fields'); if (careFields) careFields.hidden = !canUseCoverageAnalysis() && select.value !== '청약완료'; }
     if (select.value !== '예약') return;
     var name = value(source === 'detail' ? 'iwd-consult-name' : 'iwf-consult-name'); openReservationPopup(name);
   }
@@ -4686,6 +4687,17 @@
     var genderInput = document.querySelector('input[name="iwf-consult-gender"]:checked'), gender = genderInput ? genderInput.value : '';
     if (!name || !date || !richHasText(memo)) return;
     var existing = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId); }) || {}, promoted = status === '청약완료', profile = Object.assign({}, customerProfile(existing), { birth_date: birth || null, gender: gender || null });
+    if (document.getElementById('iwf-consult-care-fields')) Object.assign(profile, {
+      zip: value('iwf-consult-care-zip') || null,
+      address: value('iwf-consult-care-address') || null,
+      address_detail: value('iwf-consult-care-address-detail') || null,
+      job: value('iwf-consult-care-job') || null,
+      driving_status: drivingStatusValues('iwf-consult-care'),
+      medication: value('iwf-consult-care-medication') || null,
+      medical_history: value('iwf-consult-care-history') || null,
+      diagnosis_date: value('iwf-consult-care-diagnosis') || null,
+      current_condition: value('iwf-consult-care-current-status') || null
+    });
     if (promoted) profile.customer_managed = true;
     var customerBody = { owner_id: currentUserId(), name: name, phone: phone || null, status: promoted ? '청약완료' : (existing.status || status || '예약'), profile: profile };
     var customerPromise = customerId ? updateOne('insuwork_customers?id=eq.' + encodeURIComponent(customerId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), customerBody) : writeOne('insuwork_customers', customerBody);
