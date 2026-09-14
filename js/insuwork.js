@@ -3201,7 +3201,12 @@
   }
   function customerExtraFieldsHtml(profile, prefix) {
     profile = profile || {};
-    return '<div class="iw-customer-extra"><section><h3>주소 정보</h3>'
+    var collapsible = canUseCoverageAnalysis();
+    function heading(title) {
+      return collapsible ? '<details class="iw-care-disclosure" open><summary><h3>' + title + '</h3><span class="iw-care-collapse">접기 ▴</span><span class="iw-care-expand">펼치기 ▾</span></summary>' : '<h3>' + title + '</h3>';
+    }
+    var closeDetails = collapsible ? '</details>' : '';
+    return '<div class="iw-customer-extra"><section>' + heading('주소 정보')
       + '<div class="iw-inline-row iw-customer-address-row"><span class="iw-inline-row-label">주소</span><div class="iw-customer-address">'
       + '<input id="' + prefix + '-zip" class="iw-customer-zip-input" placeholder="우편번호" value="' + esc(profile.zip || '') + '" readonly onclick="OSInsuwork.searchCustomerAddress(\'' + prefix + '\')">'
       + '<input id="' + prefix + '-address" class="iw-customer-address-input" placeholder="도로명·지번·건물명 검색" value="' + esc(profile.address || '') + '" autocomplete="off" aria-controls="' + prefix + '-postcode-wrap" oninput="OSInsuwork.queueCustomerAddressSearch(\'' + prefix + '\',this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();OSInsuwork.searchCustomerAddress(\'' + prefix + '\',this.value,true)}else if(event.key===\'Escape\'){OSInsuwork.closeCustomerAddress(\'' + prefix + '\')}">'
@@ -3209,14 +3214,14 @@
       + '</div></div>'
       + '<div id="' + prefix + '-postcode-wrap" class="iw-postcode-wrap" hidden><div class="iw-postcode-head"><strong>주소 검색 결과</strong><button type="button" class="iw-link-btn" aria-label="주소 검색 결과 닫기" onclick="OSInsuwork.closeCustomerAddress(\'' + prefix + '\')">닫기</button></div><div id="' + prefix + '-postcode" class="iw-postcode-embed"></div></div>'
       + inlineField('상세주소', '<input id="' + prefix + '-address-detail" placeholder="동·호수 등 상세 주소 (주소 선택 후 입력)" value="' + esc(profile.address_detail || '') + '">')
-      + '</section><section><h3>인수 정보</h3><div class="iw-customer-underwriting">'
+      + closeDetails + '</section><section>' + heading('인수 정보') + '<div class="iw-customer-underwriting">'
       + inlineField('직업', '<input id="' + prefix + '-job" value="' + esc(profile.job || '') + '" placeholder="예: 사무직 / 운전직 / 농업">')
       + inlineField('운전여부', drivingFieldHtml(prefix, profile))
       + inlineField('병력', '<input id="' + prefix + '-history" value="' + esc(profile.medical_history || '') + '" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨">')
       + inlineField('약복용', '<select id="' + prefix + '-medication"><option value="">선택</option><option' + (profile.medication === '복용 중' ? ' selected' : '') + '>복용 중</option><option' + (profile.medication === '복용 안 함' ? ' selected' : '') + '>복용 안 함</option><option' + (profile.medication === '과거 복용' ? ' selected' : '') + '>과거 복용</option></select>')
       + inlineField('진단시기', '<input id="' + prefix + '-diagnosis" value="' + esc(profile.diagnosis_date || '') + '" placeholder="예: 2025년 3월">')
       + inlineField('현재상태', '<input id="' + prefix + '-current-status" value="' + esc(profile.current_condition || '') + '" placeholder="예: 추적관찰 중 / 수술 완료">')
-      + '</div></section></div>';
+      + '</div>' + closeDetails + '</section></div>';
   }
   function formShell(title, body, saveAction) { return '<form class="iw-form" onsubmit="event.preventDefault();' + saveAction + '"><h2>' + title + '</h2>' + body + '<div class="iw-form-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="submit" class="iw-btn primary">저장</button></div></form>'; }
   function write(path, body) { return window.db.fetch('/rest/v1/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify(body) }).then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return true; }); }
