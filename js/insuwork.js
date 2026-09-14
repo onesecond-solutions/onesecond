@@ -70,7 +70,7 @@
   }
   function canSeeAdminUsers() { return isLocal() || currentUserEmail() === 'bylts@naver.com'; }
   function canUseKakaoPilot() { return localPreviewAllowed() || KAKAO_PILOT_EMAILS.indexOf(currentUserEmail()) >= 0 || KAKAO_PILOT_OWNER_IDS.indexOf(currentUserId()) >= 0; }
-  function canUseCoverageAnalysis() { return localPreviewAllowed() || (authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID); }
+  function canUseCoverageAnalysis() { return localPreviewAllowed() || authenticated(); }
   function canSeeAzViewingRoom() { return localPreviewAllowed() || (authenticated() && (currentUserId() === AZ_VIEWING_ROOM_OWNER_ID || state.azViewingRoomAccess === true)); }
   function loadAzViewingRoomAccess() {
     if (localPreviewAllowed()) { state.azViewingRoomAccess = true; return Promise.resolve(true); }
@@ -181,7 +181,7 @@
     }
     window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=' + encodeURIComponent(target);
   }
-  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'coverage-analysis' || section === 'coverage-sheet') return canUseCoverageAnalysis(); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'coverage-analysis') return canUseCoverageAnalysis(); if (section === 'coverage-sheet') return canEditCoverageTemplate(); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
   /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
      로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
      그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
@@ -497,9 +497,11 @@
       api('insuwork_consultations?owner_id=eq.' + id + '&order=consulted_at.desc&limit=5&select=id,owner_id,customer_id,content,channel,consulted_at,created_at,updated_at,insuwork_customers(id,name,phone,status)'),
       api('insuwork_customers?owner_id=eq.' + id + '&deleted_at=is.null&order=updated_at.desc&limit=2000&select=id,owner_id,name,phone,status,profile,legacy_source,created_at,updated_at,deleted_at')
     ];
+    requests.push(loadSharedCoverageTemplate());
     state.loadPromise = Promise.allSettled(requests).then(function (results) {
       if (requestId !== state.requestId) return false;
       var names = full ? ['items', 'events', 'customers', 'consultations', 'trashCustomers'] : ['items', 'events', 'favoriteSettings', 'consultations', 'customers'];
+      names.push('coverageTemplate');
       var failed = [];
       results.forEach(function (result, index) {
         if (result.status === 'fulfilled' && Array.isArray(result.value)) {
@@ -588,7 +590,7 @@
     var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '계약관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
     if (canUseCoverageAnalysis()) {
       items.push(['coverage-analysis', '▥', '보장분석·보험비교']);
-      items.push(['coverage-sheet', '▦', '보장분석 엑셀']);
+      if (canEditCoverageTemplate()) items.push(['coverage-sheet', '▦', '보장분석 엑셀']);
     }
     if (window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()) items.push(['ledger', '₩', '가계부']);
     var briefingGroup = [['◫', '뉴스 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
@@ -1454,7 +1456,7 @@
       + inlineField('전화번호', '<input id="iwd-consult-phone" inputmode="numeric" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwd-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'detail\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + '<div class="iw-consult-care-fields"' + (canUseCoverageAnalysis() || status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + coverageAnalysisSectionHtml(customer.id) + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
+      + '<div class="iw-consult-care-fields"' + (canEditCoverageTemplate() || status === '청약완료' ? '' : ' hidden') + ' id="iwd-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwd-consult-care') + '</div>' + coverageAnalysisSectionHtml(customer.id) + '<section><h3>상담내용</h3>' + richEditorField('iwd-consult-new', item.memo || '') + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</section>' + kakaoHistoryHtml('consultation', item.id) + '<div class="iw-consult-save">' + kakaoAction + '<button type="button" class="iw-btn danger" onclick="OSInsuwork.deleteConsultation(\'' + esc(item.id) + '\')">상담 삭제</button><button type="button" class="iw-btn" onclick="OSInsuwork.selectConsultation()">닫기</button><button type="button" class="iw-btn primary" onclick="OSInsuwork.saveConsultationDetail(\'' + esc(item.id) + '\')">저장</button></div></article>';
   }
 
   function calendarTitle() {
@@ -2510,7 +2512,7 @@
 
   function renderShell() {
     var view = document.getElementById('v-insuwork'); if (!view) return;
-    view.classList.toggle('iw-expanded-images', canUseCoverageAnalysis());
+    view.classList.toggle('iw-expanded-images', canEditCoverageTemplate());
     document.body.classList.toggle('is-insuwork-public', STANDALONE && !allowed());
     if (STANDALONE && !allowed()) {
       view.innerHTML = publicLandingHtml();
@@ -3201,7 +3203,7 @@
   }
   function customerExtraFieldsHtml(profile, prefix) {
     profile = profile || {};
-    var collapsible = canUseCoverageAnalysis();
+    var collapsible = canEditCoverageTemplate();
     function heading(title) {
       return collapsible ? '<details class="iw-care-disclosure" open><summary><h3>' + title + '</h3><span class="iw-care-collapse">접기 ▴</span><span class="iw-care-expand">펼치기 ▾</span></summary>' : '<h3>' + title + '</h3>';
     }
@@ -3566,7 +3568,7 @@
       + inlineField('전화번호', '<input id="iwf-consult-phone" inputmode="numeric" autocomplete="tel" value="' + esc(phoneText(customer.phone || customer.phone_raw || '')) + '" oninput="OSInsuwork.formatConsultPhone(this)">')
       + inlineField('상담상태', '<select id="iwf-consult-status" onchange="OSInsuwork.consultationStatusChanged(this,\'form\')">' + statuses.map(function (entry) { return '<option value="' + entry + '"' + (entry === status ? ' selected' : '') + '>' + entry + '</option>'; }).join('') + '</select>')
       + '</div></div>'
-      + (canUseCoverageAnalysis() ? '<div class="iw-consult-care-fields" id="iwf-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwf-consult-care') + '</div>' : '')
+      + (canEditCoverageTemplate() ? '<div class="iw-consult-care-fields" id="iwf-consult-care-fields">' + customerExtraFieldsHtml(profile, 'iwf-consult-care') + '</div>' : '')
       + '<div class="iw-consult-editor">' + formField('상담내용', richEditorField('iwf-consult-memo', item.memo || '')) + '<p class="iw-consult-editor-note">웹 주소를 붙여 넣으면 바로 열 수 있는 링크로 저장됩니다. 여러 파일을 한 번에 첨부할 수 있습니다.</p>' + consultationExistingAttachments(item.id) + '</div>'
       + '<input id="iwf-consult-customer-id" type="hidden" value="' + esc(customer.id || '') + '"><input id="iwf-consult-id" type="hidden" value="' + esc(item.id || '') + '"></div>';
   }
@@ -3580,7 +3582,16 @@
     return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_working === true; });
   }
   function canEditCoverageTemplate() { return localPreviewAllowed() || (authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID); }
+  var sharedCoverageTemplate = null;
+  function loadSharedCoverageTemplate() {
+    if (!authenticated() || canEditCoverageTemplate()) return Promise.resolve([]);
+    return window.db.fetch('/functions/v1/gemini-coverage-import', { method: 'GET' }).then(function (response) {
+      if (!response.ok) throw new Error('기본 양식을 불러오지 못했습니다.');
+      return response.json();
+    }).then(function (record) { sharedCoverageTemplate = record; return []; });
+  }
   function getCoverageBaseTemplate() {
+    if (!canEditCoverageTemplate()) return sharedCoverageTemplate ? JSON.parse(JSON.stringify(sharedCoverageTemplate)) : null;
     var item = coverageWorkspaceItem(), record = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
     return record ? Object.assign(JSON.parse(JSON.stringify(record)), { preserveTemplateLayout: true }) : null;
   }
@@ -3625,6 +3636,7 @@
     return { id: customer.id, name: customer.name || '', birthDate: customerProfile(customer).birth_date || '' };
   }
   function coverageAnalysisPageHtml() {
+    if (canUseCoverageAnalysis() && !canEditCoverageTemplate() && !sharedCoverageTemplate) return '<div class="iw-empty">기본 양식을 불러오는 중입니다. 계속 표시되면 새로고침해 주세요.</div>';
     if (!canUseCoverageAnalysis()) return homeHtml();
     if (!window.OSInsuworkCoverage) return '<div class="iw-empty">보장분석 편집기를 불러오지 못했습니다.</div>';
     return window.OSInsuworkCoverage.workspaceHtml(coverageWorkspaceRecord() || null);
@@ -3704,7 +3716,7 @@
   }
   function saveCoverageWorkspaceDraft(record, sourceFile) { return persistCoverageWorkspaceAnalysis(record, sourceFile, false); }
   function persistCoverageWorkspaceAnalysis(record, sourceFile, asTemplate) {
-    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('로그인한 뒤 보장분석을 사용해 주세요.'));
     var existing = asTemplate ? coverageWorkspaceItem() : coverageWorkingItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
     if (asTemplate) delete next.customerInfo;
     var payload = { workspace_category: 'coverage_analysis', coverage_analysis_workspace: asTemplate, coverage_analysis_template: asTemplate, coverage_analysis_working: !asTemplate, coverage_analysis: next };
@@ -3781,7 +3793,7 @@
     return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + window.db.getToken(), 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) { if (!response.ok) throw new Error('보장분석 원본 파일 업로드에 실패했습니다.'); return writeOne('insuwork_items', row); }).then(function (saved) { upsertWorkspaceItem(saved); return saved; });
   }
   function saveCoverageAnalysis(customerId, record, sourceFile, existingSourceId) {
-    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('로그인한 뒤 보장분석을 사용해 주세요.'));
     var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(customerId); });
     if (!customer) return Promise.reject(new Error('고객을 확인하지 못했습니다.'));
     var existing = coverageAnalysisItem(customerId), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
@@ -3791,7 +3803,7 @@
     return ready.then(function (saved) { upsertWorkspaceItem(saved); return uploadCoverageSources(sourceFile, function (file) { return uploadCoverageSource(customerId, rootId, file); }).then(function (source) { if (!source) return next; next.sourceItemId = source.id; next.source = Object.assign({}, next.source || {}, { name: source.title, itemId: source.id, files: source.files }); return updateOne('insuwork_items?id=eq.' + encodeURIComponent(rootId) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { body: coverageAnalysisSummary(next), legacy_payload: { workspace_category: 'customer', customer_id: customerId, coverage_analysis_record: true, coverage_analysis: next } }).then(function (updated) { upsertWorkspaceItem(updated); return next; }); }); }).then(function (savedRecord) { if (typeof window.toast === 'function') window.toast('보장분석·보험비교를 저장했습니다.'); return savedRecord; });
   }
   function loadCoveragePdfFile(fileId, customerId) {
-    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석은 임태성 게이트에서만 사용할 수 있습니다.'));
+    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('로그인한 뒤 보장분석을 사용해 주세요.'));
     var file = (state.data.items || []).find(function (entry) { return String(entry.id) === String(fileId); });
     if (!file || file.owner_id !== currentUserId() || file.deleted_at || (customerId && !customerCoveragePdfFiles(customerId).some(function (entry) { return String(entry.id) === String(fileId); })) || !file.storage_path || !(/pdf/i.test(file.mime_type || '') || String(file.extension || '').toLowerCase() === 'pdf')) return Promise.reject(new Error('PDF 원본을 확인하지 못했습니다.'));
     return signStoragePath(file.storage_path).then(function (url) { return fetch(url); }).then(function (response) { if (!response.ok) throw new Error('PDF 원본을 불러오지 못했습니다.'); return response.arrayBuffer(); }).then(function (buffer) { return { name: file.title || '보장분석.pdf', buffer: buffer }; });
@@ -3807,7 +3819,7 @@
     }).then(function (response) { return response.json().then(function (body) { if (!response.ok) throw new Error(body.error || '파일 표 인식에 실패했습니다.'); return body; }); });
   }
   function loadCoverageSheetWorkbook() {
-    if (!canUseCoverageAnalysis()) return Promise.reject(new Error('보장분석 엑셀을 사용할 권한이 없습니다.'));
+    if (!canEditCoverageTemplate()) return Promise.reject(new Error('보장분석 엑셀을 사용할 권한이 없습니다.'));
     if (!authenticated()) return Promise.resolve(null);
     return api('insuwork_items?owner_id=eq.' + encodeURIComponent(currentUserId()) + '&item_type=eq.memo&deleted_at=is.null&legacy_payload->>setting_key=eq.coverage_sheet_workbook&order=updated_at.desc&limit=1&select=*')
       .then(function (rows) { var item = Array.isArray(rows) && rows[0] || null, payload = item && item.legacy_payload || {}; return payload.workbook_base64 ? { id: item.id, data: payload.workbook_base64, fileName: payload.file_name || '보장분석 작업본.xlsx', updatedAt: item.updated_at || payload.updated_at || '' } : null; });
@@ -4646,7 +4658,7 @@
   }
   function consultationStatusChanged(select, source) {
     if (!select) return;
-    if (source === 'detail') { var careFields = document.getElementById('iwd-consult-care-fields'); if (careFields) careFields.hidden = !canUseCoverageAnalysis() && select.value !== '청약완료'; }
+    if (source === 'detail') { var careFields = document.getElementById('iwd-consult-care-fields'); if (careFields) careFields.hidden = !canEditCoverageTemplate() && select.value !== '청약완료'; }
     if (select.value !== '예약') return;
     var name = value(source === 'detail' ? 'iwd-consult-name' : 'iwf-consult-name'); openReservationPopup(name);
   }

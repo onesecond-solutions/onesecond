@@ -1,22 +1,46 @@
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const ALLOWED_USER_ID = "98c5f4f9-10c1-4ee1-a656-5c2ca63239fd";
+const TEMPLATE_OWNER_ID = "98c5f4f9-10c1-4ee1-a656-5c2ca63239fd";
 const MAX_BYTES = 15 * 1024 * 1024;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
-function jwtSubject(req: Request) {
-  try {
-    const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(payload)).sub || "";
-  } catch (_) { return ""; }
+async function authenticatedUser(req: Request) {
+  const authorization = req.headers.get("authorization") || "";
+  if (!/^Bearer\s+\S+$/i.test(authorization)) return null;
+  const response = await fetch(Deno.env.get("SUPABASE_URL") + "/auth/v1/user", {
+    headers: { authorization, apikey: Deno.env.get("SUPABASE_ANON_KEY") || "" },
+  });
+  if (!response.ok) return null;
+  const user = await response.json();
+  return user.id && !user.is_anonymous ? user : null;
+}
+
+// Only the owner's structural template is shared. Never return the source payload.
+async function sharedTemplate() {
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const path = "/rest/v1/insuwork_items?owner_id=eq." + TEMPLATE_OWNER_ID
+    + "&deleted_at=is.null&legacy_payload->>workspace_category=eq.coverage_analysis"
+    + "&legacy_payload->>coverage_analysis_workspace=eq.true"
+    + "&order=updated_at.desc&limit=1&select=legacy_payload";
+  const response = await fetch(Deno.env.get("SUPABASE_URL") + path, {
+    headers: { apikey: key, authorization: "Bearer " + key },
+  });
+  if (!response.ok) return json({ error: "기본 양식을 불러오지 못했습니다." }, 502);
+  const items = await response.json();
+  const record = items[0]?.legacy_payload?.coverage_analysis;
+  if (!Array.isArray(record?.rows)) return json({ error: "등록된 기본 양식이 없습니다." }, 404);
+  return json({ preserveTemplateLayout: true, products: [], rows: record.rows.map((row: Record<string, unknown>, index: number) => ({
+    id: "template-" + index, section: typeof row.section === "string" ? row.section : "",
+    group: typeof row.group === "string" ? row.group : "", name: typeof row.name === "string" ? row.name : "",
+    hidden: !!row.hidden, selected: false, values: {}, total: "",
+  })) });
 }
 
 const RESPONSE_SCHEMA = {
@@ -60,8 +84,11 @@ const PROMPT = [
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (req.method !== "POST") return json({ error: "POST만 허용됩니다." }, 405);
-  if (jwtSubject(req) !== ALLOWED_USER_ID) return json({ error: "보장분석 파일 인식 권한이 없습니다." }, 403);
+  if (req.method !== "POST" && req.method !== "GET") return json({ error: "허용되지 않은 요청입니다." }, 405);
+  try {
+    if (!await authenticatedUser(req)) return json({ error: "로그인이 필요합니다." }, 401);
+    if (req.method === "GET") return await sharedTemplate();
+  } catch (_) { return json({ error: "인증 또는 기본 양식 조회에 실패했습니다." }, 503); }
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) return json({ error: "파일 인식 설정이 준비되지 않았습니다." }, 500);
 
