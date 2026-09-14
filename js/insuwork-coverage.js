@@ -602,6 +602,14 @@
         if (seen.has(identity)) return;
         seen.add(identity);
         var cleaned = companyName.replace(/^간편고지\([^)]*\)\s*/, '').trim(), mappingName = cleaned;
+        // KB's explicit benefit type is authoritative; abbreviated company labels may omit 의료비.
+        var isKbSilson = area(58, 88, bottom, marker.y + 5).replace(/\s/g, '') === '실손';
+        if (isKbSilson) {
+          var medicalLabel = (creditName || companyName).replace(/\s/g, '');
+          var medical = medicalLabel.match(/^(상해|질병)(?:\([^)]*\))?의료비\(입원\+통원\)$/);
+          var kbMedicalNames = { '비급여도수,체외충격파,증식치료': '비급여 도수·체외충격파·증식치료', '비급여주사제': '비급여 주사료', '비급여MRI검사': '비급여 MRI·MRA' };
+          mappingName = medical ? medical[1] + ' 의료비(입원·통원)' : kbMedicalNames[medicalLabel] || creditName || companyName;
+        }
         // Only known individual treatments lose administrative suffixes. Coverage restrictions stay in sourceDetails.
         var treatment = cleaned.match(/^(카티\(CAR-T\)항암약물허가치료비|표적항암약물허가치료비|항암세기조절방사선치료비|항암양성자방사선치료비|항암중입자방사선치료비|항암방사선약물치료비)(?:\(|$)/i);
         if (treatment) mappingName = treatment[1];
@@ -616,7 +624,7 @@
         var ownerAdministrative = mappingName.replace(/(?:\(갱신형\))?(?:담보)?$/, '');
         if (coverageSynonym(ownerAdministrative)) mappingName = ownerAdministrative;
         var synonym = majorCancerCategory(mappingName) ? null : coverageSynonym(mappingName), name = synonym ? synonym.canonical : mappingName;
-        var section = synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
+        var section = isKbSilson ? '실손' : synonym ? synonym.section : /입원의료비|통원의료비|실손/.test(name) ? '실손' : /간병/.test(name) ? '간병인' : /입원일당|입원비/.test(companyName + creditName) ? '입원' : /암|항암/.test(name) ? '암' : /뇌/.test(name) ? '뇌' : /심장|심근/.test(name) ? '심장' : /장해/.test(name) ? '장해' : /사망/.test(name) ? '사망' : /치매/.test(name) ? '치매' : /요양/.test(name) ? '장기요양' : /간병/.test(name) ? '간병인' : /벌금|교통|자동차|변호사/.test(name) ? '운전자' : /수술/.test(name) ? '수술비' : '기타';
         var existing = rows.find(function (r) { return r.name === name && !Object.prototype.hasOwnProperty.call(r.values, product.id); });
         var detail = { provider: 'kb-detail', page: pageIndex + 1, number: marker.text, companyName: companyName, creditName: creditName, amount: amount, contractKey: key };
         if (!existing) { existing = { id: uid('coverage'), section: section, group: synonym && synonym.group || '', name: name, total: '', values: {}, sourceNames: [], sourceDetails: [], valueSources: {} }; rows.push(existing); }
@@ -659,7 +667,7 @@
     if (!row.importConflicts.some(function (item) { return JSON.stringify(item) === JSON.stringify(conflict); })) row.importConflicts.push(conflict);
     return previous;
   }
-  function conflictText(row) { return (row.sharedLimit ? row.sharedLimit.description + ' · ' : '') + (row.importConflicts || []).map(function (item) { return '금액 확인: ' + item.kept + ' / 원본 ' + item.incoming + ' (' + item.source + ')'; }).join(' · '); }
+  function conflictText(row) { return (row.sharedLimit ? row.sharedLimit.description + ' · ' : '') + (row.importConflicts || []).map(function (item) { return '금액 확인: ' + item.kept + ' / 원본 ' + item.incoming + ' (' + item.source + ')'; }).concat((row.sourceDetails || []).filter(function (d) { return d.provider === 'kb-detail'; }).map(function (d) { return 'PDF ' + d.page + '쪽 · ' + d.companyName + ' · ' + d.amount + ' · 신정원: ' + d.creditName; })).join('\n'); }
   function productMatchKey(value) { return synonymExactKey(value).replace(/^(?:무배당|무)/, ''); }
   function mergeImportedRecord(baseRecord, importedRecord) {
     var base = normalize(baseRecord), imported = normalize(importedRecord), productIds = {}, productOccurrences = {}, usedRows = new Set(), blockedProducts = new Set();
@@ -704,6 +712,11 @@
       var synonym = majorCancerCategory(incoming.name) ? null : coverageSynonym(incoming.name), targetSection = templateSection(synonym && synonym.section || incoming.section, incoming.name), nameKey = coverageMatchKey(incoming.name);
       var candidates = nameKey ? base.rows.filter(function (row) { return !usedRows.has(row.id) && coverageMatchKey(row.name) === nameKey && (!isSilson(targetSection) || (isSilson(row.section) && (row.group === incoming.group || (row.group === '세대 확인' && !hasEnrolledAmount(row.total) && !Object.values(row.values).some(hasEnrolledAmount))))); }) : [];
       var existing = candidates.find(function (row) { return matchKey(row.section) === matchKey(targetSection); }) || (candidates.length === 1 ? candidates[0] : null);
+      if (!existing && imported.source && imported.source.provider === 'kb-detail' && base.preserveTemplateLayout && isSilson(targetSection) && incoming.group === '세대 확인') {
+        // Match a unique owner-authored, generation-neutral row; never guess among generation-specific rows.
+        var neutralRows = base.rows.filter(function (row) { return !usedRows.has(row.id) && isSilson(row.section) && coverageMatchKey(row.name) === nameKey && silsonGeneration(row.group) === '세대 확인'; });
+        if (neutralRows.length === 1) existing = neutralRows[0];
+      }
       if (!existing && isSilson(targetSection) && incoming.group === '세대 확인') {
         var sameContractRows = base.rows.filter(function (row) { return !usedRows.has(row.id) && isSilson(row.section) && coverageMatchKey(row.name) === nameKey && Object.keys(incoming.values).some(function (id) { return hasEnrolledAmount(incoming.values[id]) && hasEnrolledAmount(row.values[productIds[id]]); }); });
         if (sameContractRows.length === 1) existing = sameContractRows[0];
@@ -721,6 +734,9 @@
       }
       if (!base.preserveTemplateLayout && isSilson(targetSection) && incoming.group !== '세대 확인') existing.group = incoming.group;
       usedRows.add(existing.id);
+      // Repair only untouched KB-import labels previously classified as 기타, not owner template labels.
+      if ((existing.section === '기타' || existing.section === '운전자') && targetSection === '입원' &&
+          (existing.sourceDetails || []).some(function (d) { return d.provider === 'kb-detail' && d.companyName === existing.name; })) existing.section = targetSection;
       if (incoming.sharedLimit) existing.sharedLimit = clone(incoming.sharedLimit);
       if (incoming.sourceDetails) existing.sourceDetails = (existing.sourceDetails || []).filter(function (d) { return !incoming.sourceDetails.some(function (n) { return n.contractKey === d.contractKey && n.number === d.number; }); }).concat(clone(incoming.sourceDetails));
       existing.valueSources = existing.valueSources || {};
