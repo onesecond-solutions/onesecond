@@ -1240,7 +1240,7 @@
   function close() {
     if (session && session.busy) return;
     if (session && changes(session.base, session.draft).length && !window.confirm('저장하지 않은 기본 양식 변경을 버리고 닫을까요?')) return;
-    session = null; if (box) { box.close(); box.remove(); box = null; }
+    session = null; draggedSection = null; if (box) { box.close(); box.remove(); box = null; }
   }
   function open() {
     if (!allowed() || session) return;
@@ -1257,9 +1257,10 @@
   function render() {
     if (!allowed() || !session || session.busy) return;
     session.reviewed = null;
-    show('<h2 id="iw-ca-template-title">기본 양식 편집</h2><p>저장된 기본 양식의 분류·담보명·순서를 편집합니다. 고객 정보·상품·가입금액은 포함하지 않습니다.</p>' +
+    show('<h2 id="iw-ca-template-title">기본 양식 편집</h2><p>대분류 옆의 ↕ 이동 버튼을 끌면 해당 분류의 담보가 함께 이동합니다. 변경 내역 확인 후 저장해 주세요. 고객 정보·상품·가입금액은 포함하지 않습니다.</p>' +
       '<div class="iw-ca-template-scroll"><table><thead><tr><th>대분류</th><th>중분류</th><th>담보명</th><th>순서·추가·삭제</th></tr></thead><tbody>' + session.draft.rows.map(function (r, i) {
-        return '<tr>' + ['section', 'group', 'name'].map(function (key) { return '<td><textarea rows="1" aria-label="' + ({ section: '대분류', group: '중분류', name: '담보명' }[key]) + ' ' + (i + 1) + '" oninput="OSInsuworkCoverageTemplate.set(' + i + ',\'' + key + '\',this.value)">' + esc(r[key]) + '</textarea></td>'; }).join('') +
+        var handle = r.section && session.draft.rows.findIndex(function (row) { return row.section === r.section; }) === i ? '<button type="button" class="iw-btn iw-ca-section-drag" draggable="true" aria-label="' + esc(r.section) + ' 대분류 이동" ondragstart="OSInsuworkCoverageTemplate.dragStart(event,' + i + ')" ondragend="OSInsuworkCoverageTemplate.dragEnd()">↕ 이동</button>' : '';
+        return '<tr ondragover="OSInsuworkCoverageTemplate.dragOver(event)" ondrop="OSInsuworkCoverageTemplate.dropSection(event,' + i + ')">' + ['section', 'group', 'name'].map(function (key) { return '<td>' + (key === 'section' ? handle : '') + '<textarea rows="1" aria-label="' + ({ section: '대분류', group: '중분류', name: '담보명' }[key]) + ' ' + (i + 1) + '" oninput="OSInsuworkCoverageTemplate.set(' + i + ',\'' + key + '\',this.value)">' + esc(r[key]) + '</textarea></td>'; }).join('') +
           '<td class="iw-ca-template-row-actions">' +
           button('↑', 'move(' + i + ',-1)') + button('↓', 'move(' + i + ',1)') + button('+', 'add(' + i + ')') + button('×', 'remove(' + i + ')') + '</td></tr>';
       }).join('') + '</tbody></table></div><div class="iw-ca-template-actions">' + button('담보 추가', 'add()') + button('취소', 'close()') + button('변경 내역 확인', 'review()', true) + '</div>');
@@ -1303,7 +1304,29 @@
       if (status) status.textContent = '저장 실패: ' + (error.message || String(error)) + ' · 편집 내용은 유지됩니다.';
     }
   }
+  var draggedSection = null;
   window.OSInsuworkCoverageTemplate = {
+    dragStart: function (event, index) {
+      if (!allowed() || !session || session.busy || session.reviewed || !session.draft.rows[index]) { event.preventDefault(); return; }
+      draggedSection = session.draft.rows[index].section;
+      event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-insuwork-template-section', draggedSection);
+    },
+    dragEnd: function () { draggedSection = null; },
+    dragOver: function (event) { if (draggedSection && allowed() && session && !session.busy && !session.reviewed) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } },
+    dropSection: function (event, index) {
+      var section = draggedSection; draggedSection = null;
+      if (!section || !allowed() || !session || session.busy || session.reviewed || !session.draft.rows[index]) return;
+      event.preventDefault();
+      var target = session.draft.rows[index].section;
+      if (!target || section === target) return;
+      mutate(function (rows) {
+        var down = rows.findIndex(function (r) { return r.section === section; }) < rows.findIndex(function (r) { return r.section === target; });
+        var moving = rows.filter(function (r) { return r.section === section; }), remaining = rows.filter(function (r) { return r.section !== section; });
+        var at = remaining.findIndex(function (r) { return r.section === target; });
+        if (down) remaining.forEach(function (r, i) { if (r.section === target) at = i + 1; });
+        remaining.splice.apply(remaining, [at, 0].concat(moving)); rows.splice.apply(rows, [0, rows.length].concat(remaining));
+      });
+    },
     open: open, edit: edit, close: close, set: set, review: review, save: save, back: render,
     history: function () { if (!allowed() || session) return; close(); return api().openCoverageTemplateHistory(); },
     add: function (index) { mutate(function (rows) { var prior = rows[index] || {}; rows.splice(index == null ? rows.length : index + 1, 0, { id: crypto.randomUUID(), section: prior.section || '', group: prior.group || '', name: '', hidden: false, values: {}, total: '' }); }); },

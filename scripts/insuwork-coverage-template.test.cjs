@@ -1,5 +1,10 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), { webcrypto } = require('node:crypto');
 const clone = value => JSON.parse(JSON.stringify(value));
+test('template drag moves complete section and preserves row identity through reviewed save',async()=>{
+ const s=setup();s.ui.edit();s.ui.add(0);s.ui.set(1,'name','유사암 진단비');
+ const event={preventDefault(){},dataTransfer:{setData(){}}};s.ui.dragStart(event,0);s.ui.dropSection(event,2);s.ui.review();await s.ui.save();
+ const rows=s.stored().rows;assert.deepEqual(rows.map(r=>r.section),['실손','암','암']);assert.equal(rows[1].id,'a');assert.equal(rows[2].name,'유사암 진단비');
+});
 function setup() {
   let permitted = true, writes = [], confirm = false, fail = false, pending = null;
   let stored = { customerInfo: { name: '개인 정보' }, source: { name: '원본.xlsx' }, products: [{ id: 'p' }], rows: [
