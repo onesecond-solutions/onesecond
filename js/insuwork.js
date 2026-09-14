@@ -3627,8 +3627,21 @@
   function openCoverageCustomerPicker(saveAfter) {
     if (!canUseCoverageAnalysis()) return;
     var customers = (state.data.customers || []).slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'ko'); });
-    var options = customers.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name || '(이름 없음)') + (customerProfile(c).birth_date ? ' · ' + esc(customerProfile(c).birth_date) : '') + (c.phone || c.phone_raw ? ' · ' + esc(phoneText(c.phone || c.phone_raw)) : '') + '</option>'; }).join('');
-    dialog('<div class="iw-form"><h2>고객 선택</h2><p>' + (saveAfter ? '이 보장분석을 저장할 고객을 선택하세요.' : '등록 고객을 선택하면 고객명·생년월일·보험나이가 연결됩니다.') + '</p><select id="iw-ca-pick-customer" aria-label="등록 고객"><option value="">고객을 선택하세요</option>' + options + '</select><div class="iw-form-actions"><button class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button class="iw-btn primary" onclick="OSInsuwork.chooseCoverageCustomer(' + (!!saveAfter) + ')">' + (saveAfter ? '선택한 고객에게 저장' : '선택') + '</button></div></div>');
+    dialog('<div class="iw-form"><h2>고객 선택</h2><p>' + (saveAfter ? '이 보장분석을 저장할 고객을 선택하세요.' : '등록 고객을 선택하면 고객명·생년월일·보험나이가 연결됩니다.') + '</p><label class="iw-field"><span>이름·전화번호 검색</span><input id="iw-ca-pick-search" type="search" placeholder="이름 또는 전화번호 일부 입력" autocomplete="off"></label><p id="iw-ca-pick-count" class="iw-form-note" role="status"></p><label class="iw-field"><span>검색 결과에서 고객 선택</span><select id="iw-ca-pick-customer" aria-label="등록 고객" size="7"></select></label><div class="iw-form-actions"><button class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button id="iw-ca-pick-confirm" class="iw-btn primary" onclick="OSInsuwork.chooseCoverageCustomer(' + (!!saveAfter) + ')">' + (saveAfter ? '선택한 고객에게 저장' : '선택') + '</button></div></div>');
+    var input = document.getElementById('iw-ca-pick-search'), select = document.getElementById('iw-ca-pick-customer'), count = document.getElementById('iw-ca-pick-count'), confirm = document.getElementById('iw-ca-pick-confirm');
+    function filterCustomers() {
+      var query = input.value.trim().toLocaleLowerCase().replace(/\s/g, ''), digits = query.replace(/\D/g, ''), previous = select.value;
+      var matches = customers.filter(function (c) {
+        return !query || String(c.name || '').toLocaleLowerCase().replace(/\s/g, '').indexOf(query) >= 0 || (!!digits && /^[\d\s()+.-]+$/.test(input.value.trim()) && [c.phone, c.phone_raw].some(function (phone) { return String(phone || '').replace(/\D/g, '').indexOf(digits) >= 0; }));
+      });
+      select.innerHTML = '<option value="">' + (matches.length ? '고객을 선택하세요' : '검색 결과가 없습니다') + '</option>' + matches.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name || '(이름 없음)') + (customerProfile(c).birth_date ? ' · ' + esc(customerProfile(c).birth_date) : '') + (c.phone || c.phone_raw ? ' · ' + esc(phoneText(c.phone || c.phone_raw)) : '') + '</option>'; }).join('');
+      select.value = matches.some(function (c) { return String(c.id) === previous; }) ? previous : '';
+      count.textContent = '검색 결과 ' + matches.length + '명'; confirm.disabled = !select.value;
+    }
+    input.addEventListener('input', filterCustomers);
+    select.addEventListener('change', function () { confirm.disabled = !select.value; });
+    input.addEventListener('keydown', function (event) { if (event.key === 'Enter') event.preventDefault(); });
+    filterCustomers(); input.focus();
   }
   function chooseCoverageCustomer(saveAfter) {
     if (!canUseCoverageAnalysis()) return;
