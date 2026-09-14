@@ -1,5 +1,10 @@
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), { webcrypto } = require('node:crypto');
 const clone = value => JSON.parse(JSON.stringify(value));
+test('row drag moves one row across sections without changing labels and persists order',async()=>{
+ const s=setup();s.ui.edit();s.ui.add(0);s.ui.set(1,'name','유사암');const e={preventDefault(){},dataTransfer:{setData(){}}};
+ s.ui.rowDragStart(e,0);s.ui.dropSection(e,2);s.ui.review();await s.ui.save();
+ assert.deepEqual(s.stored().rows.map(r=>r.name),['유사암','질병 실손의료비','일반암 진단비']);assert.equal(s.stored().rows[2].section,'암');assert.equal(s.stored().rows[2].id,'a');
+});
 test('template drag moves complete section and preserves row identity through reviewed save',async()=>{
  const s=setup();s.ui.edit();s.ui.add(0);s.ui.set(1,'name','유사암 진단비');
  const event={preventDefault(){},dataTransfer:{setData(){}}};s.ui.dragStart(event,0);s.ui.dropSection(event,2);s.ui.review();await s.ui.save();
