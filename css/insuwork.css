@@ -1053,3 +1053,12 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-coverage-analysis.iw-ca-page .iw-ca-table-wrap{flex:1;min-height:0;max-height:none;overscroll-behavior:contain}
 #v-insuwork .iw-coverage-analysis.iw-ca-page.iw-ca-fullscreen{padding:12px;box-sizing:border-box;background:var(--s1)}
 @media(max-width:720px){#v-insuwork .iw-main:has(>.iw-ca-page){padding:10px 8px 8px}#v-insuwork .iw-coverage-analysis.iw-ca-page.iw-ca-fullscreen{padding:8px}#v-insuwork .iw-ca-page .iw-ca-heading-actions{gap:4px}}
+
+/* Address and underwriting disclosures retain inputs when collapsed. */
+#v-insuwork .iw-care-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;border-radius:var(--radius-sm)}
+#v-insuwork .iw-care-disclosure>summary::-webkit-details-marker{display:none}
+#v-insuwork .iw-care-disclosure>summary h3{margin:0}
+#v-insuwork .iw-care-disclosure[open]>summary{margin-bottom:10px}
+#v-insuwork .iw-care-disclosure>summary:focus-visible{outline:2px solid var(--ac);outline-offset:4px}
+#v-insuwork .iw-care-disclosure>summary span{color:var(--ts);font-size:var(--fs-sm,12px);white-space:nowrap}
+#v-insuwork .iw-care-disclosure[open]>summary .iw-care-expand,#v-insuwork .iw-care-disclosure:not([open])>summary .iw-care-collapse{display:none}
