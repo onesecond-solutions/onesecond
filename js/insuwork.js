@@ -3039,7 +3039,7 @@
     var prev = document.querySelector('#iw-preview .iw-preview-nav-prev'), next = document.querySelector('#iw-preview .iw-preview-nav-next');
     if (!overlay) return false;
     closeDialog();
-    if (document.querySelector('#v-insuwork .iw-ca-fullscreen') && overlay.showPopover) { overlay.setAttribute('popover', 'manual'); if (!overlay.matches(':popover-open')) overlay.showPopover(); }
+    if (overlay.showPopover) { overlay.setAttribute('popover', 'manual'); if (!overlay.matches(':popover-open')) overlay.showPopover(); }
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('has-asset', !!assetRef);
     if (prev) { prev.hidden = !navigation; prev.disabled = !navigation || !navigation.previous; }
     if (next) { next.hidden = !navigation; next.disabled = !navigation || !navigation.next; }
@@ -3112,9 +3112,9 @@
     if (!p || !image || !stage) return;
     var naturalW = image.naturalWidth || image.width || 1, naturalH = image.naturalHeight || image.height || 1;
     var rotated = p.rotate % 180 !== 0;
-    var availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 48);
+    var availW = Math.max(1, stage.clientWidth - 16), availH = Math.max(1, stage.clientHeight - 8);
     var fitW = rotated ? naturalH : naturalW, fitH = rotated ? naturalW : naturalH;
-    var fitScale = Math.min(availW / fitW, availH / fitH, 1);
+    var fitScale = Math.min(availW / fitW, availH / fitH);
     var displayW = Math.max(1, Math.round(naturalW * fitScale * p.zoom));
     var displayH = Math.max(1, Math.round(naturalH * fitScale * p.zoom));
     image.style.width = displayW + 'px';
@@ -3124,7 +3124,7 @@
   }
   function renderPdfPreview() {
     var p = state.preview, stage = document.getElementById('iw-preview-stage'); if (!p || !p.doc || !stage) return;
-    var doc = p.doc, availW = Math.max(160, stage.clientWidth - 32), availH = Math.max(160, stage.clientHeight - 48);
+    var doc = p.doc, availW = Math.max(1, stage.clientWidth - 16), availH = Math.max(1, stage.clientHeight - 8);
     stage.innerHTML = '';
     var wraps = [];
     for (var n = 1; n <= p.pages; n++) {

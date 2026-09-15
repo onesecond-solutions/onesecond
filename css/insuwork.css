@@ -1077,3 +1077,8 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-consult-row>.iw-contract-name-cell { justify-content: flex-start; text-align: left; gap: 6px; }
 #v-insuwork .iw-contract-name-cell>span:not([role]) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 @media(max-width:860px){#v-insuwork .iw-consult-row>.iw-consult-genderAge{display:none}#v-insuwork .iw-consult-row>.iw-contract-name-cell{flex-wrap:wrap}}
+/* Fill the browser viewport above the search header; reserve only the control bar. */
+#v-insuwork .iw-preview{padding:4px 8px 58px;align-items:stretch}
+#v-insuwork .iw-preview .iw-preview-stage{height:100%;padding:4px 0}
+#v-insuwork .iw-preview .iw-preview-bar{bottom:6px}
+#v-insuwork .iw-preview .iw-preview-thumbs{top:8px;bottom:62px;left:8px}
