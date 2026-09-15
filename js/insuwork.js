@@ -1326,9 +1326,38 @@
     hydrateAssetPdfThumbs();
   }
   var assetPdfThumbCache = new Map(), assetPdfThumbQueue = Promise.resolve(), assetPdfThumbObserver;
+  function storedAssetPdfThumb(key, value) {
+    return new Promise(function (resolve) {
+      if (!window.indexedDB) { resolve(null); return; }
+      var request = indexedDB.open('iw-private-pdf-thumbnails-v1', 1);
+      request.onupgradeneeded = function () { request.result.createObjectStore('thumbs', { keyPath: 'key' }); };
+      request.onerror = request.onblocked = function () { resolve(null); };
+      request.onsuccess = function () {
+        var db = request.result, tx = db.transaction('thumbs', value ? 'readwrite' : 'readonly'), store = tx.objectStore('thumbs'), result = null;
+        if (value) {
+          store.put({ key: key, value: value, at: Date.now() });
+          var all = store.getAll(); all.onsuccess = function () { all.result.sort(function (a, b) { return b.at - a.at; }).slice(80).forEach(function (row) { store.delete(row.key); }); };
+        } else {
+          var get = store.get(key); get.onsuccess = function () { var row = get.result; if (row && Date.now() - row.at < 7 * 86400000) result = row.value; };
+        }
+        tx.oncomplete = function () { db.close(); resolve(result); };
+        tx.onerror = tx.onabort = function () { db.close(); resolve(null); };
+      };
+    });
+  }
   function assetPdfThumbnail(path) {
     var key = currentUserId() + ':' + path;
     if (assetPdfThumbCache.has(key)) return Promise.resolve(assetPdfThumbCache.get(key));
+    return storedAssetPdfThumb(key).then(function (cached) {
+      if (cached) { assetPdfThumbCache.set(key, cached); return cached; }
+      var task = assetPdfThumbQueue.catch(function () {}).then(function () {
+        if (assetPdfThumbCache.has(key)) return assetPdfThumbCache.get(key);
+        return renderAssetPdfThumbnail(path, key);
+      });
+      assetPdfThumbQueue = task; return task;
+    });
+  }
+  function renderAssetPdfThumbnail(path, key) {
     var doc;
     return Promise.all([loadPdfJs(), signStoragePath(path)]).then(function (values) {
       return values[0].getDocument({ url: values[1], isEvalSupported: false }).promise;
@@ -1340,17 +1369,17 @@
       return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise.then(function () {
         var url = canvas.toDataURL('image/jpeg', .9); canvas.width = canvas.height = 0;
         if (assetPdfThumbCache.size >= 30) assetPdfThumbCache.delete(assetPdfThumbCache.keys().next().value);
-        assetPdfThumbCache.set(key, url); return url;
+        assetPdfThumbCache.set(key, url); return storedAssetPdfThumb(key, url).then(function () { return url; });
       });
     }).finally(function () { if (doc) doc.destroy(); });
   }
   function hydrateAssetPdfThumbs() {
     if (assetPdfThumbObserver) assetPdfThumbObserver.disconnect();
     function show(img) {
-      assetPdfThumbQueue = assetPdfThumbQueue.catch(function () {}).then(function () {
-        if (!img.isConnected) return;
-        return assetPdfThumbnail(img.getAttribute('data-asset-pdf-path')).then(function (url) { if (img.isConnected) img.src = url; }).catch(function () { img.alt = 'PDF · 클릭하여 열기'; });
-      });
+      if (!img.isConnected) return;
+      var path = img.getAttribute('data-asset-pdf-path'), cached = assetPdfThumbCache.get(currentUserId() + ':' + path);
+      if (cached) { img.src = cached; return; }
+      assetPdfThumbnail(path).then(function (url) { if (img.isConnected) { img.src = url; img.onload = function () { var card = img.closest('.iw-asset-card'); if (card && card.matches(':hover')) showSearchImageHover({ currentTarget: card }); }; } }).catch(function () { img.alt = 'PDF · 클릭하여 열기'; });
     }
     if (typeof IntersectionObserver !== 'undefined') assetPdfThumbObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) { if (entry.isIntersecting) { assetPdfThumbObserver.unobserve(entry.target); show(entry.target); } });
@@ -5105,11 +5134,11 @@
     tip.style.width = width + 'px'; tip.style.left = left + 'px'; tip.style.top = Math.max(gap, Math.min(rect.top, window.innerHeight - Math.min(expanded ? 330 : 560, window.innerHeight - gap * 2) - gap)) + 'px';
   }
   document.addEventListener('mouseover', function (event) {
-    var card = event.target.closest && event.target.closest('#v-insuwork.iw-expanded-images .iw-assets-grid:not(.large) .iw-asset-card');
+    var card = event.target.closest && event.target.closest('#v-insuwork .iw-assets-grid:not(.large) .iw-asset-card');
     if (card && (!event.relatedTarget || !card.contains(event.relatedTarget))) showSearchImageHover({ currentTarget: card });
   });
   document.addEventListener('mouseout', function (event) {
-    var card = event.target.closest && event.target.closest('#v-insuwork.iw-expanded-images .iw-asset-card');
+    var card = event.target.closest && event.target.closest('#v-insuwork .iw-asset-card');
     if (card && (!event.relatedTarget || !card.contains(event.relatedTarget))) hideSearchImageHover();
   });
   window.addEventListener('scroll', hideSearchImageHover, true);
