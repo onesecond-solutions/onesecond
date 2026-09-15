@@ -1302,6 +1302,7 @@
   function assetCardHtml(item) {
     var raw = item.raw || {}, direct = raw.image_url || (/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(raw.url || '') ? raw.url : '');
     var image = direct ? '<img src="' + esc(direct) + '" alt="">' : ((raw.storage_path && /^image\//.test(raw.mime_type || '')) ? '<img data-storage-path="' + esc(raw.storage_path) + '" alt="">' : '');
+    if (!image && raw.storage_path && previewType(raw) === 'pdf') image = '<img data-asset-pdf-path="' + esc(raw.storage_path) + '" alt="PDF 첫 페이지 미리보기" loading="lazy">';
     var docBody = item.type === 'note' ? '<p class="iw-asset-ext">Note</p>' : item.type === 'memo' ? '<p class="iw-asset-ext">Memo</p>' : item.body ? '<p>' + esc(String(item.body).slice(0, 110)) + '</p>' : '<p class="iw-asset-ext">' + esc((fileExtension(raw) || item.kind || '파일').toUpperCase()) + '</p>';
     var preview = item.folder ? '<span class="iw-folder-icon">📁</span>' : image || '<div class="iw-asset-document"><span>' + (item.type === 'note' ? '업무노트' : item.type === 'memo' ? '메모' : item.kind) + '</span>' + docBody + '</div>';
     return '<button type="button" class="iw-asset-card ' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '">' + (item.folder ? '' : favoriteButton('asset', raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<span class="iw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small></button>';
@@ -1322,6 +1323,39 @@
       var path = img.getAttribute('data-storage-path'); if (!path) return;
       signStoragePath(path).then(function (url) { img.src = url; }).catch(function () {});
     });
+    hydrateAssetPdfThumbs();
+  }
+  var assetPdfThumbCache = new Map(), assetPdfThumbQueue = Promise.resolve(), assetPdfThumbObserver;
+  function assetPdfThumbnail(path) {
+    var key = currentUserId() + ':' + path;
+    if (assetPdfThumbCache.has(key)) return Promise.resolve(assetPdfThumbCache.get(key));
+    var doc;
+    return Promise.all([loadPdfJs(), signStoragePath(path)]).then(function (values) {
+      return values[0].getDocument({ url: values[1], isEvalSupported: false }).promise;
+    }).then(function (pdf) {
+      doc = pdf; return doc.getPage(1);
+    }).then(function (page) {
+      var base = page.getViewport({ scale: 1 }), viewport = page.getViewport({ scale: Math.min(900 / base.width, 1400 / base.height) });
+      var canvas = document.createElement('canvas'); canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+      return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise.then(function () {
+        var url = canvas.toDataURL('image/jpeg', .9); canvas.width = canvas.height = 0;
+        if (assetPdfThumbCache.size >= 30) assetPdfThumbCache.delete(assetPdfThumbCache.keys().next().value);
+        assetPdfThumbCache.set(key, url); return url;
+      });
+    }).finally(function () { if (doc) doc.destroy(); });
+  }
+  function hydrateAssetPdfThumbs() {
+    if (assetPdfThumbObserver) assetPdfThumbObserver.disconnect();
+    function show(img) {
+      assetPdfThumbQueue = assetPdfThumbQueue.catch(function () {}).then(function () {
+        if (!img.isConnected) return;
+        return assetPdfThumbnail(img.getAttribute('data-asset-pdf-path')).then(function (url) { if (img.isConnected) img.src = url; }).catch(function () { img.alt = 'PDF · 클릭하여 열기'; });
+      });
+    }
+    if (typeof IntersectionObserver !== 'undefined') assetPdfThumbObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) { if (entry.isIntersecting) { assetPdfThumbObserver.unobserve(entry.target); show(entry.target); } });
+    }, { rootMargin: '200px' });
+    document.querySelectorAll('#v-insuwork img[data-asset-pdf-path]').forEach(function (img) { if (assetPdfThumbObserver) assetPdfThumbObserver.observe(img); else show(img); });
   }
   function customerStageCounts(rows) {
     var counts = { all: rows.length }; CUSTOMER_STAGES.concat([CUSTOMER_REVIEW_STAGE]).forEach(function (stage) { counts[stage.key] = 0; });
