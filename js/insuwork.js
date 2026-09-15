@@ -2616,7 +2616,7 @@
     view.innerHTML = '<div class="iw-shell' + (STANDALONE ? ' iw-shell-compact' : '') + '">' + head + '<div class="iw-body">' + navHtml() + '<main class="iw-main" id="iw-main"></main></div></div><dialog class="iw-dialog" id="iw-dialog"><button class="iw-dialog-close" onclick="OSInsuwork.closeDialog()" aria-label="닫기">×</button><div id="iw-dialog-body"></div></dialog>'
       + '<dialog class="iw-dialog iw-reservation-dialog" id="iw-reservation-dialog"><button class="iw-dialog-close" onclick="OSInsuwork.closeReservationPopup()" aria-label="닫기">×</button><div id="iw-reservation-body"></div></dialog>'
       + '<div class="iw-preview" id="iw-preview" aria-hidden="true" onclick="if(event.target===this)OSInsuwork.closePreview()"><button type="button" class="iw-preview-close" onclick="OSInsuwork.closePreview()" aria-label="미리보기 닫기">×</button><button type="button" class="iw-preview-nav iw-preview-nav-prev" onclick="OSInsuwork.previewNavigate(-1)" aria-label="이전 자료">‹</button><button type="button" class="iw-preview-nav iw-preview-nav-next" onclick="OSInsuwork.previewNavigate(1)" aria-label="다음 자료">›</button><div class="iw-preview-thumbs" id="iw-preview-thumbs"></div><div class="iw-preview-stage" id="iw-preview-stage" onclick="if(event.target===this||(event.target.classList&&event.target.classList.contains(\'iw-preview-page-wrap\')))OSInsuwork.closePreview()"></div><div class="iw-preview-bar"><button type="button" onclick="OSInsuwork.previewZoom(-1)" title="축소">−</button><button type="button" onclick="OSInsuwork.previewZoom(1)" title="확대">＋</button><button type="button" onclick="OSInsuwork.previewRotate()" title="회전">↻</button><button type="button" class="iw-preview-pdf-only" onclick="OSInsuwork.previewPage(-1)" title="이전 페이지">‹</button><span id="iw-preview-page"></span><button type="button" class="iw-preview-pdf-only" onclick="OSInsuwork.previewPage(1)" title="다음 페이지">›</button><div class="iw-ddak-wrap"><button type="button" class="iw-preview-ddak" aria-haspopup="menu" aria-expanded="false" onclick="OSInsuwork.toggleDdakMenu(event)">⚡ 딸깍</button><div class="iw-ddak-menu" id="iw-preview-ddak-menu" role="menu" hidden><a id="iw-preview-download" href="#" target="_blank" rel="noopener" download role="menuitem" onclick="OSInsuwork.closeDdakMenu()">⬇ 다운로드 저장</a><button type="button" role="menuitem" onclick="OSInsuwork.previewCopy()">📋 복사</button></div></div><button type="button" class="iw-preview-asset-only" onclick="OSInsuwork.previewEditAsset()" title="수정">✎ 수정</button><button type="button" class="iw-preview-asset-only iw-preview-delete" onclick="OSInsuwork.previewDeleteAsset()" title="삭제">🗑 삭제</button></div></div>'
-      + '<div class="iw-consult-hover" id="iw-row-hover" aria-hidden="true"></div><div class="iw-search-image-hover" id="iw-search-image-hover" aria-hidden="true"></div><div class="iw-asset-drop-overlay" id="iw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 복사 저장합니다.</span></div></div>';
+      + '<div class="iw-consult-hover" id="iw-row-hover" aria-hidden="true"></div><div class="iw-search-image-hover" id="iw-search-image-hover" aria-hidden="true"></div><div class="iw-asset-drop-overlay" id="iw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 저장합니다. 사진 여러 장은 PDF 한 개로 합칩니다.</span></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('iw-search-input'); if (globalInput) globalInput.value = state.query; }
     if (window.OSInsuworkMobileSection) window.OSInsuworkMobileSection.mount(view, state.section);
     bindSearch(); bindAssetWorkspaceDrop(); bindWorkspacePaste(); renderContent();
@@ -3494,7 +3494,7 @@
   function droppedTree(dataTransfer) {
     var folders = [], files = [], items = Array.prototype.slice.call(dataTransfer && dataTransfer.items || []), entries = items.map(function (item) { return item.webkitGetAsEntry ? item.webkitGetAsEntry() : null; }).filter(Boolean);
     if (!entries.length) return Promise.resolve({ folders: folders, files: Array.prototype.slice.call(dataTransfer && dataTransfer.files || []).map(function (file) { return { file: file, parents: [] }; }) });
-    return Promise.all(entries.map(function (entry) { return collectDroppedEntry(entry, [], folders, files); })).then(function () { return { folders: folders, files: files }; });
+    return entries.reduce(function (chain, entry) { return chain.then(function () { return collectDroppedEntry(entry, [], folders, files); }); }, Promise.resolve()).then(function () { return { folders: folders, files: files }; });
   }
   function uploadAssetFile(file, category, parent) {
     var token = window.db.getToken(), owner = currentUserId(), folderPath = parent || category;
@@ -3508,6 +3508,9 @@
     var baseParent = parentOverride !== undefined ? parentOverride : (state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null);
     state.externalImporting = true; setAssetDropOverlay(true, '폴더 구조를 복사하는 중입니다…');
     droppedTree(dataTransfer).then(function (tree) {
+      if (tree.folders.length) return tree;
+      return prepareAssetPhotoBatch(tree.files.map(function (entry) { return entry.file; })).then(function (files) { return { folders: [], files: files.map(function (file) { return { file: file, parents: [] }; }) }; });
+    }).then(function (tree) {
       if (!tree.folders.length && !tree.files.length) throw new Error('복사할 파일을 찾지 못했습니다.');
       var folderIds = {}, ordered = tree.folders.slice().sort(function (a, b) { return a.length - b.length; });
       return ordered.reduce(function (promise, parts) {
@@ -3585,15 +3588,26 @@
     state.pendingAssetFiles = null; closeDialog(); performAssetFileUpload(list, category);
   }
   function performAssetFileUpload(list, category, parentOverride) {
+    if (state.externalImporting) return;
     var token = window.db.getToken(), owner = currentUserId(), parent = parentOverride !== undefined ? parentOverride : (state.assetFolder && currentAssetCategory() === category ? state.assetFolder : null), folderPath = parent || category;
-    Promise.all(list.map(function (file) {
+    state.externalImporting = true;
+    setAssetDropOverlay(true, '파일을 준비하고 저장하는 중입니다…');
+    return prepareAssetPhotoBatch(list).then(function (prepared) { return Promise.all(prepared.map(function (file) {
       var id = crypto.randomUUID(), dot = file.name.lastIndexOf('.'), ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : '', path = owner + '/' + folderPath + '/' + id + (ext ? '.' + ext.replace(/[^a-z0-9]/g, '') : '');
       var row = { id: id, owner_id: owner, parent_id: parent, item_type: 'file', title: file.name, storage_path: path, mime_type: file.type || null, extension: ext || null, file_size: file.size, visibility: 'private', legacy_payload: { workspace_category: category }, created_at: new Date().toISOString() };
       return fetch(window.db.url('/storage/v1/object/myspace/' + path.split('/').map(encodeURIComponent).join('/')), { method: 'POST', headers: { apikey: window.db.key, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'false' }, body: file }).then(function (response) {
         if (!response.ok) throw new Error(file.name + ' 업로드 실패');
         return write('insuwork_items', row).then(function () { return row; });
       });
-    })).then(function (rows) { rows.forEach(upsertWorkspaceItem); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + list.length + '개를 추가했습니다.'); }).catch(saveError);
+    })); }).then(function (rows) { rows.forEach(upsertWorkspaceItem); state.assetFilter = category; state.assetFolder = parent; renderContent(); if (typeof window.toast === 'function') window.toast(assetCategoryLabel(category) + '에 파일 ' + rows.length + '개를 추가했습니다.'); }).catch(saveError).finally(function () { state.externalImporting = false; setAssetDropOverlay(false); });
+  }
+  function prepareAssetPhotoBatch(files) {
+    var list = Array.prototype.slice.call(files || []);
+    if (list.length < 2 || !list.every(function (file) { return /^image\//i.test(file.type || '') || /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name || ''); })) return Promise.resolve(list);
+    setAssetDropOverlay(true, '사진 ' + list.length + '장을 PDF로 합치는 중입니다…');
+    return mergePhotoPdfBytes(list).then(function (bytes) {
+      return [new File([bytes], '이미지_' + list.length + '장_' + ymd(new Date()) + '.pdf', { type: 'application/pdf' })];
+    });
   }
   function addCustomer() {
     var statuses = CUSTOMER_STAGES.map(function (stage) { return stage.key; });
@@ -4660,25 +4674,25 @@
     return createImageBitmap(file).then(function (bitmap) {
       var canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height;
       var ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(bitmap, 0, 0);
-      return new Promise(function (resolve) { canvas.toBlob(function (blob) { blob.arrayBuffer().then(resolve); }, 'image/jpeg', .92); });
+      bitmap.close();
+      return new Promise(function (resolve, reject) { canvas.toBlob(function (blob) { canvas.width = canvas.height = 0; if (!blob) { reject(new Error('이미지를 변환하지 못했습니다.')); return; } blob.arrayBuffer().then(resolve, reject); }, 'image/jpeg', .92); });
+    });
+  }
+  function mergePhotoPdfBytes(files) {
+    return loadPdfLib().then(function (PDFLib) {
+      return PDFLib.PDFDocument.create().then(function (pdfDoc) {
+        return files.reduce(function (chain, file) {
+          return chain.then(function () { return fileToJpegBuffer(file); }).then(function (buffer) { return pdfDoc.embedJpg(buffer); }).then(function (img) {
+            var page = pdfDoc.addPage([img.width, img.height]);
+            page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+          });
+        }, Promise.resolve()).then(function () { return pdfDoc.save(); });
+      });
     });
   }
   function imgConvertMergePdf(files) {
     var result = document.getElementById('iw-imgconv-result'); if (result) result.innerHTML = '<div class="iw-tool-empty">PDF로 합치는 중입니다.</div>';
-    loadPdfLib().then(function (PDFLib) {
-      return Promise.all(files.map(fileToJpegBuffer)).then(function (buffers) {
-        return PDFLib.PDFDocument.create().then(function (pdfDoc) {
-          return buffers.reduce(function (chain, buf) {
-            return chain.then(function () {
-              return pdfDoc.embedJpg(buf).then(function (img) {
-                var page = pdfDoc.addPage([img.width, img.height]);
-                page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
-              });
-            });
-          }, Promise.resolve()).then(function () { return pdfDoc.save(); });
-        });
-      });
-    }).then(function (bytes) {
+    mergePhotoPdfBytes(files).then(function (bytes) {
       var blob = new Blob([bytes], { type: 'application/pdf' });
       var name = '이미지_' + files.length + '장_' + ymd(new Date()) + '.pdf';
       state.toolPdfResult = { blob: blob, url: URL.createObjectURL(blob), name: name, size: blob.size, pageCount: files.length };
