@@ -1077,3 +1077,13 @@ body.iw-preview-open{overflow:hidden}
 #v-insuwork .iw-consult-row>.iw-contract-name-cell { justify-content: flex-start; text-align: left; gap: 6px; }
 #v-insuwork .iw-contract-name-cell>span:not([role]) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 @media(max-width:860px){#v-insuwork .iw-consult-row>.iw-consult-genderAge{display:none}#v-insuwork .iw-consult-row>.iw-contract-name-cell{flex-wrap:wrap}}
+#v-insuwork .iw-asset-workspace{display:grid;grid-template-columns:minmax(170px,220px) minmax(0,1fr);gap:16px;min-height:100%}
+#v-insuwork .iw-asset-workspace-content{min-width:0}
+#v-insuwork .iw-asset-tree{border-right:1px solid var(--bd);padding-right:10px;min-width:0}
+#v-insuwork .iw-tree-body button{display:block;width:100%;padding:9px 8px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--tp);text-align:left;font:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+#v-insuwork .iw-tree-body button:hover,#v-insuwork .iw-tree-body button.on{background:var(--s2);color:var(--ac)}
+#v-insuwork .iw-tree-row{display:flex;min-width:0}#v-insuwork .iw-tree-row>button:first-child{flex:0 0 24px;padding-inline:3px}#v-insuwork .iw-tree-row>button:last-child{min-width:0}
+#v-insuwork .iw-tree-children{padding-left:12px}#v-insuwork .iw-tree-root{margin-top:10px}
+#v-insuwork .tree-collapsed{grid-template-columns:48px minmax(0,1fr)}#v-insuwork .tree-collapsed .iw-tree-body,#v-insuwork .tree-collapsed .iw-tree-toggle span{display:none}
+@media(min-width:861px){#v-insuwork.iw-nav-collapsed .iw-body{grid-template-columns:64px minmax(0,1fr)}#v-insuwork.iw-nav-collapsed .iw-nav button:not(.iw-nav-toggle),#v-insuwork.iw-nav-collapsed .iw-nav summary{font-size:0;padding:10px;justify-content:center;min-height:40px}#v-insuwork.iw-nav-collapsed .iw-nav button:not(.iw-nav-toggle)>span,#v-insuwork.iw-nav-collapsed .iw-nav summary>*{display:none}#v-insuwork.iw-nav-collapsed .iw-nav [data-nav-icon]:before{content:attr(data-nav-icon);font-size:16px}#v-insuwork.iw-nav-collapsed .iw-nav summary:after{display:none}#v-insuwork.iw-nav-collapsed .iw-nav-planned,#v-insuwork.iw-nav-collapsed .iw-nav-bottom>*{margin-inline:0;padding-inline:0}}
+@media(max-width:860px){#v-insuwork .iw-nav-toggle{display:none}#v-insuwork .iw-asset-workspace{grid-template-columns:1fr}#v-insuwork .iw-asset-tree{border-right:0;border-bottom:1px solid var(--bd);padding-bottom:8px}#v-insuwork .iw-tree-body{max-height:240px;overflow:auto}}
