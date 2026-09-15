@@ -1322,8 +1322,8 @@
   }
   function assetBreadcrumbHtml() {
     if (!state.assetFolder) return '';
-    var parts = [], id = state.assetFolder;
-    while (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); if (!folder) break; parts.unshift(folder); id = folder.parent_id; }
+    var parts = [], id = state.assetFolder, seen = {};
+    while (id && !seen[id]) { seen[id] = true; var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); if (!folder) break; parts.unshift(folder); id = folder.parent_id; }
     var category = currentAssetCategory();
     var current = parts.length ? parts[parts.length - 1] : null;
     return '<nav class="iw-folder-path" aria-label="폴더 경로"><span class="iw-folder-trail"><button type="button" onclick="OSInsuwork.openAssetRoot(\'' + esc(category) + '\')">' + esc(assetCategoryLabel(category)) + '</button>' + parts.map(function (folder) { return '<span>›</span><button type="button" onclick="OSInsuwork.openAssetFolder(\'' + esc(folder.id) + '\')">' + esc(folder.title) + '</button>'; }).join('') + '</span>' + (current ? '<button type="button" class="iw-folder-delete" onclick="OSInsuwork.deleteAssetFolder(\'' + esc(current.id) + '\')">현재 폴더 삭제</button>' : '') + '</nav>';
