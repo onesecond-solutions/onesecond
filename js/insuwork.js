@@ -619,7 +619,7 @@
     var briefingGroup = [['◫', '뉴스 브리핑', 'section:daily-briefing'], ['◫', '보험이슈', 'section:briefing']];
     var refGroup = [['◫', '소식지', 'section:newsletters'], ['↗', '영업방향', 'section:sales-strategy'], ['≡', '상품라인업', 'section:product-lineups'], ['✎', '스크립트', 'section:scripts']];
     var toolGroup = [['◷', '보험연령표', 'section:insurance-age'], ['⌗', '계산기·변환기', 'section:tools'], ['⇗', '원전산 바로가기', 'section:carriers'], ['₩', '보험회사 결제정보', 'section:payments']];
-    return '<nav class="iw-nav" aria-label="내 업무 메뉴">' + items.map(function (item) {
+    return '<nav class="iw-nav" aria-label="내 업무 메뉴"><button type="button" class="iw-nav-toggle" onclick="OSInsuwork.toggleWorkspaceNav()">« 메뉴 접기</button>' + items.map(function (item) {
       var locked = PROTECTED_SECTIONS.indexOf(item[0]) >= 0 && !allowed();
       return '<button type="button" class="' + (state.section === item[0] ? 'on' : '') + (locked ? ' iw-nav-locked' : '') + '" onclick="OSInsuwork.go(\'' + item[0] + '\')"' + (locked ? ' aria-label="' + esc(item[2]) + ' (로그인 필요)"' : '') + '><span>' + item[1] + '</span>' + item[2] + (locked ? '<span class="iw-nav-lock" aria-hidden="true">🔒</span>' : '') + '</button>';
     }).join('') + '<div class="iw-nav-planned" aria-label="부가 메뉴">' + navPlannedGroupHtml('보험브리핑', briefingGroup, 'briefing') + navPlannedGroupHtml('참고자료', refGroup, 'ref') + navPlannedGroupHtml('영업도구', toolGroup, 'tools') + supportGroupHtml() + '</div>' + '<div class="iw-nav-bottom"><button type="button" class="trash ' + (state.section === 'trash' ? 'on' : '') + '" onclick="OSInsuwork.go(\'trash\')"><span>♲</span>휴지통</button><button type="button" class="archive" onclick="window.open(\'/insu/?view=home\',\'_blank\',\'noopener,noreferrer\')">구)원세컨드</button>' + (canSeeAzViewingRoom() ? '<div class="iw-nav-private"><button type="button" class="' + (state.section === 'az-viewing-room' ? 'on' : '') + '" onclick="OSInsuwork.go(\'az-viewing-room\')"><span>▣</span>에즈 시청방</button></div>' : '') + '</div></nav>';
@@ -1234,6 +1234,8 @@
   }
 
   function assetCategory(item) {
+    var seen = {}, parent = item && item.parent_id;
+    while (parent && !seen[parent]) { seen[parent] = true; var folder = state.data.items.find(function (entry) { return entry.id === parent && entry.item_type === 'folder'; }); if (!folder) break; item = folder; parent = folder.parent_id; }
     var payload = item && item.legacy_payload;
     if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (_) { payload = {}; } }
     if (payload && ['note', 'file', 'memo'].indexOf(payload.workspace_category) >= 0) return payload.workspace_category;
@@ -1256,7 +1258,7 @@
 
   function assetsHtml() {
     var items = [];
-    state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
+    state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: assetCategory(item), kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
     state.data.library.forEach(function (item) { var memo = item.item_type === 'memo', folder = item.item_type === 'folder', file = item.item_type === 'file', category = assetCategory(item); items.push({ source: 'library', type: category, folder: folder, kind: folder ? '폴더' : file ? '파일' : memo ? '메모' : item.item_type === 'link' ? '링크' : item.item_type === 'note' ? '업무노트' : '자료', title: item.title, body: item.body || item.url || '', created: item.created_at, raw: item }); });
     items = items.filter(function (item) {
       if (state.assetFilter !== 'all' && item.type !== state.assetFilter) return false;
@@ -1279,8 +1281,35 @@
     var content = state.assetView === 'list'
       ? '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="iw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
       : '<div class="iw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
-    return statusHtml() + controls + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSInsuwork.loadMoreAssets()');
+    return statusHtml() + '<div class="iw-asset-workspace' + (localStorage.getItem('iw-tree-collapsed') === '1' ? ' tree-collapsed' : '') + '">' + assetTreeHtml() + '<section class="iw-asset-workspace-content">' + controls.replace(tabsHtml, '') + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSInsuwork.loadMoreAssets()') + '</section></div>';
   }
+  var assetTreeClosed = {};
+  function toggleAssetTree(id) { if (id) assetTreeClosed[id] = !assetTreeClosed[id]; else localStorage.setItem('iw-tree-collapsed', localStorage.getItem('iw-tree-collapsed') === '1' ? '0' : '1'); renderContent(); }
+  function assetTreeHtml() {
+    var folders = state.data.library.filter(function (item) { return item.item_type === 'folder'; });
+    function children(parent, category, seen) {
+      return folders.filter(function (folder) { return String(folder.parent_id || '') === parent && assetCategory(folder) === category && !seen[folder.id]; }).map(function (folder) {
+        var next = Object.assign({}, seen); next[folder.id] = true;
+        return '<div class="iw-tree-node"><div class="iw-tree-row"><button type="button" aria-label="폴더 펼치기 또는 접기" onclick="OSInsuwork.toggleAssetTree(\'' + esc(folder.id) + '\')">' + (assetTreeClosed[folder.id] ? '▸' : '▾') + '</button><button type="button" draggable="true" ondragstart="OSInsuwork.startTreeDrag(event,\'' + esc(folder.id) + '\')" ondragend="OSInsuwork.assetDragEnd(event)" class="' + (state.assetFolder === folder.id ? 'on' : '') + '" title="' + esc(folder.title) + '" onclick="OSInsuwork.openAssetFolder(\'' + esc(folder.id) + '\')" ' + target(folder.id, category) + '>📁 ' + esc(folder.title) + '</button></div>' + (assetTreeClosed[folder.id] ? '' : '<div class="iw-tree-children">' + children(folder.id, category, next) + '</div>') + '</div>';
+      }).join('');
+    }
+    function target(id, category) { return 'ondragover="OSInsuwork.assetDragOver(event,\'' + esc(id) + '\',\'' + category + '\')" ondrop="OSInsuwork.assetDrop(event,\'' + esc(id) + '\',\'' + category + '\')" ondragleave="OSInsuwork.assetDragLeave(event)"'; }
+    return '<aside class="iw-asset-tree"><button type="button" class="iw-btn iw-tree-toggle" onclick="OSInsuwork.toggleAssetTree()" aria-label="폴더트리 접기 또는 펼치기">☷ <span>폴더</span></button><div class="iw-tree-body"><button type="button" onclick="OSInsuwork.filterAssets(\'all\')">자료 전체</button>' + ['note','file','memo'].map(function (category) { return '<div class="iw-tree-root"><button type="button" class="' + (!state.assetFolder && state.assetFilter === category ? 'on' : '') + '" onclick="OSInsuwork.openAssetRoot(\'' + category + '\')" ' + target('', category) + '>' + assetCategoryLabel(category) + '</button>' + children('', category, {}) + '</div>'; }).join('') + '</div></aside>';
+  }
+  function toggleWorkspaceNav() { var collapsed = localStorage.getItem('iw-nav-collapsed') !== '1'; localStorage.setItem('iw-nav-collapsed', collapsed ? '1' : '0'); applyWorkspaceNav(); }
+  function applyWorkspaceNav() {
+    var view = document.getElementById('v-insuwork'); if (!view) return;
+    var collapsed = localStorage.getItem('iw-nav-collapsed') === '1'; view.classList.toggle('iw-nav-collapsed', collapsed);
+    var nav = view.querySelector('.iw-nav'); if (!nav) return;
+    nav.querySelectorAll('button,summary').forEach(function (button) {
+      if (button.classList.contains('iw-nav-toggle')) return;
+      if (!button.dataset.navLabel) button.dataset.navLabel = button.textContent.trim();
+      button.title = button.dataset.navLabel; button.setAttribute('aria-label', button.dataset.navLabel);
+      button.dataset.navIcon = button.querySelector('span') ? button.querySelector('span').textContent : button.dataset.navLabel.slice(0, 1);
+    });
+    var toggle = nav.querySelector('.iw-nav-toggle'); if (toggle) { toggle.textContent = collapsed ? '»' : '« 메뉴 접기'; toggle.setAttribute('aria-expanded', String(!collapsed)); toggle.title = collapsed ? '메뉴 펼치기' : '메뉴 접기'; }
+  }
+  function startTreeDrag(event, id) { state.draggingAsset = { id: id }; event.dataTransfer.setData('application/x-insuwork-item', id); event.dataTransfer.effectAllowed = 'move'; }
   function assetOpenAction(item) {
     if (item.folder) return "OSInsuwork.openAssetFolder('" + esc(item.raw.id) + "')";
     if (previewType(item.raw) && (item.raw.storage_path || item.raw.image_url)) return "OSInsuwork.openAssetPreview('" + item.source + "','" + esc(item.raw.id) + "')";
@@ -2682,7 +2711,7 @@
       + '<div class="iw-consult-hover" id="iw-row-hover" aria-hidden="true"></div><div class="iw-search-image-hover" id="iw-search-image-hover" aria-hidden="true"></div><div class="iw-asset-drop-overlay" id="iw-asset-drop-overlay" aria-hidden="true"><div><strong>폴더와 파일을 여기에 놓으세요</strong><span>현재 자료 화면으로 저장합니다. 사진 여러 장은 PDF 한 개로 합칩니다.</span></div></div>';
     if (STANDALONE) { var globalInput = document.getElementById('iw-search-input'); if (globalInput) globalInput.value = state.query; }
     if (window.OSInsuworkMobileSection) window.OSInsuworkMobileSection.mount(view, state.section);
-    bindSearch(); bindAssetWorkspaceDrop(); bindWorkspacePaste(); renderContent();
+    applyWorkspaceNav(); bindSearch(); bindAssetWorkspaceDrop(); bindWorkspacePaste(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
   function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); if (state.section === 'coverage-sheet' && window.OSInsuworkCoverageSheet) window.OSInsuworkCoverageSheet.mount(); }, 0); hideRowHover(); hideSearchImageHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml() + kakaoHubHtml(); hydrateFileDrags(); if (state.query.trim() && state.searchView !== 'list') hydrateAssetThumbs(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
@@ -3591,11 +3620,10 @@
     }).catch(saveError).finally(function () { state.externalImporting = false; setAssetDropOverlay(false); });
   }
   function assetDragStart(event, id, category) {
-    state.draggingAsset = null;
-    if (fileDragPayload(event, id) && event.currentTarget) {
-      state.draggingAsset = { id: String(id), category: String(category) };
-      event.currentTarget.classList.add('is-dragging');
-    }
+    fileDragPayload(event, id);
+    state.draggingAsset = { id: String(id), category: String(category) };
+    event.dataTransfer.setData('application/x-insuwork-item', String(id));
+    if (event.currentTarget) event.currentTarget.classList.add('is-dragging');
   }
   function assetDragEnd(event) {
     state.draggingAsset = null;
@@ -3604,7 +3632,7 @@
   }
   function assetDragOver(event, folderId, folderCategory) {
     var hasFiles = event.dataTransfer && event.dataTransfer.types && Array.prototype.indexOf.call(event.dataTransfer.types, 'Files') >= 0;
-    var canMove = state.draggingAsset && state.draggingAsset.category === String(folderCategory) && state.draggingAsset.id !== String(folderId);
+    var canMove = state.draggingAsset && state.draggingAsset.id !== String(folderId);
     if (!hasFiles && !canMove) return;
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = hasFiles ? 'copy' : 'move';
@@ -3619,18 +3647,23 @@
     if (event.currentTarget) event.currentTarget.classList.remove('is-drag-over');
     var droppedItems = Array.prototype.slice.call(event.dataTransfer && event.dataTransfer.items || []);
     var hasDirectory = droppedItems.some(function (item) { var entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null; return !!(entry && entry.isDirectory); });
-    if (hasDirectory) { importExternalAssetDrop(event.dataTransfer, String(folderCategory), String(folderId)); return; }
+    if (hasDirectory) { importExternalAssetDrop(event.dataTransfer, String(folderCategory), folderId || null); return; }
     var files = event.dataTransfer && event.dataTransfer.files ? Array.prototype.slice.call(event.dataTransfer.files) : [];
-    if (files.length) { performAssetFileUpload(files, String(folderCategory), String(folderId)); return; }
+    if (files.length) { performAssetFileUpload(files, String(folderCategory), folderId || null); return; }
     var dragging = state.draggingAsset;
     state.draggingAsset = null;
     if (!dragging || dragging.id === String(folderId)) return;
-    if (dragging.category !== String(folderCategory)) { if (typeof window.toast === 'function') window.toast('같은 분류의 폴더로만 이동할 수 있습니다.'); return; }
-    window.db.fetch('/rest/v1/insuwork_items?id=eq.' + encodeURIComponent(dragging.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify({ parent_id: String(folderId) }) })
+    var moving = state.data.items.find(function (item) { return String(item.id) === dragging.id; });
+    if (!moving || ['note', 'file', 'memo'].indexOf(folderCategory) < 0) return;
+    var parentCheck = folderId, visited = {};
+    while (parentCheck) { if (String(parentCheck) === dragging.id || visited[parentCheck]) { briefingAlert('자기 자신이나 하위 폴더로는 이동할 수 없습니다.'); return; } visited[parentCheck] = true; var ancestor = state.data.items.find(function (item) { return String(item.id) === String(parentCheck) && item.item_type === 'folder'; }); if (!ancestor) return; parentCheck = ancestor.parent_id; }
+    var payload = moving.legacy_payload || {}; if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (_) { payload = {}; } }
+    payload = Object.assign({}, payload, { workspace_category: folderCategory });
+    window.db.fetch('/rest/v1/insuwork_items?id=eq.' + encodeURIComponent(dragging.id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()), { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify({ parent_id: folderId || null, legacy_payload: payload }) })
       .then(function (response) { if (!response.ok) return response.text().then(function (message) { throw new Error(message || ('HTTP ' + response.status)); }); return response.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows) || rows.length !== 1) throw new Error('이동할 자료를 확인하지 못했습니다.');
-        state.data.items.forEach(function (item) { if (String(item.id) === dragging.id) item.parent_id = String(folderId); });
+        state.data.items.forEach(function (item) { if (String(item.id) === dragging.id) { item.parent_id = folderId || null; item.legacy_payload = payload; } });
         rebuildWorkspaceDerived(); renderContent();
         if (typeof window.toast === 'function') window.toast('폴더로 이동했습니다.');
       }).catch(saveError);
@@ -5552,7 +5585,7 @@
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, editPublicLibraryItem: editPublicLibraryItem, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
-    closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
+    toggleWorkspaceNav: toggleWorkspaceNav, toggleAssetTree: toggleAssetTree, startTreeDrag: startTreeDrag, closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     setListPeriod: setListPeriod, addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, queueCustomerAddressSearch: queueCustomerAddressSearch, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, showSearchImageHover: showSearchImageHover, hideSearchImageHover: hideSearchImageHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, uploadKakaoBusinessCard: uploadKakaoBusinessCard, toggleKakaoHub: toggleKakaoHub, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, openAzRoomTool: openAzRoomTool, startChatScrollCapture: startChatScrollCapture, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, openBriefingSearchResult: openBriefingSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
