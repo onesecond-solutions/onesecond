@@ -974,7 +974,20 @@
       }
     }
     var row = draft(customerId).rows.find(function (item) { return String(item.id) === String(rowId); });
-    if (row) { if (productId === null) row.total = value; else row.values[productId] = value; }
+    if (row) {
+      if (productId === null) row.total = value;
+      else {
+        row.values[productId] = value;
+        // Hidden products still belong to the contract; do not drop their coverage.
+        var amounts = Object.values(row.values).filter(hasEnrolledAmount).map(amountKey);
+        if (amounts.every(function (amount) { return /^\d+(?:\.\d+)?$/.test(amount); })) {
+          var total = Math.round(amounts.reduce(function (sum, amount) { return sum + Number(amount); }, 0));
+          row.total = amounts.length ? (total % 10000 === 0 ? (total / 10000).toLocaleString('ko-KR') + '만' : total.toLocaleString('ko-KR') + '원') : '';
+          var tr = input.closest('tr'), totalInput = tr && tr.querySelector('.iw-ca-total-cell input');
+          if (totalInput) totalInput.value = row.total;
+        }
+      }
+    }
   }
   function resetNameColumn(customerId) {
     delete draft(customerId).nameColumnWidth;
