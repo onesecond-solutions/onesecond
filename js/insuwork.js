@@ -3038,7 +3038,12 @@
     var overlay = document.getElementById('iw-preview'), page = document.getElementById('iw-preview-page'), download = document.getElementById('iw-preview-download');
     var prev = document.querySelector('#iw-preview .iw-preview-nav-prev'), next = document.querySelector('#iw-preview .iw-preview-nav-next');
     if (!overlay) return false;
-    closeDialog();
+    var sourceDialog = document.getElementById('iw-dialog');
+    if (sourceDialog && sourceDialog.open && !sourceDialog.contains(overlay)) {
+      overlay._previewHome = document.createComment('preview-home');
+      overlay.before(overlay._previewHome);
+      sourceDialog.appendChild(overlay);
+    }
     if (overlay.showPopover) { overlay.setAttribute('popover', 'manual'); if (!overlay.matches(':popover-open')) overlay.showPopover(); }
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); overlay.classList.toggle('is-pdf', type === 'pdf'); overlay.classList.toggle('is-image', type === 'image'); overlay.classList.toggle('has-asset', !!assetRef);
     if (prev) { prev.hidden = !navigation; prev.disabled = !navigation || !navigation.previous; }
@@ -3206,7 +3211,7 @@
     var page = state.preview && state.preview.page;
     Array.prototype.forEach.call(box.querySelectorAll('.iw-preview-thumb'), function (btn) { btn.classList.toggle('on', Number(btn.getAttribute('data-page')) === page); });
   }
-  function closePreview() { var overlay = document.getElementById('iw-preview'), thumbs = document.getElementById('iw-preview-thumbs'); if (overlay) { if (overlay.hidePopover && overlay.matches(':popover-open')) overlay.hidePopover(); overlay.removeAttribute('popover'); overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); } if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); } state.preview = null; document.body.classList.remove('iw-preview-open'); }
+  function closePreview() { var overlay = document.getElementById('iw-preview'), thumbs = document.getElementById('iw-preview-thumbs'); if (overlay) { if (overlay.hidePopover && overlay.matches(':popover-open')) overlay.hidePopover(); overlay.removeAttribute('popover'); if (overlay._previewHome) { overlay._previewHome.replaceWith(overlay); delete overlay._previewHome; } overlay.classList.remove('open'); overlay.classList.remove('has-pages'); overlay.setAttribute('aria-hidden', 'true'); } if (thumbs) { thumbs.innerHTML = ''; thumbs.removeAttribute('data-rendered-for'); } state.preview = null; document.body.classList.remove('iw-preview-open'); }
   function previewZoom(direction) { var p = state.preview; if (!p) return; p.zoom = Math.min(4, Math.max(.5, p.zoom + direction * .25)); if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewRotate() { var p = state.preview; if (!p) return; p.rotate = (p.rotate + 90) % 360; if (p.type === 'pdf') renderPdfPreview(); else renderPreviewTransform(); }
   function previewPage(direction) { var p = state.preview; if (!p || p.type !== 'pdf') return; var next = Math.min(p.pages, Math.max(1, p.page + direction)); if (next !== p.page) scrollToPreviewPage(next); }
@@ -5336,7 +5341,7 @@
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
   window.addEventListener('popstate', function () { if (!restoreFromUrl()) return; openWorkspace(state.section, false); });
-  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) closePreview(); else if (state.preview && event.altKey && event.key === 'ArrowRight') previewNavigate(1); else if (state.preview && event.altKey && event.key === 'ArrowLeft') previewNavigate(-1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) { event.preventDefault(); event.stopImmediatePropagation(); closePreview(); } else if (state.preview && event.altKey && event.key === 'ArrowRight') previewNavigate(1); else if (state.preview && event.altKey && event.key === 'ArrowLeft') previewNavigate(-1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); }, true);
   document.addEventListener('click', function (event) { var menu = document.getElementById('iw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.iw-preview-ddak')) closeDdakMenu(); });
   document.addEventListener('click', function (event) { var open = document.querySelectorAll('.iw-rich-color-pop[open]'); Array.prototype.forEach.call(open, function (pop) { if (!pop.contains(event.target)) pop.open = false; }); });
   document.addEventListener('click', function (event) { var panel = document.getElementById('iw-fav-panel'); if (panel && !panel.hidden && !panel.contains(event.target) && !event.target.closest('.iw-fav-toggle')) closeFavoritesPanel(); });
