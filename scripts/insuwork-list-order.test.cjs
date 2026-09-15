@@ -22,7 +22,7 @@ function harness(handler) {
     renderContent = function () {}; renderShell = function () {}; canEditCoverageTemplate = function () { return true; }; canUseKakaoPilot = function () { return true; };
     window.test = { state: state, loadData: loadData, loadHomeDate: loadHomeDate,
       syncCareTasksForAll: syncCareTasksForAll, careTaskTargets: careTaskTargets,
-      upsertCustomer, upsertConsultation, customerListOrder, consultationListOrder, dataReadyForSection: dataReadyForSection, periodRange, periodRows, periodFilter, periodBarHtml, setListPeriod, loadPeriodCare, allEvents, applicationCalendarEventsForYear, selectAllKakaoBulk, kakaoBulkState };
+      consultationDate, upsertCustomer, upsertConsultation, customerListOrder, consultationListOrder, dataReadyForSection: dataReadyForSection, periodRange, periodRows, periodFilter, periodBarHtml, setListPeriod, loadPeriodCare, allEvents, applicationCalendarEventsForYear, selectAllKakaoBulk, kakaoBulkState };
     window.OSInsuwork = {`), ctx);
   return { ...window.test, ctx, requests, events };
 }
@@ -38,4 +38,11 @@ test('editing an older consultation stays in place; reload and same-day ties are
 test('customer edits preserve position and application date ordering ignores update time',()=>{
  const h=harness(async()=>[]), rows=[{id:'new',profile:{contract_date:'2026-09-15'}},{id:'old',profile:{contract_date:'2026-09-07'}}];h.state.data.customers=rows.slice();h.upsertCustomer({...rows[1],name:'수정',updated_at:'2026-09-20'});
  assert.equal(h.state.data.customers[1].id,'old');assert.equal(h.state.data.customers.slice().reverse().sort(h.customerListOrder)[0].id,'new');
+});
+
+test('Korean registration date survives UTC save response and repeated edits',()=>{
+ const h=harness(async()=>[]);
+ for(const value of ['2026-09-10T15:00:00Z','2026-09-10T15:00:00+00:00','2026-09-11T00:00:00+09:00','2026-09-11'])assert.equal(h.consultationDate({consulted_at:value}),'2026-09-11');
+ let date='2026-09-11';for(let i=0;i<3;i++){date=h.consultationDate({consulted_at:new Date(date+'T00:00:00+09:00').toISOString()});assert.equal(date,'2026-09-11');}
+ assert.equal(h.consultationDate({consulted_at:'2026-09-10T14:59:59Z'}),'2026-09-10');
 });
