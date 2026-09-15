@@ -328,9 +328,17 @@
     if (index >= 0) state.data.consultations[index] = consultation;
     else state.data.consultations.unshift(consultation);
   }
+  function consultationDate(item) {
+    var raw = String(item && (item.consulted_at || item.created_at) || '');
+    // timestamptz responses are UTC: Korean midnight is the previous UTC day.
+    // Date-only/legacy values already represent the entered calendar date.
+    if (!/[T ]\d{2}:\d{2}.*(?:Z|[+-]\d{2}(?::?\d{2})?)$/i.test(raw)) return raw.slice(0, 10);
+    var time = Date.parse(raw);
+    return Number.isFinite(time) ? new Date(time + 9 * 60 * 60 * 1000).toISOString().slice(0, 10) : raw.slice(0, 10);
+  }
   function stableRecordOrder(a, b, customer) {
-    var ad = String((customer ? customerProfile(a).contract_date : a.consulted_at) || a.created_at || '').slice(0, 10);
-    var bd = String((customer ? customerProfile(b).contract_date : b.consulted_at) || b.created_at || '').slice(0, 10);
+    var ad = customer ? String(customerProfile(a).contract_date || a.created_at || '').slice(0, 10) : consultationDate(a);
+    var bd = customer ? String(customerProfile(b).contract_date || b.created_at || '').slice(0, 10) : consultationDate(b);
     return bd.localeCompare(ad) || String(b.created_at || '').localeCompare(String(a.created_at || '')) || String(a.id || '').localeCompare(String(b.id || ''));
   }
   function customerListOrder(a, b) { return stableRecordOrder(a, b, true); }
@@ -1368,7 +1376,7 @@
         var birth = String(customerProfile(item).birth_date || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(birth)) return false;
         for (var year = Number(range[0].slice(0, 4)); year <= Number(range[1].slice(0, 4)); year++) { if (inside(careAnniversaryDate(birth, year))) return true; } return false;
       }
-      var date = area === 'customer' ? contractDatesOf(item)[0] : String(item.consulted_at || item.created_at || '').slice(0, 10);
+      var date = area === 'customer' ? contractDatesOf(item)[0] : consultationDate(item);
       return inside(date);
     });
     periodResults[area] = rows.map(function (item) { return String(item.id); });
@@ -1508,7 +1516,7 @@
     else rows = rows.slice(0, state.consultationsRenderLimit);
     var columns = '<div class="iw-consult-columns" style="' + gridStyle + '">' + configuredColumns.map(function (column) { return '<span' + (column.key === 'name' ? ' class="iw-contract-name-head"' : '') + '>' + esc(column.label) + '</span>'; }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></div>';
     var list = '<div class="iw-consult-list" role="list">' + columns + '<div class="iw-consult-rows">' + rows.map(function (item) {
-      var customer = customers[item.customer_id] || {}, profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
+      var customer = customers[item.customer_id] || {}, profile = customerProfile(customer), date = consultationDate(item), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
       return '<button type="button" role="listitem" class="iw-consult-row' + (String(item.id) === String(state.selectedConsultation) ? ' on' : '') + '" style="' + gridStyle + '" onclick="OSInsuwork.selectConsultation(\'' + esc(item.id) + '\')" onmouseenter="OSInsuwork.showRowHover(event)" onmouseleave="OSInsuwork.hideRowHover()" data-hover-text="' + esc(stripHtml(item.memo || '상담내용이 없습니다.')) + '">' + configuredColumns.map(function (column) { if (column.key === 'name') return '<strong class="iw-contract-name-cell">' + kakaoBulkToggleHtml('consultation', item.id, customer.name || '고객 상담') + favoriteButton('consultation', item.id, customer.name || '고객 상담', status + ' · ' + date) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></strong>'; return consultCell(column, item, customer, profile, date, age, status); }).join('') + '<span class="iw-consult-action-spacer" aria-hidden="true"></span></button>';
     }).join('') + (rows.length ? '' : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div>' + loadMoreHtml(totalRowCount, rows.length, 'OSInsuwork.loadMoreConsultations()') + '</div>';
     var detail = selected ? consultationDetailHtml(selected, customers[selected.customer_id] || {}) : '';
@@ -1523,7 +1531,7 @@
   function moveConsultColumn(index, direction) { var columns = consultColumns(), target = index + direction; if (target < 0 || target >= columns.length) return; var moved = columns.splice(index, 1)[0]; columns.splice(target, 0, moved); saveConsultColumns(columns); closeDialog(); renderContent(); manageConsultColumns(); }
   function deleteConsultColumn(key) { var columns = consultColumns(), column = columns.find(function (entry) { return entry.key === key && entry.custom; }); if (!column) return; briefingConfirm('“' + column.label + '” 컬럼을 목록에서 제거할까요? 기존 입력값은 보존됩니다.', '컬럼 삭제', '삭제', true).then(function (ok) { if (!ok) return; saveConsultColumns(columns.filter(function (entry) { return entry.key !== key; })); closeDialog(); renderContent(); manageConsultColumns(); }); }
   function consultationDetailHtml(item, customer) {
-    var profile = customerProfile(customer), date = String(item.consulted_at || item.created_at || '').slice(0, 10), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
+    var profile = customerProfile(customer), date = consultationDate(item), age = insuranceAge(profile.birth_date, date), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     var kakaoAction = canUseKakaoPilot() ? '<button type="button" class="iw-btn iw-kakao-btn" onclick="OSInsuwork.openKakaoDraft(\'consultation\',\'' + esc(item.id) + '\')">카카오톡 보내기</button>' : '';
     return '<article class="iw-consult-detail"><button type="button" class="iw-consult-detail-close" onclick="OSInsuwork.selectConsultation()" aria-label="상담 상세 닫기">×</button><button type="button" class="iw-consult-back" onclick="OSInsuwork.selectConsultation()">‹ 목록</button>'
@@ -3185,7 +3193,7 @@
   function showCustomer(id) {
     var customer = state.data.customers.find(function (entry) { return String(entry.id) === String(id); }); if (!customer) return;
     var history = state.data.consultations.filter(function (entry) { return String(entry.customer_id) === String(id); });
-    dialog('<div class="iw-detail"><span class="iw-badge">고객</span><h2 class="iw-detail-title">' + favoriteButton('customer', id, customer.name || '(이름 없음)', phoneText(customer.phone || customer.phone_raw || '')) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></h2><p>' + esc(customer.phone || customer.phone_raw || '') + '</p><h3>상담 기록</h3><div class="iw-list">' + (history.length ? history.map(function (entry) { return row(formatDate(entry.consulted_at || entry.created_at), entry.memo || '', esc(entry.channel || ''), ''); }).join('') : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div></div>');
+    dialog('<div class="iw-detail"><span class="iw-badge">고객</span><h2 class="iw-detail-title">' + favoriteButton('customer', id, customer.name || '(이름 없음)', phoneText(customer.phone || customer.phone_raw || '')) + '<span>' + esc(customer.name || '(이름 없음)') + '</span></h2><p>' + esc(customer.phone || customer.phone_raw || '') + '</p><h3>상담 기록</h3><div class="iw-list">' + (history.length ? history.map(function (entry) { return row(formatDate(consultationDate(entry)), entry.memo || '', esc(entry.channel || ''), ''); }).join('') : '<div class="iw-empty">상담 기록이 없습니다.</div>') + '</div></div>');
   }
   function eventTitleLabel(event) { return (event && event.completed_at ? '✓ ' : '') + (event && event.title || ''); }
   function eventTimeLabel(timeStr) { if (!timeStr) return ''; var parts = String(timeStr).slice(0, 5).split(':'), h = Number(parts[0]), m = parts[1], period = h < 12 ? '오전' : '오후', h12 = h % 12 === 0 ? 12 : h % 12; return period + ' ' + h12 + ':' + m; }
@@ -3671,7 +3679,7 @@
   function setValue(id, value) { var el = document.getElementById(id); if (el) el.value = value; }
   function customerOptions() { return state.data.customers.map(function (item) { return '<option value="' + esc(item.id) + '">' + esc(item.name || '이름 없음') + '</option>'; }).join(''); }
   function consultationForm(item, customer) {
-    item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = String(item.consulted_at || ymd(new Date())).slice(0, 10), status = consultationStatus(item, customer);
+    item = item || {}; customer = customer || {}; var profile = customerProfile(customer), date = (consultationDate(item) || ymd(new Date())), status = consultationStatus(item, customer);
     var statuses = ['예약', '진행중', '제안서발송', '클로징', '청약완료', '보류', '종결'];
     return '<div class="iw-consult-registration"><div class="iw-inline-form-block">'
       + '<div class="iw-inline-form-row">' + inlineField('등록일자', dateMaskInputHtml('iwf-consult-date', date, '', 'required')) + '</div>'
@@ -5275,7 +5283,7 @@
     var customersById = {};
     (state.data.customers || []).forEach(function (customer) { customersById[customer.id] = customer; });
     var tomorrowConsults = (state.data.consultations || []).filter(function (entry) {
-      return String((entry && entry.consulted_at) || '').slice(0, 10) === tomorrow;
+      return consultationDate(entry) === tomorrow;
     });
     return tomorrowConsults.map(function (consultation) {
       var customer = customersById[consultation.customer_id] || {};
@@ -5311,7 +5319,7 @@
     state.data.consultations.forEach(function (item) {
       var key = String(item.customer_id);
       if (!consultsByCustomer[key]) consultsByCustomer[key] = [];
-      consultsByCustomer[key].push({ id: item.id, date: String(item.consulted_at || item.created_at || '').slice(0, 10), memo: stripHtml(item.memo || '') });
+      consultsByCustomer[key].push({ id: item.id, date: consultationDate(item), memo: stripHtml(item.memo || '') });
     });
     Object.keys(consultsByCustomer).forEach(function (key) { consultsByCustomer[key].sort(function (a, b) { return b.date.localeCompare(a.date); }); });
     var careByCustomer = {};
@@ -5359,7 +5367,7 @@
         customerName: customer.name || '(이름 없음)',
         customerPhone: customer.phone || customer.phone_raw || '',
         customerBirth: profile.birth_date || '',
-        date: String(item.consulted_at || item.created_at || '').slice(0, 10),
+        date: consultationDate(item),
         channel: item.channel || '',
         status: status,
         memo: stripHtml(item.memo || item.content || '')
