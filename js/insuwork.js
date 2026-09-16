@@ -3298,8 +3298,103 @@
   function formField(label, input) { return '<label class="iw-field"><span>' + label + '</span>' + input + '</label>'; }
   /* 라벨-입력칸 한 줄 스타일(2026-08-20, 대표 확정) — 고객/상담 폼 전용. formField()는 다른 화면(자료실 등)에서도 쓰여서 그대로 두고, 여기서만 별도 헬퍼로 분리 */
   function inlineField(label, input) { return '<label class="iw-inline-field"><span>' + label + '</span>' + input + '</label>'; }
+  var unifiedDatePicker = { input: null, cursor: null, installed: false };
+  function dateParts(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+    if (!match) return null;
+    var year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+    var date = new Date(year, month - 1, day, 12);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? { year: year, month: month, day: day } : null;
+  }
+  function dateIso(year, month, day) { return String(year).padStart(4, '0') + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0'); }
+  function unifiedDatePickerElement() {
+    var root = document.getElementById('v-insuwork');
+    if (!root) return null;
+    var picker = document.getElementById('iw-date-popover');
+    var host = unifiedDatePicker.input && unifiedDatePicker.input.closest ? (unifiedDatePicker.input.closest('dialog,.iw-dialog') || root) : root;
+    if (!picker) {
+      picker = document.createElement('div'); picker.id = 'iw-date-popover'; picker.className = 'iw-date-popover';
+      picker.setAttribute('role', 'dialog'); picker.setAttribute('aria-label', '날짜 선택'); picker.hidden = true;
+    }
+    if (picker.parentElement !== host) host.appendChild(picker);
+    return picker;
+  }
+  function datePickerBounds(input) {
+    var min = dateParts(input && input.min), max = dateParts(input && input.max);
+    return { min: min ? min.year : 1900, max: max ? max.year : 2100 };
+  }
+  function renderUnifiedDatePicker() {
+    var picker = unifiedDatePickerElement(), input = unifiedDatePicker.input, cursor = unifiedDatePicker.cursor;
+    if (!picker || !input || !cursor) return;
+    var bounds = datePickerBounds(input), year = cursor.getFullYear(), monthIndex = cursor.getMonth(), years = '', months = '';
+    for (var y = bounds.min; y <= bounds.max; y++) years += '<option value="' + y + '"' + (y === year ? ' selected' : '') + '>' + y + '년</option>';
+    for (var m = 1; m <= 12; m++) months += '<option value="' + m + '"' + (m === monthIndex + 1 ? ' selected' : '') + '>' + m + '월</option>';
+    var selected = dateParts(input.value), today = new Date(), first = new Date(year, monthIndex, 1, 12), gridStart = new Date(year, monthIndex, 1 - first.getDay(), 12), days = '';
+    for (var i = 0; i < 42; i++) {
+      var date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i, 12), iso = dateIso(date.getFullYear(), date.getMonth() + 1, date.getDate());
+      var selectedClass = selected && selected.year === date.getFullYear() && selected.month === date.getMonth() + 1 && selected.day === date.getDate() ? ' is-selected' : '';
+      var todayClass = today.getFullYear() === date.getFullYear() && today.getMonth() === date.getMonth() && today.getDate() === date.getDate() ? ' is-today' : '';
+      var outsideClass = date.getMonth() !== monthIndex ? ' is-outside' : '';
+      days += '<button type="button" class="iw-date-day' + selectedClass + todayClass + outsideClass + '" data-date="' + iso + '" aria-label="' + date.getFullYear() + '년 ' + (date.getMonth() + 1) + '월 ' + date.getDate() + '일"' + (selectedClass ? ' aria-current="date"' : '') + '>' + date.getDate() + '</button>';
+    }
+    picker.innerHTML = '<div class="iw-date-head"><button type="button" class="iw-date-nav" data-move="-1" aria-label="이전 달">‹</button><select class="iw-date-year" aria-label="연도 선택">' + years + '</select><select class="iw-date-month" aria-label="월 선택">' + months + '</select><button type="button" class="iw-date-nav" data-move="1" aria-label="다음 달">›</button></div><div class="iw-date-week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="iw-date-grid">' + days + '</div>';
+    picker.querySelector('.iw-date-year').onchange = function () { unifiedDatePicker.cursor = new Date(Number(this.value), unifiedDatePicker.cursor.getMonth(), 1, 12); renderUnifiedDatePicker(); positionUnifiedDatePicker(); };
+    picker.querySelector('.iw-date-month').onchange = function () { unifiedDatePicker.cursor = new Date(unifiedDatePicker.cursor.getFullYear(), Number(this.value) - 1, 1, 12); renderUnifiedDatePicker(); positionUnifiedDatePicker(); };
+    picker.querySelectorAll('[data-move]').forEach(function (button) { button.onclick = function () { var move = Number(this.getAttribute('data-move')); unifiedDatePicker.cursor = new Date(unifiedDatePicker.cursor.getFullYear(), unifiedDatePicker.cursor.getMonth() + move, 1, 12); renderUnifiedDatePicker(); positionUnifiedDatePicker(); }; });
+    picker.querySelectorAll('[data-date]').forEach(function (button) { button.onclick = function () { selectUnifiedDate(this.getAttribute('data-date')); }; });
+  }
+  function positionUnifiedDatePicker() {
+    var picker = document.getElementById('iw-date-popover'), input = unifiedDatePicker.input;
+    if (!picker || !input || picker.hidden) return;
+    var rect = input.getBoundingClientRect(), host = picker.parentElement, hostRect = host.getBoundingClientRect(), width = picker.offsetWidth || 286, height = picker.offsetHeight || 340;
+    var inOverlay = host.matches && host.matches('dialog,.iw-dialog'), left, top;
+    if (inOverlay) {
+      picker.style.position = 'absolute';
+      left = Math.max(8, Math.min(rect.left - hostRect.left + host.scrollLeft, host.clientWidth - width - 8));
+      top = rect.bottom - hostRect.top + host.scrollTop + 6;
+    } else {
+      picker.style.position = 'fixed';
+      left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)); top = rect.bottom + 6;
+      if (top + height > window.innerHeight - 8 && rect.top > height + 8) top = rect.top - height - 6;
+    }
+    picker.style.left = left + 'px'; picker.style.top = Math.max(8, top) + 'px';
+  }
+  function openUnifiedDatePicker(input) {
+    if (!input || input.disabled || input.readOnly) return;
+    if (input.classList.contains('iw-date-native')) prepareDatePicker(input);
+    var value = dateParts(input.value), now = new Date();
+    unifiedDatePicker.input = input; unifiedDatePicker.cursor = new Date(value ? value.year : now.getFullYear(), value ? value.month - 1 : now.getMonth(), 1, 12);
+    var picker = unifiedDatePickerElement(); if (!picker) return;
+    picker.hidden = false; picker.classList.add('is-open'); renderUnifiedDatePicker(); positionUnifiedDatePicker();
+  }
+  function closeUnifiedDatePicker() { var picker = document.getElementById('iw-date-popover'); if (picker) { picker.hidden = true; picker.classList.remove('is-open'); } unifiedDatePicker.input = null; unifiedDatePicker.cursor = null; }
+  function selectUnifiedDate(value) {
+    var input = unifiedDatePicker.input; if (!input) return;
+    input.value = value; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); closeUnifiedDatePicker();
+    try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); }
+  }
+  function installUnifiedDatePicker() {
+    if (unifiedDatePicker.installed) return; unifiedDatePicker.installed = true;
+    document.addEventListener('pointerdown', function (event) {
+      var input = document.documentElement.hasAttribute('data-insuwork') && event.target && event.target.closest ? event.target.closest('input[type="date"]') : null;
+      var picker = event.target && event.target.closest ? event.target.closest('#iw-date-popover') : null;
+      if (input) { event.preventDefault(); try { input.focus({ preventScroll: true }); } catch (_) {} openUnifiedDatePicker(input); return; }
+      if (!picker) closeUnifiedDatePicker();
+    }, true);
+    document.addEventListener('click', function (event) {
+      var input = document.documentElement.hasAttribute('data-insuwork') && event.target && event.target.closest ? event.target.closest('input[type="date"]') : null;
+      if (input) { event.preventDefault(); openUnifiedDatePicker(input); }
+    }, true);
+    document.addEventListener('keydown', function (event) {
+      var input = document.documentElement.hasAttribute('data-insuwork') && event.target && event.target.matches && event.target.matches('input[type="date"]') ? event.target : null;
+      if (input && (event.key === 'Enter' || event.key === ' ' || (event.altKey && event.key === 'ArrowDown'))) { event.preventDefault(); openUnifiedDatePicker(input); }
+      else if (event.key === 'Escape' && unifiedDatePicker.input) { event.preventDefault(); closeUnifiedDatePicker(); }
+    });
+    window.addEventListener('resize', positionUnifiedDatePicker);
+    document.addEventListener('scroll', function () { if (unifiedDatePicker.input) positionUnifiedDatePicker(); }, true);
+  }
   function dateMaskInputHtml(id, value, context, extraAttrs) {
-    return '<span class="iw-date-control"><input' + (id ? ' id="' + id + '"' : '') + ' type="text" inputmode="numeric" maxlength="10" pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="YYYY-MM-DD" autocomplete="off" value="' + esc(value || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + esc(context || '') + '\')"' + (extraAttrs ? ' ' + extraAttrs : '') + '><span class="iw-date-picker-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></span><input class="iw-date-native" type="date" aria-label="' + (id && id.indexOf('birth') !== -1 ? '생년월일' : id && id.indexOf('consult-date') !== -1 ? '등록일자' : '청약일자') + ' 달력 선택" title="년·월·일 선택" onfocus="OSInsuwork.prepareDatePicker(this)" onclick="OSInsuwork.openDatePicker(this)" onchange="OSInsuwork.applyDatePicker(this)"></span>';
+    return '<span class="iw-date-control"><input' + (id ? ' id="' + id + '"' : '') + ' type="text" inputmode="numeric" maxlength="10" pattern="\\d{4}-\\d{2}-\\d{2}" placeholder="YYYY-MM-DD" autocomplete="off" value="' + esc(value || '') + '" oninput="OSInsuwork.formatBirthInput(this,\'' + esc(context || '') + '\')"' + (extraAttrs ? ' ' + extraAttrs : '') + '><button type="button" class="iw-date-picker-icon" aria-label="달력에서 날짜 선택" onclick="OSInsuwork.openDatePicker(this.parentElement.querySelector(\'.iw-date-native\'))"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></button><input class="iw-date-native" type="date" tabindex="-1" aria-hidden="true" aria-label="' + (id && id.indexOf('birth') !== -1 ? '생년월일' : id && id.indexOf('consult-date') !== -1 ? '등록일자' : '청약일자') + ' 달력 선택" title="년·월·일 선택" onchange="OSInsuwork.applyDatePicker(this)"></span>';
   }
   function prepareDatePicker(picker) {
     var text = picker.parentElement.querySelector('input[type="text"]');
@@ -3307,7 +3402,7 @@
   }
   function openDatePicker(picker) {
     prepareDatePicker(picker);
-    if (typeof picker.showPicker === 'function') { try { picker.showPicker(); } catch (_) {} }
+    openUnifiedDatePicker(picker);
   }
   function applyDatePicker(picker) {
     var text = picker.parentElement.querySelector('input[type="text"]');
@@ -5336,7 +5431,7 @@
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
      'skip-url'이 아닌 false(=replaceState)를 써서 지금까지의 동작을 유지한다. */
   function initialOpenPush() { return (!INITIAL_URL_HAD_VIEW_PARAMS && state.section === 'home') ? 'skip-url' : false; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: AZ_VIEWING_ROOM_OWNER_ID, name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: '00000000-0000-0000-0000-000000000002', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; state.adminAzRoomMembers[AZ_VIEWING_ROOM_OWNER_ID] = true; state.azViewingRoomAccess = true; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { loadAzViewingRoomAccess().finally(function () { openWorkspace(state.section, initialOpenPush()); }); }); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; installUnifiedDatePicker(); restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: AZ_VIEWING_ROOM_OWNER_ID, name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: '00000000-0000-0000-0000-000000000002', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; state.adminAzRoomMembers[AZ_VIEWING_ROOM_OWNER_ID] = true; state.azViewingRoomAccess = true; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { loadAzViewingRoomAccess().finally(function () { openWorkspace(state.section, initialOpenPush()); }); }); }
 
   restoreFromUrl();
   document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
