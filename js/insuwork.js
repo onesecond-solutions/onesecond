@@ -35,7 +35,7 @@
     try { var p = new URLSearchParams(location.search); return p.has('view') || p.has('section'); }
     catch (_) { return !!location.search; }
   })();
-  var SECTIONS = ['ledger', 'az-viewing-room', 'home', 'assets', 'coverage-analysis', 'coverage-sheet', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'product-lineups', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'daily-briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users'];
+  var SECTIONS = ['ledger', 'az-viewing-room', 'home', 'assets', 'coverage-analysis', 'coverage-sheet', 'customers', 'consultations', 'calendar', 'carriers', 'payments', 'scripts', 'newsletters', 'product-lineups', 'sales-strategy', 'insurance-age', 'tools', 'trash', 'archive', 'briefing', 'daily-briefing', 'public-library', 'notice-updates', 'user-guide', 'feedback', 'admin-users', 'personal-office', 'my-work'];
   /* 2026-08-30 대표 확정 — 보험워크는 원세컨드와 별도 사이트다. 비로그인 첫 진입은 내부 업무 셸
      일부를 잠가 보여주는 방식이 아니라 보험워크 CI 기반 공개 랜딩만 렌더링한다. 로그인 후에는 기존
      업무 홈과 메뉴를 그대로 유지한다. */
@@ -181,7 +181,7 @@
     }
     window.location.href = '/pages/landing.html?auth=' + encodeURIComponent(mode) + '&redirect=' + encodeURIComponent(target);
   }
-  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'coverage-analysis') return canUseCoverageAnalysis(); if (section === 'coverage-sheet') return canEditCoverageTemplate(); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
+  function canEnterSection(section) { if (section === 'ledger') return !!(window._canSeeInsuworkLedger && window._canSeeInsuworkLedger()); if (section === 'coverage-analysis') return canUseCoverageAnalysis(); if (section === 'coverage-sheet') return canEditCoverageTemplate(); if (section === 'az-viewing-room') return canSeeAzViewingRoom(); if (section === 'admin-users' || section === 'personal-office' || section === 'my-work') return localPreviewAllowed() || (authenticated() && canSeeAdminUsers()); return PROTECTED_SECTIONS.indexOf(section) < 0 || allowed(); }
   /* 비로그인 상태에서 보호 메뉴(캘린더/고객관리/상담관리/자료) 클릭 시 호출 — 기존 보험브리핑
      로그인 모달(insubriefing/auth.js의 InsuranceBriefingAuth.open, 작업 C에서 이식한 것과 동일 흐름)을
      그대로 재사용해 로그인 유도. 현재 경로+쿼리를 redirect로 넘겨 로그인 후 원래 메뉴로 복귀시킨다. */
@@ -2452,6 +2452,8 @@
     if (state.section === 'user-guide') return userGuidePageHtml();
     if (state.section === 'feedback') return feedbackHtml();
     if (state.section === 'briefing') return briefingHtml();
+    if (state.section === 'personal-office') return personalOfficeHtml();
+    if (state.section === 'my-work') return myWorkHtml();
     if (state.section === 'admin-users') return adminUsersHtml();
     return homeHtml();
   }
@@ -2511,6 +2513,25 @@
         if (main) { main.scrollTop = scrollTop; table = main.querySelector('.iw-admin-users-table'); if (table) { table.scrollLeft = tableLeft; table.scrollTop = tableTop; } }
       });
   }
+  /* 2026-09-16 대표 확정 지시 — 기존 "사용자 관리" 단독 화면을 "개인 오피스"라는 admin 전용
+     서브 워크스페이스로 확장한다. 이 화면 전용 좌측 3항목 사이드 메뉴(개인 오피스/MY WORK/
+     보험워크 관리>사용자관리)를 렌더한다. 전역 메인 메뉴(navHtml)와는 완전히 별개다. */
+  function officeNavHtml(active) {
+    var adminGroupOpen = active === 'admin-users';
+    return '<nav class="iw-office-nav" aria-label="개인 오피스 메뉴">'
+      + '<button type="button" class="iw-nav-link' + (active === 'personal-office' ? ' on' : '') + '" onclick="OSInsuwork.go(\'personal-office\')"><span>⌂</span>개인 오피스</button>'
+      + '<button type="button" class="iw-nav-link' + (active === 'my-work' ? ' on' : '') + '" onclick="OSInsuwork.go(\'my-work\')"><span>✎</span>MY WORK</button>'
+      + '<details class="iw-nav-group"' + (adminGroupOpen ? ' open' : '') + '><summary>보험워크 관리</summary>'
+      + '<button type="button" class="iw-nav-link' + (active === 'admin-users' ? ' on' : '') + '" onclick="OSInsuwork.go(\'admin-users\')"><span>♙</span>사용자관리</button>'
+      + '</details>'
+      + '</nav>';
+  }
+  function personalOfficeHtml() {
+    return '<div class="iw-office-layout">' + officeNavHtml('personal-office') + '<div class="iw-office-content"><p class="iw-office-empty">준비 중입니다.</p></div></div>';
+  }
+  function myWorkHtml() {
+    return '<div class="iw-office-layout">' + officeNavHtml('my-work') + '<div class="iw-office-content"><p class="iw-office-empty">준비 중입니다.</p></div></div>';
+  }
   function adminUsersHtml() {
     if (!canSeeAdminUsers()) return '<div class="iw-state"><strong>접근할 수 없는 화면입니다.</strong><span>보험워크 홈으로 이동합니다.</span></div>';
     if (!state.adminUsers) return '<div class="iw-loading">사용자 목록을 불러오는 중입니다.</div>';
@@ -2526,11 +2547,12 @@
       var userId = String(user.id || ''), ownerRoom = userId === AZ_VIEWING_ROOM_OWNER_ID, roomEnabled = ownerRoom || !!state.adminAzRoomMembers[userId], roomSaving = !!state.azRoomPermissionSaving[userId];
       return '<tr><td><strong>' + esc(user.name || '-') + '</strong></td><td>' + esc(user.nickname || '-') + '</td><td>' + esc(user.email || '-') + '</td><td>' + esc(user.company || '-') + '</td><td>' + esc(phoneText(user.phone || '') || '-') + '</td><td>' + esc(adminUserDateTime(user.created_at)) + '</td><td>' + esc(adminUserDateTime(user.last_seen_at)) + '</td><td class="iw-admin-room-access"><input type="checkbox" aria-label="' + esc((user.name || user.email || '사용자') + ' 에즈 시청방 읽기·쓰기 권한') + '" onchange="OSInsuwork.setAzViewingRoomAccess(\'' + esc(userId) + '\',this.checked,this)"' + (roomEnabled ? ' checked' : '') + (ownerRoom || roomSaving ? ' disabled' : '') + '></td><td><span class="iw-admin-status iw-admin-status-' + esc(rawStatus) + '">' + esc(adminUserStatusLabel(rawStatus)) + '</span></td></tr>';
     }).join('');
-    return '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">30초마다 자동 갱신 · 화면 복귀 시 갱신' + (adminUsersUpdatedAt ? ' · 최근 확인 ' + esc(adminUserDateTime(adminUsersUpdatedAt)) : '') + '</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
+    var content = '<div class="iw-toolbar iw-admin-users-head"><div><h2>사용자 관리</h2><p class="iw-subtitle">30초마다 자동 갱신 · 화면 복귀 시 갱신' + (adminUsersUpdatedAt ? ' · 최근 확인 ' + esc(adminUserDateTime(adminUsersUpdatedAt)) : '') + '</p></div><button type="button" class="iw-btn" onclick="OSInsuwork.reloadAdminUsers()">새로고침</button></div>'
       + '<div class="iw-stats iw-admin-users-stats"><div class="iw-stat"><span>전체 사용자</span><strong>' + state.adminUsers.length + '</strong></div><div class="iw-stat"><span>오늘 가입</span><strong>' + todayCount + '</strong></div><div class="iw-stat"><span>검색 결과</span><strong>' + rows.length + '</strong></div></div>'
       + '<div class="iw-admin-users-tools"><label class="iw-admin-user-search">⌕<input id="iw-admin-user-search" type="search" value="' + esc(state.adminUserQuery) + '" placeholder="이름·닉네임·이메일·회사명 검색"></label><select aria-label="이용 상태" onchange="OSInsuwork.filterAdminUserStatus(this.value)">' + statusOptions.map(function (option) { return '<option value="' + option[0] + '"' + (status === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select></div>'
       + (state.adminUsersError ? '<div class="iw-error" role="alert"><span>' + esc(state.adminUsersError) + '</span></div>' : '')
       + '<div class="iw-explorer iw-admin-users-table"><table><thead><tr><th>이름</th><th>닉네임</th><th>이메일</th><th>회사명</th><th>휴대전화</th><th>가입일</th><th>마지막 접속</th><th class="iw-admin-room-access">에즈 시청방</th><th>이용 상태</th></tr></thead><tbody>' + (body || '<tr><td colspan="9" class="iw-admin-users-empty">조건에 맞는 사용자가 없습니다.</td></tr>') + '</tbody></table></div>';
+    return '<div class="iw-office-layout">' + officeNavHtml('admin-users') + '<div class="iw-office-content">' + content + '</div></div>';
   }
   function setAzViewingRoomAccess(userId, enabled, checkbox) {
     userId = String(userId || '');
@@ -2701,13 +2723,13 @@
     /* 초기 로드/뒤로가기 등 비클릭 진입에서 보호 메뉴로 바로 들어오면(예: 로그아웃 상태로 딥링크
        또는 popstate) 조용히 홈으로 대체한다 — 클릭 흐름(go())의 로그인 유도 모달과 달리 여기는
        사용자가 방금 누른 액션이 아니라서 확인 모달로 막지 않고 가벼운 토스트만 남긴다. */
-    if (!canEnterSection(target)) { var deniedAdmin = target === 'admin-users', deniedPrivate = target === 'az-viewing-room'; target = 'home'; if (typeof window.toast === 'function') window.toast(deniedAdmin ? '관리자 전용 화면입니다.' : deniedPrivate ? '접근 권한이 없는 메뉴입니다.' : '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
+    if (!canEnterSection(target)) { var deniedAdmin = target === 'admin-users' || target === 'personal-office' || target === 'my-work', deniedPrivate = target === 'az-viewing-room'; target = 'home'; if (typeof window.toast === 'function') window.toast(deniedAdmin ? '관리자 전용 화면입니다.' : deniedPrivate ? '접근 권한이 없는 메뉴입니다.' : '로그인이 필요한 메뉴입니다. 로그인 후 이용해 주세요.'); }
     state.section = target;
     document.querySelectorAll('.body .view').forEach(function (view) { view.classList.remove('on'); });
     document.getElementById('v-insuwork').classList.add('on');
     renderShell(); if (push !== 'skip-url') setUrl(push !== false); if (state.section !== 'daily-briefing' && state.section !== 'ledger' && !dataReadyForSection()) loadData(state.section !== 'home');
   }
-  function go(section) { if (window.OSInsuworkMobileSection && canEnterSection(section) && window.OSInsuworkMobileSection.navigate(section)) return; if (!canEnterSection(section)) { if (section === 'admin-users' || section === 'az-viewing-room') { if (typeof window.toast === 'function') window.toast(section === 'admin-users' ? '관리자 전용 화면입니다.' : '접근 권한이 없는 메뉴입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && section !== 'daily-briefing' && section !== 'ledger' && !dataReadyForSection()) loadData(true); }
+  function go(section) { if (window.OSInsuworkMobileSection && canEnterSection(section) && window.OSInsuworkMobileSection.navigate(section)) return; if (!canEnterSection(section)) { if (section === 'admin-users' || section === 'personal-office' || section === 'my-work' || section === 'az-viewing-room') { if (typeof window.toast === 'function') window.toast(section === 'az-viewing-room' ? '접근 권한이 없는 메뉴입니다.' : '관리자 전용 화면입니다.'); return; } promptLoginRequired(); return; } if (section === 'consultations' && state.section === 'consultations') state.selectedConsultation = null; if (section === 'customers' && state.section === 'customers') state.selectedCustomerDetail = null; window.clearTimeout(state.searchTimer); state.query = ''; state.section = section; renderShell(); setUrl(true); if (section !== 'home' && section !== 'daily-briefing' && section !== 'ledger' && !dataReadyForSection()) loadData(true); }
   function dialog(html) { var box = document.getElementById('iw-dialog'), body = document.getElementById('iw-dialog-body'); if (!box || !body) return; body.innerHTML = html; if (!box.open && box.showModal) box.showModal(); else if (!box.open) box.setAttribute('open', ''); }
   function forceCloseDialog() { var box = document.getElementById('iw-dialog'); if (box && box.close) box.close(); else if (box) box.removeAttribute('open'); }
   function closeDialog() { var box = document.getElementById('iw-dialog'), root = box && box.querySelector('[data-work-draft-key]'), key = root && root.dataset.workDraftKey, hasDraft = key && (readWorkDraft(key) || root.dataset.workDraftDirty === '1'); if (!hasDraft) { forceCloseDialog(); return; } saveBoundWorkDraft(root); briefingConfirm('작성 중인 임시 내용을 삭제하고 닫을까요?', '작성 취소', '삭제', true).then(function (ok) { if (!ok) return; clearWorkDraft(key); forceCloseDialog(); }); }
