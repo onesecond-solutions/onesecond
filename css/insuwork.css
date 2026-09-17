@@ -1107,6 +1107,19 @@ html[data-insuwork] .iw-date-day.is-selected{background:var(--ac);color:var(--s1
 
 #v-insuwork .iw-coverage-analysis.iw-ca-hide-total{--iw-ca-total-w:0px!important}
 #v-insuwork .iw-ca-hide-total .iw-ca-total-cell{display:none}
+html[data-insuwork] .iw-ca-copy-preview{width:min(920px,calc(100vw - 32px));max-width:none;max-height:90dvh;margin:auto;padding:0;border:1px solid var(--bd);border-radius:var(--radius-lg);background:var(--s1);color:var(--tp);box-shadow:0 22px 58px color-mix(in srgb,var(--tp) 24%,transparent);overflow:hidden}
+html[data-insuwork] .iw-ca-copy-preview::backdrop{background:color-mix(in srgb,var(--tp) 56%,transparent);backdrop-filter:blur(3px)}
+html[data-insuwork] .iw-ca-copy-preview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px 16px;border-bottom:1px solid var(--bd)}
+html[data-insuwork] .iw-ca-copy-preview-head small{display:block;margin-bottom:4px;color:var(--ac);font-size:var(--fs-caption);font-weight:700}
+html[data-insuwork] .iw-ca-copy-preview-head h2{margin:0;font-size:var(--fs-heading);line-height:var(--lh-tight)}
+html[data-insuwork] .iw-ca-copy-preview-head p{margin:6px 0 0;color:var(--ts);font-size:var(--fs-body)}
+html[data-insuwork] .iw-ca-copy-preview-head>button{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:0;border-radius:var(--radius-full);background:var(--s2);color:var(--ts);font-size:var(--fs-xl);cursor:pointer}
+html[data-insuwork] .iw-ca-copy-preview-stage{max-height:calc(90dvh - 160px);padding:18px;overflow:auto;background:var(--s2);text-align:center}
+html[data-insuwork] .iw-ca-copy-preview-stage img{display:block;width:auto;max-width:100%;height:auto;margin:0 auto;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);box-shadow:0 8px 22px color-mix(in srgb,var(--tp) 12%,transparent)}
+html[data-insuwork] .iw-ca-copy-preview-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 18px;border-top:1px solid var(--bd);background:var(--s1)}
+html[data-insuwork] .iw-ca-copy-preview-actions span{color:var(--ts);font-size:var(--fs-body)}
+html[data-insuwork] .iw-ca-copy-preview-actions button{min-width:88px;padding:10px 18px;border:1px solid var(--ac);border-radius:var(--radius-md);background:var(--ac);color:var(--s1);font:inherit;font-weight:700;cursor:pointer}
+@media(max-width:620px){html[data-insuwork] .iw-ca-copy-preview{width:calc(100vw - 16px);max-height:94dvh}html[data-insuwork] .iw-ca-copy-preview-head{padding:16px}html[data-insuwork] .iw-ca-copy-preview-stage{max-height:calc(94dvh - 174px);padding:10px}html[data-insuwork] .iw-ca-copy-preview-actions{align-items:stretch;flex-direction:column;padding:12px 14px}html[data-insuwork] .iw-ca-copy-preview-actions .iw-btn{width:100%}}
 #v-insuwork .iw-period-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0; }
 #v-insuwork .iw-period-bar select, #v-insuwork .iw-period-bar input { min-width: 0; padding: 8px; border: 1px solid var(--bd); border-radius: var(--radius-sm); background: var(--s1); color: var(--tp); font: inherit; }
 #v-insuwork .iw-period-bar small { color: var(--ts); }
