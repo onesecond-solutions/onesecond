@@ -1124,7 +1124,21 @@
   }
   function copyCoverageImage(customerId) {
     if (!navigator.clipboard || !window.ClipboardItem) return Promise.reject(new Error('이 브라우저에서는 이미지 복사를 지원하지 않습니다.'));
-    return coverageImageBlob(customerId).then(function (blob) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); });
+    return coverageImageBlob(customerId).then(function (blob) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () { return blob; }); });
+  }
+  function showCopiedImagePreview(blob) {
+    var dialog = document.getElementById('iw-ca-copy-preview');
+    if (!dialog) {
+      dialog = document.createElement('dialog'); dialog.id = 'iw-ca-copy-preview'; dialog.className = 'iw-ca-copy-preview';
+      dialog.innerHTML = '<div class="iw-ca-copy-preview-head"><div><small>보험워크</small><h2>카카오톡에 붙여질 이미지</h2><p>아래 이미지가 클립보드에 복사되었습니다.</p></div><button type="button" aria-label="닫기" onclick="this.closest(\'dialog\').close()">×</button></div><div class="iw-ca-copy-preview-stage"><img alt="복사된 보장분석 표 미리보기"></div><div class="iw-ca-copy-preview-actions"><span>카카오톡 채팅창에서 Ctrl+V로 붙여넣어 주세요.</span><button type="button" class="iw-btn primary" onclick="this.closest(\'dialog\').close()">확인</button></div>';
+      dialog.addEventListener('close', function () { var image = dialog.querySelector('img'), url = image && image.dataset.objectUrl; if (url) URL.revokeObjectURL(url); if (image) { image.removeAttribute('src'); delete image.dataset.objectUrl; } });
+      document.body.appendChild(dialog);
+    }
+    if (dialog.open) dialog.close();
+    var image = dialog.querySelector('img'), previous = image.dataset.objectUrl;
+    if (previous) URL.revokeObjectURL(previous);
+    var url = URL.createObjectURL(blob); image.dataset.objectUrl = url; image.src = url;
+    dialog.showModal();
   }
   function copyText(customerId) { var d = draft(customerId), rows = d.rows.filter(function (r) { return r.selected && !r.hidden; }); if (!rows.length) rows = d.rows.filter(function (r) { return !r.hidden; }); var products = d.products.filter(function (p) { return !p.hidden; }); var info = customerHeaderInfo(customerId, d); var lines = [[[info.name || '고객명', info.birthDate || '생년월일 확인', customerAge(info)].join(' · '), '', '담보'].concat(d.hideTotalColumn ? [] : ['합계금액 · 합계보험료 ' + premiumSummary(products)]).concat(products.map(function (p) { return (p.company + ' ' + p.product).trim(); })).join('\t')]; rows.forEach(function (r) { lines.push([r.section, r.group, r.name].concat(d.hideTotalColumn ? [] : [r.total]).concat(products.map(function (p) { return (r.values || {})[p.id] || ''; })).join('\t')); }); return lines.join('\n'); }
   function saveRecord(customerId, asTemplate) {
@@ -1200,7 +1214,7 @@
     openSources: function (customerId) { return api().openCoverageSources(draft(customerId)); },
     saveWorkspaceToCustomer: function () { var d = clone(draft(WORKSPACE_KEY)); if (!d.customerInfo || !d.customerInfo.id) return api().openCoverageCustomerPicker(true); delete d._starter; delete d._templateSeed; d.updatedAt = new Date().toISOString(); setSaveState(WORKSPACE_KEY, 'saving', '선택 고객에게 저장 중…'); return Promise.resolve().then(function () { return api().saveCoverageWorkspaceToCustomer(d); }).then(function () { setSaveState(WORKSPACE_KEY, 'saved', '선택 고객에게 저장 완료'); }).catch(function (e) { var message = e.message || String(e); setSaveState(WORKSPACE_KEY, 'error', /고객/.test(message) ? '표의 고객명에서 저장할 고객을 선택해 주세요' : '저장 실패 · 다시 시도해 주세요'); api().coverageError(message); }); },
     importExistingPdf: function (customerId, fileId) { return api().openCustomerCoverage(customerId, fileId); },
-    copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function () { api().coverageNotice('선택한 보장분석 표를 이미지로 복사했습니다. 카카오톡에 붙여넣어 주세요.'); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
+    copySelected: function (customerId, sendKakao) { var text = copyText(customerId); copyCoverageImage(customerId).then(function (blob) { showCopiedImagePreview(blob); if (sendKakao) api().sendCoverageToKakao(customerId, text); }).catch(function (error) { api().coverageError(error.message || '선택 화면을 복사하지 못했습니다.'); }); }
   };
   window.OSInsuworkCoverage = exposed;
 })();
