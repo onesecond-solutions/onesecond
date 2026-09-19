@@ -3268,6 +3268,7 @@
     var html = assetDetailHtml(source, id); if (!html) return;
     var pane = state.section === 'assets' && state.assetView === 'list' && state.assetFilter === 'note' && document.getElementById('iw-note-pane');
     if (pane) {
+      if (selectedNote && selectedNote.source === source && String(selectedNote.id) === String(id)) { closeNotePane(); return; }
       selectedNote = { source: source, id: id };
       pane.innerHTML = html; pane.scrollTop = 0;
       pane.closest('.iw-note-workspace').classList.add('has-note');
