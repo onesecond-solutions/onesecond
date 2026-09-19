@@ -88,7 +88,7 @@
   applyBgMode(currentBgMode());
   function logout() {
     ['os_token', 'os_refresh_token', 'os_user', 'selected_menu'].forEach(function (key) { localStorage.removeItem(key); sessionStorage.removeItem(key); });
-    window.location.replace('/insuwork/insubriefing/');
+    window.location.replace('/insuwork/');
   }
   function openProfile() {
     closeAccountMenu();
