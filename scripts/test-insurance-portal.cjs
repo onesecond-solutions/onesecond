@@ -24,7 +24,9 @@ for (const entry of entries) {
   }
   if (['silson','cancer-history','care-history'].includes(entry.id)) {
     assert.ok(html.includes('iph-native'));
-    assert.ok(!/<iframe|<table/.test(html),'History must be native editorial content, not a framed table');
+    assert.ok(!/<iframe/.test(html),'History has no nested frame');
+    assert.ok(/<table>/.test(html),'Comparison matrix is preserved');
+    assert.ok(!html.includes('iph-facts'),'Do not split the matrix into cards');
     assert.ok(html.length>7000,'Complete history content must remain');
   }
   for (const m of html.matchAll(/data-ip-open="([^"]+)"/g)) assert.ok(entries.some(e=>e.id===m[1]),'Broken related topic: '+m[1]);
