@@ -531,11 +531,27 @@
       state.error = failed.length ? failed.join(', ') + ' 자료를 불러오지 못했습니다.' : '';
       renderContent();
       document.dispatchEvent(new CustomEvent('insuwork:data-ready'));
+      if (!failed.length) window.setTimeout(maybeShowEmptyWorkspaceGuide, 0);
       if (failed.indexOf('customers') < 0) window.setTimeout(maybeShowCustomerStatusNotice, 0);
       if (full && failed.indexOf('customers') < 0) syncCareTasksForAll();
       return failed.length === 0;
     }).finally(function () { if (requestId === state.requestId) { state.loadPromise = null; state.loadFull = false; } });
     return state.loadPromise;
+  }
+
+  var welcomeCheckedFor = '';
+  function maybeShowEmptyWorkspaceGuide() {
+    var owner=currentUserId();
+    if(!authenticated()||state.status!=='ready'||state.loadedFor!==owner||welcomeCheckedFor===owner||!window.OSInsuworkGuide)return;
+    if(state.data.customers.length||state.data.consultations.length){welcomeCheckedFor=owner;return;}
+    welcomeCheckedFor=owner;
+    // A dedicated existence query excludes preferences and avoids mistaking a limited home result for an empty workspace.
+    api('insuwork_items?owner_id=eq.'+encodeURIComponent(owner)+'&deleted_at=is.null&and=(or'+personalItemScope().slice(4)+',or(legacy_payload->>workspace_category.is.null,legacy_payload->>workspace_category.neq.settings))&limit=1&select=id').then(function(rows){
+      if(!Array.isArray(rows)||rows.length||currentUserId()!==owner||!authenticated()||state.status!=='ready'||state.data.customers.length||state.data.consultations.length||state.section==='user-guide')return;
+      var key='iw_empty_workspace_guide_'+owner;
+      try{if(sessionStorage.getItem(key))return;}catch(_){}
+      if(window.OSInsuworkGuide.openWelcome(owner)){try{sessionStorage.setItem(key,'shown');}catch(_){}}
+    }).catch(function(){ /* Do not show an empty-account guide when the existence check fails. */ });
   }
 
   function maybeShowCustomerStatusNotice() {
@@ -1052,6 +1068,7 @@
         if (results.every(function (ok) { return ok; })) state.careSyncKey = key;
         rebuildWorkspaceDerived(); renderContent();
         document.dispatchEvent(new CustomEvent('insuwork:data-ready'));
+      if (!failed.length) window.setTimeout(maybeShowEmptyWorkspaceGuide, 0);
       });
     }).catch(function () {}).finally(function () { state.careSyncPromise = null; });
     return state.careSyncPromise;
