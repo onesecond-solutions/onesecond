@@ -17,7 +17,9 @@ for (const entry of entries) {
   assert.ok(!html.includes('undefined'),entry.id);
   if (['silson','cancer-history','care-history'].includes(entry.id)) {
     assert.ok(html.includes('iph-native'));
-    assert.ok(!/<iframe|<table/.test(html),'History must be native editorial content');
+    assert.ok(!/<iframe/.test(html),'No framed history');
+    assert.ok(/<table>/.test(html),'Preserve comparison matrix');
+    assert.ok(!html.includes('iph-facts'),'Do not split comparison cells into fact cards');
     assert.ok(html.length>7000,'Complete content must remain');
   }
   if (['silson','cancer-history','care-history'].includes(entry.id)) {
