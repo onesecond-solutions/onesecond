@@ -1139,3 +1139,26 @@ html[data-insuwork] .iw-ca-copy-preview-actions button{min-width:88px;padding:10
 #v-insuwork .iw-preview .iw-preview-stage{height:100%;padding:4px 0}
 #v-insuwork .iw-preview .iw-preview-bar{bottom:6px}
 #v-insuwork .iw-preview .iw-preview-thumbs{top:8px;bottom:62px;left:8px}
+
+/* 업무노트 목록과 상담용 본문을 독립적으로 스크롤한다. */
+#v-insuwork .iw-note-workspace{display:grid;grid-template-columns:minmax(240px, 2fr) minmax(0, 3fr);gap:16px;height:calc(100dvh - 240px);min-height:320px}
+#v-insuwork .iw-note-list,#v-insuwork .iw-note-pane{min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1)}
+#v-insuwork .iw-note-pane{padding:20px;overflow-wrap:anywhere}
+#v-insuwork .iw-note-pane .iw-detail{max-width:none}
+#v-insuwork .iw-note-list .iw-explorer{border:0;overflow:visible}
+#v-insuwork .iw-note-list .iw-table th:nth-child(2),#v-insuwork .iw-note-list .iw-table td:nth-child(2){display:none}
+#v-insuwork .iw-note-selected{background:color-mix(in srgb,var(--ac) 13%,var(--s1))}
+#v-insuwork .iw-note-back{display:none}
+@media(max-width:760px){
+#v-insuwork .iw-note-workspace{grid-template-columns:minmax(0,1fr)}
+#v-insuwork .iw-note-workspace .iw-note-pane{display:none}
+#v-insuwork .iw-note-workspace.has-note .iw-note-list{display:none}
+#v-insuwork .iw-note-workspace.has-note .iw-note-pane{display:block}
+#v-insuwork .iw-note-pane .iw-note-back{display:inline-flex;margin-bottom:12px}
+}
+
+#v-insuwork .iw-note-list .iw-table{min-width:0;width:100%;table-layout:fixed}
+#v-insuwork .iw-note-list .iw-table th,#v-insuwork .iw-note-list .iw-table td{white-space:normal;overflow-wrap:anywhere}
+#v-insuwork .iw-note-list .iw-table th:first-child{width:60%}
+#v-insuwork .iw-note-list .iw-table tr.iw-note-selected td{background:color-mix(in srgb,var(--ac) 13%,var(--s1))}
+#v-insuwork .iw-note-pane .iw-detail{padding:0}

@@ -1244,6 +1244,7 @@
     return '<div class="iw-load-more"><button type="button" class="iw-btn" onclick="' + action + '">더 보기 (' + visibleCount + ' / ' + totalCount + ')</button></div>';
   }
 
+  var selectedNote = null;
   function assetsHtml() {
     var items = [];
     state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
@@ -1267,12 +1268,19 @@
       : '<div class="iw-toolbar"><div><h2>자료</h2><p class="iw-subtitle">노트, 메모, 링크와 사이트 파일을 한 화면에서 관리합니다.</p></div><div class="iw-actions"><button class="iw-btn" onclick="OSInsuwork.openVault()">📁 파일함 열기</button><button class="iw-btn primary" onclick="OSInsuwork.addAsset()">+ 자료 추가</button></div></div><div class="iw-system-note"><strong>사이트 파일함</strong><span>새 폴더 만들기와 여러 파일 업로드를 지원합니다.</span><small>PC 원본과 별개인 사이트 보관 공간이며, 사이트에서 작업해도 PC 원본은 변경되지 않습니다.</small></div><div class="iw-tabs">' + tabsHtml + '</div>';
     var breadcrumb = assetBreadcrumbHtml();
     var content = state.assetView === 'list'
-      ? '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="iw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
+      ? '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + (selectedNote && selectedNote.source === item.source && String(selectedNote.id) === String(item.raw.id) ? ' iw-note-selected' : '') + '" data-note-id="' + esc(item.raw.id) + '" data-note-source="' + item.source + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="iw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
       : '<div class="iw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
-    return statusHtml() + controls + breadcrumb + content + loadMoreHtml(totalItemCount, items.length, 'OSInsuwork.loadMoreAssets()');
+    var more = loadMoreHtml(totalItemCount, items.length, 'OSInsuwork.loadMoreAssets()');
+    if (state.assetView === 'list' && state.assetFilter === 'note') {
+      if (selectedNote && !items.some(function (item) { return item.source === selectedNote.source && String(item.raw.id) === String(selectedNote.id); })) selectedNote = null;
+      content = '<div class="iw-note-workspace' + (selectedNote ? ' has-note' : '') + '"><div class="iw-note-list" aria-label="업무노트 목록">' + content + more + '</div><section class="iw-note-pane" id="iw-note-pane" aria-label="업무노트 내용">' + (selectedNote ? assetDetailHtml(selectedNote.source, selectedNote.id) : '<div class="iw-empty">왼쪽 목록에서 업무노트를 선택해 주세요.</div>') + '</section></div>';
+      more = '';
+    }
+    return statusHtml() + controls + breadcrumb + content + more;
   }
   function assetOpenAction(item) {
     if (item.folder) return "OSInsuwork.openAssetFolder('" + esc(item.raw.id) + "')";
+    if (state.assetView === 'list' && state.assetFilter === 'note' && item.type === 'note') return "OSInsuwork.showAsset('" + item.source + "','" + esc(item.raw.id) + "')";
     if (previewType(item.raw) && (item.raw.storage_path || item.raw.image_url)) return "OSInsuwork.openAssetPreview('" + item.source + "','" + esc(item.raw.id) + "')";
     return "OSInsuwork.showAsset('" + item.source + "','" + esc(item.raw.id) + "')";
   }
@@ -2677,7 +2685,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); bindWorkspacePaste(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); if (state.section === 'coverage-sheet' && window.OSInsuworkCoverageSheet) window.OSInsuworkCoverageSheet.mount(); }, 0); hideRowHover(); hideSearchImageHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml() + kakaoHubHtml(); hydrateFileDrags(); if (state.query.trim() && state.searchView !== 'list') hydrateAssetThumbs(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
+  function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); if (state.section === 'coverage-sheet' && window.OSInsuworkCoverageSheet) window.OSInsuworkCoverageSheet.mount(); }, 0); hideRowHover(); hideSearchImageHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml() + kakaoHubHtml(); hydrateFileDrags(); if (selectedNote && state.section === 'assets') hydrateRichStorage(); if (state.query.trim() && state.searchView !== 'list') hydrateAssetThumbs(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
@@ -3227,7 +3235,7 @@
   function previewDeleteAsset() { var ref = state.preview && state.preview.assetRef; if (!ref) return; deleteAsset(ref.id); }
   function workspaceItem(id) { return state.data.items.find(function (entry) { return String(entry.id) === String(id); }); }
   function itemAttachments(id) { return state.data.items.filter(function (entry) { var payload = entry.legacy_payload || {}; return entry.item_type === 'file' && String(entry.parent_id || '') === String(id) && payload.attachment_role !== 'inline-image'; }); }
-  function showAsset(source, id) {
+  function assetDetailHtml(source, id) {
     var list = source === 'scripts' ? state.data.scripts : state.data.library;
     var item = list.find(function (entry) { return String(entry.id) === String(id); }); if (!item) return;
     var body = source === 'scripts' ? item.script_text : item.memo_text || item.description || '';
@@ -3247,7 +3255,24 @@
       return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '"' + (file.storage_path ? ' onclick="event.preventDefault();OSInsuwork.openStoragePreview(this)"' : ' target="_blank" rel="noopener"') + '><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
     }).join('') + '</div></div>' : '';
     var kind = source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실';
-    dialog('<div class="iw-detail"><span class="iw-badge">' + kind + '</span><h2 class="iw-detail-title">' + favoriteButton('asset', id, item.title || '(제목 없음)', kind + ' · ' + formatDate(item.created_at)) + '<span>' + esc(item.title || '(제목 없음)') + '</span></h2><small>' + formatDate(item.created_at) + '</small><div class="iw-detail-body iw-rich-content">' + linkifyRich(body) + '</div>' + attachmentHtml + '<div class="iw-detail-actions">' + actions + '</div></div>');
+    return '<button type="button" class="iw-btn iw-note-back" onclick="OSInsuwork.closeNotePane()">← 목록</button><div class="iw-detail"><span class="iw-badge">' + kind + '</span><h2 class="iw-detail-title">' + favoriteButton('asset', id, item.title || '(제목 없음)', kind + ' · ' + formatDate(item.created_at)) + '<span>' + esc(item.title || '(제목 없음)') + '</span></h2><small>' + formatDate(item.created_at) + '</small><div class="iw-detail-body iw-rich-content">' + linkifyRich(body) + '</div>' + attachmentHtml + '<div class="iw-detail-actions">' + actions + '</div></div>';
+  }
+  function closeNotePane() {
+    selectedNote = null;
+    var workspace = document.querySelector('.iw-note-workspace');
+    if (workspace) { workspace.classList.remove('has-note'); workspace.querySelectorAll('.iw-note-selected').forEach(function (row) { row.classList.remove('iw-note-selected'); }); }
+    var pane = document.getElementById('iw-note-pane');
+    if (pane) pane.innerHTML = '<div class="iw-empty">왼쪽 목록에서 업무노트를 선택해 주세요.</div>';
+  }
+  function showAsset(source, id) {
+    var html = assetDetailHtml(source, id); if (!html) return;
+    var pane = state.section === 'assets' && state.assetView === 'list' && state.assetFilter === 'note' && document.getElementById('iw-note-pane');
+    if (pane) {
+      selectedNote = { source: source, id: id };
+      pane.innerHTML = html; pane.scrollTop = 0;
+      pane.closest('.iw-note-workspace').classList.add('has-note');
+      document.querySelectorAll('[data-note-id]').forEach(function (row) { row.classList.toggle('iw-note-selected', row.dataset.noteId === String(id) && row.dataset.noteSource === source); });
+    } else dialog(html);
     hydrateRichStorage();
   }
   function showCustomer(id) {
@@ -5637,7 +5662,8 @@
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreCustomers: function () { state.customersRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreConsultations: function () { state.consultationsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
-    filterAssets: function (filter) { state.assetFilter = filter; state.assetFolder = null; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
+    closeNotePane: closeNotePane,
+    filterAssets: function (filter) { selectedNote = null; state.assetFilter = filter; state.assetFolder = null; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     setSearchView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.searchView = view; localStorage.setItem('iw_search_view', view); renderContent(); },
     setPublicLibView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.publicLibView = view; renderContent(); },
