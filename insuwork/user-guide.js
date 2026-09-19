@@ -23,17 +23,20 @@
       ['분석 결과를 검토합니다','보험사·상품·보험료와 담보별 가입금액을 원본과 대조하세요. 필요한 항목을 수정하고 불필요한 행을 숨겨 상담용으로 정리합니다.','보험사·상품|원본과 비교;가입금액|원본과 비교;담보현황|상담할 분류 선택'],
       ['저장하고 활용합니다','작업표 저장으로 작업을 보관하거나 고객을 선택해 고객별로 저장합니다. 선택 화면 복사로 정리한 표를 활용하세요.','작업표 저장|작업 보관;고객별 저장|선택한 고객 확인;선택 화면 복사|상담용 표 활용'] ]}
   ];
-  var mounted = new WeakSet();
+  var mounted = new WeakSet(), states = {};
   function esc(s) { return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function html(promo) { return '<section class="iw-demo" data-iw-demo="'+(promo?'promo':'guide')+'" aria-label="보험워크 사용 시연"></section>'; }
   function mount() { document.querySelectorAll('[data-iw-demo]').forEach(function(root){
     if(mounted.has(root))return; mounted.add(root);
     var promo=root.dataset.iwDemo==='promo', lesson=0, step=0, timer=0, playing=promo&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
     var tour=[[0,0],[0,2],[1,1],[1,2],[2,0]], tourIndex=0;
+    var key=promo?'promo':'guide', saved=states[key];
+    if(saved){lesson=saved.lesson;step=saved.step;tourIndex=saved.tourIndex;playing=saved.playing;}
     root.innerHTML='<header><span class="iw-demo-eyebrow">'+(promo?'보험워크, 이렇게 사용합니다':'단계별 사용 가이드')+'</span><h2>'+(promo?'상담부터 다음 고객 케어까지':'보고, 멈추고, 따라 해보세요')+'</h2><p>가상 고객 김예시로 구성한 시연 예시입니다. 실제 고객 정보는 사용하지 않습니다.</p></header><nav class="iw-demo-lessons" aria-label="가이드 메뉴">'+(promo?'':lessons.map(function(l,i){return '<button type="button" data-lesson="'+i+'">'+l.name+'</button>';}).join(''))+'</nav><div class="iw-demo-stage"></div><div class="iw-demo-controls"><button type="button" data-action="prev">이전</button><button type="button" data-action="play"></button><button type="button" data-action="next">다음</button><button type="button" data-action="restart">다시 보기</button><span class="iw-demo-count"></span></div><div class="iw-demo-dots" aria-label="단계 선택"></div><div class="iw-demo-cta"></div>';
     function stop(){clearTimeout(timer);timer=0;}
     function schedule(){stop();if(playing)timer=setTimeout(function(){if(!root.isConnected){stop();return;}if(!document.hidden){advance();}else schedule();},6500);}
     function draw(){
+      states[key]={lesson:lesson,step:step,tourIndex:tourIndex,playing:playing};
       var l=lessons[lesson], s=l.steps[step], count=promo?tour.length:l.steps.length, index=promo?tourIndex:step;
       root.querySelector('.iw-demo-stage').innerHTML='<div class="iw-demo-screen"><div class="iw-demo-screenbar"><b>보험워크</b><span>'+esc(l.name)+' · 시연 예시</span></div><div class="iw-demo-mock"><aside>'+lessons.map(function(x,i){return '<span class="'+(i===lesson?'active':'')+'">'+x.name+'</span>';}).join('')+'</aside><div class="iw-demo-form"><h3>'+esc(l.name)+'</h3>'+s[2].split(';').map(function(field,i){var pair=field.split('|');return '<div class="iw-demo-field '+(i===step%s[2].split(';').length?'focus':'')+'"><small>'+esc(pair[0])+'</small><strong>'+esc(pair[1])+'</strong></div>';}).join('')+'</div></div></div><div class="iw-demo-caption"><span>STEP '+(index+1)+'</span><h3>'+esc(s[0])+'</h3><p>'+esc(s[1])+'</p></div>';
       root.querySelector('[data-action="play"]').textContent=playing?'일시정지':'재생';
@@ -52,7 +55,7 @@
       if(b.hasAttribute('data-step')){playing=false;select(Number(b.dataset.step));draw();return;}
       var a=b.dataset.action;
       if(a==='login'){var login=document.querySelector('[data-ib-login]')||document.getElementById('iw-account-login');if(login)login.click();return;}
-      if(a==='open'){playing=false;stop();window.OSInsuwork.go(lessons[lesson].section);return;}
+      if(a==='open'){playing=false;states[key].playing=false;stop();window.OSInsuwork.go(lessons[lesson].section);return;}
       if(a==='play'){var last=promo?tourIndex===tour.length-1:step===lessons[lesson].steps.length-1;if(!playing&&last)select(0);playing=!playing;}
       if(a==='prev'){playing=false;select(Math.max(0,(promo?tourIndex:step)-1));}
       if(a==='next'){playing=false;advance();return;}
