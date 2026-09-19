@@ -1244,7 +1244,7 @@
     return '<div class="iw-load-more"><button type="button" class="iw-btn" onclick="' + action + '">더 보기 (' + visibleCount + ' / ' + totalCount + ')</button></div>';
   }
 
-  var selectedNote = null;
+  var selectedNote = null, assetSearchReturn = null;
   function assetsHtml() {
     var items = [];
     state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
@@ -1276,7 +1276,8 @@
       content = '<div class="iw-note-workspace' + (selectedNote ? ' has-note' : '') + '"><div class="iw-note-list" aria-label="업무노트 목록">' + content + more + '</div><section class="iw-note-pane" id="iw-note-pane" aria-label="업무노트 내용">' + (selectedNote ? assetDetailHtml(selectedNote.source, selectedNote.id) : '<div class="iw-empty">왼쪽 목록에서 업무노트를 선택해 주세요.</div>') + '</section></div>';
       more = '';
     }
-    return statusHtml() + controls + breadcrumb + content + more;
+    var back = assetSearchReturn ? '<button type="button" class="iw-btn" onclick="OSInsuwork.returnToAssetSearch()">← 검색 결과로 돌아가기</button>' : '';
+    return statusHtml() + back + controls + breadcrumb + content + more;
   }
   function assetOpenAction(item) {
     if (item.folder) return "OSInsuwork.openAssetFolder('" + esc(item.raw.id) + "')";
@@ -3255,7 +3256,30 @@
       return '<a href="' + href + '" data-storage-path="' + esc(file.storage_path || '') + '" data-file-title="' + esc(file.title) + '" data-file-mime="' + esc(file.mime_type || '') + '"' + (file.storage_path ? ' onclick="event.preventDefault();OSInsuwork.openStoragePreview(this)"' : ' target="_blank" rel="noopener"') + '><span>' + (type === 'pdf' ? '▤' : '▣') + '</span><b>' + esc(file.title) + '</b><small>' + (type ? '미리보기 · ' : '') + formatBytes(file.file_size) + '</small></a>';
     }).join('') + '</div></div>' : '';
     var kind = source === 'scripts' ? '업무노트' : item.memo_text ? '메모' : '자료실';
-    return '<button type="button" class="iw-btn iw-note-back" onclick="OSInsuwork.closeNotePane()">← 목록</button><div class="iw-detail"><span class="iw-badge">' + kind + '</span><h2 class="iw-detail-title">' + favoriteButton('asset', id, item.title || '(제목 없음)', kind + ' · ' + formatDate(item.created_at)) + '<span>' + esc(item.title || '(제목 없음)') + '</span></h2><small>' + formatDate(item.created_at) + '</small><div class="iw-detail-body iw-rich-content">' + linkifyRich(body) + '</div>' + attachmentHtml + '<div class="iw-detail-actions">' + actions + '</div></div>';
+    return '<button type="button" class="iw-btn iw-note-back" onclick="OSInsuwork.closeNotePane()">← 목록</button><div class="iw-detail">' + (state.query.trim() ? '<button type="button" class="iw-badge" onclick="OSInsuwork.openAssetLocation(\'' + esc(source) + '\',\'' + esc(id) + '\')">' + kind + '로 이동 ↗</button>' : '<span class="iw-badge">' + kind + '</span>') + '<h2 class="iw-detail-title">' + favoriteButton('asset', id, item.title || '(제목 없음)', kind + ' · ' + formatDate(item.created_at)) + '<span>' + esc(item.title || '(제목 없음)') + '</span></h2><small>' + formatDate(item.created_at) + '</small><div class="iw-detail-body iw-rich-content">' + linkifyRich(body) + '</div>' + attachmentHtml + '<div class="iw-detail-actions">' + actions + '</div></div>';
+  }
+  function openAssetLocation(source, id) {
+    var item = (source === 'scripts' ? state.data.scripts : state.data.library).find(function (entry) { return String(entry.id) === String(id); });
+    if (!item) return;
+    var main = document.getElementById('iw-main');
+    assetSearchReturn = { query: state.query, section: state.section, scrollTop: main ? main.scrollTop : 0, view: state.searchView };
+    window.clearTimeout(state.searchTimer);
+    forceCloseDialog();
+    state.query = ''; state.section = 'assets'; state.assetFilter = source === 'scripts' ? 'note' : assetCategory(item);
+    state.assetFolder = item.parent_id || null; state.assetView = 'list';
+    state.assetsRenderLimit = Math.max(LIST_PAGE_SIZE, state.data.library.length + state.data.scripts.length);
+    selectedNote = state.assetFilter === 'note' ? { source: source, id: id } : null;
+    renderShell(); setUrl(true); hydrateRichStorage();
+    var row = Array.prototype.find.call(document.querySelectorAll('[data-note-id]'), function (node) { return node.dataset.noteId === String(id) && node.dataset.noteSource === source; });
+    if (row) { row.classList.add('iw-asset-located'); row.scrollIntoView({ block: 'nearest' }); }
+  }
+  function returnToAssetSearch() {
+    if (!assetSearchReturn) return;
+    var previous = assetSearchReturn; assetSearchReturn = null; selectedNote = null;
+    window.clearTimeout(state.searchTimer); forceCloseDialog();
+    state.query = previous.query; state.section = previous.section; state.searchView = previous.view;
+    renderShell(); setUrl(true);
+    var main = document.getElementById('iw-main'); if (main) main.scrollTop = previous.scrollTop;
   }
   function closeNotePane() {
     selectedNote = null;
@@ -5663,7 +5687,7 @@
     loadMoreAssets: function () { state.assetsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreCustomers: function () { state.customersRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     loadMoreConsultations: function () { state.consultationsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
-    closeNotePane: closeNotePane,
+    openAssetLocation: openAssetLocation, returnToAssetSearch: returnToAssetSearch, closeNotePane: closeNotePane,
     filterAssets: function (filter) { selectedNote = null; state.assetFilter = filter; state.assetFolder = null; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
     setSearchView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.searchView = view; localStorage.setItem('iw_search_view', view); renderContent(); },
