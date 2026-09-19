@@ -1183,6 +1183,7 @@
       + '<div class="iw-story-output"><strong>오늘의 업무판</strong><span>일정 · 고객 · 자료 · 도구가 한 화면으로 연결됩니다.</span></div><div class="iw-story-signal a"></div><div class="iw-story-signal b"></div></div>'
       + '<figcaption>보험 업무를 기억이 아니라 워크플로우로.</figcaption></figure>'
       + '</div>'
+      + (window.OSInsuworkGuide ? window.OSInsuworkGuide.html(true) : '')
       + '<div class="iw-public-concepts" aria-label="보험워크 구성 개념">' + concepts.map(function (item, index) { return '<article><span>' + String(index + 1).padStart(2, '0') + '</span><strong>' + item[0] + '</strong><p>' + item[1] + '</p></article>'; }).join('') + '</div>'
       + '</section>';
   }
@@ -2574,18 +2575,7 @@
       }).join('') + '</div></div>';
   }
   function userGuidePageHtml() {
-    var guides = [
-      ['홈', '오늘 일정, 즐겨찾기, 최근 자료, 최근 고객을 먼저 확인합니다. 하루 업무를 시작하는 첫 화면입니다.'],
-      ['상담관리', '예약, 진행중, 제안서발송, 클로징, 청약완료까지 상담 흐름을 단계별로 관리합니다.'],
-      ['계약관리', '청약이 완료된 고객을 계약일과 보험나이 기준으로 관리하고 다음 케어 일정을 이어갑니다.'],
-      ['캘린더', '상담 일정, 고객 케어, 보험상령일을 한 화면에서 확인합니다.'],
-      ['자료', '업무노트, 자료실, 메모를 상담 중 바로 꺼내 쓸 수 있게 정리합니다.'],
-      ['보험브리핑·참고자료·영업도구', '보험 이슈, 소식지, 영업방향, 스크립트, 원전산 바로가기를 업무 흐름 안에서 사용합니다.']
-    ];
-    return supportHeroHtml('사용자 가이드', '보험워크를 업무 흐름대로 사용하는 방법입니다.')
-      + '<div class="iw-guide-grid">' + guides.map(function (item, index) {
-        return '<article class="iw-support-card"><span class="iw-guide-step">' + String(index + 1).padStart(2, '0') + '</span><h3>' + esc(item[0]) + '</h3><p>' + esc(item[1]) + '</p></article>';
-      }).join('') + '</div></div>';
+    return supportHeroHtml('사용자 가이드', '단계별 시연으로 보험워크 사용 흐름을 확인하세요.') + (window.OSInsuworkGuide ? window.OSInsuworkGuide.html(false) : '') + '</div>';
   }
   function feedbackHtml() {
     if (!allowed()) return statusHtml();
@@ -2667,7 +2657,7 @@
     view.classList.toggle('iw-expanded-images', canEditCoverageTemplate());
     document.body.classList.toggle('is-insuwork-public', STANDALONE && !allowed());
     if (STANDALONE && !allowed()) {
-      view.innerHTML = publicLandingHtml();
+      view.innerHTML = publicLandingHtml(); if (window.OSInsuworkGuide) window.OSInsuworkGuide.mount();
       var loginBtn = view.querySelector('[data-ib-login]');
       var signupBtn = view.querySelector('[data-ib-signup]');
       if (loginBtn) loginBtn.addEventListener('click', function () { openBriefingAuth('login'); });
@@ -2686,7 +2676,7 @@
     bindSearch(); bindAssetWorkspaceDrop(); bindWorkspacePaste(); renderContent();
   }
   function renderConsultCustomFields() { var detail = document.querySelector('#v-insuwork .iw-consult-detail'), section = detail && detail.querySelector('section'); if (!detail || !section || detail.querySelector('.iw-custom-fields')) return; var item = state.data.consultations.find(function (entry) { return String(entry.id) === String(state.selectedConsultation); }), customer = item && state.data.customers.find(function (entry) { return String(entry.id) === String(item.customer_id); }), profile = customerProfile(customer || {}), columns = consultColumns().filter(function (column) { return column.custom; }); if (!columns.length) return; var box = document.createElement('div'); box.className = 'iw-custom-fields'; columns.forEach(function (column) { var label = document.createElement('label'), span = document.createElement('span'), input = document.createElement('input'); span.textContent = column.label; input.setAttribute('data-consult-custom', column.key); input.value = consultCustomValue(profile, column.key); label.className = 'iw-custom-field'; label.appendChild(span); label.appendChild(input); box.appendChild(label); }); detail.insertBefore(box, section); }
-  function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); if (state.section === 'coverage-sheet' && window.OSInsuworkCoverageSheet) window.OSInsuworkCoverageSheet.mount(); }, 0); hideRowHover(); hideSearchImageHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml() + kakaoHubHtml(); hydrateFileDrags(); if (selectedNote && state.section === 'assets') hydrateRichStorage(); if (state.query.trim() && state.searchView !== 'list') hydrateAssetThumbs(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
+  function renderContent() { syncAdminUsersRefresh(); window.setTimeout(function () { if (window.OSCustomerBriefing) window.OSCustomerBriefing.mount(); if (window.OSInsuworkLedger) window.OSInsuworkLedger.mount(); if (window.OSInsuworkProductLineups) window.OSInsuworkProductLineups.mount(); if (state.section === 'coverage-sheet' && window.OSInsuworkCoverageSheet) window.OSInsuworkCoverageSheet.mount(); }, 0); hideRowHover(); hideSearchImageHover(); var activeAdminSearch = state.section === 'admin-users' && document.activeElement && document.activeElement.id === 'iw-admin-user-search', adminSearchSelection = activeAdminSearch ? document.activeElement.selectionStart : null; var main = document.getElementById('iw-main'); if (main) { main.innerHTML = sectionHtml() + kakaoHubHtml(); if (window.OSInsuworkGuide) window.OSInsuworkGuide.mount(); hydrateFileDrags(); if (selectedNote && state.section === 'assets') hydrateRichStorage(); if (state.query.trim() && state.searchView !== 'list') hydrateAssetThumbs(); if (state.section === 'assets' && state.assetView !== 'list') hydrateAssetThumbs(); if (state.section === 'public-library' && state.publicLibView !== 'list') hydrateAssetThumbs(); if (state.section === 'consultations') { bindNameSearch('consult'); if (state.selectedConsultation) { renderConsultCustomFields(); hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('consultation-detail', state.selectedConsultation)); } } if (state.section === 'customers') { bindNameSearch('customer'); if (state.selectedCustomerDetail) { hydrateRichStorage(); bindWorkDraft(main.querySelector('.iw-consult-detail'), workDraftKey('customer-detail', state.selectedCustomerDetail)); } } if (state.section === 'newsletters') { hydrateNewsThumbs(); bindNameSearch('newsCo'); } if (state.section === 'sales-strategy') { hydrateStrategyThumbs(); bindNameSearch('strategyCo'); } if (state.section === 'insurance-age') { calcToolInsuranceAge(); scheduleInsuranceAgeAutoRefresh(); } else window.clearTimeout(state.insageRefreshTimer); if (state.section === 'tools') hydrateToolsPage(); if (state.section === 'public-library') { loadPublicLibrary(); bindNameSearch('publicLib'); } if (state.section === 'briefing') initBriefingCalendar(); if (state.section === 'admin-users') { bindAdminUserSearch(); if (activeAdminSearch) { var adminInput = document.getElementById('iw-admin-user-search'); if (adminInput) { adminInput.focus(); try { adminInput.setSelectionRange(adminSearchSelection, adminSearchSelection); } catch (_) {} } } } } }
   function bindSearch() {
     var input = document.getElementById('iw-search-input'); if (!input) return;
     input.addEventListener('compositionstart', function () { state.composing = true; });
