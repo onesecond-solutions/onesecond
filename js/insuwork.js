@@ -600,7 +600,7 @@
     }).join('') + '</details>';
   }
   function navHtml() {
-    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['customers', '♙', '계약관리'], ['consultations', '✎', '상담관리'], ['assets', '▤', '자료']];
+    var items = [['home', '⌂', '홈'], ['calendar', '▦', '캘린더'], ['consultations', '✎', '상담관리'], ['customers', '♙', '계약관리'], ['assets', '▤', '자료']];
     if (canUseCoverageAnalysis()) {
       items.push(['coverage-analysis', '▥', '보장분석·보험비교']);
       if (canEditCoverageTemplate()) items.push(['coverage-sheet', '▦', '보장분석 엑셀']);
