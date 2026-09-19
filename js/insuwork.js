@@ -2,9 +2,7 @@
   'use strict';
 
   // 2026-08-23 대표 승인 — 고정 17인 파일럿 허용목록 게이트 종료, 인증된 전체 사용자에게 오픈.
-  // 대신 첫 로그인 시 기존 자료 이관 여부를 1회 물어보는 팝업(migrate-choice)이 붙는다 — 아래
-  // proceedPastMigrationGate/renderMigrationChoiceGate 참고. 오늘 이미 이관된 17인은
-  // insuwork_migration_choices에 accepted row가 백필되어 있어 팝업을 다시 보지 않는다.
+  // 2026-09-19: 기존 서비스 이관 질문 없이 보험워크로 바로 진입한다.
   var TEST_EMAIL = 'bylts0428+codex-insuwork-20260815@gmail.com';
   var AZ_VIEWING_ROOM_OWNER_ID = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
   var KAKAO_PILOT_EMAILS = ['bylts@naver.com'];
@@ -42,6 +40,7 @@
   var PROTECTED_SECTIONS = ['calendar', 'customers', 'consultations', 'assets', 'public-library'];
   var LIST_PAGE_SIZE = 200;
   var state = {
+    draftTimer: 0,
     section: 'home', assetFilter: 'all', assetView: localStorage.getItem('ws_asset_view') || 'list', searchView: localStorage.getItem('iw_search_view') || 'list', assetFolder: null, consultationStatusFilter: 'all', customerStatusFilter: 'all', query: '', composing: false, searchTimer: 0, briefingSearchRows: [], briefingSearchQuery: '', briefingSearchLoading: false, briefingSearchRequestId: 0,
     consultNameQuery: '', consultNameComposing: false, consultNameTimer: 0, customerNameQuery: '', customerNameComposing: false, customerNameTimer: 0,
     calendarMode: 'month', calendarSummaryOpen: false, calendarSummaryBuckets: [], selectedDate: ymd(new Date()), homeDate: ymd(new Date()), homeRequestId: 0, coreLoaded: false, careSyncKey: '', careSyncPromise: null, selectedConsultation: null, selectedCustomerDetail: null, kakaoSelectedCustomers: [], kakaoSelectedConsultations: [], cursor: new Date(),
@@ -52,7 +51,6 @@
     strategyCoNameQuery: '', strategyCoNameComposing: false, strategyCoNameTimer: 0, toolMode: 'calculator', toolFile: null, toolResult: null, toolPages: null,
     assetsRenderLimit: LIST_PAGE_SIZE, customersRenderLimit: LIST_PAGE_SIZE, consultationsRenderLimit: LIST_PAGE_SIZE, signedUrlCache: {}, insageRefreshTimer: 0,
     status: 'idle', error: '', loadedFor: '', requestId: 0, loadPromise: null, loadFull: false, fullLoaded: false, favorites: [], pendingRichFiles: [], pendingRichImages: [], carrierType: 'nonlife', carriersLoaded: false, carriersLoading: false, paymentType: 'nonlife', paymentData: null, paymentLoading: false, paymentError: '',
-    migrationDecided: false, migrationCheck: null, draftTimer: 0, // 이번 페이지 로드에서 insuwork_migration_choices 확인/이관선택 완료 여부(중복 확인 방지)
     adminUsers: null, adminUsersLoading: false, adminUsersError: '', adminUserQuery: '', adminUserStatus: 'all', adminUserComposing: false, adminUserTimer: 0, 
     publicLibraryData: null, publicLibraryLoading: false, publicLibNameQuery: '', publicLibNameComposing: false, publicLibNameTimer: 0, publicLibView: 'list',
     data: { items: [], library: [], scripts: [], events: [], customers: [], consultations: [], trashCustomers: [] }
@@ -363,16 +361,12 @@
     return true;
   }
 
-  function renderStandaloneGate(mode, next) {
+  function renderStandaloneGate(mode) {
     var view = document.getElementById('v-insuwork');
     if (!view) return;
     document.body.classList.remove('is-insuwork');
     if (mode === 'denied') {
       view.innerHTML = '<div class="iw-access"><strong>보험워크 준비 중</strong><p>이 계정은 아직 이용 대상이 아닙니다.</p><a class="iw-btn" href="/insuwork/insubriefing/">보험브리핑으로 돌아가기</a></div>';
-      return;
-    }
-    if (mode === 'migrate-choice') {
-      renderMigrationChoiceGate(view, next);
       return;
     }
     view.innerHTML = '<div class="iw-access"><strong>보험워크 로그인</strong><p>기존 원세컨드 계정은 같은 이메일로 로그인할 수 있고, 신규 가입은 이름·전화번호·이메일 인증만 확인합니다.</p><div class="iw-access-actions"><button class="iw-btn primary" type="button" data-ib-login>로그인</button><button class="iw-btn" type="button" data-ib-signup>회원가입</button></div><a class="iw-btn" href="/insuwork/insubriefing/">보험브리핑으로 돌아가기</a></div>';
@@ -387,56 +381,6 @@
     }
     if (loginBtn) loginBtn.addEventListener('click', function () { openBriefingAuth('login'); });
     if (signupBtn) signupBtn.addEventListener('click', function () { openBriefingAuth('signup'); });
-  }
-
-  /* 2026-08-23 대표 승인 — 고정 허용목록 게이트를 폐지하고 게이트를 오픈하며 함께 도입한 1회성 이관 동의 팝업.
-     allowed()를 통과한(=인증된) 사용자가 실제 워크스페이스를 보기 직전, STANDALONE(데스크톱 셸)에서만
-     insuwork_migration_choices에 본인 결정 row가 있는지 확인한다. 이미 결정했으면(오늘 백필된 17인 포함)
-     바로 next()(=openWorkspace 계속 진행)로 넘어가고, 없으면 renderStandaloneGate('migrate-choice')로
-     선택을 받는다. DB 쪽 테이블/RPC(별도 PR)가 아직 없어 조회 자체가 실패하는 경우는 fail-open —
-     인증된 사용자를 워크스페이스 밖에 계속 세워두지 않고 next()로 진행한다(콘솔 경고만 남김). */
-  function proceedPastMigrationGate(next) {
-    if (!STANDALONE) { next(); return; }
-    if (state.migrationDecided) { next(); return; }
-    var id = currentUserId();
-    if (!id) { next(); return; }
-    if (!state.migrationCheck) state.migrationCheck = api('insuwork_migration_choices?user_id=eq.' + encodeURIComponent(id) + '&select=choice&limit=1').finally(function () { state.migrationCheck = null; });
-    state.migrationCheck.then(function (rows) {
-      if (Array.isArray(rows) && rows.length) { state.migrationDecided = true; next(); return; }
-      renderStandaloneGate('migrate-choice', next);
-    }).catch(function (error) {
-      console.warn('Migration choice check failed (계속 진행)', error);
-      next();
-    });
-  }
-  function renderMigrationChoiceGate(view, next) {
-    view.innerHTML = '<div class="iw-access"><strong>기존 자료를 가져올까요?</strong><p>원세컨드에 저장하신 기존 자료·고객·상담·일정을 보험워크로 가져올까요?</p><div class="iw-access-actions"><button class="iw-btn primary" type="button" data-iw-migrate-accept>가져오기</button><button class="iw-btn" type="button" data-iw-migrate-decline>새로 시작하기</button></div><p class="iw-migrate-status" id="iw-migrate-status" hidden></p></div>';
-    var acceptBtn = view.querySelector('[data-iw-migrate-accept]');
-    var declineBtn = view.querySelector('[data-iw-migrate-decline]');
-    var statusEl = view.querySelector('#iw-migrate-status');
-    function setStatus(message, isError) {
-      if (!statusEl) return;
-      statusEl.hidden = !message;
-      statusEl.textContent = message || '';
-      statusEl.style.color = isError ? 'var(--err)' : '';
-    }
-    function setBusy(busy) {
-      if (acceptBtn) acceptBtn.disabled = busy;
-      if (declineBtn) declineBtn.disabled = busy;
-    }
-    function runChoice(rpcName, busyMessage, failMessage) {
-      setBusy(true);
-      setStatus(busyMessage, false);
-      rpc(rpcName).then(function () {
-        state.migrationDecided = true;
-        next();
-      }).catch(function (error) {
-        setBusy(false);
-        setStatus(failMessage + (error && error.message ? ' (' + error.message + ')' : '') + ' 다시 시도해 주세요.', true);
-      });
-    }
-    if (acceptBtn) acceptBtn.addEventListener('click', function () { runChoice('migrate_my_legacy_data', '가져오는 중입니다. 자료가 많으면 몇 초 정도 걸릴 수 있습니다.', '가져오기에 실패했습니다.'); });
-    if (declineBtn) declineBtn.addEventListener('click', function () { runChoice('decline_legacy_migration', '설정을 저장하는 중입니다.', '저장하지 못했습니다.'); });
   }
 
   function needsFullItems() {
@@ -5480,10 +5424,10 @@
      그대로 둔다. 그 외(딥링크로 들어왔거나 보호 메뉴라 home으로 튕기는 경우가 아닌 등)는 기존처럼
      'skip-url'이 아닌 false(=replaceState)를 써서 지금까지의 동작을 유지한다. */
   function initialOpenPush() { return (!INITIAL_URL_HAD_VIEW_PARAMS && state.section === 'home') ? 'skip-url' : false; }
-  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; installUnifiedDatePicker(); restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: AZ_VIEWING_ROOM_OWNER_ID, name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: '00000000-0000-0000-0000-000000000002', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); }
+  function boot() { var localTest = isLocal() && new URLSearchParams(location.search).get('pwtest') === '1'; if (!ensureShell()) return; installUnifiedDatePicker(); restoreFromUrl(); if (localTest) { state.data = { items: [], library: [{ id: 'l1', title: '고객 보장자료', description: '고객상담 자료', created_at: '2026-08-14', scope: 'personal' }], scripts: [{ id: 's1', title: '상담 업무노트', script_text: '<p>한글 검색 확인</p>', created_at: '2026-08-13', scope: 'personal' }], events: [{ id: 'e1', title: '김고객 상담', description: '갱신 상담', event_date: ymd(new Date()), event_time: '10:00' }], customers: [{ id: 'c1', name: '김고객', phone: '010-1234-5678', status: '상담중', created_at: '2026-08-10', profile: { customer_managed: true } }], consultations: [{ id: 'co1', customer_id: 'c1', memo: '보장 상담 완료', channel: '전화', consulted_at: '2026-08-13' }] }; state.adminUsers = [{ id: AZ_VIEWING_ROOM_OWNER_ID, name: '임태성', nickname: '임실장', email: 'bylts@naver.com', company: '에즈금융서비스', phone: '010-1234-5678', status: 'active', created_at: '2026-08-27T09:00:00+09:00', last_seen_at: '2026-08-27T13:30:00+09:00' }, { id: '00000000-0000-0000-0000-000000000002', name: '테스트 사용자', nickname: '', email: 'member@example.com', company: '원세컨드', phone: '010-0000-0000', status: 'pending', created_at: '2026-08-27T10:00:00+09:00', last_seen_at: null }]; readFavoritesFromStorage(); if (!state.favorites.length) state.favorites = [{ target_type: 'customer', target_id: 'c1', title: '김고객', subtitle: '010-1234-5678', sort_order: 0, created_at: new Date().toISOString() }]; state.status = 'ready'; state.loadedFor = 'local-test'; state.coreLoaded = true; state.fullLoaded = true; renderShell(); return; } openWorkspace(state.section, initialOpenPush()); }
 
   restoreFromUrl();
-  document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); proceedPastMigrationGate(function () { openWorkspace(state.section, initialOpenPush()); }); });
+  document.addEventListener('appstate:ready', function () { if (!document.getElementById('v-insuwork')) ensureShell(); restoreFromUrl(); openWorkspace(state.section, initialOpenPush()); });
   window.addEventListener('popstate', function () { if (!restoreFromUrl()) return; openWorkspace(state.section, false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && state.preview) { event.preventDefault(); event.stopImmediatePropagation(); closePreview(); } else if (state.preview && event.altKey && event.key === 'ArrowRight') previewNavigate(1); else if (state.preview && event.altKey && event.key === 'ArrowLeft') previewNavigate(-1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowRight') previewPage(1); else if (state.preview && state.preview.type === 'pdf' && event.key === 'ArrowLeft') previewPage(-1); }, true);
   document.addEventListener('click', function (event) { var menu = document.getElementById('iw-preview-ddak-menu'); if (menu && !menu.hidden && !menu.contains(event.target) && !event.target.closest('.iw-preview-ddak')) closeDdakMenu(); });
