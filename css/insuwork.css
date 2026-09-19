@@ -1168,3 +1168,8 @@ html[data-insuwork] .iw-ca-copy-preview-actions button{min-width:88px;padding:10
 
 #v-insuwork .iw-table tr.iw-asset-located td{background:color-mix(in srgb,var(--ac) 20%,var(--s1));box-shadow:inset 0 2px var(--ac),inset 0 -2px var(--ac)}
 #v-insuwork button.iw-badge,#iw-dialog button.iw-badge{cursor:pointer}
+
+/* 선택한 업무노트: 교차 배경과 구분되는 강조선과 제목. */
+#v-insuwork .iw-note-list .iw-table tr.iw-note-selected td{background:color-mix(in srgb,var(--ac) 28%,var(--s1));box-shadow:none}
+#v-insuwork .iw-note-list .iw-table tr.iw-note-selected td:first-child{box-shadow:inset 4px 0 var(--ac)}
+#v-insuwork .iw-note-list .iw-table tr.iw-note-selected .iw-title-with-fav b{color:var(--ac);font-weight:800}

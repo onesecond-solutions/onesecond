@@ -3284,7 +3284,7 @@
   function closeNotePane() {
     selectedNote = null;
     var workspace = document.querySelector('.iw-note-workspace');
-    if (workspace) { workspace.classList.remove('has-note'); workspace.querySelectorAll('.iw-note-selected').forEach(function (row) { row.classList.remove('iw-note-selected'); }); }
+    if (workspace) { workspace.classList.remove('has-note'); workspace.querySelectorAll('.iw-note-selected').forEach(function (row) { row.classList.remove('iw-note-selected', 'iw-asset-located'); }); }
     var pane = document.getElementById('iw-note-pane');
     if (pane) pane.innerHTML = '<div class="iw-empty">왼쪽 목록에서 업무노트를 선택해 주세요.</div>';
   }
@@ -3296,7 +3296,7 @@
       selectedNote = { source: source, id: id };
       pane.innerHTML = html; pane.scrollTop = 0;
       pane.closest('.iw-note-workspace').classList.add('has-note');
-      document.querySelectorAll('[data-note-id]').forEach(function (row) { row.classList.toggle('iw-note-selected', row.dataset.noteId === String(id) && row.dataset.noteSource === source); });
+      document.querySelectorAll('[data-note-id]').forEach(function (row) { row.classList.remove('iw-asset-located'); row.classList.toggle('iw-note-selected', row.dataset.noteId === String(id) && row.dataset.noteSource === source); });
     } else dialog(html);
     hydrateRichStorage();
   }
