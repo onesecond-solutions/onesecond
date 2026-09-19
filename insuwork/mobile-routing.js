@@ -28,7 +28,9 @@
     return '/insuwork/m/' + page + (params.toString() ? '?' + params.toString() : '');
   }
   function run() {
-    if (!/^\/insuwork\/(?:index\.html)?$/.test(location.pathname) || !isPhone() || !signedIn()) return;
+    var entry = /^\/insuwork\/(?:index\.html)?$/.test(location.pathname) ||
+      (location.hostname === 'insuwork.onesecond.solutions' && /^\/(?:index\.html)?$/.test(location.pathname));
+    if (!entry || !isPhone() || !signedIn()) return;
     location.replace(destination(location.search));
   }
   window.OSInsuworkMobileRouting = { destination: destination, isPhone: isPhone, run: run };
