@@ -59,3 +59,28 @@
 #iw-portal .iph-native .who{color:var(--ip-muted);font-size:13px;margin-top:20px}
 @media(max-width:1000px){#iw-portal .iph-facts,#iw-portal .iph-native .d-grid,#iw-portal .iph-native .grid{grid-template-columns:repeat(2,minmax(0,1fr))}#iw-portal .iph-products{grid-template-columns:1fr}#iw-portal .iph-product .iph-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){#iw-portal .iph-native .gens,#iw-portal .iph-eras{grid-template-columns:repeat(2,minmax(0,1fr))}#iw-portal .iph-facts,#iw-portal .iph-native .d-grid,#iw-portal .iph-native .grid,#iw-portal .iph-checks,#iw-portal .iph-product .iph-facts{grid-template-columns:1fr}#iw-portal .iph-native .tl .row{grid-template-columns:35px minmax(0,1fr);gap:14px}#iw-portal .iph-native .stat{display:block}#iw-portal .iph-native .badge{display:block;margin:8px 0}#iw-portal .iph-native .panel h2,#iw-portal .iph-era h2{font-size:27px}}
+/* Native history: preserve the matrix and use the entire workspace width. */
+#iw-portal .ip-history-reading .iph-native{font-family:inherit;font-size:15px;line-height:1.7}
+#iw-portal .iph-native .iph-comparison,#iw-portal .iph-native .tbl-wrap{width:100%;overflow-x:auto;overflow-y:visible;margin:20px 0 32px}
+#iw-portal .iph-native table{width:100%;min-width:740px;table-layout:fixed;border-collapse:collapse;font:inherit;background:var(--ip-paper)}
+#iw-portal .iph-native table th,#iw-portal .iph-native table td{font-family:inherit;font-size:15px;line-height:1.7;vertical-align:middle;padding:17px 14px;border:1px solid var(--ip-line);text-align:center;word-break:keep-all;overflow-wrap:break-word}
+#iw-portal .iph-native table thead th{background:#6366f1;color:#fff;font-weight:700}
+#iw-portal .iph-native table thead th:first-child{background:#334155;width:16%}
+#iw-portal .iph-native table thead th.iph-latest{background:#ea580c}
+#iw-portal .iph-native table tbody th{background:#f7f8fa;font-weight:600;text-align:left;color:var(--ip-ink)}
+#iw-portal .iph-native table small{display:block;font-family:inherit;font-size:13px;line-height:1.7;font-weight:400;margin-top:3px}
+#iw-portal .iph-native table thead small{font-weight:600;color:inherit}
+#iw-portal .iph-native table .hl,#iw-portal .iph-native table .em{color:#5551e8;font-weight:700}
+#iw-portal .iph-native table .gr,#iw-portal .iph-native table .em-g{color:#00866b;font-weight:700}
+#iw-portal .iph-native table .o,#iw-portal .iph-native table .em-o{color:#d64b00;font-weight:700}
+#iw-portal .iph-native .section-t,#iw-portal .iph-native .sec,#iw-portal .iph-native .panel h2,#iw-portal .iph-native .iph-era h2{font-family:inherit;font-size:24px;line-height:1.5;font-weight:700}
+#iw-portal .iph-native .intro,#iw-portal .iph-native .desc,#iw-portal .iph-native .lead{font-family:inherit;font-size:16px;line-height:1.8}
+#iw-portal .iph-native .d-card p,#iw-portal .iph-native .dd,#iw-portal .iph-native .bd p{font-family:inherit;font-size:15px;line-height:1.8}
+#iw-portal .iph-native .gens .n,#iw-portal .iph-native .iph-eras strong{font-size:22px}
+#iw-portal .iph-native .iph-era{margin-bottom:20px;padding-top:25px}
+#iw-portal:has(.ip-history-reading) .ip-article-head{padding:18px 0 24px}
+#iw-portal:has(.ip-history-reading) .ip-article-head h1{font-size:32px;line-height:1.4;margin:12px 0}
+#iw-portal:has(.ip-history-reading) .ip-article-head h1 br{display:none}
+#iw-portal:has(.ip-history-reading) .ip-article-head p{font-size:15px}
+#iw-portal .ip-history-reading>.ip-toc{margin-bottom:18px;padding:14px 0}
+@media(max-width:640px){#iw-portal:has(.ip-history-reading) .ip-article-head h1{font-size:26px}#iw-portal .iph-native table th,#iw-portal .iph-native table td{font-size:14px;padding:12px 10px}}
