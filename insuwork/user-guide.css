@@ -56,3 +56,13 @@
 @media(min-width:1100px){#v-insuwork .iw-demo[data-iw-demo=promo]{padding:40px 48px}#v-insuwork .iw-demo[data-iw-demo=promo]>header{margin-bottom:30px}}
 @media(max-width:760px){#v-insuwork .iw-demo{padding:18px;border-radius:16px;margin:18px 0}#v-insuwork .iw-demo>header{margin-bottom:18px}#v-insuwork .iw-demo-lessons{gap:4px;padding:4px;width:100%;box-sizing:border-box}#v-insuwork .iw-demo-lessons button{flex:1 0 auto;padding:9px 10px;font-size:12px}#v-insuwork .iw-demo-caption{grid-template-columns:minmax(0,1fr);gap:8px;min-height:0;padding:20px 0}#v-insuwork .iw-demo-caption>span{grid-column:1;grid-row:auto}#v-insuwork .iw-demo-caption h3,#v-insuwork .iw-demo-caption p{grid-column:1}#v-insuwork .iw-demo-caption h3{font-size:19px;margin:0}#v-insuwork .iw-demo-controls{gap:6px}#v-insuwork .iw-demo-controls button{padding:9px 11px;font-size:12px}#v-insuwork .iw-demo [data-action=play]{min-width:80px}#v-insuwork .iw-demo-count{font-size:11px}#v-insuwork .iw-demo-cta{align-items:flex-start;flex-direction:column;gap:8px;margin-top:20px}#v-insuwork .iw-demo-screenbar{padding:9px 11px}#v-insuwork .iw-demo-mock aside{display:none}#v-insuwork .iw-demo-mock{grid-template-columns:minmax(0,1fr)}.iw-guide-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:16px}#v-insuwork .iw-guide-dialog .iw-demo{padding:20px}.iw-guide-dialog-footer{padding:16px 20px;align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){#v-insuwork .iw-demo button{transition:none}}
+/* Keep the captured screen and playback controls together within desktop viewports. */
+#v-insuwork .iw-guide-page{max-width:1400px;margin:0 auto;width:100%}
+#v-insuwork .iw-guide-page .iw-demo{margin:0;padding:24px 30px}
+#v-insuwork .iw-demo>header{margin-bottom:16px}
+#v-insuwork .iw-demo h2{font-size:clamp(24px,2.5vw,32px);margin:6px 0}
+#v-insuwork .iw-demo-capture-wrap{max-width:calc(48vh * 2.032);margin:0 auto}
+#v-insuwork .iw-demo-caption{min-height:0;padding:16px 2px}
+#v-insuwork .iw-demo-cta{margin-top:14px}
+.iw-guide-dialog-footer button{padding:10px 16px;border:1px solid #e7e3db;border-radius:10px;background:#fff;color:#172b43;cursor:pointer;white-space:nowrap}
+@media(max-width:760px){#v-insuwork .iw-guide-page .iw-demo{padding:16px}#v-insuwork .iw-demo-capture-wrap{max-width:100%}}

@@ -2592,7 +2592,7 @@
       }).join('') + '</div></div>';
   }
   function userGuidePageHtml() {
-    return supportHeroHtml('사용자 가이드', '단계별 시연으로 보험워크 사용 흐름을 확인하세요.') + (window.OSInsuworkGuide ? window.OSInsuworkGuide.html(false) : '') + '</div>';
+    return '<div class="iw-guide-page">' + (window.OSInsuworkGuide ? window.OSInsuworkGuide.html(false) : '') + '</div>';
   }
   function feedbackHtml() {
     if (!allowed()) return statusHtml();

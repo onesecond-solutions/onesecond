@@ -46,7 +46,7 @@
       states[key]={lesson:lesson,step:step,tourIndex:tourIndex,playing:playing};
       var l=lessons[lesson], s=l.steps[step], count=promo?tour.length:l.steps.length, index=promo?tourIndex:step;
       var shot=captures[lesson][step];
-      root.querySelector('.iw-demo-stage').innerHTML='<div class="iw-demo-screen"><div class="iw-demo-screenbar"><b>'+esc(l.name)+'</b><span>실제 화면 · 예시 데이터</span></div><div class="iw-demo-capture-wrap"><img class="iw-demo-capture" width="1920" height="945" src="/insuwork/assets/guide/'+shot[0]+'.png" alt="'+esc(l.name+' — '+s[0])+'"><span class="iw-demo-hotspot" aria-hidden="true" style="left:'+shot[1]+'%;top:'+shot[2]+'%;width:'+shot[3]+'%;height:'+shot[4]+'%"></span></div></div><div class="iw-demo-caption"><span>STEP '+(index+1)+'</span><h3>'+esc(s[0])+'</h3><p>'+esc(s[1])+'</p></div>';
+      root.querySelector('.iw-demo-stage').innerHTML='<div class="iw-demo-screen"><div class="iw-demo-screenbar"><b>'+esc(l.name)+'</b><a href="/insuwork/assets/guide/'+shot[0]+'.png" target="_blank" rel="noopener">화면 크게 보기 ↗</a></div><div class="iw-demo-capture-wrap"><img class="iw-demo-capture" width="1920" height="945" src="/insuwork/assets/guide/'+shot[0]+'.png" alt="'+esc(l.name+' — '+s[0])+'"><span class="iw-demo-hotspot" aria-hidden="true" style="left:'+shot[1]+'%;top:'+shot[2]+'%;width:'+shot[3]+'%;height:'+shot[4]+'%"></span></div></div><div class="iw-demo-caption"><span>STEP '+(index+1)+'</span><h3>'+esc(s[0])+'</h3><p>'+esc(s[1])+'</p></div>';
       root.querySelector('[data-action="play"]').textContent=playing?'일시정지':'재생';
       root.querySelector('[data-action="prev"]').disabled=index===0;
       root.querySelector('[data-action="next"]').disabled=index===count-1;
