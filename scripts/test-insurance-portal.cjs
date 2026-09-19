@@ -4,6 +4,7 @@ const vm = require('node:vm');
 const location = {href:'https://example.test/?section=insurance-portal',search:'?section=insurance-portal'};
 const window = {};
 vm.runInNewContext(fs.readFileSync('insuwork/portal-histories.js','utf8'), {window});
+vm.runInNewContext(fs.readFileSync('insuwork/portal-histories.js','utf8'), {window});
 vm.runInNewContext(fs.readFileSync('insuwork/portal.js','utf8'), {window,location,URL,URLSearchParams,Map});
 const portal = window.OSInsurancePortal;
 const entries = portal.entries();
@@ -14,6 +15,11 @@ for (const entry of entries) {
   const html = portal.html();
   assert.ok(html.includes('<h1>'));
   assert.ok(!html.includes('undefined'),entry.id);
+  if (['silson','cancer-history','care-history'].includes(entry.id)) {
+    assert.ok(html.includes('iph-native'));
+    assert.ok(!/<iframe|<table/.test(html),'History must be native editorial content');
+    assert.ok(html.length>7000,'Complete content must remain');
+  }
   if (['silson','cancer-history','care-history'].includes(entry.id)) {
     assert.ok(html.includes('iph-native'));
     assert.ok(!/<iframe|<table/.test(html),'History must be native editorial content, not a framed table');
