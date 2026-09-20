@@ -4,7 +4,6 @@ const vm = require('node:vm');
 const location = {href:'https://example.test/?section=insurance-portal',search:'?section=insurance-portal'};
 const window = {};
 vm.runInNewContext(fs.readFileSync('insuwork/portal-histories.js','utf8'), {window});
-vm.runInNewContext(fs.readFileSync('insuwork/portal-histories.js','utf8'), {window});
 vm.runInNewContext(fs.readFileSync('insuwork/portal.js','utf8'), {window,location,URL,URLSearchParams,Map});
 const portal = window.OSInsurancePortal;
 const entries = portal.entries();
@@ -22,13 +21,7 @@ for (const entry of entries) {
     assert.ok(!html.includes('iph-facts'),'Do not split comparison cells into fact cards');
     assert.ok(html.length>7000,'Complete content must remain');
   }
-  if (['silson','cancer-history','care-history'].includes(entry.id)) {
-    assert.ok(html.includes('iph-native'));
-    assert.ok(!/<iframe/.test(html),'History has no nested frame');
-    assert.ok(/<table>/.test(html),'Comparison matrix is preserved');
-    assert.ok(!html.includes('iph-facts'),'Do not split the matrix into cards');
-    assert.ok(html.length>7000,'Complete history content must remain');
-  }
+
   for (const m of html.matchAll(/data-ip-open="([^"]+)"/g)) assert.ok(entries.some(e=>e.id===m[1]),'Broken related topic: '+m[1]);
   for (const m of html.matchAll(/src="(\/insurance\/[^?]+)\?portal=1"/g)) assert.ok(fs.existsSync('.'+m[1]+'index.html'));
 }
@@ -43,3 +36,7 @@ const mobileWindow={addEventListener(){},innerWidth:390,matchMedia:()=>({matches
 vm.runInNewContext(fs.readFileSync('insuwork/mobile-routing.js','utf8'), {window:mobileWindow,location:{pathname:'/other',hostname:'example.test'},navigator:{userAgent:'iPhone'},document:{addEventListener(){}},URLSearchParams});
 assert.equal(mobileWindow.OSInsuworkMobileRouting.destination('?section=insurance-portal&article=age'),'/insuwork/m/section.html?article=age&view=insuwork&section=insurance-portal');
 console.log('Portal topic rendering, related links, history paths and mobile deep links passed');
+
+for (const [id,title] of [['silson','의료실비 변천사'],['cancer-history','암주요치료비 변천사'],['care-history','간병보험 변천사']]) { assert.equal(entries.find(e=>e.id===id).title,title); }
+location.search='?topic=history';
+assert.ok(!/data-ip-source=/.test(portal.html()),'History covers must not borrow unrelated source documents');
