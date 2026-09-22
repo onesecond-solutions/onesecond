@@ -3876,7 +3876,7 @@
   }
   function getCoverageWorkspaceTab() {
     var id = canEditCoverageTemplate() && window.OSInsuworkCoverage && window.OSInsuworkCoverage.workspaceTabId ? window.OSInsuworkCoverage.workspaceTabId() : 'basic';
-    return ['kb','banksalad','kakaopay','basic'].indexOf(id) >= 0 ? id : 'basic';
+    return ['kb','banksalad','kakaopay','basic','lotte'].indexOf(id) >= 0 ? id : 'basic';
   }
   function coverageWorkingItem() {
     return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_working === true && (payload.coverage_analysis_tab || 'basic') === getCoverageWorkspaceTab(); });
@@ -3897,6 +3897,7 @@
   }
   function coverageWorkspaceRecord() {
     var item = coverageWorkingItem(), working = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
+    if (!working && getCoverageWorkspaceTab() === 'lotte') return {version:1,preserveTemplateLayout:true,products:[],rows:[]};
     var template = getCoverageBaseTemplate();
     if (!working && template && getCoverageWorkspaceTab() !== 'basic') {
       template.products = []; template.source = null; delete template.customerInfo; delete template.sourceItemId;
