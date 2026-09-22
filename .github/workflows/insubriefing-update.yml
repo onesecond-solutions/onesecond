@@ -22,7 +22,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify collector safeguards
+        run: node --test scripts/insuwork_briefing.test.mjs insuwork/insubriefing/scripts/*.test.mjs
       - name: Check today's published briefing
         id: freshness
         run: |
@@ -39,24 +41,29 @@ jobs:
           let current = false, collected = false;
           try {
             const local=JSON.parse(fs.readFileSync('insuwork/insubriefing/data/briefing-latest.json','utf8'));
-            collected=local.date===kstDay() && local.items?.length>0;
-            const r=await fetch('https://onesecond.solutions/insuwork/insubriefing/data/briefing-latest.json?check='+Date.now(),{signal:AbortSignal.timeout(15000)});
+            let status; try {status=JSON.parse(fs.readFileSync('insuwork/insubriefing/data/collection-status.json','utf8'));} catch {}
+            collected=local.date===kstDay() && local.items?.length>0 && status?.date===kstDay() && ['ok','degraded'].includes(status.state);
+            const r=await fetch('https://insuwork.onesecond.solutions/insuwork/insubriefing/data/briefing-latest.json?check='+Date.now(),{signal:AbortSignal.timeout(15000)});
             const live=await r.json();
-            current=r.ok && local.date===kstDay() && local.updatedAt===live.updatedAt && live.items?.length>0;
+            const sr=await fetch('https://insuwork.onesecond.solutions/insuwork/insubriefing/data/collection-status.json?check='+Date.now(),{signal:AbortSignal.timeout(15000)});
+            const liveStatus=sr.ok?await sr.json():null;
+            current=r.ok && local.date===kstDay() && local.updatedAt===live.updatedAt && live.items?.length>0 && status?.checkedAt===liveStatus?.checkedAt;
           } catch {}
           fs.appendFileSync(process.env.GITHUB_OUTPUT,`current=${current}\ncollected=${collected}\n`);
           NODE
       - name: Collect customer briefing
+        id: collect
+        continue-on-error: true
         if: steps.freshness.outputs.collected != 'true' || inputs.force_recollect
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: node insuwork/insubriefing/scripts/update-content.mjs
       - name: Update legacy briefing references
-        if: steps.freshness.outputs.collected != 'true' || inputs.force_recollect
+        if: steps.collect.outcome == 'success'
         run: node insuwork/insubriefing/scripts/update-library.mjs
       - name: Save briefing and daily archive
-        if: steps.freshness.outputs.current != 'true' || inputs.force_recollect
+        if: always() && (steps.collect.outcome == 'success' || steps.collect.outcome == 'failure')
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -67,29 +74,49 @@ jobs:
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
       - name: Request Pages deployment explicitly
-        if: (steps.freshness.outputs.current != 'true' || inputs.force_recollect || inputs.verify_deployment) && github.ref_name == 'main'
+        if: (steps.freshness.outputs.current != 'true' || steps.collect.outcome == 'success' || steps.collect.outcome == 'failure' || inputs.force_recollect || inputs.verify_deployment) && github.ref_name == 'main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --jq '.status'
       - name: Verify live briefing
-        if: (steps.freshness.outputs.current != 'true' || inputs.force_recollect || inputs.verify_deployment) && github.ref_name == 'main'
+        if: (steps.freshness.outputs.current != 'true' || steps.collect.outcome == 'success' || steps.collect.outcome == 'failure' || inputs.force_recollect || inputs.verify_deployment) && github.ref_name == 'main'
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const expected=JSON.parse(fs.readFileSync('insuwork/insubriefing/data/briefing-latest.json','utf8'));
-          for(let i=0;i<36;i++) {
+          const statusPath='insuwork/insubriefing/data/collection-status.json';
+          const expectedStatus=fs.existsSync(statusPath)?JSON.parse(fs.readFileSync(statusPath,'utf8')):null;
+          for(let i=0;i<90;i++) {
             try {
-              const r=await fetch('https://onesecond.solutions/insuwork/insubriefing/data/briefing-latest.json?verify='+Date.now(),{signal:AbortSignal.timeout(10000)});
+              const r=await fetch('https://insuwork.onesecond.solutions/insuwork/insubriefing/data/briefing-latest.json?verify='+Date.now(),{signal:AbortSignal.timeout(10000)});
               const live=await r.json();
-              if(r.ok && live.updatedAt===expected.updatedAt && live.items?.length) {
+              const sr=await fetch('https://insuwork.onesecond.solutions/insuwork/insubriefing/data/collection-status.json?verify='+Date.now(),{signal:AbortSignal.timeout(10000)});
+              const liveStatus=sr.ok?await sr.json():null;
+              if(r.ok && live.updatedAt===expected.updatedAt && live.items?.length && (!expectedStatus || liveStatus?.checkedAt===expectedStatus.checkedAt)) {
                 fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,`게시 확인: ${live.date}, ${live.items.length}건, ${live.updatedAt}\n`);
                 process.exit(0);
               }
             } catch {}
-            await new Promise(r=>setTimeout(r,10000));
+            await new Promise(r=>setTimeout(r,20000));
           }
           throw new Error('라이브 갱신 확인 실패: 저장 결과와 배포 데이터가 다릅니다.');
           NODE
+      - name: Report collection health
+        if: always()
+        env:
+          COLLECTION_OUTCOME: ${{ steps.collect.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {kstDay} from './insuwork/insubriefing/scripts/briefing-core.mjs';
+          let status; try {status=JSON.parse(fs.readFileSync('insuwork/insubriefing/data/collection-status.json','utf8'));} catch {}
+          const message=status ? '수집 상태: '+status.state+', '+status.date+', '+status.articleCount+'건. '+status.errors.join('; ') : '수집 상태 기록 없음';
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,message+'\n');
+          if (process.env.COLLECTION_OUTCOME==='failure' || !status || status.date!==kstDay() || status.state!=='ok') {
+            console.error('::error::'+message);
+            process.exitCode=1;
+          }
+          NODE
       - name: Report failed update
         if: failure()
-        run: echo '자동 갱신 실패. 마지막 정상 기사는 유지됩니다. 실행 로그를 확인하세요.' >> "$GITHUB_STEP_SUMMARY"
+        run: echo '수집원 또는 배포에 점검이 필요합니다. 대체 수집 결과와 기존 기사는 보존됩니다. 위 상태와 실행 로그를 확인하세요.' >> "$GITHUB_STEP_SUMMARY"

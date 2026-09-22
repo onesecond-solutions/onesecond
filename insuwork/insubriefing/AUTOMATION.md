@@ -1,19 +1,12 @@
-# 인슈브리핑 자동 업데이트
+# 뉴스 브리핑 자동 수집
 
-`scripts/update-content.mjs`는 NAVER Cloud Platform의 NAVER API HUB 뉴스 검색 API에서 다음 검색어를 조회해 `data/content.json`을 갱신합니다.
-
-- `보험 금융감독원` → 정책·제도
-- `보험금 청구` → 보험금·청구
-- `실손보험` → 보험뉴스
-- `보험 상품 출시` → 상품소식
-
-## 필요한 GitHub Actions Secrets
-
-- `NAVER_CLIENT_ID`
-- `NAVER_CLIENT_SECRET`
-
-두 값은 NAVER Cloud Platform 콘솔의 NAVER API HUB Application에서 발급합니다. 2026년 7월 31일부터 검색 API 신규 신청은 기존 NAVER Developers가 아니라 NAVER API HUB에서만 가능합니다.
-
-실행 명령은 `node insubriefing/scripts/update-content.mjs`입니다. 기사 본문을 복제하거나 AI로 요약하지 않고, 네이버 API가 반환한 제목·원문 링크·발행일만 저장합니다.
-
-`.github/workflows/insubriefing-update.yml`이 매일 오전 5시 20분(KST)에 실행됩니다. GitHub Actions의 `Run workflow` 버튼으로 즉시 수동 실행할 수도 있습니다.
+- 실행: `node insuwork/insubriefing/scripts/update-content.mjs`
+- 읽기 전용 실제 수집 검사: 위 명령에 `--dry-run` 추가. 로컬에 NAVER 키가 없으면 다음뉴스 대체 수집만 검증한다.
+- NAVER API HUB 7분야 10개 검색 + 다음뉴스 생활/경제/사회/IT과학 목록 보완. 429는 첫 응답에서 추가 NAVER 호출 중단. 네트워크/5xx만 최대 3회 시도.
+- GitHub Secrets: 기존 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`. 변경·출력하지 않는다.
+- 기사 전문/AI 요약 없음. 기존 필터·72시간·중복 제거 적용. 당일 수동 검수 기사 보존.
+- `collection-status.json`: ok=모두 정상, degraded=일부 수집원 장애이나 대체 수집 게시, failed=기존 기사 유지. 수동 기사만으로 자동 수집 성공을 판단하지 않는다.
+- KST 05:17/06:17/07:17 예약(실행 지연 가능). 당일 수집 게시 후 중복 호출 생략. `force_recollect`로 재수집 가능. 실패/부분 장애는 Actions 오류와 뉴스 브리핑 갱신 안내에 표시한다.
+- 원본 저장 후 이전 Pages 호환 배포 요청. 전용 사이트는 insuwork-site 변경 감지가 배포하며 최대 30분 안에 전용 도메인의 기사·상태 일치를 확인하지 못하면 실패한다. 제품 수정 작업 종료 시에는 `gh workflow run deploy.yml --repo onesecond-solutions/insuwork-site`를 명시 실행하고 `/deployment.json` source를 확인한다.
+- 테스트: `node --test scripts/insuwork_briefing.test.mjs insuwork/insubriefing/scripts/*.test.mjs`
+- 운영 결정: `docs/decisions/2026-09-22_briefing_collector_recovery.md`
