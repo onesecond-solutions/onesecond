@@ -25,7 +25,7 @@ test('four source tabs preserve the legacy basic draft and isolate unsaved edits
 });
 test('owner gate and keyboard tab navigation',()=>{
   const ordinary=setup(false).ui;assert.doesNotMatch(ordinary.workspaceHtml(base()),/role="tablist"/);ordinary.switchWorkspaceTab('kb');assert.equal(ordinary.workspaceTabId(),'basic');
-  const ui=setup().ui;ui.workspaceTabKeydown({key:'Home',preventDefault(){}});assert.equal(ui.workspaceTabId(),'kb');ui.workspaceTabKeydown({key:'ArrowRight',preventDefault(){}});assert.equal(ui.workspaceTabId(),'banksalad');ui.switchWorkspaceTab('unknown');assert.equal(ui.workspaceTabId(),'banksalad');
+  const ui=setup().ui;ui.workspaceTabKeydown({key:'Home',preventDefault(){}});assert.equal(ui.workspaceTabId(),'basic');ui.workspaceTabKeydown({key:'ArrowRight',preventDefault(){}});assert.equal(ui.workspaceTabId(),'kb');ui.switchWorkspaceTab('unknown');assert.equal(ui.workspaceTabId(),'kb');
 });
 test('private persistence matches exact tab and legacy records remain basic on reload',async()=>{
   let active='basic';const items=[{id:'legacy',legacy_payload:{workspace_category:'coverage_analysis',coverage_analysis_working:true,coverage_analysis:base()}},{id:'template',legacy_payload:{workspace_category:'coverage_analysis',coverage_analysis_workspace:true,coverage_analysis:base()}}];

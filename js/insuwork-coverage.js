@@ -376,7 +376,7 @@
   function restoreView(customerId, view, revealIndex) { requestAnimationFrame(function () { var main = document.querySelector('#v-insuwork .iw-main'), panel = panelFor(customerId), wrap = panel && panel.querySelector('.iw-ca-table-wrap'); if (main) { main.scrollTop = view.mainTop; main.scrollLeft = view.mainLeft; } if (wrap) { wrap.scrollTop = view.tableTop; wrap.scrollLeft = view.tableLeft; } if (wrap && revealIndex != null) { var row = wrap.querySelectorAll('tbody tr')[revealIndex]; if (row) { var top = row.offsetTop, bottom = top + row.offsetHeight; if (top < wrap.scrollTop) wrap.scrollTop = top; else if (bottom > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = bottom - wrap.clientHeight; var input = row.querySelector('.iw-ca-name-cell textarea'); if (input) try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); } } } }); }
   function rerender(customerId, revealIndex) { var view = captureView(customerId); if (customerId === WORKSPACE_KEY && api().rerenderCoverageWorkspace) api().rerenderCoverageWorkspace(); else if (api().rerenderCoverageAnalysis) api().rerenderCoverageAnalysis(customerId); restoreView(customerId, view, revealIndex); }
   var WORKSPACE_KEY = '__coverage_workspace__';
-  var workspaceTabs = [{id:'kb',label:'KB손해보험'},{id:'banksalad',label:'뱅크샐러드'},{id:'kakaopay',label:'카카오페이'},{id:'basic',label:'기본형'}];
+  var workspaceTabs = [{id:'basic',label:'기본형'},{id:'kb',label:'KB손해보험'},{id:'banksalad',label:'뱅크샐러드'},{id:'kakaopay',label:'카카오페이'}];
   var activeWorkspaceTab = 'basic', workspaceTabDrafts = {};
   function canUseWorkspaceTabs() { return !!(api().canEditCoverageTemplate && api().canEditCoverageTemplate()); }
   function workspaceTabId() { return canUseWorkspaceTabs() ? activeWorkspaceTab : 'basic'; }
