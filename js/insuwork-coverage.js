@@ -376,6 +376,40 @@
   function restoreView(customerId, view, revealIndex) { requestAnimationFrame(function () { var main = document.querySelector('#v-insuwork .iw-main'), panel = panelFor(customerId), wrap = panel && panel.querySelector('.iw-ca-table-wrap'); if (main) { main.scrollTop = view.mainTop; main.scrollLeft = view.mainLeft; } if (wrap) { wrap.scrollTop = view.tableTop; wrap.scrollLeft = view.tableLeft; } if (wrap && revealIndex != null) { var row = wrap.querySelectorAll('tbody tr')[revealIndex]; if (row) { var top = row.offsetTop, bottom = top + row.offsetHeight; if (top < wrap.scrollTop) wrap.scrollTop = top; else if (bottom > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = bottom - wrap.clientHeight; var input = row.querySelector('.iw-ca-name-cell textarea'); if (input) try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); } } } }); }
   function rerender(customerId, revealIndex) { var view = captureView(customerId); if (customerId === WORKSPACE_KEY && api().rerenderCoverageWorkspace) api().rerenderCoverageWorkspace(); else if (api().rerenderCoverageAnalysis) api().rerenderCoverageAnalysis(customerId); restoreView(customerId, view, revealIndex); }
   var WORKSPACE_KEY = '__coverage_workspace__';
+  var workspaceTabs = [{id:'kb',label:'KB손해보험'},{id:'banksalad',label:'뱅크샐러드'},{id:'kakaopay',label:'카카오페이'},{id:'basic',label:'기본형'}];
+  var activeWorkspaceTab = 'basic', workspaceTabDrafts = {};
+  function canUseWorkspaceTabs() { return !!(api().canEditCoverageTemplate && api().canEditCoverageTemplate()); }
+  function workspaceTabId() { return canUseWorkspaceTabs() ? activeWorkspaceTab : 'basic'; }
+  function workspaceTabsHtml() {
+    if (!canUseWorkspaceTabs()) return '';
+    return '<div class="iw-ca-source-tabs" role="tablist" aria-label="보장분석 양식">' + workspaceTabs.map(function (tab) {
+      var selected = tab.id === workspaceTabId();
+      return '<button type="button" role="tab" id="iw-ca-tab-' + tab.id + '" aria-controls="iw-ca-workspace-panel" aria-selected="' + selected + '" tabindex="' + (selected ? '0' : '-1') + '" data-coverage-tab="' + tab.id + '" onclick="OSInsuworkCoverage.switchWorkspaceTab(this.dataset.coverageTab)" onkeydown="OSInsuworkCoverage.workspaceTabKeydown(event)">' + tab.label + '</button>';
+    }).join('') + '</div>';
+  }
+  function switchWorkspaceTab(id) {
+    if (!canUseWorkspaceTabs() || id === activeWorkspaceTab || !workspaceTabs.some(function (tab) { return tab.id === id; })) return;
+    if (importBusy || openingCustomer || (saveStates[WORKSPACE_KEY] || {}).tone === 'saving' || document.querySelector && document.querySelector('#v-insuwork dialog[open]')) return;
+    workspaceTabDrafts[activeWorkspaceTab] = {record:drafts[WORKSPACE_KEY],filter:coverageFilters[WORKSPACE_KEY],save:saveStates[WORKSPACE_KEY],view:captureView(WORKSPACE_KEY)};
+    activeWorkspaceTab = id;
+    var cached = workspaceTabDrafts[id];
+    if (cached && cached.record) drafts[WORKSPACE_KEY] = cached.record;
+    else { delete drafts[WORKSPACE_KEY]; draft(WORKSPACE_KEY, api().getCoverageWorkspaceRecord ? api().getCoverageWorkspaceRecord() : api().getCoverageBaseTemplate()); }
+    coverageFilters[WORKSPACE_KEY] = cached && cached.filter || {open:true,sections:[]};
+    saveStates[WORKSPACE_KEY] = cached && cached.save || {};
+    rerenderTarget(WORKSPACE_KEY);
+    restoreView(WORKSPACE_KEY, cached && cached.view || {mainTop:0,mainLeft:0,tableTop:0,tableLeft:0});
+    requestAnimationFrame(function () { var button=document.getElementById('iw-ca-tab-' + id); if (button) button.focus({preventScroll:true}); });
+  }
+  function workspaceTabKeydown(event) {
+    var index=workspaceTabs.findIndex(function (tab) { return tab.id===workspaceTabId(); }), next;
+    if (event.key==='ArrowRight') next=(index+1)%workspaceTabs.length;
+    else if (event.key==='ArrowLeft') next=(index+workspaceTabs.length-1)%workspaceTabs.length;
+    else if (event.key==='Home') next=0;
+    else if (event.key==='End') next=workspaceTabs.length-1;
+    else return;
+    event.preventDefault(); switchWorkspaceTab(workspaceTabs[next].id);
+  }
   function rerenderTarget(customerId) { if (customerId === WORKSPACE_KEY && api().rerenderCoverageWorkspace) api().rerenderCoverageWorkspace(); else rerender(customerId); }
   function saveTarget(customerId, record, file) { return customerId === WORKSPACE_KEY ? api().saveCoverageWorkspaceDraft(record, file) : api().saveCoverageAnalysis(customerId, record, file); }
   function setSaveState(customerId, tone, message) {
@@ -1173,6 +1207,9 @@
   }
   function workspaceHtml(record) {
     var markup = html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, page: true });
+    if (canUseWorkspaceTabs()) {
+      markup = markup.replace('<div class="iw-ca-panel"', workspaceTabsHtml() + '<div id="iw-ca-workspace-panel" role="tabpanel" aria-labelledby="iw-ca-tab-' + workspaceTabId() + '" class="iw-ca-panel"');
+    }
     queueMicrotask(syncWorkspaceExpanded);
     markup = markup.replace(/<header>[\s\S]*?<\/header>/, '<header class="iw-ca-page-title"><h2>보장분석·보험비교</h2></header>');
     var productButton = '<button type="button" class="iw-btn" onclick="OSInsuworkCoverage.addProduct(\'' + WORKSPACE_KEY + '\')">+ 회사·상품</button>';
@@ -1192,6 +1229,7 @@
     startNameResize: startNameResize, resetNameColumn: resetNameColumn,
     resizeNameColumn: resizeNameColumn,
     toggleWorkspaceExpanded: toggleWorkspaceExpanded,
+    workspaceTabId: workspaceTabId, switchWorkspaceTab: switchWorkspaceTab, workspaceTabKeydown: workspaceTabKeydown,
     html: html, workspaceHtml: workspaceHtml, reset: reset, importFile: importFile, openCustomerWorkspace: openCustomerWorkspace, importCustomerPdfs: importCustomerPdfs,
     togglePanel: function (customerId, button) { var panel = button.closest('.iw-coverage-analysis').querySelector('.iw-ca-panel'), open = panel.hidden; panel.hidden = !open; button.textContent = open ? '접기' : '펼치기'; },
     setProduct: function (customerId, id, key, value) { setPath(customerId, 'product', id, key, value); if (key === 'premium') updatePremiumHeader(customerId); },

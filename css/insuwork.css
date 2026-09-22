@@ -1176,3 +1176,11 @@ html[data-insuwork] .iw-ca-copy-preview-actions button{min-width:88px;padding:10
 
 /* 작성창과 동일하게 본문 텍스트의 줄바꿈과 공백을 보존한다. */
 #v-insuwork .iw-detail-body.iw-rich-content{white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* Owner's coverage source tabs: the existing table remains inside one panel. */
+#v-insuwork .iw-ca-page>.iw-ca-source-tabs{display:flex;flex:0 0 auto;gap:var(--sp-1,4px);overflow-x:auto;border-bottom:1px solid var(--bd);margin-bottom:var(--sp-3,12px);padding:var(--sp-1,4px) var(--sp-1,4px) 0;background:var(--s2);border-radius:var(--radius-md)}
+#v-insuwork .iw-ca-source-tabs [role="tab"]{flex:0 0 auto;position:relative;border:1px solid transparent;border-radius:var(--radius-sm);padding:var(--sp-3,12px) var(--sp-4,16px);background:transparent;color:var(--ts);font:inherit;cursor:pointer;white-space:nowrap}
+#v-insuwork .iw-ca-source-tabs [role="tab"][aria-selected="true"]{background:var(--s1);border-color:var(--bd);color:var(--ac);font-weight:700;box-shadow:inset 0 -3px 0 var(--ac)}
+#v-insuwork .iw-ca-source-tabs [role="tab"]:hover{background:var(--s1)}
+#v-insuwork .iw-ca-source-tabs [role="tab"]:focus-visible{outline:2px solid var(--ac);outline-offset:-3px}
+@media(max-width:720px){#v-insuwork .iw-ca-source-tabs [role="tab"]{padding:var(--sp-2,8px) var(--sp-3,12px);font-size:var(--text-sm,13px)}}

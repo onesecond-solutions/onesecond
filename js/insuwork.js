@@ -3874,8 +3874,12 @@
   function coverageWorkspaceItem() {
     return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_workspace === true; });
   }
+  function getCoverageWorkspaceTab() {
+    var id = canEditCoverageTemplate() && window.OSInsuworkCoverage && window.OSInsuworkCoverage.workspaceTabId ? window.OSInsuworkCoverage.workspaceTabId() : 'basic';
+    return ['kb','banksalad','kakaopay','basic'].indexOf(id) >= 0 ? id : 'basic';
+  }
   function coverageWorkingItem() {
-    return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_working === true; });
+    return (state.data.items || []).find(function (entry) { var payload = entry.legacy_payload || {}; return payload.workspace_category === 'coverage_analysis' && payload.coverage_analysis_working === true && (payload.coverage_analysis_tab || 'basic') === getCoverageWorkspaceTab(); });
   }
   function canEditCoverageTemplate() { return localPreviewAllowed() || (authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID); }
   var sharedCoverageTemplate = null;
@@ -3894,6 +3898,10 @@
   function coverageWorkspaceRecord() {
     var item = coverageWorkingItem(), working = item && item.legacy_payload && item.legacy_payload.coverage_analysis;
     var template = getCoverageBaseTemplate();
+    if (!working && template && getCoverageWorkspaceTab() !== 'basic') {
+      template.products = []; template.source = null; delete template.customerInfo; delete template.sourceItemId;
+      template.rows.forEach(function (row) { row.values = {}; row.total = ''; row.recommended = ''; row.status = ''; row.difference = ''; row.selected = false; delete row.sourceTotal; });
+    }
     return working || template;
   }
   var coverageTemplateHistory = [];
@@ -4015,7 +4023,7 @@
     if (!canUseCoverageAnalysis()) return Promise.reject(new Error('로그인한 뒤 보장분석을 사용해 주세요.'));
     var existing = asTemplate ? coverageWorkspaceItem() : coverageWorkingItem(), rootId = existing ? existing.id : crypto.randomUUID(), next = JSON.parse(JSON.stringify(record || {}));
     if (asTemplate) delete next.customerInfo;
-    var payload = { workspace_category: 'coverage_analysis', coverage_analysis_workspace: asTemplate, coverage_analysis_template: asTemplate, coverage_analysis_working: !asTemplate, coverage_analysis: next };
+    var payload = { workspace_category: 'coverage_analysis', coverage_analysis_workspace: asTemplate, coverage_analysis_template: asTemplate, coverage_analysis_working: !asTemplate, coverage_analysis_tab: asTemplate ? 'basic' : getCoverageWorkspaceTab(), coverage_analysis: next };
     var title = asTemplate ? '보장분석 기본 양식' : '보장분석 내 작업표';
     var body = { owner_id: currentUserId(), item_type: 'memo', title: title, body: coverageAnalysisSummary(next), visibility: 'private', legacy_payload: payload };
     var ready;
@@ -5631,7 +5639,7 @@
   }
   window.OSInsuwork = {
     saveLegacyCustomerStatus: saveLegacyCustomerStatus,
-    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, getCoverageCustomerInfo: getCoverageCustomerInfo, openCoverageCustomerPicker: openCoverageCustomerPicker, chooseCoverageCustomer: chooseCoverageCustomer, openCoverageSources: openCoverageSources, openCoverageSource: openCoverageSource, coverageInsuranceAge: insuranceAge, canEditCoverageTemplate: canEditCoverageTemplate, openCustomerCoverage: openCustomerCoverage, openCoverageAttachmentPicker: openCoverageAttachmentPicker, analyzeCoverageAttachments: analyzeCoverageAttachments, getCoverageBaseTemplate: getCoverageBaseTemplate, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
+    openCoverageTemplateHistory: openCoverageTemplateHistory, previewCoverageTemplateHistory: previewCoverageTemplateHistory, restoreCoverageTemplateHistory: restoreCoverageTemplateHistory, getCoverageCustomerInfo: getCoverageCustomerInfo, openCoverageCustomerPicker: openCoverageCustomerPicker, chooseCoverageCustomer: chooseCoverageCustomer, openCoverageSources: openCoverageSources, openCoverageSource: openCoverageSource, coverageInsuranceAge: insuranceAge, canEditCoverageTemplate: canEditCoverageTemplate, openCustomerCoverage: openCustomerCoverage, openCoverageAttachmentPicker: openCoverageAttachmentPicker, analyzeCoverageAttachments: analyzeCoverageAttachments, getCoverageBaseTemplate: getCoverageBaseTemplate, getCoverageWorkspaceRecord: coverageWorkspaceRecord, saveCoverageWorkspaceDraft: saveCoverageWorkspaceDraft, saveCoverageAnalysis: saveCoverageAnalysis, saveCoverageWorkspaceAnalysis: saveCoverageWorkspaceAnalysis, saveCoverageWorkspaceToCustomer: saveCoverageWorkspaceToCustomer, loadCoveragePdfFile: loadCoveragePdfFile, extractCoverageFile: extractCoverageFile, loadCoverageSheetWorkbook: loadCoverageSheetWorkbook, saveCoverageSheetWorkbook: saveCoverageSheetWorkbook, rerenderCoverageAnalysis: rerenderCoverageAnalysis, rerenderCoverageWorkspace: rerenderCoverageWorkspace, sendCoverageToKakao: sendCoverageToKakao, coverageError: coverageError, coverageNotice: coverageNotice,
     boot: boot, go: go, legacy: legacy, reload: function () { return loadData(true); }, reloadAdminUsers: function () { loadAdminUsers(true); }, filterAdminUserStatus: function (status) { state.adminUserStatus = status || 'all'; renderContent(); },
     /* 보험워크 모바일 전용 읽기 전용 조회 함수 (2026-08-22, fix/workstation-mobile-bugs 버그1).
        화면에 필요한 데이터가 준비됐는지 반환한다. 홈·캘린더는 전체 자료 본문을 기다리지 않고
