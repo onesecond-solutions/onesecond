@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify collector safeguards
+        run: node --test scripts/insuwork_briefing.test.mjs insuwork/insubriefing/scripts/*.test.mjs
       - name: Check today's published briefing
         id: freshness
         run: |
@@ -101,6 +103,8 @@ jobs:
           NODE
       - name: Report collection health
         if: always()
+        env:
+          COLLECTION_OUTCOME: ${{ steps.collect.outcome }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
@@ -108,7 +112,7 @@ jobs:
           let status; try {status=JSON.parse(fs.readFileSync('insuwork/insubriefing/data/collection-status.json','utf8'));} catch {}
           const message=status ? '수집 상태: '+status.state+', '+status.date+', '+status.articleCount+'건. '+status.errors.join('; ') : '수집 상태 기록 없음';
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,message+'\n');
-          if (!status || status.date!==kstDay() || status.state!=='ok') {
+          if (process.env.COLLECTION_OUTCOME==='failure' || !status || status.date!==kstDay() || status.state!=='ok') {
             console.error('::error::'+message);
             process.exitCode=1;
           }
