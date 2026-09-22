@@ -1208,7 +1208,7 @@
   function workspaceHtml(record) {
     var markup = html(WORKSPACE_KEY, record || workspaceStarter(), { expanded: true, page: true });
     if (canUseWorkspaceTabs()) {
-      markup = markup.replace('<div class="iw-ca-panel"', workspaceTabsHtml() + '<div id="iw-ca-workspace-panel" role="tabpanel" aria-labelledby="iw-ca-tab-' + workspaceTabId() + '" class="iw-ca-panel"');
+      markup = markup.replace('<div class="iw-ca-table-wrap"', workspaceTabsHtml() + '<div id="iw-ca-workspace-panel" role="tabpanel" aria-labelledby="iw-ca-tab-' + workspaceTabId() + '" class="iw-ca-table-wrap"');
     }
     queueMicrotask(syncWorkspaceExpanded);
     markup = markup.replace(/<header>[\s\S]*?<\/header>/, '<header class="iw-ca-page-title"><h2>보장분석·보험비교</h2></header>');
