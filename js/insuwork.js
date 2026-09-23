@@ -1273,8 +1273,8 @@
     if (canUseAssetActions()) return assetActionCard(item, preview);
     return '<button type="button" class="iw-asset-card ' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '">' + (item.folder ? '' : favoriteButton('asset', raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<span class="iw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small></button>';
   }
-  // Owner-preview card actions. Reuse the private item tree and existing viewers/editors.
-  function canUseAssetActions() { return authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID; }
+  // Private card actions for all signed-in users. Keep every mutation owner-scoped.
+  function canUseAssetActions() { return authenticated() && !!currentUserId(); }
   function actionableAsset(id) {
     var item = workspaceItem(id);
     return canUseAssetActions() && item && !item.deleted_at && item.owner_id === currentUserId() && ['folder','file','memo','note','link'].indexOf(item.item_type) >= 0 ? item : null;
