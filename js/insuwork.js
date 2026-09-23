@@ -904,7 +904,7 @@
       var script = state.data.scripts.find(function (entry) { return String(entry.id) === String(id); });
       if (script) return { action: function () { showAsset('scripts', id); } };
       var asset = state.data.library.find(function (entry) { return String(entry.id) === String(id); });
-      if (asset) return { action: function () { showAsset('library', id); } };
+      if (asset) return { action: function () { if (asset.item_type === 'folder') { state.section = 'assets'; state.assetFolder = id; state.assetFilter = assetCategory(asset); renderContent(); setUrl(false); } else showAsset('library', id); } };
     }
     if (type === 'customer' && state.data.customers.some(function (entry) { return String(entry.id) === String(id); })) return { action: function () { showCustomer(id); } };
     if (type === 'consultation' && state.data.consultations.some(function (entry) { return String(entry.id) === String(id); })) return { action: function () { state.section = 'consultations'; state.selectedConsultation = id; renderContent(); setUrl(false); } };
@@ -1210,6 +1210,7 @@
 
   var selectedNote = null, assetSearchReturn = null;
   function assetsHtml() {
+    if (canUseAssetActions() && !state.assetCardsInitialized) { state.assetView = localStorage.getItem('iw_asset_card_view') || 'thumb'; state.assetCardsInitialized = true; }
     var items = [];
     state.data.scripts.forEach(function (item) { items.push({ source: 'scripts', type: 'note', kind: '업무노트', title: item.title, body: stripHtml(item.script_text), created: item.created_at, raw: item }); });
     state.data.library.forEach(function (item) { var memo = item.item_type === 'memo', folder = item.item_type === 'folder', file = item.item_type === 'file', category = assetCategory(item); items.push({ source: 'library', type: category, folder: folder, kind: folder ? '폴더' : file ? '파일' : memo ? '메모' : item.item_type === 'link' ? '링크' : item.item_type === 'note' ? '업무노트' : '자료', title: item.title, body: item.body || item.url || '', created: item.created_at, raw: item }); });
@@ -1222,7 +1223,7 @@
     items = items.slice(0, state.assetsRenderLimit);
     var tabs = [['all', '전체'], ['note', '업무노트'], ['file', '자료실'], ['memo', '메모']];
     var tabsHtml = tabs.map(function (tab) { return '<button class="' + (state.assetFilter === tab[0] ? 'on' : '') + '" onclick="OSInsuwork.filterAssets(\'' + tab[0] + '\')">' + tab[1] + '</button>'; }).join('');
-    var viewModes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
+    var viewModes = [['list', '목록', '☷'], ['thumb', canUseAssetActions() ? '카드' : '썸네일', '▦'], ['large', '큰 이미지', '▣']];
     var viewHtml = viewModes.map(function (mode) { return '<button type="button" class="' + (state.assetView === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setAssetView(\'' + mode[0] + '\')" aria-label="' + mode[1] + ' 보기" title="' + mode[1] + '"><span aria-hidden="true">' + mode[2] + '</span>' + mode[1] + '</button>'; }).join('');
     var destination = currentAssetCategory();
     var destinationText = destination ? assetCategoryLabel(destination) + (state.assetFolder ? ' · 현재 폴더' : '') : '저장 위치를 선택합니다';
@@ -1232,8 +1233,8 @@
       : '<div class="iw-toolbar"><div><h2>자료</h2><p class="iw-subtitle">노트, 메모, 링크와 사이트 파일을 한 화면에서 관리합니다.</p></div><div class="iw-actions"><button class="iw-btn" onclick="OSInsuwork.openVault()">📁 파일함 열기</button><button class="iw-btn primary" onclick="OSInsuwork.addAsset()">+ 자료 추가</button></div></div><div class="iw-system-note"><strong>사이트 파일함</strong><span>새 폴더 만들기와 여러 파일 업로드를 지원합니다.</span><small>PC 원본과 별개인 사이트 보관 공간이며, 사이트에서 작업해도 PC 원본은 변경되지 않습니다.</small></div><div class="iw-tabs">' + tabsHtml + '</div>';
     var breadcrumb = assetBreadcrumbHtml();
     var content = state.assetView === 'list'
-      ? '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th></tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + (selectedNote && selectedNote.source === item.source && String(selectedNote.id) === String(item.raw.id) ? ' iw-note-selected' : '') + '" data-note-id="' + esc(item.raw.id) + '" data-note-source="' + item.source + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="iw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td></tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
-      : '<div class="iw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>';
+      ? '<div class="iw-explorer"><table class="iw-table"><thead><tr><th>이름</th><th>종류</th><th>현재 분류</th><th>등록일</th>' + (canUseAssetActions() ? '<th aria-label="자료 메뉴"></th>' : '') + '</tr></thead><tbody>' + items.map(function (item) { return '<tr tabindex="0" class="' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + (selectedNote && selectedNote.source === item.source && String(selectedNote.id) === String(item.raw.id) ? ' iw-note-selected' : '') + '" data-note-id="' + esc(item.raw.id) + '" data-note-source="' + item.source + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '"><td><span class="iw-title-with-fav">' + (item.folder ? '' : favoriteButton('asset', item.raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<b>' + (item.folder ? '📁 ' : '') + esc(item.title || '(제목 없음)') + '</b></span></td><td>' + item.kind + '</td><td>' + scopeBadge(item.raw) + '</td><td>' + formatDate(item.created) + '</td>' + (canUseAssetActions() ? '<td>' + assetMoreButton(item) + '</td>' : '') + '</tr>'; }).join('') + '</tbody></table>' + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>'
+      : (canUseAssetActions() ? assetCardsGrid(items) : '<div class="iw-assets-grid ' + (state.assetView === 'large' ? 'large' : '') + '">' + items.map(assetCardHtml).join('') + (items.length ? '' : '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>') + '</div>');
     var more = loadMoreHtml(totalItemCount, items.length, 'OSInsuwork.loadMoreAssets()');
     if (state.assetView === 'list' && state.assetFilter === 'note') {
       if (selectedNote && !items.some(function (item) { return item.source === selectedNote.source && String(item.raw.id) === String(selectedNote.id); })) selectedNote = null;
@@ -1267,9 +1268,120 @@
     var image = direct ? '<img src="' + esc(direct) + '" alt="">' : ((raw.storage_path && /^image\//.test(raw.mime_type || '')) ? '<img data-storage-path="' + esc(raw.storage_path) + '" alt="">' : '');
     if (!image && raw.storage_path && previewType(raw) === 'pdf') image = '<img data-asset-pdf-path="' + esc(raw.storage_path) + '" alt="PDF 첫 페이지 미리보기" loading="lazy">';
     var docBody = item.type === 'note' ? '<p class="iw-asset-ext">Note</p>' : item.type === 'memo' ? '<p class="iw-asset-ext">Memo</p>' : item.body ? '<p>' + esc(String(item.body).slice(0, 110)) + '</p>' : '<p class="iw-asset-ext">' + esc((fileExtension(raw) || item.kind || '파일').toUpperCase()) + '</p>';
+    if (canUseAssetActions() && item.body && !image) docBody = '<p>' + esc(stripHtml(String(item.body)).slice(0,180)) + '</p>';
     var preview = item.folder ? '<span class="iw-folder-icon">📁</span>' : image || '<div class="iw-asset-document"><span>' + (item.type === 'note' ? '업무노트' : item.type === 'memo' ? '메모' : item.kind) + '</span>' + docBody + '</div>';
+    if (canUseAssetActions()) return assetActionCard(item, preview);
     return '<button type="button" class="iw-asset-card ' + (item.folder ? 'iw-folder-drop-target' : 'iw-asset-draggable') + '" ' + assetDragAttributes(item) + ' onclick="' + assetOpenAction(item) + '">' + (item.folder ? '' : favoriteButton('asset', raw.id, item.title || '(제목 없음)', item.kind + ' · ' + formatDate(item.created))) + '<span class="iw-asset-preview">' + preview + '</span><b>' + esc(item.title || '(제목 없음)') + '</b><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small></button>';
   }
+  // Owner-preview card actions. Reuse the private item tree and existing viewers/editors.
+  function canUseAssetActions() { return authenticated() && currentUserId() === AZ_VIEWING_ROOM_OWNER_ID; }
+  function actionableAsset(id) {
+    var item = workspaceItem(id);
+    return canUseAssetActions() && item && !item.deleted_at && item.owner_id === currentUserId() && ['folder','file','memo','note','link'].indexOf(item.item_type) >= 0 ? item : null;
+  }
+  function assetMoreButton(item) {
+    return '<button type="button" class="iw-asset-more" aria-label="' + esc(item.title || '자료') + ' 더보기" aria-haspopup="menu" aria-expanded="false" data-asset-id="' + esc(item.raw.id) + '" onclick="event.stopPropagation();OSInsuwork.assetMore(event,this.dataset.assetId)" onpointerdown="event.stopPropagation()" onkeydown="event.stopPropagation()">⋮</button>';
+  }
+  function assetActionCard(item, preview) {
+    var action = assetOpenAction(item), title = esc(item.title || '(제목 없음)');
+    return '<article class="iw-asset-action-card' + (item.folder ? ' is-folder iw-folder-drop-target' : ' iw-asset-draggable') + '" ' + assetDragAttributes(item) + '><div class="iw-asset-card-heading"><button type="button" class="iw-asset-title-open" title="' + title + '" onclick="' + action + '">' + title + '</button>' + assetMoreButton(item) + '</div>' + (item.folder ? '' : '<button type="button" class="iw-asset-content-open" aria-label="' + title + ' 열기" onclick="' + action + '"><span class="iw-asset-preview">' + preview + '</span></button><small>' + esc(item.kind) + ' · ' + formatDate(item.created) + '</small>') + '</article>';
+  }
+  function assetCardsGrid(items) {
+    if (!items.length) return '<div class="iw-empty">조건에 맞는 자료가 없습니다.</div>';
+    var folders = items.filter(function (i) { return i.folder; }), files = items.filter(function (i) { return !i.folder; });
+    return (folders.length ? '<div class="iw-asset-card-grid iw-asset-folder-grid" aria-label="폴더">' + folders.map(assetCardHtml).join('') + '</div>' : '') + (files.length ? '<div class="iw-asset-card-grid' + (state.assetView === 'large' ? ' is-large' : '') + '" aria-label="자료 카드">' + files.map(assetCardHtml).join('') + '</div>' : '');
+  }
+  var assetMenuTarget = null, assetMenuTrigger = null, assetMoveState = null;
+  function closeAssetActions() {
+    var menu = document.getElementById('iw-asset-action-menu');
+    if (menu) { if (menu.hidePopover && menu.matches(':popover-open')) menu.hidePopover(); menu.remove(); }
+    if (assetMenuTrigger && assetMenuTrigger.isConnected) assetMenuTrigger.setAttribute('aria-expanded','false');
+  }
+  function assetMore(event, id) {
+    if (event) event.stopPropagation();
+    var item = actionableAsset(id); if (!item) return;
+    var existingMenu = document.getElementById('iw-asset-action-menu');
+    var trigger = event.currentTarget, wasOpen = assetMenuTarget === id && existingMenu && (!existingMenu.showPopover || existingMenu.matches(':popover-open'));
+    closeAssetActions(); if (wasOpen) { assetMenuTarget = null; return; }
+    assetMenuTarget = id; assetMenuTrigger = trigger;
+    var entries = [['rename','이름 바꾸기'],['move','폴더로 이동'],['favorite',isFavorited('asset',id) ? '즐겨찾기 해제' : '즐겨찾기 추가']];
+    if (['memo','note','link'].indexOf(item.item_type) >= 0) entries.unshift(['edit',item.item_type === 'link' ? '링크 수정' : '내용 수정']);
+    if (item.item_type === 'file' && item.storage_path) entries.push(['download','다운로드']);
+    if (item.url && /^https?:\/\//i.test(item.url)) entries.push(['copy','주소 복사']);
+    entries.push(['info','정보 보기'],['trash','휴지통으로 이동']);
+    var menu = document.createElement('div'); menu.id = 'iw-asset-action-menu'; menu.className = 'iw-asset-action-menu'; menu.setAttribute('role','menu'); menu.setAttribute('aria-label',item.title + ' 메뉴');
+    menu.innerHTML = entries.map(function (entry) { return '<button type="button" role="menuitem" class="' + (entry[0] === 'trash' ? 'is-danger' : '') + '" data-action="' + entry[0] + '" onclick="OSInsuwork.assetMenuAction(this.dataset.action)">' + entry[1] + '</button>'; }).join('');
+    document.getElementById('v-insuwork').appendChild(menu);
+    if (menu.showPopover) { menu.setAttribute('popover','auto'); menu.showPopover(); }
+    var rect = trigger.getBoundingClientRect(); menu.style.left = Math.max(8,Math.min(rect.right-menu.offsetWidth,window.innerWidth-menu.offsetWidth-8))+'px'; menu.style.top = Math.max(8,Math.min(rect.bottom+4,window.innerHeight-menu.offsetHeight-8))+'px';
+    trigger.setAttribute('aria-expanded','true');
+    menu.addEventListener('toggle',function (e) { if (e.newState === 'closed' && trigger.isConnected) trigger.setAttribute('aria-expanded','false'); });
+    menu.addEventListener('keydown',function (e) {
+      var buttons = Array.from(menu.querySelectorAll('button')), index = buttons.indexOf(document.activeElement);
+      if (e.key === 'Escape' || e.key === 'Tab') { closeAssetActions(); if (e.key === 'Escape') { e.preventDefault(); trigger.focus(); } return; }
+      if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) < 0) return;
+      e.preventDefault(); buttons[e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length-1 : (index+(e.key === 'ArrowDown'?1:-1)+buttons.length)%buttons.length].focus();
+    });
+    menu.querySelector('button').focus();
+  }
+  function assetActionRefresh(message) {
+    var main = document.querySelector('#v-insuwork .iw-main'), top = main ? main.scrollTop : 0;
+    renderContent(); requestAnimationFrame(function () { var next = document.querySelector('#v-insuwork .iw-main'); if (next) next.scrollTop = top; });
+    if (typeof window.toast === 'function') window.toast(message);
+  }
+  function assetMenuAction(action) {
+    var item = actionableAsset(assetMenuTarget); closeAssetActions(); if (!item) return;
+    if (action === 'edit') return editAsset(item.id);
+    if (action === 'move') return assetMoveOpen(item.id);
+    if (action === 'favorite') return toggleFavorite('asset',item.id,item.title,assetCategoryLabel(assetCategory(item)));
+    if (action === 'trash') return item.item_type === 'folder' ? deleteAssetFolder(item.id) : deleteAsset(item.id);
+    if (action === 'rename') return briefingPrompt('새 이름을 입력하세요.','이름 바꾸기',item.title || '').then(function (name) {
+      if (name == null || !String(name).trim() || String(name).trim() === item.title) return;
+      if (!actionableAsset(item.id)) throw new Error('수정할 자료를 확인하지 못했습니다.');
+      return updateOne('insuwork_items?id=eq.'+encodeURIComponent(item.id)+'&owner_id=eq.'+encodeURIComponent(currentUserId())+'&deleted_at=is.null',{title:String(name).trim()}).then(function (updated) { upsertWorkspaceItem(updated); syncPublicLibraryItem(updated); assetActionRefresh('이름을 변경했습니다.'); });
+    }).catch(saveError);
+    if (action === 'copy') return navigator.clipboard.writeText(item.url).then(function () { if (typeof window.toast === 'function') window.toast('주소를 복사했습니다.'); }).catch(saveError);
+    if (action === 'download') return signStoragePath(item.storage_path).then(function (url) { return fetch(url); }).then(function (r) { if (!r.ok) throw new Error('파일을 내려받지 못했습니다.'); return r.blob(); }).then(function (blob) { var url = URL.createObjectURL(blob); downloadBlob(url,item.title || '파일'); window.setTimeout(function () { URL.revokeObjectURL(url); },60000); }).catch(saveError);
+    if (action === 'info') return dialog('<div class="iw-form"><h2>자료 정보</h2><p>' + esc(item.title) + '</p><p>종류: ' + esc(item.item_type === 'folder' ? '폴더' : fileExtension(item) || assetCategoryLabel(assetCategory(item))) + '</p><p>위치: ' + esc(assetLocation(item.parent_id,assetCategory(item))) + '</p><p>등록일: ' + esc(formatDate(item.created_at)) + '</p>' + (item.file_size != null ? '<p>크기: ' + esc(formatBytes(item.file_size)) + '</p>' : '') + '<button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">닫기</button></div>');
+  }
+  function assetLocation(folderId, category) {
+    var names = [], seen = new Set();
+    while (folderId && !seen.has(String(folderId))) { seen.add(String(folderId)); var folder = workspaceItem(folderId); if (!folder) break; names.unshift(folder.title); folderId = folder.parent_id; }
+    return [assetCategoryLabel(category)].concat(names).join(' / ');
+  }
+  function validAssetDestination(item, folderId) {
+    if (!folderId) return true;
+    var folder = actionableAsset(folderId); if (!folder || folder.item_type !== 'folder' || assetCategory(folder) !== assetCategory(item)) return false;
+    var seen = new Set(), current = folder;
+    while (current) { if (String(current.id) === String(item.id) || seen.has(String(current.id))) return false; seen.add(String(current.id)); current = current.parent_id ? workspaceItem(current.parent_id) : null; }
+    return true;
+  }
+  function assetMoveOpen(id) {
+    var item = actionableAsset(id); if (!item) return;
+    assetMoveState = {id:id,folder:item.parent_id || null,busy:false}; assetMoveRender();
+  }
+  function assetMoveRender() {
+    var move = assetMoveState, item = move && actionableAsset(move.id); if (!item) return;
+    var category = assetCategory(item), parent = move.folder && workspaceItem(move.folder), folders = state.data.items.filter(function (folder) { return folder.item_type === 'folder' && String(folder.parent_id || '') === String(move.folder || '') && validAssetDestination(item,folder.id); });
+    dialog('<div class="iw-form iw-asset-move"><h2>폴더로 이동</h2><p>' + esc(item.title) + '</p><p aria-live="polite">' + esc(assetLocation(move.folder,category)) + '</p><div class="iw-actions">' + (move.folder ? '<button type="button" class="iw-btn" data-parent="' + esc(parent && parent.parent_id || '') + '" onclick="OSInsuwork.assetMoveEnter(this.dataset.parent)">상위 폴더</button>' : '') + '<button type="button" class="iw-btn" onclick="OSInsuwork.assetMoveNewFolder()">새 폴더</button></div><div class="iw-asset-move-folders">' + folders.map(function (folder) { return '<button type="button" class="iw-btn" data-folder="' + esc(folder.id) + '" onclick="OSInsuwork.assetMoveEnter(this.dataset.folder)">' + esc(folder.title) + ' ›</button>'; }).join('') + (folders.length ? '' : '<p>이 위치에 하위 폴더가 없습니다.</p>') + '</div><div class="iw-actions"><button type="button" class="iw-btn" onclick="OSInsuwork.closeDialog()">취소</button><button type="button" class="iw-btn primary"' + (String(item.parent_id || '') === String(move.folder || '') ? ' disabled' : '') + ' onclick="OSInsuwork.assetMoveConfirm()">여기로 이동</button></div></div>');
+  }
+  function assetMoveEnter(id) { var m = assetMoveState, item = m && actionableAsset(m.id); if (!item || m.busy || !validAssetDestination(item,id)) return; m.folder = id || null; assetMoveRender(); }
+  function assetMoveConfirm() {
+    var move = assetMoveState, item = move && actionableAsset(move.id); if (!item || move.busy || !validAssetDestination(item,move.folder) || String(item.parent_id || '') === String(move.folder || '')) return;
+    move.busy = true;
+    return updateOne('insuwork_items?id=eq.'+encodeURIComponent(item.id)+'&owner_id=eq.'+encodeURIComponent(currentUserId())+'&deleted_at=is.null',{parent_id:move.folder || null}).then(function (updated) { upsertWorkspaceItem(updated); closeDialog(); assetActionRefresh('이동 완료 · '+assetLocation(move.folder,assetCategory(item))); }).catch(saveError).finally(function () { move.busy = false; });
+  }
+  function assetMoveNewFolder() {
+    var move = assetMoveState, item = move && actionableAsset(move.id); if (!item || move.busy) return;
+    move.busy = true;
+    return briefingPrompt('새 폴더 이름을 입력하세요.','새 폴더').then(function (name) {
+      if (name == null || !String(name).trim()) return;
+      if (!actionableAsset(move.id) || !validAssetDestination(item,move.folder)) throw new Error('저장 위치를 확인해 주세요.');
+      move.busy = true;
+      return writeOne('insuwork_items',{owner_id:currentUserId(),parent_id:move.folder || null,item_type:'folder',title:String(name).trim(),visibility:'private',legacy_payload:{workspace_category:assetCategory(item)}}).then(function (folder) { upsertWorkspaceItem(folder); move.folder = folder.id; });
+    }).catch(saveError).finally(function () { move.busy = false; if (assetMoveState === move) assetMoveRender(); });
+  }
+  document.addEventListener('pointerdown',function (event) { var menu = document.getElementById('iw-asset-action-menu'); if (menu && !menu.contains(event.target) && !event.target.closest('.iw-asset-more')) closeAssetActions(); });
   function fileExtension(item) {
     var name = String((item && (item.extension || item.title || item.storage_path)) || '').split('?')[0];
     return String((item && item.extension) || (name.indexOf('.') >= 0 ? name.split('.').pop() : '')).toLowerCase();
@@ -2310,7 +2422,7 @@
     var rows = (state.publicLibraryData || []).filter(publicLibraryMatches);
     var clearBtn = state.publicLibNameQuery ? '<button type="button" class="iw-consult-name-clear" onclick="OSInsuwork.clearNameSearch(\'publicLib\')" aria-label="검색어 지우기">×</button>' : '';
     var toolbar = '<div class="iw-toolbar"><h2>공개자료실</h2><label class="iw-consult-name-search"><span aria-hidden="true">⌕</span><input id="iw-publicLib-name-input" type="search" placeholder="공개자료 검색" autocomplete="off" value="' + esc(state.publicLibNameQuery || '') + '">' + clearBtn + '</label></div>';
-    var viewModes = [['list', '목록', '☷'], ['thumb', '썸네일', '▦'], ['large', '큰 이미지', '▣']];
+    var viewModes = [['list', '목록', '☷'], ['thumb', canUseAssetActions() ? '카드' : '썸네일', '▦'], ['large', '큰 이미지', '▣']];
     var viewHtml = viewModes.map(function (mode) { return '<button type="button" class="' + (state.publicLibView === mode[0] ? 'on' : '') + '" onclick="OSInsuwork.setPublicLibView(\'' + mode[0] + '\')" aria-label="' + mode[1] + ' 보기" title="' + mode[1] + '"><span aria-hidden="true">' + mode[2] + '</span>' + mode[1] + '</button>'; }).join('');
     var notice = '<div class="iw-pl-notice"><span>함께 쓰는 공개 자료실입니다. 올리신 자료의 권리·내용은 본인 책임이며, 개인정보·저작권 침해·부적절한 콘텐츠는 통보 없이 삭제될 수 있습니다.</span><div class="iw-view-switch" aria-label="보기 방식">' + viewHtml + '</div></div>';
     var body;
@@ -3594,7 +3706,7 @@
       if (!ok) return;
       var category = assetCategory(folder);
       softDelete('insuwork_items?id=eq.' + encodeURIComponent(id) + '&owner_id=eq.' + encodeURIComponent(currentUserId()))
-        .then(function () { removeWorkspaceItemsLocal([id]); state.assetFolder = null; state.assetFilter = category; renderContent(); if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
+        .then(function () { removeWorkspaceItemsLocal([id]); if (String(state.assetFolder) === String(id)) state.assetFolder = null; state.assetFilter = category; renderContent(); if (typeof window.toast === 'function') window.toast('폴더를 삭제했습니다.'); }).catch(saveError);
     });
   }
   function externalFileDrag(event) { return !!(event.dataTransfer && event.dataTransfer.types && Array.prototype.indexOf.call(event.dataTransfer.types, 'Files') >= 0); }
@@ -5652,13 +5764,14 @@
     loadMoreConsultations: function () { state.consultationsRenderLimit += LIST_PAGE_SIZE; renderContent(); },
     openAssetLocation: openAssetLocation, returnToAssetSearch: returnToAssetSearch, closeNotePane: closeNotePane,
     filterAssets: function (filter) { selectedNote = null; state.assetFilter = filter; state.assetFolder = null; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
-    setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem('ws_asset_view', view); renderContent(); },
+    setAssetView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.assetView = view; localStorage.setItem(canUseAssetActions() ? 'iw_asset_card_view' : 'ws_asset_view', view); renderContent(); },
     setSearchView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.searchView = view; localStorage.setItem('iw_search_view', view); renderContent(); },
     setPublicLibView: function (view) { if (['list', 'thumb', 'large'].indexOf(view) < 0) return; state.publicLibView = view; renderContent(); },
     openAssetFolder: function (id) { var folder = state.data.library.find(function (item) { return String(item.id) === String(id) && item.item_type === 'folder'; }); state.assetFolder = id || null; state.assetFilter = folder ? assetCategory(folder) : 'file'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     openAssetRoot: function (category) { state.assetFolder = null; state.assetFilter = ['note', 'file', 'memo'].indexOf(category) >= 0 ? category : 'all'; state.assetsRenderLimit = LIST_PAGE_SIZE; renderContent(); },
     showAsset: showAsset, openFilePreview: openFilePreview, openAssetPreview: openAssetPreview, openUrlPreview: openPreviewUrl, openUrlPreviewNode: openUrlPreviewNode, openStoragePreview: openStoragePreview, closePreview: closePreview, previewZoom: previewZoom, previewRotate: previewRotate, previewPage: previewPage, previewNavigate: previewNavigate, toggleDdakMenu: toggleDdakMenu, closeDdakMenu: closeDdakMenu, previewCopy: previewCopy, previewEditAsset: previewEditAsset, previewDeleteAsset: previewDeleteAsset, editAsset: editAsset, saveAssetEdit: saveAssetEdit, deleteAsset: deleteAsset, richCommand: richCommand, richColorCommand: richColorCommand, positionRichColorMenu: positionRichColorMenu, focusRich: focusRich, focusRichBody: focusRichBody, prepareRichFocus: prepareRichFocus, addRichImages: addRichImages, addRichFiles: addRichFiles, removeRichFile: removeRichFile, showCustomer: showCustomer, showEvent: showEvent, toggleFavorite: toggleFavorite, openFavorite: openFavorite, toggleFavoritesPanel: toggleFavoritesPanel, closeFavoritesPanel: closeFavoritesPanel, toggleDrivingPanel: toggleDrivingPanel, drivingCheckChanged: drivingCheckChanged, openPublicLibraryItem: openPublicLibraryItem, openPublicLibraryFile: openPublicLibraryFile, editPublicLibraryItem: editPublicLibraryItem, favoriteDragStart: favoriteDragStart, favoriteDragOver: favoriteDragOver, favoriteDragLeave: favoriteDragLeave, favoriteDrop: favoriteDrop, favoriteDragEnd: favoriteDragEnd,
     closeDialog: closeDialog, openHelp: openHelp, saveFeedback: saveFeedback, addAsset: function () { closeAssetMenu(); addAsset(); }, saveAsset: saveAsset, openVault: openVault, newFolder: newFolder, uploadFiles: uploadFiles, newAssetFolder: newAssetFolder, saveAssetFolder: saveAssetFolder, deleteAssetFolder: deleteAssetFolder, uploadAssetFiles: uploadAssetFiles, confirmAssetFileUpload: confirmAssetFileUpload,
+    assetMore: assetMore, assetMenuAction: assetMenuAction, assetMoveOpen: assetMoveOpen, assetMoveEnter: assetMoveEnter, assetMoveConfirm: assetMoveConfirm, assetMoveNewFolder: assetMoveNewFolder,
     assetDragStart: assetDragStart, externalFileDragStart: externalFileDragStart, assetDragEnd: assetDragEnd, assetDragOver: assetDragOver, assetDragLeave: assetDragLeave, assetDrop: assetDrop,
     setListPeriod: setListPeriod, addCustomer: addCustomer, saveCustomer: saveCustomer, runCustomerOcr: runCustomerOcr, searchCustomerAddress: searchCustomerAddress, queueCustomerAddressSearch: queueCustomerAddressSearch, closeCustomerAddress: closeCustomerAddress, addContractDateRow: addContractDateRow, removeContractDateRow: removeContractDateRow, clearNameSearch: clearNameSearch, filterCustomerStatus: function (status) { state.customerStatusFilter = status || 'all'; state.selectedCustomerDetail = null; state.customersRenderLimit = LIST_PAGE_SIZE; renderContent(); }, selectCustomerDetail: selectCustomerDetail, saveCustomerDetail: saveCustomerDetail, showFamilyGroup: showFamilyGroup, openFamilyMember: openFamilyMember, toggleFamilySection: toggleFamilySection, setFamilyAddMode: setFamilyAddMode, toggleNewFamilyAddress: toggleNewFamilyAddress, saveNewFamily: saveNewFamily, prepareFamilyCandidate: prepareFamilyCandidate, connectFamily: connectFamily, removeFamilyMember: removeFamilyMember, showRowHover: showRowHover, hideRowHover: hideRowHover, showSearchImageHover: showSearchImageHover, hideSearchImageHover: hideSearchImageHover, refreshCustomerDetailInsuranceAge: refreshCustomerDetailInsuranceAge, refreshCustomerInsuranceAge: refreshCustomerInsuranceAge, addConsultation: addConsultation, editConsultation: editConsultation, saveConsultation: saveConsultation, selectConsultation: selectConsultation, deleteConsultation: deleteConsultation, filterConsultationStatus: function (status) { state.consultationStatusFilter = status || 'all'; state.selectedConsultation = null; state.consultationsRenderLimit = LIST_PAGE_SIZE; renderContent(); }, manageConsultColumns: manageConsultColumns, addConsultColumn: addConsultColumn, moveConsultColumn: moveConsultColumn, deleteConsultColumn: deleteConsultColumn, saveConsultationDetail: saveConsultationDetail, openKakaoDraft: openKakaoDraft, refreshKakaoDraftPreview: refreshKakaoDraftPreview, saveKakaoDraft: saveKakaoDraft, toggleKakaoBulkTarget: toggleKakaoBulkTarget, selectAllKakaoBulk: selectAllKakaoBulk, clearKakaoBulk: clearKakaoBulk, openKakaoBulkDraft: openKakaoBulkDraft, refreshKakaoBulkPreview: refreshKakaoBulkPreview, saveKakaoBulkDraft: saveKakaoBulkDraft, uploadKakaoBusinessCard: uploadKakaoBusinessCard, toggleKakaoHub: toggleKakaoHub, trashCustomer: trashCustomer, restoreCustomer: restoreCustomer, emptyTrash: emptyTrash, refreshInsuranceAge: refreshInsuranceAge, refreshDetailInsuranceAge: refreshDetailInsuranceAge, prepareDatePicker: prepareDatePicker, openDatePicker: openDatePicker, applyDatePicker: applyDatePicker, formatBirthInput: formatBirthInput, formatConsultPhone: formatConsultPhone, consultationStatusChanged: consultationStatusChanged, closeReservationPopup: closeReservationPopup, saveReservationEvent: saveReservationEvent, addEvent: addEvent, addEventForCustomer: addEventForCustomer, editEvent: editEvent, deleteEvent: deleteEvent, saveEvent: saveEvent, toggleEventTime: toggleEventTime, toggleEventAllDay: toggleEventAllDay, syncEventTime: syncEventTime, toggleEventComplete: toggleEventComplete, openCustomerFromEvent: openCustomerFromEvent, openDayCreate: openDayCreate, richPaste: richPaste,
     openTool: openTool, setToolMode: setToolMode, startChatScrollCapture: startChatScrollCapture, openCarrierSystem: openCarrierSystem, openPaymentSearchResult: openPaymentSearchResult, openBriefingSearchResult: openBriefingSearchResult, setCarrierType: function (type) { state.carrierType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, setPaymentType: function (type) { state.paymentType = type === 'life' ? 'life' : 'nonlife'; renderContent(); }, reloadPaymentInfo: function () { state.paymentData = null; state.paymentError = ''; loadPaymentInfo(); renderContent(); }, calcPress: calcPress, calcBmi: calcBmi, calcToolInsuranceAge: calcToolInsuranceAge, imgConvertLoad: imgConvertLoad, imgConvertRun: imgConvertRun, imgConvertClear: imgConvertClear, imgConvertDownload: imgConvertDownload, imgConvertCopy: imgConvertCopy, imgConvertPdfDownload: imgConvertPdfDownload, imgConvertPdfCopy: imgConvertPdfCopy, imgConvertPdfNameInput: imgConvertPdfNameInput, imgConvertPdfMergeDownload: imgConvertPdfMergeDownload, imgConvertPdfMergeSaveToInsuwork: imgConvertPdfMergeSaveToInsuwork, audioConvertLoad: audioConvertLoad, audioConvertRun: audioConvertRun, audioConvertRunOne: audioConvertRunOne, audioConvertClear: audioConvertClear, audioConvertDownload: audioConvertDownload, audioConvertDownloadAll: audioConvertDownloadAll, toolSavePickerGo: toolSavePickerGo, toolSavePickerEnter: toolSavePickerEnter, toolSavePickerNewFolder: toolSavePickerNewFolder, toolSavePickerConfirm: toolSavePickerConfirm, filterQuickLinks: filterQuickLinks,
